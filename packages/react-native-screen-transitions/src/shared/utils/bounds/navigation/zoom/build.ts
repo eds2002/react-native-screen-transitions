@@ -300,6 +300,7 @@ export function buildZoomStyles({
 		return {
 			content: unfocusedContent,
 			[link.id]: {
+				props: { teleport: !active.settled },
 				style: {
 					transform: [
 						{ translateX: 0 },
@@ -359,6 +360,7 @@ export function buildZoomStyles({
 	return {
 		content: unfocusedContent,
 		[link.id]: {
+			props: { teleport: !active.settled },
 			style: {
 				transform: [
 					{ translateX: trackedSourceElement.translateX },

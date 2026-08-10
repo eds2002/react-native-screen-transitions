@@ -169,6 +169,18 @@ const releaseDestinationBlock = (pairKey: ScreenPairKey, linkKey: LinkKey) => {
 	});
 };
 
+const releaseDestinationBlockWhenReady = (
+	pairKey: ScreenPairKey,
+	linkKey: LinkKey,
+) => {
+	"worklet";
+	const pair = pairs.get()[pairKey];
+	const link = pair?.links[linkKey];
+	if (!link?.source || !link.destination) return;
+	if (link.source.escapeClipping && !pair.portalReadySources?.[linkKey]) return;
+	releaseDestinationBlock(pairKey, linkKey);
+};
+
 export function registerScreen(params: RegisterScreenParams) {
 	"worklet";
 	const node: BoundsScreenNode = {
@@ -282,6 +294,7 @@ export function requestBoundaryMeasurements({
 
 		if (!link?.source || startsRefresh) {
 			ensurePairSourceRequests(state, pairKey)[linkKey] = true;
+			delete pair.portalReadySources?.[linkKey];
 		}
 
 		if (destination) {
@@ -345,9 +358,21 @@ export function completeBoundaryMeasurement(
 ) {
 	"worklet";
 	const linkKey = getLinkKeyFromTag(tag);
-	const link = pairs.get()[target.pairKey]?.links[linkKey];
-	if (!link?.source || !link.destination) return;
-	releaseDestinationBlock(target.pairKey, linkKey);
+	releaseDestinationBlockWhenReady(target.pairKey, linkKey);
+}
+
+export function markBoundaryPortalReady(pairKey: ScreenPairKey, tag: TagID) {
+	"worklet";
+	const linkKey = getLinkKeyFromTag(tag);
+	pairs.modify(<T extends LinkPairsState>(state: T): T => {
+		"worklet";
+		const pair = state[pairKey];
+		if (!pair) return state;
+		if (!pair.portalReadySources) pair.portalReadySources = {};
+		pair.portalReadySources[linkKey] = true;
+		return state;
+	});
+	releaseDestinationBlockWhenReady(pairKey, linkKey);
 }
 
 export function abandonBoundaryMeasurement(

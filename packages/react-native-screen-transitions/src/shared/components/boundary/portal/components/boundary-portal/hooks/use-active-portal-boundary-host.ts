@@ -8,7 +8,8 @@ import type { ScreenPairKey } from "../../../../../../stores/bounds/types";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../../../../types/animation.types";
 import type { BoundaryLocalMeasurementValue } from "../../../../types";
 import { createBoundaryPortalHostName } from "../../../utils/naming";
-import { resolveBoundaryPortalPairKey } from "../helpers/local-measurement";
+import { isTeleportEnabled } from "../../../utils/teleport-control";
+import { resolveActiveBoundaryPortalPairKey } from "../helpers/local-measurement";
 import {
 	mountPortalBoundaryHost,
 	unmountPortalBoundaryHostByName,
@@ -42,12 +43,25 @@ export const useActivePortalBoundaryHost = ({
 	useAnimatedReaction(
 		() => {
 			"worklet";
-			return resolveBoundaryPortalPairKey(localMeasurement.get());
+			return resolveActiveBoundaryPortalPairKey(
+				localMeasurement.get(),
+				slotsMap.get()[boundaryId],
+			);
 		},
 		(pairKey, previousPairKey) => {
 			"worklet";
 			if (pairKey === previousPairKey) {
 				return;
+			}
+
+			const slot = slotsMap.get()[boundaryId];
+			if (
+				pairKey === null &&
+				localMeasurement.get() !== null &&
+				slot &&
+				!isTeleportEnabled(slot.props?.teleport)
+			) {
+				localMeasurement.set(null);
 			}
 
 			runOnJS(updateActivePairKey)(pairKey);

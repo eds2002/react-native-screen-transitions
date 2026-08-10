@@ -5,6 +5,7 @@ import { applyMeasuredBoundsWrites } from "../../providers/helpers/measured-boun
 import {
 	abandonBoundaryMeasurement,
 	getBoundaryMeasurementRequest,
+	markBoundaryPortalReady,
 	registerBoundary,
 	registerScreen,
 	requestBoundaryMeasurements,
@@ -69,6 +70,51 @@ const measured = {
 	pageY: 20,
 	width: 100,
 	height: 80,
+};
+
+const registerPair = (escapeClipping = false) => {
+	const blockCount = makeMutable(0);
+	registerScreen({
+		screenKey: "source",
+		animationProgress: makeMutable(1),
+		pendingLifecycleStartBlockCount: makeMutable(0),
+	});
+	registerScreen({
+		screenKey: "destination",
+		animationProgress: makeMutable(0),
+		pendingLifecycleStartBlockCount: blockCount,
+	});
+	registerBoundary({
+		boundTag: { tag: "card", linkKey: "card" },
+		screenKey: "source",
+		entry: escapeClipping ? { escapeClipping: true } : {},
+	});
+	registerBoundary({
+		boundTag: { tag: "card", linkKey: "card" },
+		screenKey: "destination",
+		entry: {},
+	});
+
+	return {
+		blockCount,
+		pairKey: createScreenPairKey("source", "destination"),
+	};
+};
+
+const measurePairSide = (
+	pairKey: string,
+	type: "source" | "destination",
+	escapeClipping = false,
+) => {
+	applyMeasuredBoundsWrites({
+		entryTag: "card",
+		linkId: "card",
+		currentScreenKey: type,
+		measured,
+		preparedStyles: {},
+		linkWrite: { type, pairKey },
+		escapeClipping,
+	});
 };
 
 beforeEach(() => {
@@ -370,5 +416,69 @@ describe("bounds coordinator", () => {
 		});
 		expect(blockCount.get()).toBe(0);
 		expect(pairs.get()[pairKey]?.links.card?.status).toBe("complete");
+	});
+
+	it("holds an escape-clipping opening until its source portal is ready", () => {
+		const { blockCount, pairKey } = registerPair(true);
+		requestBoundaryMeasurements({
+			pairKey,
+			tag: "card",
+			destination: true,
+			refresh: false,
+		});
+
+		measurePairSide(pairKey, "destination");
+		measurePairSide(pairKey, "source", true);
+
+		expect(blockCount.get()).toBe(1);
+		markBoundaryPortalReady(pairKey, "card");
+		expect(blockCount.get()).toBe(0);
+	});
+
+	it("releases once the destination completes when the portal was ready first", () => {
+		const { blockCount, pairKey } = registerPair(true);
+		requestBoundaryMeasurements({
+			pairKey,
+			tag: "card",
+			destination: true,
+			refresh: false,
+		});
+
+		measurePairSide(pairKey, "source", true);
+		markBoundaryPortalReady(pairKey, "card");
+		expect(blockCount.get()).toBe(1);
+
+		measurePairSide(pairKey, "destination");
+		expect(blockCount.get()).toBe(0);
+	});
+
+	it("requires fresh portal readiness for a refreshed escape-clipping link", () => {
+		const { blockCount, pairKey } = registerPair(true);
+
+		requestBoundaryMeasurements({
+			pairKey,
+			tag: "card",
+			destination: true,
+			refresh: false,
+		});
+		measurePairSide(pairKey, "source", true);
+		measurePairSide(pairKey, "destination");
+		markBoundaryPortalReady(pairKey, "card");
+		expect(blockCount.get()).toBe(0);
+
+		requestBoundaryMeasurements({
+			pairKey,
+			tag: "card",
+			destination: true,
+			refresh: true,
+		});
+		expect(blockCount.get()).toBe(1);
+
+		measurePairSide(pairKey, "source", true);
+		measurePairSide(pairKey, "destination");
+		expect(blockCount.get()).toBe(1);
+
+		markBoundaryPortalReady(pairKey, "card");
+		expect(blockCount.get()).toBe(0);
 	});
 });

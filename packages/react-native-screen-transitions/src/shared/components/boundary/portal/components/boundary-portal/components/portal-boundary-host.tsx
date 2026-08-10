@@ -13,6 +13,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { NO_STYLES } from "../../../../../../constants";
 import { composeSlotStyleWithLocalTransform } from "../../../../../../providers/screen/styles/helpers/compose-slot-style";
+import { markBoundaryPortalReady } from "../../../../../../stores/bounds/internals/coordinator";
 import { NativePortalHost, PORTAL_POINTER_EVENTS } from "../../../teleport";
 import { resolveBoundaryLocalMeasurement } from "../helpers/local-measurement";
 import { resolvePortalOffsetStyle } from "../helpers/offset-style";
@@ -59,6 +60,7 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 			"worklet";
 			if (ready) {
 				host.portalHostReady.set(true);
+				markBoundaryPortalReady(host.pairKey, host.boundaryId);
 			}
 		},
 	);

@@ -137,6 +137,7 @@ export type LinkPairState = {
 	destinationGroupDemands?: Record<GroupKey, true>;
 	refreshingLinks?: Record<LinkKey, true>;
 	blockedDestinations?: Record<LinkKey, true>;
+	portalReadySources?: Record<LinkKey, true>;
 };
 
 export type LinkPairsState = Record<ScreenPairKey, LinkPairState>;

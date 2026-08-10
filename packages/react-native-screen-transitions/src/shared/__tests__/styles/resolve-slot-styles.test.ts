@@ -251,6 +251,7 @@ describe("resolveSlotStyles", () => {
 							},
 							props: {
 								pointerEvents: "none",
+								teleport: true,
 							},
 						},
 					},
@@ -269,6 +270,7 @@ describe("resolveSlotStyles", () => {
 				},
 				props: {
 					pointerEvents: "auto",
+					teleport: false,
 				},
 			});
 			expect(omitted.nextPreviousStyleStatesBySlot).toEqual({});

@@ -30,6 +30,19 @@ export type ScreenSlotContextValue = {
 	visibilityBlocked: SharedValue<boolean>;
 };
 
+const NO_PARENT_SCREEN_KEY = "__no-parent-screen__";
+
+export const useAreAnyBlockingVisibility = () => {
+	const parentScreenKey = useDescriptorsStore(
+		(store) => store.derivations.parentScreenKey,
+	);
+
+	return useScreenSlots(
+		parentScreenKey ?? NO_PARENT_SCREEN_KEY,
+		(store) => store.visibilityBlocked,
+	);
+};
+
 export const { ScreenSlotProvider, useScreenSlotStore: useScreenSlots } =
 	createProvider("ScreenSlot", {
 		guarded: true,
@@ -41,12 +54,13 @@ export const { ScreenSlotProvider, useScreenSlotStore: useScreenSlots } =
 		const currentScreenKey = useDescriptorsStore(
 			(store) => store.derivations.currentScreenKey,
 		);
-		const { animatedStyle, animatedProps, shouldBlockVisibility } =
-			useMaybeBlockVisibility();
+		const ancestorVisibilityBlocked = useAreAnyBlockingVisibility();
+		const { animatedStyle, animatedProps, visibilityBlocked } =
+			useMaybeBlockVisibility({ ancestorVisibilityBlocked });
 
 		const { interpolatorReady, localStylesMaps } = useInterpolatedStylesMap({
 			enabled: true,
-			visibilityBlocked: shouldBlockVisibility,
+			visibilityBlocked,
 		});
 
 		const slotsMap = useResolvedStylesMap({
@@ -57,9 +71,9 @@ export const { ScreenSlotProvider, useScreenSlotStore: useScreenSlots } =
 			() => ({
 				interpolatorReady,
 				slotsMap,
-				visibilityBlocked: shouldBlockVisibility,
+				visibilityBlocked,
 			}),
-			[interpolatorReady, shouldBlockVisibility, slotsMap],
+			[interpolatorReady, slotsMap, visibilityBlocked],
 		);
 		const content = useMemo(
 			() => (

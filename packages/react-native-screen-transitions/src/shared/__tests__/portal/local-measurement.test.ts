@@ -1,5 +1,8 @@
 import { describe, expect, it } from "bun:test";
-import { resolveBoundaryLocalMeasurement } from "../../components/boundary/portal/components/boundary-portal/helpers/local-measurement";
+import {
+	resolveActiveBoundaryPortalPairKey,
+	resolveBoundaryLocalMeasurement,
+} from "../../components/boundary/portal/components/boundary-portal/helpers/local-measurement";
 
 const bounds = {
 	x: 10,
@@ -26,6 +29,32 @@ describe("resolveBoundaryLocalMeasurement", () => {
 				{ bounds, pairKey: "previous<>destination" },
 				"source<>destination",
 			),
+		).toBeNull();
+	});
+});
+
+describe("resolveActiveBoundaryPortalPairKey", () => {
+	const measurement = { bounds, pairKey: "source<>destination" };
+
+	it("keeps the host mounted while the boundary slot is teleporting", () => {
+		expect(
+			resolveActiveBoundaryPortalPairKey(measurement, {
+				props: { teleport: true },
+			}),
+		).toBe(measurement.pairKey);
+	});
+
+	it("prepares the host before the animated slot is published", () => {
+		expect(resolveActiveBoundaryPortalPairKey(measurement, undefined)).toBe(
+			measurement.pairKey,
+		);
+	});
+
+	it("unmounts the host when teleportation settles", () => {
+		expect(
+			resolveActiveBoundaryPortalPairKey(measurement, {
+				props: { teleport: false },
+			}),
 		).toBeNull();
 	});
 });

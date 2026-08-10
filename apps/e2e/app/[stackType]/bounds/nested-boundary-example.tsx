@@ -2,6 +2,7 @@ import { useNavigation } from "@react-navigation/native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import { makeMutable } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";
 import Transition from "react-native-screen-transitions";
@@ -20,6 +21,8 @@ const BOUNDARY_ITEMS = [
 	{ id: "cyan", label: "Cyan", color: "#0891B2" },
 ] as const;
 
+const activeNestedBoundaryId = makeMutable<string>(BOUNDARY_ITEMS[0].id);
+
 type ExampleParams = {
 	groups?: string;
 	id?: string;
@@ -28,12 +31,10 @@ type ExampleParams = {
 
 type NestedBoundaryMeta = {
 	nestedBoundaryGroups?: string;
-	nestedBoundaryId?: string;
 	nestedBoundaryTargetBound?: string;
 };
 
 type NestedBoundaryNavigation = {
-	getParent: () => NestedBoundaryNavigation | undefined;
 	setOptions: (options: { meta: NestedBoundaryMeta }) => void;
 };
 
@@ -66,16 +67,7 @@ export const nestedBoundaryZoomInterpolator: ScreenTransitionConfig["screenStyle
 			getRouteParam(next?.route, "targetBound") ??
 			getRouteParam(current.route, "targetBound") ??
 			getRouteParam(previous?.route, "targetBound");
-		const idParam =
-			active.meta?.nestedBoundaryId ??
-			next?.meta?.nestedBoundaryId ??
-			current.meta?.nestedBoundaryId ??
-			previous?.meta?.nestedBoundaryId ??
-			getRouteParam(active.route, "id") ??
-			getRouteParam(next?.route, "id") ??
-			getRouteParam(current.route, "id") ??
-			getRouteParam(previous?.route, "id");
-		const id = typeof idParam === "string" ? idParam : "violet";
+		const id = activeNestedBoundaryId.get();
 		const group = groups === "true" ? BOUNDARY_GROUP : undefined;
 		const targetBound = targetBoundParam === "true";
 		const boundary = bounds({ id, group });
@@ -118,10 +110,10 @@ export function NestedBoundarySource({
 	const [escapeClipping, setEscapeClipping] = useState(true);
 
 	const openDestination = (id: string) => {
+		activeNestedBoundaryId.set(id);
 		navigation.setOptions({
 			meta: {
 				nestedBoundaryGroups: String(groups),
-				nestedBoundaryId: id,
 				nestedBoundaryTargetBound: String(targetBound),
 			},
 		});
@@ -198,32 +190,16 @@ export function NestedBoundarySource({
 	);
 }
 
-export function NestedBoundaryDestination({
-	title,
-	updateParentRoute = false,
-}: {
-	title: string;
-	updateParentRoute?: boolean | number;
-}) {
+export function NestedBoundaryDestination({ title }: { title: string }) {
 	const theme = useTheme();
 	const params = useLocalSearchParams<ExampleParams>();
-	const navigation = useNavigation() as NestedBoundaryNavigation;
 	const groups = isEnabled(params.groups);
+	const [activeId, setActiveId] = useState(params.id ?? BOUNDARY_ITEMS[0].id);
 	const activeItem =
-		BOUNDARY_ITEMS.find((item) => item.id === params.id) ?? BOUNDARY_ITEMS[0];
+		BOUNDARY_ITEMS.find((item) => item.id === activeId) ?? BOUNDARY_ITEMS[0];
 	const selectBoundary = (id: string) => {
-		router.setParams({ id });
-		if (updateParentRoute) {
-			const parentRouteDepth =
-				typeof updateParentRoute === "number" ? updateParentRoute : 1;
-			let parentNavigation: NestedBoundaryNavigation | undefined = navigation;
-			for (let depth = 0; depth < parentRouteDepth; depth++) {
-				parentNavigation = parentNavigation?.getParent();
-			}
-			parentNavigation?.setOptions({
-				meta: { nestedBoundaryId: id },
-			});
-		}
+		activeNestedBoundaryId.set(id);
+		setActiveId(id);
 	};
 
 	return (
@@ -233,18 +209,28 @@ export function NestedBoundaryDestination({
 		>
 			<ScreenHeader title={title} subtitle="Change the ID, then swipe back" />
 			<View style={styles.destinationContent}>
-				<Transition.Boundary.View
-					id={activeItem.id}
-					group={groups ? BOUNDARY_GROUP : undefined}
-					style={[
-						styles.destinationCard,
-						{ backgroundColor: activeItem.color },
-					]}
-					testID="nested-boundary-destination"
-				>
-					<Text style={styles.cardEyebrow}>DESTINATION</Text>
-					<Text style={styles.cardTitle}>{activeItem.label}</Text>
-				</Transition.Boundary.View>
+				<View style={styles.destinationCardStage}>
+					{BOUNDARY_ITEMS.map((item) => {
+						const active = item.id === activeItem.id;
+						return (
+							<Transition.Boundary.View
+								key={item.id}
+								id={item.id}
+								group={groups ? BOUNDARY_GROUP : undefined}
+								pointerEvents={active ? "auto" : "none"}
+								style={[
+									styles.destinationCard,
+									{ backgroundColor: item.color },
+									!active && styles.inactiveDestinationCard,
+								]}
+								testID={`nested-boundary-destination-${item.id}`}
+							>
+								<Text style={styles.cardEyebrow}>DESTINATION</Text>
+								<Text style={styles.cardTitle}>{item.label}</Text>
+							</Transition.Boundary.View>
+						);
+					})}
+				</View>
 				<View style={styles.idControls}>
 					{BOUNDARY_ITEMS.map((item) => {
 						const active = item.id === activeItem.id;
@@ -310,7 +296,12 @@ const styles = StyleSheet.create({
 	sourceCard2: { width: "58%", alignSelf: "flex-end" },
 	sourceCard3: { width: "72%", alignSelf: "center" },
 	sourceCardTitle: { color: "#FFFFFF", fontSize: 18, fontWeight: "800" },
+	destinationCardStage: {
+		height: 280,
+		width: "100%",
+	},
 	destinationCard: {
+		...StyleSheet.absoluteFillObject,
 		height: 280,
 		width: "100%",
 		borderRadius: 36,
@@ -318,6 +309,9 @@ const styles = StyleSheet.create({
 		padding: 24,
 		justifyContent: "flex-end",
 		overflow: "hidden",
+	},
+	inactiveDestinationCard: {
+		opacity: 0,
 	},
 	cardEyebrow: {
 		color: "rgba(255,255,255,0.72)",
