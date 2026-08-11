@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "bun:test";
 import type { MeasuredDimensions } from "react-native-reanimated";
 import { BoundStore } from "../../stores/bounds";
 import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
+import { pairs } from "../../stores/bounds/internals/state";
 import type { ResolvedTransitionPair } from "../../stores/bounds/types";
 import { createBoundsAccessor } from "../../utils/bounds";
 import { computeBoundStyles } from "../../utils/bounds/helpers/styles/compute";
@@ -160,5 +161,36 @@ describe("visual transform bounds", () => {
 			scaleX: 1,
 			scaleY: 1,
 		});
+	});
+
+	it("requests fresh endpoint measurements before animation styles attach", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		BoundStore.link.setSource(
+			pairKey,
+			"card",
+			"screen-a",
+			createBounds(20, 20, 100, 100),
+		);
+		BoundStore.link.setDestination(
+			pairKey,
+			"card",
+			"screen-b",
+			createBounds(200, 200, 200, 200),
+		);
+		const bounds = createBoundsAccessor(
+			() =>
+				({
+					current: { route: { key: "screen-a" } },
+					next: { route: { key: "screen-b" } },
+					active: { animating: 0, willAnimate: 1 },
+					progress: 2,
+					layouts: { screen: { width: 400, height: 800 } },
+				}) as any,
+		);
+
+		expect(bounds("card").styles()).toEqual({});
+		expect(pairs.get()[pairKey]?.sourceRequests?.card).toBe(true);
+		expect(pairs.get()[pairKey]?.destinationRequests?.card).toBe(true);
+		expect(pairs.get()[pairKey]?.refreshingLinks?.card).toBe(true);
 	});
 });

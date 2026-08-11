@@ -66,12 +66,15 @@ const createBoundsAccessorParts = ({
 			styles: (options?: BoundsComputeOptions): BoundsStyleResult => {
 				"worklet";
 				// Keep the component at its base layout for pre-animation refresh
-				// measurement, then remove generated styles again after settlement.
-				if (!props.active.animating) {
+				// measurement, then remove generated styles again after settlement. The
+				// pre-animation pass still has to reach the bounds coordinator so both
+				// endpoints are captured before generated transforms attach.
+				const shouldRenderStyles = !!props.active.animating;
+				if (!shouldRenderStyles && !props.active.willAnimate) {
 					return NO_STYLES;
 				}
 
-				return prepareBoundStyles({
+				const preparedStyles = prepareBoundStyles({
 					props,
 					options: {
 						...options,
@@ -79,6 +82,8 @@ const createBoundsAccessorParts = ({
 						group: normalizedIdentity.group,
 					},
 				}) as BoundsStyleResult;
+
+				return shouldRenderStyles ? preparedStyles : NO_STYLES;
 			},
 			values: getValues,
 			math: <T extends BoundsComputeOptions = BoundsComputeOptions>(
