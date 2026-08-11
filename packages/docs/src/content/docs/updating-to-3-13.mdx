@@ -1,0 +1,62 @@
+---
+title: "New in 3.13"
+pageTitle: "New in 3.13"
+summary: "v3.13 makes Boundary transitions more predictable across complex navigation structures and reduces work from inactive screen interpolators."
+description: "v3.13 makes Boundary transitions more predictable across complex navigation structures and reduces work from inactive screen interpolators."
+eyebrow: "Changelogs"
+group: "Changelogs"
+hidden: true
+changelogDate: "August 2026"
+order: -4
+to: /changelog/updating-to-3-13
+---
+
+v3.13 makes bounds more global. Matching Boundaries can now coordinate across complex navigation structures without depending on where each Boundary happens to mount.
+
+The result is more predictable transitions across deeply nested navigators, repeated route pushes, dynamic Boundary IDs, and flows where only one side of a bounds transition exists.
+
+## Boundaries across complex navigation
+
+Matching Boundary IDs can now find each other across nested layouts and navigators without extra setup. This includes cases where the source and destination live several navigator levels apart or where the same ID is reused across repeated pushes of the same route.
+
+Source-only transitions, fullscreen and custom targets, and destinations that appear before their source are also handled as normal bounds flows. A matching destination is no longer required before a source can participate.
+
+Bounds transitions also account more reliably for scale and position styles applied directly to a Boundary. Forward and backward transitions refresh their endpoints before animating, keeping them aligned when a Boundary has moved, resized, or changed scale since the previous transition.
+
+Escaped Boundary portals and live handoffs follow the same behavior. Content remains with its current screen until the next destination is ready, reducing flicker during multi-screen push and pop sequences.
+
+## Faster deep stacks
+
+The new bounds architecture avoids repeating as much work across retained screens. In preliminary release-mode profiling on a Pixel 8, deeply repeated pushes no longer accumulated the large transition delay seen with the previous implementation. An equivalent deep-stack run that previously produced repeated UI hangs completed without those hangs after the redesign.
+
+These results are promising, but they are not yet a universal benchmark. More profiling across Android devices, navigators, and real applications is still needed to measure how much performance improves outside the tested bounds-heavy flow.
+
+## Inactive interpolators sleep by default
+
+`stackProgress` can be used to animate every screen in a stack, which previously meant retained screen interpolators could continue updating as the stack grew. This is useful for a small set of coordinated stack effects, but most transitions only need the active, inert, and closing screens.
+
+Fully inactive screen interpolators now sleep by default. For normal navigation flows, leaving them awake provides no visual benefit and makes deep JavaScript stacks do unnecessary work.
+
+If your interpolator intentionally uses `stackProgress` to animate screens more than one level behind the active route, you can keep every screen updating through the stack's `screenOptions`:
+
+```tsx
+<Stack.Navigator
+  screenOptions={{
+    experimental_updateInactiveInterpolators: true,
+  }}
+>
+  {/* screens */}
+</Stack.Navigator>
+```
+
+The option can also be enabled on an individual screen. Most applications should keep the new default.
+
+## More reliable inactive-screen settlement
+
+Inactive presentation now waits for the paint-driving screen's visual progress to settle. This prevents an older screen from being hidden during the final visual frames of a nested transition even when its underlying transition clock has already completed.
+
+## Upgrade notes
+
+No Boundary API migration is required. Existing `id`, `group`, `handoff`, `escapeClipping`, `.styles()`, `.values()`, `.link()`, navigation zoom, and reveal usage keeps the same shape.
+
+If an interpolator relies on `stackProgress` to animate fully inactive routes, enable `experimental_updateInactiveInterpolators` for that screen or navigator.
