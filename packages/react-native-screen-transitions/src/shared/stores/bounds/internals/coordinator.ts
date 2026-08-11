@@ -224,6 +224,7 @@ export function registerBoundary({
 export function unregisterBoundary(boundTag: BoundTag, screenKey: ScreenKey) {
 	"worklet";
 	removeEntry(boundTag.tag, screenKey);
+	if (!boundsScreens.get()[screenKey]) return;
 
 	const state = pairs.get();
 	for (const pairKey in state) {
@@ -380,6 +381,14 @@ export function abandonBoundaryMeasurement(
 ) {
 	"worklet";
 	const linkKey = getLinkKeyFromTag(params.tag);
+	const pair = pairs.get()[params.pairKey];
+	const hasPendingRequest =
+		params.type === "source"
+			? !!pair?.sourceRequests?.[linkKey]
+			: !!pair?.destinationRequests?.[linkKey];
+	const hasDestinationBlock = !!pair?.blockedDestinations?.[linkKey];
+	if (!hasPendingRequest && !hasDestinationBlock) return;
+
 	pairs.modify(<T extends LinkPairsState>(state: T): T => {
 		"worklet";
 		if (params.type === "source") {

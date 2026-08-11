@@ -10,6 +10,7 @@ import {
 	registerScreen,
 	requestBoundaryMeasurements,
 	unregisterBoundary,
+	unregisterScreen,
 } from "../../stores/bounds/internals/coordinator";
 import { boundaryRegistry, pairs } from "../../stores/bounds/internals/state";
 
@@ -364,6 +365,63 @@ describe("bounds coordinator", () => {
 
 		unregisterBoundary({ tag: "card", linkKey: "card" }, "source");
 		expect(blockCount.get()).toBe(0);
+	});
+
+	it("does not rewrite a completed pair when its boundary unmounts", () => {
+		const { pairKey } = registerPair();
+		requestBoundaryMeasurements({
+			pairKey,
+			tag: "card",
+			destination: true,
+			refresh: false,
+		});
+		measurePairSide(pairKey, "destination");
+		measurePairSide(pairKey, "source");
+
+		const originalModify = pairs.modify;
+		let pairWrites = 0;
+		(pairs as any).modify = (...args: Parameters<typeof pairs.modify>) => {
+			pairWrites += 1;
+			return originalModify.apply(pairs, args);
+		};
+
+		try {
+			unregisterBoundary(
+				{ tag: "card", linkKey: "card" },
+				"destination",
+			);
+			expect(pairWrites).toBe(0);
+		} finally {
+			(pairs as any).modify = originalModify;
+		}
+	});
+
+	it("does not rewrite a blocked pair after its screen unregisters", () => {
+		const { pairKey } = registerPair();
+		requestBoundaryMeasurements({
+			pairKey,
+			tag: "card",
+			destination: true,
+			refresh: false,
+		});
+		unregisterScreen("destination");
+
+		const originalModify = pairs.modify;
+		let pairWrites = 0;
+		(pairs as any).modify = (...args: Parameters<typeof pairs.modify>) => {
+			pairWrites += 1;
+			return originalModify.apply(pairs, args);
+		};
+
+		try {
+			unregisterBoundary(
+				{ tag: "card", linkKey: "card" },
+				"destination",
+			);
+			expect(pairWrites).toBe(0);
+		} finally {
+			(pairs as any).modify = originalModify;
+		}
 	});
 
 	it("holds the opening gate until both demanded sides have measured", () => {
