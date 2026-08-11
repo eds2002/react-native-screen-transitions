@@ -181,6 +181,16 @@ export type ScreenTransitionConfig = {
 	screenStyleInterpolator?: ScreenStyleInterpolator;
 
 	/**
+	 * Allows this screen's interpolator to keep updating while the screen is
+	 * inactive. This is useful for flows that intentionally animate screens more
+	 * than one level behind the active route with values such as `stackProgress`.
+	 *
+	 * @experimental This API may change in future versions.
+	 * @default false
+	 */
+	experimental_updateInactiveInterpolators?: boolean;
+
+	/**
 	 * The Reanimated animation config for opening and closing transitions.
 	 */
 	transitionSpec?: TransitionSpec;

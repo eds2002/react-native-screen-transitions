@@ -393,6 +393,7 @@ const sharedGestureSensitivityOptions: ScreenTransitionConfig = {
 };
 const initialMountAnimationOptions: ScreenTransitionConfig = {
 	experimental_animateOnInitialMount: true,
+	experimental_updateInactiveInterpolators: true,
 };
 const disabledGestureTrackingOptions: ScreenTransitionConfig = {
 	gestureEnabled: false,

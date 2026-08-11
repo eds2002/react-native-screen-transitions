@@ -57,13 +57,18 @@ export const { ScreenAnimationProvider, useScreenAnimationStore } =
 					parentContext?.ancestorDescendantScreenAnimationRegistrars,
 			);
 
+			const parentInterpolatorUpdatesEnabled = useParentStore(
+				(parentContext) => parentContext?.interpolatorUpdatesEnabled,
+			);
+
 			const {
+				interpolatorUpdatesEnabled,
 				screenInterpolatorProps,
 				screenInterpolatorPropsRevision,
 				selectedInterpolatorOptions,
 				nextInterpolator,
 				currentInterpolator,
-			} = useScreenAnimationPipeline();
+			} = useScreenAnimationPipeline(parentInterpolatorUpdatesEnabled ?? true);
 
 			const selfScreenAnimationSource = useMemo<ScreenAnimationSource>(
 				() => ({
@@ -206,6 +211,7 @@ export const { ScreenAnimationProvider, useScreenAnimationStore } =
 			return {
 				key: currentScreenKey,
 				value: {
+					interpolatorUpdatesEnabled,
 					screenInterpolatorProps,
 					screenInterpolatorPropsRevision,
 					selectedInterpolatorOptions,
