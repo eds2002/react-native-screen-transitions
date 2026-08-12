@@ -1,0 +1,10 @@
+{
+	"expo": {
+		"name": "Screen Transitions v4 — React Navigation",
+		"slug": "screen-transitions-react-navigation",
+		"version": "1.0.0",
+		"orientation": "portrait",
+		"scheme": "screen-transitions-react-navigation",
+		"userInterfaceStyle": "dark"
+	}
+}

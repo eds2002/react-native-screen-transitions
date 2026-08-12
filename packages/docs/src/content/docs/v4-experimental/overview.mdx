@@ -15,15 +15,17 @@ Use it to build custom push and dismiss animations, gesture-driven screens, snap
 
 ## One navigator, two hosts
 
-v4's Blank Stack is a [Standard Navigator](https://reactnavigation.org/docs/standard-navigator/). The same transition navigator integrates with both React Navigation and Expo Router through host-specific package entry points.
+v4's Blank Stack is a [Standard Navigator](https://reactnavigation.org/docs/standard-navigator/). The same transition navigator integrates with both upstream React Navigation and the forked Expo Router navigation runtime through host-specific package entry points.
 
 Blank Stack is the default choice when Screen Transitions should drive the stack. `withScreenTransitions` remains available as an adapter for one-off animations inside an existing native stack.
 
 <Note>
-  v4 is experimental. Its navigation and bounds APIs may change before the stable release.
+  v4 is alpha software. Its navigation and bounds APIs may change before the stable release. The Expo Router entry point uses Expo's alpha Standard Navigator integration, which is available in Expo SDK 56 and later.
 </Note>
 
 Continue to [Installation](/v4-experimental/installation), then connect your navigator in [Getting Started](/v4-experimental/getting-started).
+
+If you prefer a runnable reference, use the [Expo Router starter](https://github.com/eds2002/react-native-screen-transitions/tree/main/starters/expo-router) or [React Navigation starter](https://github.com/eds2002/react-native-screen-transitions/tree/main/starters/react-navigation).
 
 ## Expo Router
 
@@ -31,21 +33,18 @@ Screen Transitions exports a `BlankStack` that is ready to use in an Expo Router
 
 ```tsx
 // app/_layout.tsx
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Transition from "react-native-screen-transitions";
 import { BlankStack } from "react-native-screen-transitions/expo-router";
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <BlankStack>
-        <BlankStack.Screen name="index" />
-        <BlankStack.Screen
-          name="detail"
-          options={Transition.Presets.SlideFromBottom}
-        />
-      </BlankStack>
-    </GestureHandlerRootView>
+    <BlankStack>
+      <BlankStack.Screen name="index" />
+      <BlankStack.Screen
+        name="detail"
+        options={Transition.Presets.SlideFromBottom()}
+      />
+    </BlankStack>
   );
 }
 ```
@@ -60,7 +59,6 @@ Screen Transitions exports the same Blank Stack for React Navigation through its
 
 ```tsx
 import { NavigationContainer } from "@react-navigation/native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Transition from "react-native-screen-transitions";
 import { createBlankStackNavigator } from "react-native-screen-transitions/react-navigation";
 
@@ -68,18 +66,16 @@ const Stack = createBlankStackNavigator();
 
 export default function App() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <NavigationContainer>
-        <Stack.Navigator>
-          <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen
-            name="Detail"
-            component={DetailScreen}
-            options={Transition.Presets.SlideFromBottom()}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </GestureHandlerRootView>
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen
+          name="Detail"
+          component={DetailScreen}
+          options={Transition.Presets.SlideFromBottom()}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 ```

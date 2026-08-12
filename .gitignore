@@ -23,6 +23,7 @@ expo-env.d.ts
 
 #Bun
 node_modules/
+/starters/*/bun.lock
 
 # OS-specific
 .DS_Store

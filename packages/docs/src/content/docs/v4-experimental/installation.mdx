@@ -9,6 +9,10 @@ order: 2
 to: /installation
 ---
 
+<Note>
+  This installs the v4 alpha. Use this line for Expo Router on Expo SDK 56 or later, or to test the new Standard Navigator integration with React Navigation. Stable v3 remains the supported path for Expo Router on SDK 55 and earlier.
+</Note>
+
 ## Install the package
 
 <CodeBlock
@@ -33,7 +37,8 @@ For Expo projects, let Expo select compatible native versions:
 
 ```bash
 npx expo install react-native-reanimated react-native-worklets \
-  react-native-gesture-handler
+  react-native-gesture-handler react-native-screens \
+  react-native-safe-area-context
 ```
 
 For bare React Native projects:
@@ -143,5 +148,11 @@ For bare React Native projects, install iOS pods after changing native dependenc
 ```bash
 cd ios && pod install
 ```
+
+## Start From A Complete App
+
+The [Expo Router starter](https://github.com/eds2002/react-native-screen-transitions/tree/main/starters/expo-router) and [React Navigation starter](https://github.com/eds2002/react-native-screen-transitions/tree/main/starters/react-navigation) are standalone Expo SDK 56 apps using the published v4 alpha. They keep the navigation hosts separate and include detail, snap-sheet, and paired-boundary zoom examples.
+
+The starter code does not require custom Metro resolution, type aliases, or changes to generated template files. You can start from another compatible Expo template and install the same dependencies.
 
 Continue to [Getting Started](/v4-experimental/getting-started).
