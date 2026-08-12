@@ -172,6 +172,7 @@ export interface PinchTrackState {
 export interface PanReleaseResult {
 	target: number;
 	shouldDismiss: boolean;
+	isCancelled: boolean;
 	initialVelocity: number;
 	commitProgress?: number;
 	transitionSpec: TransitionSpec | undefined;

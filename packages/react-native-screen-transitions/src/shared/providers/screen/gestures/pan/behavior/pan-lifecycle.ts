@@ -109,6 +109,7 @@ export const finalizePanRelease = (
 			: {
 					target: animations.transitionProgress.get(),
 					shouldDismiss: false,
+					isCancelled: true,
 					initialVelocity: 0,
 					transitionSpec: undefined,
 					resetSpec: policy.transitionSpec?.open,

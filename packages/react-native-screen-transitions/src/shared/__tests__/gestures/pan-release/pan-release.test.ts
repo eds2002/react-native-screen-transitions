@@ -68,6 +68,7 @@ const createGestureSnapshotStore = () => ({
 const createSnapRuntime = ({
 	progress = 0.5,
 	baseline = 0.5,
+	targetProgress = baseline,
 	activeGesture = "horizontal-inverted" as ActiveGesture,
 	gestureSnapLocked = false,
 	lockedSnapPoint = 1 as number | null,
@@ -104,6 +105,7 @@ const createSnapRuntime = ({
 			},
 			system: {
 				resolvedAutoSnapPoint: shared(0),
+				targetProgress: shared(targetProgress),
 			},
 			gestures: {
 				active: shared(activeGesture),
@@ -123,6 +125,7 @@ const createRelease = (
 ): PanReleaseResult => ({
 	target: 0,
 	shouldDismiss: true,
+	isCancelled: false,
 	initialVelocity: 4,
 	transitionSpec: undefined,
 	resetSpec: undefined,
@@ -167,9 +170,33 @@ describe("pan release plan", () => {
 		expect(plan.handoffVelocity).toBeCloseTo(0.15, 5);
 	});
 
-	it("resets cancelled gestures with release velocity", () => {
+	it("resets cancelled gestures without release velocity", () => {
 		const plan = buildPanReleasePlan(
-			createRelease({ target: 1, shouldDismiss: false }),
+			createRelease({
+				target: 1,
+				shouldDismiss: false,
+				isCancelled: true,
+			}),
+			createRuntime(),
+			dimensions,
+			rawEvent,
+		);
+
+		expect(plan.progressVelocity).toBe(0);
+		expect(plan.resetVelocityX).toBe(0);
+		expect(plan.resetVelocityY).toBe(0);
+		expect(plan.resetVelocityNormX).toBe(0);
+		expect(plan.resetVelocityNormY).toBe(0);
+		expect(plan.handoffVelocity).toBe(0);
+	});
+
+	it("preserves release velocity for a committed snap", () => {
+		const plan = buildPanReleasePlan(
+			createRelease({
+				target: 0.5,
+				shouldDismiss: false,
+				isCancelled: false,
+			}),
 			createRuntime(),
 			dimensions,
 			rawEvent,
@@ -211,6 +238,7 @@ describe("snap pan release", () => {
 
 		expect(release.target).toBe(1);
 		expect(release.commitProgress).toBe(1);
+		expect(release.isCancelled).toBe(false);
 	});
 
 	it("still snaps back when the live drag has not crossed the midpoint", () => {
@@ -227,6 +255,7 @@ describe("snap pan release", () => {
 
 		expect(release.target).toBe(0.5);
 		expect(release.commitProgress).toBe(0.725);
+		expect(release.isCancelled).toBe(true);
 	});
 
 	it("carries committed progress into the release plan", () => {
