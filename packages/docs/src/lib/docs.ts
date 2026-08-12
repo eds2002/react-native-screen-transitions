@@ -75,7 +75,7 @@ export const docVersions = [
 	{
 		basePath: "/v4-experimental",
 		id: "v4-experimental",
-		label: "v4 (next)",
+		label: "v4 (alpha)",
 	},
 ] as const satisfies ReadonlyArray<DocVersion>;
 

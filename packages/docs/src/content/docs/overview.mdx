@@ -43,6 +43,22 @@ React Native can support smooth, 60 fps transition work across Android and iOS. 
 
 Screen Transitions is a customizable package for building transitions that used to feel out of reach in React Native.
 
+## Navigation Compatibility
+
+These are the supported navigation paths for the stable v3 release:
+
+| Navigation setup | v3 status | Integration |
+| --- | --- | --- |
+| React Navigation 6 or 7 | Supported | Use `react-native-screen-transitions/blank-stack` or the native-stack adapter. |
+| Expo Router on Expo SDK 55 or earlier | Supported | Wrap the v3 blank stack with `withLayoutContext()`. |
+| Expo Router on Expo SDK 56 or later | Not supported by v3 | Use the [v4 alpha Expo Router integration](/v4-experimental/getting-started). |
+
+<Note>
+  Expo SDK 55 is the last Expo Router release that uses the React Navigation-backed integration documented for v3. Expo Router forked the navigation packages it builds upon in SDK 56. See Expo's [SDK 55 to 56 migration guide](https://docs.expo.dev/router/migrate/sdk-55-to-56/) for the upstream change.
+</Note>
+
+Using React Navigation directly is still supported, including inside an Expo app. The SDK 56 boundary applies specifically to Expo Router.
+
 ## Choose A Stack
 
 ### Blank Stack
