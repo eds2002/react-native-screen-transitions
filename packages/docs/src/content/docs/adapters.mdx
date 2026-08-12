@@ -62,7 +62,7 @@ const Stack = withScreenTransitions(NativeStack);
 For Expo Router, wrap the adapted native stack with `withLayoutContext()`:
 
 <Note>
-  Expo SDK 56 changes Expo Router's navigator internals. This package does not currently support SDK 56 without replacing the internal React Navigation imports with Expo Router imports.
+  This v3 adapter supports Expo Router through Expo SDK 55. Expo Router forked its navigation internals in SDK 56, so SDK 56+ apps must use the separate [v4 alpha Expo Router integration](/v4-experimental/getting-started).
 </Note>
 
 ```tsx

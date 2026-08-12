@@ -9,6 +9,20 @@ order: 2
 to: /installation
 ---
 
+## Choose Your Navigation Setup
+
+This page installs the stable v3 release.
+
+| Navigation setup | v3 status | Next step |
+| --- | --- | --- |
+| React Navigation 6 or 7 | Supported | Follow this page, then [Quick Start](/quick-start). |
+| Expo Router on Expo SDK 55 or earlier | Supported | Follow this page, then [Expo Router](/expo-router). |
+| Expo Router on Expo SDK 56 or later | Not supported by v3 | Use the [v4 alpha installation](/v4-experimental/installation). |
+
+<Note>
+  Expo SDK 55 is the final SDK supported by the v3 Expo Router integration. Expo Router changed navigation internals in SDK 56; do not combine an SDK 56+ Expo Router app with the v3 setup below.
+</Note>
+
 ## 1. Install The Package
 
 <CodeBlock
@@ -152,7 +166,7 @@ If this renders and navigates without Reanimated or Gesture Handler errors, the 
 
 ```tsx
 import Transition from "react-native-screen-transitions";
-import { createBlankStackNavigator } from "react-native-screen-transitions/react-navigation";
+import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
 
 const Stack = createBlankStackNavigator();
 
@@ -173,3 +187,12 @@ export function RootNavigator() {
 ```
 
 Then continue to [Quick Start](/quick-start).
+
+## Start From A Complete App
+
+If you are creating a new project, these starters keep the two supported v3 navigation setups separate:
+
+- [v3 Expo Router starter](https://github.com/eds2002/react-native-screen-transitions/tree/main/starters/expo-router) — an Expo SDK 55 app exercising the final Router environment supported by the v3 `withLayoutContext()` integration.
+- [v3 React Navigation starter](https://github.com/eds2002/react-native-screen-transitions/tree/main/starters/react-navigation) — upstream React Navigation with the v3 blank stack.
+
+Both starters show the same detail transition, snap-point sheet, and paired-boundary remote-media zoom, so the only meaningful difference is the navigation host.

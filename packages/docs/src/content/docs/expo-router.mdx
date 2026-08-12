@@ -11,15 +11,19 @@ to: /expo-router
 
 ## Overview
 
-In v3, Expo Router integration wraps `createBlankStackNavigator()` with Expo Router's `withLayoutContext()`.
+The stable v3 Expo Router integration supports Expo SDK 55 and earlier. It wraps `createBlankStackNavigator()` with Expo Router's `withLayoutContext()`, using the React Navigation-backed navigator internals available in those SDKs.
 
 <Note>
-  Looking for Expo SDK 55+ support? See the [v4 documentation](/v4-experimental/getting-started).
+  Expo SDK 55 is the final SDK supported by this v3 integration. Expo Router forked the navigation packages it builds upon in SDK 56. For Expo SDK 56 or later, use the separate [v4 alpha Expo Router integration](/v4-experimental/getting-started).
 </Note>
+
+The SDK 56 boundary applies to Expo Router, not to Expo projects generally. An Expo app using React Navigation directly can continue to use v3. See Expo's [SDK 55 to 56 migration guide](https://docs.expo.dev/router/migrate/sdk-55-to-56/) for details about the upstream import and runtime changes.
+
+If you want a complete reference app before integrating this into an existing project, use the [v3 Expo Router starter](https://github.com/eds2002/react-native-screen-transitions/tree/main/starters/expo-router). It pins Expo SDK 55, the final Expo Router environment supported by the v3 integration and the version used by the v3 e2e app.
 
 ## Blank Stack Layout
 
-This is the pattern from the e2e app:
+This is the v3 integration pattern used by the e2e app and starter:
 
 ```tsx
 // layouts/blank-stack.tsx
@@ -39,7 +43,7 @@ import {
 const { Navigator } = createBlankStackNavigator();
 
 function BlankStackNavigator(props: ComponentProps<typeof Navigator>) {
-  return <Navigator {...props} nativeScreens={false} />;
+  return <Navigator {...props} />;
 }
 
 export const BlankStack = withLayoutContext<
@@ -50,9 +54,7 @@ export const BlankStack = withLayoutContext<
 >(BlankStackNavigator);
 ```
 
-The local wrapper lets your screens use screen options like `screenStyleInterpolator`, `gestureEnabled`, `snapPoints`, and `overlay`.
-
-The blank-stack navigator itself also accepts navigator props like `independent` and `nativeScreens`. The e2e wrapper above pins `nativeScreens={false}`; remove that fixed prop if route layouts should choose the value themselves.
+The local wrapper provides a stable TypeScript boundary for `withLayoutContext()` while forwarding navigator props unchanged. Native screens remain enabled by default.
 
 ## Using It In Route Layouts
 
@@ -97,7 +99,7 @@ The destination can use a matching passive `Transition.Boundary`, `Transition.Bo
 ## Embedded Flows
 
 ```tsx
-<BlankStack independent enableNativeScreens={false}>
+<BlankStack independent nativeScreens={false}>
   <BlankStack.Screen name="index" />
 </BlankStack>
 ```
