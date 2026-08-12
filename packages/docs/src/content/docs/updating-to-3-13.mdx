@@ -55,6 +55,12 @@ The option can also be enabled on an individual screen. Most applications should
 
 Inactive presentation now waits for the paint-driving screen's visual progress to settle. This prevents an older screen from being hidden during the final visual frames of a nested transition even when its underlying transition clock has already completed.
 
+## More predictable locked snap gestures
+
+`gestureSnapLocked` now keeps `animatedSnapIndex` pinned to the current detent while dragging, dismissing, and settling back after a cancelled gesture. A programmatic `snapTo()` issued during that settlement can still take over and animate to its requested snap point.
+
+Cancelled gestures now return to their starting snap point without carrying release velocity into the reset. Swipes that commit to a different snap point keep their velocity, preserving natural momentum between detents while keeping snap-backs soft and controlled.
+
 ## Upgrade notes
 
 No Boundary API migration is required. Existing `id`, `group`, `handoff`, `escapeClipping`, `.styles()`, `.values()`, `.link()`, navigation zoom, and reveal usage keeps the same shape.
