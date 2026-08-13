@@ -1,5 +1,10 @@
 import type { SharedValue } from "react-native-reanimated";
 import {
+	registerWorkletScreen,
+	screenBelongsToScope,
+	unregisterWorkletScreen,
+} from "../../../factories/screen-topology";
+import {
 	ensurePairDestinationRequests,
 	ensurePairGroups,
 	ensurePairLinks,
@@ -20,11 +25,6 @@ import type {
 	TagID,
 } from "../types";
 import { removeEntry, setEntry } from "./entries";
-import {
-	registerBoundsScreen,
-	screenBelongsToScope,
-	unregisterBoundsScreen,
-} from "./screen-graph";
 import { boundaryRegistry, boundsScreens, pairs } from "./state";
 
 type MeasurementRequest = {
@@ -184,11 +184,18 @@ const releaseDestinationBlockWhenReady = (
 export function registerScreen(params: RegisterScreenParams) {
 	"worklet";
 	const node: BoundsScreenNode = {
-		parentScreenKey: params.parentScreenKey,
 		animationProgress: params.animationProgress,
 		pendingLifecycleStartBlockCount: params.pendingLifecycleStartBlockCount,
 	};
-	registerBoundsScreen(params.screenKey, node);
+	registerWorkletScreen({
+		screenKey: params.screenKey,
+		parentScreenKey: params.parentScreenKey,
+	});
+	boundsScreens.modify(<T extends typeof boundsScreens.value>(state: T): T => {
+		"worklet";
+		(state as typeof boundsScreens.value)[params.screenKey] = node;
+		return state;
+	});
 
 	const state = pairs.get();
 	for (const pairKey in state) {
@@ -201,7 +208,12 @@ export function registerScreen(params: RegisterScreenParams) {
 
 export function unregisterScreen(screenKey: ScreenKey) {
 	"worklet";
-	unregisterBoundsScreen(screenKey);
+	unregisterWorkletScreen(screenKey);
+	boundsScreens.modify(<T extends typeof boundsScreens.value>(state: T): T => {
+		"worklet";
+		delete state[screenKey];
+		return state;
+	});
 }
 
 export function registerBoundary({

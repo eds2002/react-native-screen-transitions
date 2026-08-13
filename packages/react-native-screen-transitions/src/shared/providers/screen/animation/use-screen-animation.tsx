@@ -4,7 +4,7 @@ import type {
 	ScreenInterpolationProps,
 	ScreenTransitionTarget,
 } from "../../../types/animation.types";
-import { useScreenAnimationStore } from "./animation.provider";
+import { useOptionalScreenAnimationStore } from "./animation.provider";
 import { useBuildTransitionAccessor } from "./helpers/accessors/use-build-transition-accessor";
 import { readScreenAnimationRevisions } from "./helpers/read-screen-animation-revisions";
 import type {
@@ -35,32 +35,28 @@ export function useScreenAnimation(
 	| DerivedValue<ScreenInterpolationProps>
 	| DerivedValue<ScreenInterpolationProps | null> {
 	const route = useRoute();
-	const screenAnimationStore = useScreenAnimationStore(route.key);
+	const localAnimationStore = useOptionalScreenAnimationStore();
+	const keyedAnimationStore = useOptionalScreenAnimationStore(
+		localAnimationStore ? null : route.key,
+	);
+	const screenAnimationStore = localAnimationStore ?? keyedAnimationStore;
 
 	if (!screenAnimationStore) {
 		throw new Error(
-			`ScreenAnimation store for route "${route.key}" was not found`,
+			`ScreenAnimationStore is unavailable for route "${route.key}"`,
 		);
 	}
 
-	const {
-		screenInterpolatorPropsRevision,
-		ancestorScreenAnimationSources,
-		descendantScreenAnimationSources,
-	} = screenAnimationStore;
+	const { transitionSources, transitionOriginIndex } = screenAnimationStore;
 	const transition = useBuildTransitionAccessor(screenAnimationStore);
 	const transitionTarget = normalizeScreenAnimationTarget(
 		target,
-		ancestorScreenAnimationSources.length,
+		transitionOriginIndex,
 	);
 
 	const animation = useDerivedValue<ScreenInterpolationProps | null>(() => {
 		"worklet";
-		readScreenAnimationRevisions(
-			screenInterpolatorPropsRevision,
-			ancestorScreenAnimationSources,
-			descendantScreenAnimationSources,
-		);
+		readScreenAnimationRevisions(transitionSources);
 		return transition(transitionTarget);
 	});
 

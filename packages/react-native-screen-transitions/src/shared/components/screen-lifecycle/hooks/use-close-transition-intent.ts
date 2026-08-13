@@ -2,11 +2,9 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import { useNavigationHelpers } from "../../../hooks/navigation/use-navigation-helpers";
 import useStableCallback from "../../../hooks/use-stable-callback";
 import { hasTransitionsEnabled } from "../../../providers/screen/animation/helpers/has-transitions-enabled";
-import {
-	type BaseDescriptor,
-	useDescriptorsStore,
-} from "../../../providers/screen/descriptors";
-import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
+import type { BaseDescriptor } from "../../../providers/screen/descriptors";
+import { useCurrentScreenRelationships } from "../../../providers/screen/use-current-screen-relationships";
+import { useOptionalBlankStackStore } from "../../../providers/stack/blank-stack.provider";
 import { useStackCoreStore } from "../../../providers/stack/core.provider";
 import { GestureStore } from "../../../stores/gesture.store";
 import { StackType } from "../../../types/stack.types";
@@ -24,18 +22,16 @@ export function useCloseTransitionIntent(current: BaseDescriptor): {
 	completeClose: () => void;
 } {
 	const routeKey = current.route.key;
+	const flags = useStackCoreStore((store) => store.flags);
 	const { STACK_TYPE: stackType, TRANSITIONS_ALWAYS_ON: transitionsAlwaysOn } =
-		useStackCoreStore((store) => store.flags);
-	const handleCloseRoute = useBlankStackStore(
+		flags;
+	const handleCloseRoute = useOptionalBlankStackStore(
 		(store) => store?.handleCloseRoute,
 	);
-	const isBlankStackClosing = useBlankStackStore(
+	const isBlankStackClosing = useOptionalBlankStackStore(
 		(store) => store?.scenesByKey[routeKey]?.activity === "closing",
 	);
-	const ancestorKeys = useDescriptorsStore(
-		(store) => store.derivations.ancestorKeys,
-	);
-	const parentScreenKey = ancestorKeys[0];
+	const { parentScreenKey } = useCurrentScreenRelationships();
 	const { dismissScreen, requestDismiss } = useNavigationHelpers();
 	const pendingActionRef = useRef<any>(null);
 

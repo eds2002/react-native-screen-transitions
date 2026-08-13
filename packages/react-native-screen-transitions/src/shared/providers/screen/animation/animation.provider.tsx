@@ -1,16 +1,10 @@
-import { type ReactNode, useCallback, useLayoutEffect, useMemo } from "react";
-import { useSharedValue } from "react-native-reanimated";
+import { type ReactNode, useMemo } from "react";
 import { createBoundsAccessor } from "../../../utils/bounds";
 import createProvider from "../../../utils/create-provider";
 import { useDescriptorsStore } from "../descriptors";
+import { useCurrentScreenRelationships } from "../use-current-screen-relationships";
 import { useScreenAnimationPipeline } from "./helpers/pipeline";
-import type {
-	RegisterScreenAnimationDescendant,
-	ScreenAnimationAncestorDescendantRegistrar,
-	ScreenAnimationDescendantSources,
-	ScreenAnimationSource,
-	ScreenAnimationTransitionSource,
-} from "./types";
+import type { ScreenAnimationTransitionSource } from "./types";
 
 type Props = {
 	children: ReactNode;
@@ -19,209 +13,76 @@ type Props = {
 export type ScreenAnimationContextValue = ReturnType<
 	typeof useScreenAnimationPipeline
 > & {
-	ancestorScreenAnimationSources: ScreenAnimationSource[];
-	descendantScreenAnimationSources: ScreenAnimationDescendantSources;
-	registerDescendantScreenAnimationSource: RegisterScreenAnimationDescendant;
-	ancestorDescendantScreenAnimationRegistrars: ScreenAnimationAncestorDescendantRegistrar[];
+	transitionSources: readonly ScreenAnimationTransitionSource[];
+	transitionOriginIndex: number;
+	transitionSourcesThroughSelf: readonly ScreenAnimationTransitionSource[];
+	transitionSourcesFromSelf: readonly ScreenAnimationTransitionSource[];
 };
 
-export type ScreenAnimationContextResult = {
-	key: string;
-	value: ScreenAnimationContextValue;
-};
+const EMPTY_TRANSITION_SOURCES: readonly ScreenAnimationTransitionSource[] = [];
 
-export const { ScreenAnimationProvider, useScreenAnimationStore } =
-	createProvider("ScreenAnimation", {
-		guarded: true,
-		global: true,
-	})<Props, ScreenAnimationContextValue>(
-		(_props, { useParentStore }): ScreenAnimationContextResult => {
-			const currentScreenKey = useDescriptorsStore(
-				(store) => store.derivations.currentScreenKey,
-			);
-			const parentScreenInterpolatorProps = useParentStore(
-				(parentContext) => parentContext?.screenInterpolatorProps,
-			);
-			const parentScreenInterpolatorPropsRevision = useParentStore(
-				(parentContext) => parentContext?.screenInterpolatorPropsRevision,
-			);
-			const parentAncestorScreenAnimationSources = useParentStore(
-				(parentContext) => parentContext?.ancestorScreenAnimationSources,
-			);
-			const parentRegisterDescendantScreenAnimationSource = useParentStore(
-				(parentContext) =>
-					parentContext?.registerDescendantScreenAnimationSource,
-			);
-			const parentAncestorDescendantScreenAnimationRegistrars = useParentStore(
-				(parentContext) =>
-					parentContext?.ancestorDescendantScreenAnimationRegistrars,
-			);
+const createScreenAnimationProvider = createProvider("ScreenAnimation", {
+	global: true,
+})<Props, ScreenAnimationContextValue>;
 
-			const parentInterpolatorUpdatesEnabled = useParentStore(
-				(parentContext) => parentContext?.interpolatorUpdatesEnabled,
-			);
+export const {
+	ScreenAnimationProvider,
+	useOptionalScreenAnimationStore,
+	useScreenAnimationStore,
+}: ReturnType<typeof createScreenAnimationProvider> =
+	createScreenAnimationProvider((_props) => {
+		const currentScreenKey = useDescriptorsStore(
+			(store) => store.derivations.currentScreenKey,
+		);
+		const relationships = useCurrentScreenRelationships();
+		const pipeline = useScreenAnimationPipeline();
 
-			const {
-				interpolatorUpdatesEnabled,
-				screenInterpolatorProps,
-				screenInterpolatorPropsRevision,
-				selectedInterpolatorOptions,
-				nextInterpolator,
-				currentInterpolator,
-			} = useScreenAnimationPipeline(parentInterpolatorUpdatesEnabled ?? true);
-
-			const selfScreenAnimationSource = useMemo<ScreenAnimationSource>(
-				() => ({
-					screenInterpolatorProps,
-					screenInterpolatorPropsRevision,
+		const screenAnimationSource = useMemo<ScreenAnimationTransitionSource>(
+			() => ({
+				screenInterpolatorProps: pipeline.screenInterpolatorProps,
+				screenInterpolatorPropsRevision:
+					pipeline.screenInterpolatorPropsRevision,
+				boundsAccessor: createBoundsAccessor(() => {
+					"worklet";
+					return pipeline.screenInterpolatorProps.get();
 				}),
-				[screenInterpolatorProps, screenInterpolatorPropsRevision],
-			);
+			}),
+			[
+				pipeline.screenInterpolatorProps,
+				pipeline.screenInterpolatorPropsRevision,
+			],
+		);
+		const ancestorSources =
+			useOptionalScreenAnimationStore(
+				relationships.parentScreenKey,
+				(store) => store.transitionSourcesThroughSelf,
+			) ?? EMPTY_TRANSITION_SOURCES;
+		const descendantSources =
+			useOptionalScreenAnimationStore(
+				relationships.activeChildScreenKey,
+				(store) => store.transitionSourcesFromSelf,
+			) ?? EMPTY_TRANSITION_SOURCES;
+		const transitionSourcesThroughSelf = useMemo(
+			() => [...ancestorSources, screenAnimationSource],
+			[ancestorSources, screenAnimationSource],
+		);
+		const transitionSourcesFromSelf = useMemo(
+			() => [screenAnimationSource, ...descendantSources],
+			[screenAnimationSource, descendantSources],
+		);
+		const transitionSources = useMemo(
+			() => [...transitionSourcesThroughSelf, ...descendantSources],
+			[transitionSourcesThroughSelf, descendantSources],
+		);
 
-			const selfScreenAnimationTransitionSource =
-				useMemo<ScreenAnimationTransitionSource>(
-					() => ({
-						...selfScreenAnimationSource,
-						boundsAccessor: createBoundsAccessor(() => {
-							"worklet";
-							return selfScreenAnimationSource.screenInterpolatorProps.get();
-						}),
-					}),
-					[selfScreenAnimationSource],
-				);
-
-			const descendantScreenAnimationSources = useSharedValue<
-				ScreenAnimationDescendantSources["value"]
-			>([]);
-
-			const registerDescendantScreenAnimationSource =
-				useCallback<RegisterScreenAnimationDescendant>(
-					(source, depth) => {
-						descendantScreenAnimationSources.modify(
-							<T extends ScreenAnimationDescendantSources["value"]>(
-								currentSources: T,
-							): T => {
-								"worklet";
-								const existingIndex = currentSources.findIndex(
-									(currentSource) => currentSource.source === source,
-								);
-
-								if (
-									existingIndex !== -1 &&
-									currentSources[existingIndex]?.depth === depth
-								) {
-									return currentSources;
-								}
-
-								const nextSources =
-									existingIndex === -1
-										? [...currentSources, { source, depth }]
-										: currentSources.map((currentSource, index) =>
-												index === existingIndex
-													? { source, depth }
-													: currentSource,
-											);
-
-								return nextSources.sort((a, b) => a.depth - b.depth) as T;
-							},
-						);
-
-						return () => {
-							descendantScreenAnimationSources.modify(
-								<T extends ScreenAnimationDescendantSources["value"]>(
-									currentSources: T,
-								): T => {
-									"worklet";
-									return currentSources.filter(
-										(currentSource) => currentSource.source !== source,
-									) as T;
-								},
-							);
-						};
-					},
-					[descendantScreenAnimationSources],
-				);
-
-			const ancestorScreenAnimationSources = useMemo(() => {
-				if (
-					!parentScreenInterpolatorProps ||
-					!parentScreenInterpolatorPropsRevision ||
-					!parentAncestorScreenAnimationSources
-				) {
-					return [];
-				}
-
-				return [
-					{
-						screenInterpolatorProps: parentScreenInterpolatorProps,
-						screenInterpolatorPropsRevision:
-							parentScreenInterpolatorPropsRevision,
-					},
-					...parentAncestorScreenAnimationSources,
-				];
-			}, [
-				parentScreenInterpolatorProps,
-				parentScreenInterpolatorPropsRevision,
-				parentAncestorScreenAnimationSources,
-			]);
-
-			const ancestorDescendantScreenAnimationRegistrars = useMemo(() => {
-				if (!parentRegisterDescendantScreenAnimationSource) {
-					return [];
-				}
-
-				// Each provider exposes its own descendant registrar and forwards ancestor
-				// registrars, letting a mounted child register with every ancestor scope.
-				return [
-					{
-						register: parentRegisterDescendantScreenAnimationSource,
-						depth: 1,
-					},
-					...(parentAncestorDescendantScreenAnimationRegistrars ?? []).map(
-						(registrar) => ({
-							register: registrar.register,
-							depth: registrar.depth + 1,
-						}),
-					),
-				];
-			}, [
-				parentRegisterDescendantScreenAnimationSource,
-				parentAncestorDescendantScreenAnimationRegistrars,
-			]);
-
-			useLayoutEffect(() => {
-				const cleanups = ancestorDescendantScreenAnimationRegistrars.map(
-					(registrar) =>
-						registrar.register(
-							selfScreenAnimationTransitionSource,
-							registrar.depth,
-						),
-				);
-
-				return () => {
-					for (const cleanup of cleanups) {
-						cleanup();
-					}
-				};
-			}, [
-				ancestorDescendantScreenAnimationRegistrars,
-				selfScreenAnimationTransitionSource,
-			]);
-
-			return {
-				key: currentScreenKey,
-				value: {
-					interpolatorUpdatesEnabled,
-					screenInterpolatorProps,
-					screenInterpolatorPropsRevision,
-					selectedInterpolatorOptions,
-					nextInterpolator,
-					currentInterpolator,
-					ancestorScreenAnimationSources,
-					descendantScreenAnimationSources,
-					registerDescendantScreenAnimationSource,
-					ancestorDescendantScreenAnimationRegistrars,
-				},
-			};
-		},
-	);
+		return {
+			key: currentScreenKey,
+			value: {
+				...pipeline,
+				transitionSources,
+				transitionOriginIndex: ancestorSources.length,
+				transitionSourcesThroughSelf,
+				transitionSourcesFromSelf,
+			},
+		};
+	});

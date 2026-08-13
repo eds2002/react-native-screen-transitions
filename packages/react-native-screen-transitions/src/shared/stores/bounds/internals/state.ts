@@ -38,5 +38,5 @@ export const boundaryRegistry = makeMutable<BoundaryEntriesState>({});
  */
 export const pairs = makeMutable<LinkPairsState>({});
 
-/** Stable ownership graph used to match leaf boundaries to transition roots. */
+/** Bounds-only runtime values keyed by screen. Relationships live in topology. */
 export const boundsScreens = makeMutable<BoundsScreenState>({});

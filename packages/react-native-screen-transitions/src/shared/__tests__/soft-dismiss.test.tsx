@@ -74,7 +74,12 @@ mock.module("@react-navigation/native", () => ({
 
 mock.module("../providers/screen/descriptors", () => ({
 	useDescriptorsStore: (selector: (store: any) => unknown) =>
-		selector({ current, derivations: { ancestorKeys: [] } }),
+		selector({
+			current,
+			derivations: {
+				currentScreenKey: route.key,
+			},
+		}),
 }));
 
 mock.module("../hooks/navigation/use-stack", () => ({
@@ -83,7 +88,7 @@ mock.module("../hooks/navigation/use-stack", () => ({
 }));
 
 mock.module("../providers/stack/blank-stack.provider", () => ({
-	useBlankStackStore: (selector: (stack: any) => unknown) =>
+	useOptionalBlankStackStore: (selector: (stack: any) => unknown) =>
 		selector({
 			handleCloseRoute: () => {
 				blankCloseCount += 1;

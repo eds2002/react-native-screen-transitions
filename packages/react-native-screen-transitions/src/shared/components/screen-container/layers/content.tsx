@@ -1,10 +1,9 @@
-/** biome-ignore-all lint/style/noNonNullAssertion: <Screen gesture is under the gesture context, so this will always exist.> */
 import { type ComponentType, memo, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../providers/screen/descriptors";
-import { useGestureStore } from "../../../providers/screen/gestures";
+import { useScreenGestureStore } from "../../../providers/screen/gestures";
 import { useSlotProps, useSlotStyles } from "../../../providers/screen/styles";
 import type { ScreenContentComponentProps } from "../../../types";
 import { ScreenFallbackHost } from "../../boundary/portal/components/boundary-portal/components/host";
@@ -21,7 +20,7 @@ type Props = {
 
 export const ContentLayer = memo(
 	({ children, pointerEvents, isBackdropActive }: Props) => {
-		const gestureContext = useGestureStore();
+		const gestureContext = useScreenGestureStore();
 		const ContentComponent = useDescriptorsStore(
 			(store) => store.options.contentComponent,
 		);
@@ -71,7 +70,7 @@ export const ContentLayer = memo(
 		);
 
 		return (
-			<GestureDetector gesture={gestureContext!.detectorGesture}>
+			<GestureDetector gesture={gestureContext.detectorGesture}>
 				{AnimatedContentComponent ? (
 					<AnimatedContentComponent
 						style={contentStyles}

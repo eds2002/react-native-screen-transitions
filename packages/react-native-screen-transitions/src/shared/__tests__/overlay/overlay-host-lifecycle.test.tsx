@@ -35,7 +35,7 @@ let stackState: {
 const useScreenAnimationStore = (key: string) =>
 	animationStores.get(key) ?? null;
 
-const useScreenSlots = <Selected,>(
+const useScreenSlotStore = <Selected,>(
 	key: string,
 	selector?: (store: ScreenSlotContextValue) => Selected,
 ) => {
@@ -64,15 +64,18 @@ mock.module("@react-navigation/native", () => ({
 }));
 
 mock.module("../../providers/screen/animation/animation.provider", () => ({
+	useOptionalScreenAnimationStore: useScreenAnimationStore,
 	useScreenAnimationStore,
 }));
 
 mock.module("../../providers/screen/animation", () => ({
+	useOptionalScreenAnimationStore: useScreenAnimationStore,
 	useScreenAnimationStore,
 }));
 
 mock.module("../../providers/screen/styles/slot.provider", () => ({
-	useScreenSlots,
+	useOptionalScreenSlotStore: useScreenSlotStore,
+	useScreenSlotStore,
 }));
 
 mock.module("../../components/overlay/hooks/use-overlay-slot", () => ({
@@ -97,19 +100,29 @@ const shared = <T,>(value: T) => ({
 	modify: () => {},
 });
 
-const createAnimationStore = (routeKey: string) =>
-	({
-		screenInterpolatorProps: shared({
+const createAnimationStore = (routeKey: string) => {
+	const screenInterpolatorProps = shared({
 			current: {
 				route: { key: routeKey, name: routeKey },
 				layouts: { screen: { width: 390, height: 844 } },
 			},
 			stackProgress: 1,
-		}),
-		screenInterpolatorPropsRevision: shared(0),
-		ancestorScreenAnimationSources: [],
-		descendantScreenAnimationSources: shared([]),
-	}) as unknown as ScreenAnimationContextValue;
+		});
+	const screenInterpolatorPropsRevision = shared(0);
+
+	return {
+		screenInterpolatorProps,
+		screenInterpolatorPropsRevision,
+		transitionSources: [
+			{
+				screenInterpolatorProps,
+				screenInterpolatorPropsRevision,
+				boundsAccessor: {},
+			},
+		],
+		transitionOriginIndex: 0,
+	} as unknown as ScreenAnimationContextValue;
+};
 
 const createSlotStore = (opacity = 0.5) =>
 	({

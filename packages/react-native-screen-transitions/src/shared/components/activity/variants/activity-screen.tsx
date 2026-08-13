@@ -27,46 +27,39 @@ const PointerEventsByActivity = {
 } satisfies Record<StackSceneActivity, ViewProps["pointerEvents"]>;
 
 interface ActivityScreenProps {
-	activity?: StackSceneActivity;
 	children: React.ReactNode;
 	inactiveBehavior?: InactiveBehavior;
 	paintDriverRouteKey?: string;
 	hasNestedState?: boolean;
-	routeKey?: string;
+	routeKey: string;
 }
 
 export const ActivityScreen = memo(function ActivityScreen({
-	activity,
 	children,
 	inactiveBehavior,
 	paintDriverRouteKey,
 	hasNestedState,
 	routeKey,
 }: ActivityScreenProps) {
-	const stackActivity = useBlankStackStore((store) =>
-		routeKey ? store?.scenesByKey[routeKey]?.activity : undefined,
+	const activity = useBlankStackStore(
+		(store) =>
+			(store.scenesByKey[routeKey] as (typeof store.scenes)[number]).activity,
 	);
-	const stackInactiveBehavior = useBlankStackStore((store) =>
-		routeKey
-			? (
-					store?.scenesByKey[routeKey]?.descriptor.options as
-						| { inactiveBehavior?: InactiveBehavior }
-						| undefined
-				)?.inactiveBehavior
-			: undefined,
+	const stackInactiveBehavior = useBlankStackStore(
+		(store) =>
+			(
+				store.scenesByKey[routeKey]?.descriptor.options as
+					| { inactiveBehavior?: InactiveBehavior }
+					| undefined
+			)?.inactiveBehavior,
 	);
-	const stackRoute = useBlankStackStore((store) =>
-		routeKey ? store?.scenesByKey[routeKey]?.route : undefined,
+	const stackRoute = useBlankStackStore(
+		(store) => store.scenesByKey[routeKey]?.route,
 	);
 	const stackPaintDriverRouteKey = useBlankStackStore((store) => {
-		if (!routeKey || !store) {
-			return undefined;
-		}
-
 		const routeIndex = store.routeKeys.indexOf(routeKey);
 		return store.routeKeys[routeIndex + 2];
 	});
-	const resolvedActivity = activity ?? stackActivity ?? "active";
 	const resolvedInactiveBehavior =
 		inactiveBehavior ?? stackInactiveBehavior ?? DEFAULT_INACTIVE_BEHAVIOR;
 	const resolvedPaintDriverRouteKey =
@@ -97,13 +90,13 @@ export const ActivityScreen = memo(function ActivityScreen({
 
 	const isPaintDriverSettledOnJS = useSharedValueState(isPaintDriverSettled);
 
-	let activityState: ActivityState = ActivityStateByActivity[resolvedActivity];
+	let activityState: ActivityState = ActivityStateByActivity[activity];
 	let shouldFreeze = false;
-	let visible = resolvedActivity !== "inactive";
+	let visible = activity !== "inactive";
 
 	const shouldWaitForPaintDriver = !isPaintDriverSettledOnJS;
 
-	if (resolvedActivity === "inactive") {
+	if (activity === "inactive") {
 		if (resolvedInactiveBehavior === "keep") {
 			activityState = 1;
 			visible = true;
@@ -127,11 +120,11 @@ export const ActivityScreen = memo(function ActivityScreen({
 
 	const shouldUnmount =
 		resolvedInactiveBehavior === "unmount" &&
-		resolvedActivity === "inactive" &&
+		activity === "inactive" &&
 		!resolvedHasNestedState &&
 		isPaintDriverSettledOnJS;
 
-	const pointerEvents = PointerEventsByActivity[resolvedActivity];
+	const pointerEvents = PointerEventsByActivity[activity];
 
 	if (shouldUnmount) {
 		return null;

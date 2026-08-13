@@ -67,7 +67,7 @@ describe("prevented removal", () => {
 		const config = resolveScreenGestureConfig({
 			options: { gestureEnabled: true },
 			isFirstKey: false,
-			gestureContext: null,
+			ancestorGestures: [],
 			isRemovePrevented: true,
 		});
 

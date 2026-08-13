@@ -1,7 +1,7 @@
 import { useIsFocused } from "@react-navigation/native";
 import { useAnimatedProps, useSharedValue } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../../../../providers/screen/descriptors";
-import { useScreenSlots } from "../../../../../../providers/screen/styles";
+import { useScreenSlotStore } from "../../../../../../providers/screen/styles";
 import { pairs } from "../../../../../../stores/bounds/internals/state";
 import { useBoundaryRootStore } from "../../../../providers/boundary-root.provider";
 import { PORTAL_HOST_NAME_RESET_VALUE } from "../../../utils/naming";
@@ -18,10 +18,6 @@ export const useBoundaryPortalAttachment = ({
 	boundaryId,
 }: UseBoundaryPortalAttachmentParams) => {
 	const localMeasurement = useBoundaryRootStore((root) => {
-		if (!root) {
-			throw new Error("Boundary portal attachment requires a boundary root.");
-		}
-
 		return root.localMeasurement;
 	});
 	const currentScreenKey = useDescriptorsStore(
@@ -31,7 +27,7 @@ export const useBoundaryPortalAttachment = ({
 	// A leaf that is still selected in its own one-screen stack becomes unfocused
 	// when any ancestor route is covered.
 	const focused = useIsFocused();
-	const { slotsMap } = useScreenSlots();
+	const slotsMap = useScreenSlotStore((store) => store.slotsMap);
 	const portalHostName = useSharedValue<string | null>(null);
 	const portalHostReady = useSharedValue<string | null>(null);
 	const escapeHostKey = useActiveHostKey(currentScreenKey);

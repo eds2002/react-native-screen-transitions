@@ -71,15 +71,18 @@ export const NO_DIRECTION_CLAIMS: DirectionClaimMap = {
 	"horizontal-inverted": null,
 };
 
-export interface GestureContextType {
+export interface ScreenGestureSource {
 	routeKey: string;
 	detectorGesture: ComposedGesture;
 	panGesture: PanGesture;
 	pinchGesture: PinchGesture;
 	scrollState: SharedValue<ScrollGestureState | null>;
-	gestureContext: GestureContextType | null;
 	claimedDirections: ClaimedDirections;
 	childDirectionClaims: SharedValue<DirectionClaimMap>;
+}
+
+export interface GestureContextType extends ScreenGestureSource {
+	ancestorGestures: readonly ScreenGestureSource[];
 }
 
 export interface ScreenGestureParticipation {

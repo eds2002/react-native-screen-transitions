@@ -7,11 +7,11 @@ import { StyleSheet, View } from "react-native";
 import Animated, { useDerivedValue } from "react-native-reanimated";
 import { snapDescriptorToIndex } from "../../../animation/snap-to";
 import { useStack } from "../../../hooks/navigation/use-stack";
-import { useScreenAnimationStore } from "../../../providers/screen/animation";
+import { useOptionalScreenAnimationStore } from "../../../providers/screen/animation";
 import type { ScreenAnimationContextValue } from "../../../providers/screen/animation/animation.provider";
 import {
 	type ScreenSlotContextValue,
-	useScreenSlots,
+	useOptionalScreenSlotStore,
 } from "../../../providers/screen/styles/slot.provider";
 import type { OverlayProps } from "../../../types/overlay.types";
 import type {
@@ -39,12 +39,16 @@ export const OverlayHost = memo(function OverlayHost({
 	activity,
 	layerIndex,
 }: OverlayHostProps) {
-	const overlayAnimationStore = useScreenAnimationStore(scene.route.key);
-	const driverAnimationStore = useScreenAnimationStore(driverScene.route.key);
-	const previousOverlayAnimationStore = useScreenAnimationStore(
+	const overlayAnimationStore = useOptionalScreenAnimationStore(
+		scene.route.key,
+	);
+	const driverAnimationStore = useOptionalScreenAnimationStore(
+		driverScene.route.key,
+	);
+	const previousOverlayAnimationStore = useOptionalScreenAnimationStore(
 		previousOverlayScene?.route.key ?? scene.route.key,
 	);
-	const driverSlots = useScreenSlots(driverScene.route.key);
+	const driverSlots = useOptionalScreenSlotStore(driverScene.route.key);
 	const overlayComponentRef = useRef(scene.descriptor.options.overlay);
 	const OverlayComponent = overlayComponentRef.current;
 	const readyResourcesRef = useRef<ReadyOverlayResources | null>(null);

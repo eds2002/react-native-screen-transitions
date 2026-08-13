@@ -1,7 +1,10 @@
 import { useAnimatedProps, useSharedValue } from "react-native-reanimated";
 import { useStack } from "../../../../../../hooks/navigation/use-stack";
 import { useDescriptorsStore } from "../../../../../../providers/screen/descriptors";
-import { useScreenSlots } from "../../../../../../providers/screen/styles";
+import {
+	useOptionalScreenSlotStore,
+	useScreenSlotStore,
+} from "../../../../../../providers/screen/styles";
 import { hasCloseTransitionFinished } from "../../../../../../providers/screen/styles/helpers/transition-visual-state";
 import { AnimationStore } from "../../../../../../stores/animation.store";
 import { getLinkKeyFromTag } from "../../../../../../stores/bounds/helpers/link-pairs.helpers";
@@ -26,7 +29,7 @@ interface UseBoundaryContentPortalAttachmentParams {
 export const useBoundaryContentPortalAttachment = ({
 	boundaryId,
 }: UseBoundaryContentPortalAttachmentParams) => {
-	const { slotsMap } = useScreenSlots();
+	const slotsMap = useScreenSlotStore((store) => store.slotsMap);
 
 	const currentScreenKey = useDescriptorsStore(
 		(s) => s.derivations.currentScreenKey,
@@ -43,7 +46,7 @@ export const useBoundaryContentPortalAttachment = ({
 	const resolvedSourcePairKey = sourcePairKey ?? transitionSourcePairKey;
 	const resolvedDestinationScreenKey =
 		nextScreenKey ?? transitionDestinationScreenKey;
-	const destinationSlots = useScreenSlots(
+	const destinationSlots = useOptionalScreenSlotStore(
 		resolvedDestinationScreenKey ?? currentScreenKey,
 	);
 	const unavailableInterpolatorReady = useSharedValue(0);

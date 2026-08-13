@@ -1,4 +1,5 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
+import { screenBelongsToScope } from "../../../factories/screen-topology";
 import {
 	createGroupTag,
 	ensurePairGroups,
@@ -23,7 +24,6 @@ import type {
 	TagID,
 	TagLink,
 } from "../types";
-import { screenBelongsToScope } from "./screen-graph";
 import { pairs } from "./state";
 
 const syncLinkStatus = (link: TagLink) => {

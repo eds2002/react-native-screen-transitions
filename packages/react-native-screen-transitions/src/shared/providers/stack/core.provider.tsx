@@ -45,7 +45,6 @@ const StackCoreRoot = memo(function StackCoreRoot({
 
 export const { StackCoreProvider, useStackCoreStore } = createProvider(
 	"StackCore",
-	{ guarded: true },
 )<StackCoreProviderProps, StackCoreContextValue>(({ config, children }) => {
 	const {
 		TRANSITIONS_ALWAYS_ON = false,

@@ -8,6 +8,7 @@ import type {
 import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
 import createProvider from "../../../utils/create-provider";
 import { useDescriptorsStore } from "../descriptors";
+import { useCurrentScreenRelationships } from "../use-current-screen-relationships";
 import { useInterpolatedStylesMap } from "./hooks/use-interpolated-style-maps";
 import { useMaybeBlockVisibility } from "./hooks/use-maybe-block-visibility";
 import { useResolvedStylesMap } from "./hooks/use-resolved-slot-style-map";
@@ -30,33 +31,32 @@ export type ScreenSlotContextValue = {
 	visibilityBlocked: SharedValue<boolean>;
 };
 
-const NO_PARENT_SCREEN_KEY = "__no-parent-screen__";
+const createScreenSlotProvider = createProvider("ScreenSlot", {
+	global: true,
+})<Props, ScreenSlotContextValue>;
 
-export const useAreAnyBlockingVisibility = () => {
-	const parentScreenKey = useDescriptorsStore(
-		(store) => store.derivations.parentScreenKey,
-	);
-
-	return useScreenSlots(
-		parentScreenKey ?? NO_PARENT_SCREEN_KEY,
-		(store) => store.visibilityBlocked,
-	);
-};
-
-export const { ScreenSlotProvider, useScreenSlotStore: useScreenSlots } =
-	createProvider("ScreenSlot", {
-		guarded: true,
-		global: true,
-	})<Props, ScreenSlotContextValue>(({ children }, { useParentStore }) => {
-		const ancestorStylesMap = useParentStore(
-			(parentContext) => parentContext?.slotsMap,
-		);
+export const {
+	ScreenSlotProvider,
+	useOptionalScreenSlotStore,
+	useScreenSlotStore,
+}: ReturnType<typeof createScreenSlotProvider> = createScreenSlotProvider(
+	({ children }) => {
 		const currentScreenKey = useDescriptorsStore(
 			(store) => store.derivations.currentScreenKey,
 		);
-		const ancestorVisibilityBlocked = useAreAnyBlockingVisibility();
+		const { parentScreenKey } = useCurrentScreenRelationships();
+		const ancestorStylesMap = useOptionalScreenSlotStore(
+			parentScreenKey,
+			(store) => store.slotsMap,
+		);
+		const ancestorVisibilityBlocked = useOptionalScreenSlotStore(
+			parentScreenKey,
+			(store) => store.visibilityBlocked,
+		);
 		const { animatedStyle, animatedProps, visibilityBlocked } =
-			useMaybeBlockVisibility({ ancestorVisibilityBlocked });
+			useMaybeBlockVisibility({
+				ancestorVisibilityBlocked: ancestorVisibilityBlocked ?? null,
+			});
 
 		const { interpolatorReady, localStylesMaps } = useInterpolatedStylesMap({
 			enabled: true,
@@ -65,7 +65,7 @@ export const { ScreenSlotProvider, useScreenSlotStore: useScreenSlots } =
 
 		const slotsMap = useResolvedStylesMap({
 			localStylesMaps,
-			ancestorStylesMap,
+			ancestorStylesMap: ancestorStylesMap ?? undefined,
 		});
 		const value = useMemo(
 			() => ({
@@ -92,7 +92,8 @@ export const { ScreenSlotProvider, useScreenSlotStore: useScreenSlots } =
 			value,
 			children: content,
 		};
-	});
+	},
+);
 
 const styles = StyleSheet.create({
 	container: { flex: 1 },

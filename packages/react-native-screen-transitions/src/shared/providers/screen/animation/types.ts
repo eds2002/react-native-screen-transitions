@@ -15,30 +15,8 @@ export type ScreenAnimationTarget =
 	| ScreenTransitionTarget
 	| ScreenAnimationLegacyTarget;
 
-export type ScreenAnimationSource = {
+export type ScreenAnimationTransitionSource = {
 	screenInterpolatorProps: SharedValue<ScreenInterpolatorFrame>;
 	screenInterpolatorPropsRevision: ScreenInterpolatorPropsRevision;
-};
-
-export type ScreenAnimationTransitionSource = ScreenAnimationSource & {
 	boundsAccessor: BoundsAccessor;
-};
-
-export type ScreenAnimationDescendantSource = {
-	source: ScreenAnimationTransitionSource;
-	depth: number;
-};
-
-export type ScreenAnimationDescendantSources = SharedValue<
-	ScreenAnimationDescendantSource[]
->;
-
-export type RegisterScreenAnimationDescendant = (
-	source: ScreenAnimationTransitionSource,
-	depth: number,
-) => () => void;
-
-export type ScreenAnimationAncestorDescendantRegistrar = {
-	register: RegisterScreenAnimationDescendant;
-	depth: number;
 };

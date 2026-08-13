@@ -3,7 +3,7 @@ import type { View } from "react-native";
 import { useWindowDimensions } from "react-native";
 import type { AnimatedRef, StyleProps } from "react-native-reanimated";
 import { applyMeasuredBoundsWrites } from "../../../providers/helpers/measured-bounds-writes";
-import { useScreenSlots } from "../../../providers/screen/styles";
+import { useScreenSlotStore } from "../../../providers/screen/styles";
 import type { BoundTag } from "../../../stores/bounds/types";
 import { ScrollStore } from "../../../stores/scroll.store";
 import { getVisibilityBlockOffset } from "../../../utils/visibility-block-offset";
@@ -41,7 +41,8 @@ export const useMeasurer = ({
 
 	const scrollState = ScrollStore.getValue(currentScreenKey, "coordination");
 	const scrollMetadata = ScrollStore.getValue(currentScreenKey, "metadata");
-	const { visibilityBlocked } = useScreenSlots();
+	const screenSlotStore = useScreenSlotStore();
+	const { visibilityBlocked } = screenSlotStore;
 
 	return useCallback(
 		(target) => {

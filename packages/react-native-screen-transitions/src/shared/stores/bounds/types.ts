@@ -143,7 +143,6 @@ export type LinkPairState = {
 export type LinkPairsState = Record<ScreenPairKey, LinkPairState>;
 
 export type BoundsScreenNode = {
-	parentScreenKey?: ScreenKey;
 	animationProgress: SharedValue<number>;
 	pendingLifecycleStartBlockCount: SharedValue<number>;
 };

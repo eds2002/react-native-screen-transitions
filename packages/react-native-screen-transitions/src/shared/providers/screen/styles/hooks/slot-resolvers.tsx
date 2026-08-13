@@ -6,14 +6,21 @@ import {
 	composeSlotStyleWithLocalTransform,
 	getLocalTransformForSlotComposition,
 } from "../helpers/compose-slot-style";
-import { useScreenSlots } from "../slot.provider";
+import { useOptionalScreenSlotStore } from "../slot.provider";
 
 const useCurrentScreenSlotsMap = () => {
 	const route = useRoute();
-	const slotsMap = useScreenSlots(route.key, (store) => store.slotsMap);
+	const localSlotsMap = useOptionalScreenSlotStore(
+		(store) => store?.slotsMap ?? null,
+	);
+	const keyedSlotsMap = useOptionalScreenSlotStore(
+		localSlotsMap ? null : route.key,
+		(store) => store.slotsMap,
+	);
+	const slotsMap = localSlotsMap ?? keyedSlotsMap;
 
 	if (!slotsMap) {
-		throw new Error(`ScreenSlot store for route "${route.key}" was not found`);
+		throw new Error(`ScreenSlotStore is unavailable for route "${route.key}"`);
 	}
 
 	return slotsMap;

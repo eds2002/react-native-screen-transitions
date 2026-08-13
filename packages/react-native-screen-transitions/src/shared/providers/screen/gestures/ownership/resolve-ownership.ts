@@ -16,7 +16,6 @@ import type { DirectionClaim } from "../types";
  */
 interface AncestorClaimsContext {
 	claimedDirections: ClaimedDirections;
-	gestureContext: AncestorClaimsContext | null;
 }
 
 /**
@@ -31,12 +30,12 @@ interface AncestorClaimsContext {
  * used in worklets since it's a plain object.
  *
  * @param selfClaims - The directions claimed by the current screen
- * @param gestureContext - The gesture context chain (can be null if no ancestors)
+ * @param ancestors - Nearest-first ancestor gesture values from screen topology.
  * @returns Ownership status for all four directions
  */
 export function resolveOwnership(
 	selfClaims: ClaimedDirections,
-	gestureContext: AncestorClaimsContext | null,
+	ancestors: readonly AncestorClaimsContext[],
 ): DirectionOwnership {
 	const result: DirectionOwnership = { ...NO_OWNERSHIP };
 
@@ -44,7 +43,7 @@ export function resolveOwnership(
 		result[direction] = resolveDirectionOwnership(
 			direction,
 			selfClaims,
-			gestureContext,
+			ancestors,
 		);
 	}
 
@@ -57,7 +56,7 @@ export function resolveOwnership(
 function resolveDirectionOwnership(
 	direction: Direction,
 	selfClaims: ClaimedDirections,
-	gestureContext: AncestorClaimsContext | null,
+	ancestors: readonly AncestorClaimsContext[],
 ): OwnershipStatus {
 	// Check self first
 	if (selfClaims[direction]) {
@@ -65,12 +64,10 @@ function resolveDirectionOwnership(
 	}
 
 	// Walk ancestors looking for a claim
-	let ancestor = gestureContext;
-	while (ancestor) {
+	for (const ancestor of ancestors) {
 		if (ancestor.claimedDirections?.[direction]) {
 			return "ancestor";
 		}
-		ancestor = ancestor.gestureContext;
 	}
 
 	// No one claims this direction

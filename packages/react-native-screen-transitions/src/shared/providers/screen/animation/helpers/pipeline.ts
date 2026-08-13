@@ -23,7 +23,6 @@ import { buildScreenTransitionOptions } from "./build-screen-transition-options"
 import { updateDerivations } from "./derivations";
 import { hasTransitionsEnabled } from "./has-transitions-enabled";
 import { hydrateTransitionState } from "./hydrate-transition-state";
-import { shouldUpdateScreenInterpolator } from "./interpolator-participation";
 import type { SelectedInterpolatorOptions } from "./selected-interpolator-options";
 import { resolveStackProgress } from "./stack-progress";
 import { useBuildTransitionState } from "./use-build-transition-state";
@@ -35,7 +34,6 @@ export type ScreenInterpolatorFrame = Omit<
 >;
 
 interface ScreenAnimationPipeline {
-	interpolatorUpdatesEnabled: boolean;
 	screenInterpolatorProps: SharedValue<ScreenInterpolatorFrame>;
 	screenInterpolatorPropsRevision: DerivedValue<number>;
 	selectedInterpolatorOptions: SharedValue<SelectedInterpolatorOptions>;
@@ -275,9 +273,7 @@ const hydrateInterpolatorFrame = <TFrame extends ScreenInterpolatorFrame>({
 	return frame;
 };
 
-export function useScreenAnimationPipeline(
-	parentInterpolatorUpdatesEnabled = true,
-): ScreenAnimationPipeline {
+export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 	const transitionsAlwaysOn = useStack(
 		(stack) => stack.flags.TRANSITIONS_ALWAYS_ON,
 	);
@@ -287,17 +283,6 @@ export function useScreenAnimationPipeline(
 	const currDescriptor = useDescriptorsStore((store) => store.current);
 	const nextDescriptor = useDescriptorsStore((store) => store.next);
 	const prevDescriptor = useDescriptorsStore((store) => store.previous);
-	const currentActivity = useStack((stack) => {
-		const routeIndex = stack.routeKeys.indexOf(currDescriptor.route.key);
-		return stack.scenes[routeIndex]?.activity;
-	});
-	const interpolatorUpdatesEnabled =
-		parentInterpolatorUpdatesEnabled &&
-		shouldUpdateScreenInterpolator(
-			currentActivity ?? "active",
-			currDescriptor.options.experimental_updateInactiveInterpolators === true,
-		);
-
 	const currentAnimation = useBuildTransitionState(currDescriptor);
 	const nextAnimation = useBuildTransitionState(nextDescriptor);
 	const prevAnimation = useBuildTransitionState(prevDescriptor);
@@ -326,50 +311,38 @@ export function useScreenAnimationPipeline(
 		});
 
 	const propsRevisionState = useSharedValue({ value: 0 });
-	const screenInterpolatorPropsRevision = useDerivedValue<number>(
-		interpolatorUpdatesEnabled
-			? () => {
-					"worklet";
-					screenInterpolatorProps.modify((frame) => {
-						"worklet";
-						const interpolatorOptions = selectedInterpolatorOptions.get();
-						return hydrateInterpolatorFrame({
-							frame,
-							dimensions,
-							insets,
-							currentAnimation,
-							nextAnimation,
-							prevAnimation,
-							nextHasTransitions,
-							interpolatorOptions,
-						});
-					}, false);
+	const screenInterpolatorPropsRevision = useDerivedValue<number>(() => {
+		"worklet";
+		screenInterpolatorProps.modify((frame) => {
+			"worklet";
+			const interpolatorOptions = selectedInterpolatorOptions.get();
+			return hydrateInterpolatorFrame({
+				frame,
+				dimensions,
+				insets,
+				currentAnimation,
+				nextAnimation,
+				prevAnimation,
+				nextHasTransitions,
+				interpolatorOptions,
+			});
+		}, false);
 
-					// Critical reactive dependency for `screenInterpolatorProps`.
-					//
-					// `screenInterpolatorProps` is mutated in place to avoid allocating a large
-					// interpolator frame every tick. Consumers must read this revision before
-					// reading `screenInterpolatorProps`, otherwise Reanimated may not subscribe
-					// to frame updates and can observe stale transition state.
-					propsRevisionState.modify((revision) => {
-						"worklet";
-						revision.value += 1;
-						return revision;
-					}, false);
+		// `screenInterpolatorProps` is mutated in place. Consumers read this
+		// revision first so Reanimated subscribes to the hydrated frame.
+		propsRevisionState.modify((revision) => {
+			"worklet";
+			revision.value += 1;
+			return revision;
+		}, false);
 
-					return propsRevisionState.get().value;
-				}
-			: () => {
-					"worklet";
-					return propsRevisionState.get().value;
-				},
-	);
+		return propsRevisionState.get().value;
+	});
 
 	const nextInterpolator = nextDescriptor?.options.screenStyleInterpolator;
-	const currentInterpolator = currDescriptor?.options.screenStyleInterpolator;
+	const currentInterpolator = currDescriptor.options.screenStyleInterpolator;
 
 	return {
-		interpolatorUpdatesEnabled,
 		screenInterpolatorProps,
 		screenInterpolatorPropsRevision,
 		selectedInterpolatorOptions,
