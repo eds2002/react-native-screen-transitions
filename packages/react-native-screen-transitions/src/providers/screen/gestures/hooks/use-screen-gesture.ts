@@ -2,8 +2,7 @@ import {
 	type ChainTarget,
 	resolveChainTarget,
 } from "../../../../utils/resolve-chain-target";
-import { useGestureStore } from "../gestures.provider";
-import { walkGestureAncestors } from "../shared/ancestors";
+import { useOptionalScreenGestureStore } from "../gestures.provider";
 
 export type ScreenGestureTarget = ChainTarget;
 
@@ -21,13 +20,13 @@ export type ScreenGestureTarget = ChainTarget;
  * ```
  */
 export const useScreenGesture = (target?: ScreenGestureTarget) => {
-	const ctx = useGestureStore();
+	const ctx = useOptionalScreenGestureStore();
 
 	return (
 		resolveChainTarget({
 			target,
 			self: ctx,
-			ancestors: walkGestureAncestors(ctx?.gestureContext),
+			ancestors: ctx?.ancestorGestures ?? [],
 		})?.panGesture ?? null
 	);
 };

@@ -1,19 +1,18 @@
 import type { SharedValue } from "react-native-reanimated";
 import type { Direction } from "../../../../types/ownership.types";
-import { walkGestureAncestors } from "../shared/ancestors";
 import type {
-	GestureContextType,
 	PanGesture,
 	PinchGesture,
+	ScreenGestureSource,
 	ScrollGestureAxis,
 	ScrollGestureState,
 } from "../types";
 
 /** Walks up the gesture tree until it finds the owner for a specific direction. */
 function findGestureOwnerForDirection(
-	ancestors: GestureContextType[],
+	ancestors: readonly ScreenGestureSource[],
 	direction: Direction,
-): GestureContextType | null {
+): ScreenGestureSource | null {
 	for (const ancestor of ancestors) {
 		if (ancestor.claimedDirections?.[direction]) return ancestor;
 	}
@@ -28,8 +27,10 @@ const getDirectionsForAxis = (
 		? ["vertical", "vertical-inverted"]
 		: ["horizontal", "horizontal-inverted"];
 
-const collectAncestorPinchGestures = (ancestors: GestureContextType[]) => {
-	const pinchGestures: GestureContextType["pinchGesture"][] = [];
+const collectAncestorPinchGestures = (
+	ancestors: readonly ScreenGestureSource[],
+) => {
+	const pinchGestures: ScreenGestureSource["pinchGesture"][] = [];
 
 	for (const ancestor of ancestors) {
 		if (!pinchGestures.includes(ancestor.pinchGesture)) {
@@ -41,12 +42,12 @@ const collectAncestorPinchGestures = (ancestors: GestureContextType[]) => {
 };
 
 const collectAxisOwners = (
-	ancestors: GestureContextType[],
+	ancestors: readonly ScreenGestureSource[],
 	directions: readonly [Direction, Direction],
 ) => {
-	const seenOwners: GestureContextType[] = [];
-	const panGestures: GestureContextType["panGesture"][] = [];
-	const scrollStates: GestureContextType["scrollState"][] = [];
+	const seenOwners: ScreenGestureSource[] = [];
+	const panGestures: ScreenGestureSource["panGesture"][] = [];
+	const scrollStates: ScreenGestureSource["scrollState"][] = [];
 	const ownerRouteKeys: string[] = [];
 
 	for (const direction of directions) {
@@ -73,10 +74,9 @@ interface WalkUpScrollGestureCoordinationResult {
 }
 
 export function walkUpScrollGestureCoordination(
-	context: GestureContextType | null,
+	ancestors: readonly ScreenGestureSource[],
 	axis: ScrollGestureAxis,
 ): WalkUpScrollGestureCoordinationResult {
-	const ancestors = walkGestureAncestors(context);
 	const axisOwners = collectAxisOwners(ancestors, getDirectionsForAxis(axis));
 
 	return {

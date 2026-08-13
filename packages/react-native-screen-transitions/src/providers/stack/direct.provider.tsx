@@ -23,7 +23,7 @@ type DirectStackStoreProviderProps = {
 };
 
 const { DirectStackProvider: DirectStackStoreProvider, useDirectStackStore } =
-	createProvider("DirectStack", { guarded: true })<
+	createProvider("DirectStack")<
 		DirectStackStoreProviderProps,
 		DirectStackContextValue
 	>(({ children, value }) => ({ children, value }));

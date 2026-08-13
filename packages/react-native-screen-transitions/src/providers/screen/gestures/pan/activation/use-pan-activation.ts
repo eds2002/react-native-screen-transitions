@@ -9,6 +9,7 @@ import { GestureActivationState } from "../../../../../types/gesture.types";
 import type { Direction } from "../../../../../types/ownership.types";
 import { useDescriptorsStore } from "../../../descriptors";
 import type { ScreenOptionsContextValue } from "../../../options";
+import { useCurrentScreenRelationships } from "../../../use-current-screen-relationships";
 import { resolvePanRuntime } from "../../shared/runtime";
 import type {
 	DirectionClaimMap,
@@ -39,9 +40,7 @@ export const usePanActivation = ({
 	const currentScreenKey = useDescriptorsStore(
 		(store) => store.derivations.currentScreenKey,
 	);
-	const parentScreenKey = useDescriptorsStore(
-		(store) => store.derivations.parentScreenKey,
-	);
+	const { parentScreenKey } = useCurrentScreenRelationships();
 
 	const ancestorDismissing = useMemo(() => {
 		if (!parentScreenKey) return null;

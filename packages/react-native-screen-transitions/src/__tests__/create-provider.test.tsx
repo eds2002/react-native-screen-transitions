@@ -11,18 +11,55 @@ type TestProviderProps = {
 	value: number;
 };
 
-const { TestProvider, useTestStore } = createProvider("Test", {
-	guarded: true,
+let injectedFactoryArgument: unknown;
+const testProviderFactory = createProvider("Test", { global: true })<
+	TestProviderProps,
+	{ value: number }
+>(({ children, id, value }, ...injectedArguments: unknown[]) => {
+	injectedFactoryArgument = injectedArguments[0];
+
+	return {
+		children,
+		key: id,
+		value: { value },
+	};
+});
+const { TestProvider, useOptionalTestStore, useTestStore } = testProviderFactory;
+
+const parentObservations: Record<string, number | null> = {};
+const { PathProvider, useOptionalPathStore } = createProvider("Path", {
 	global: true,
-})<TestProviderProps, { value: number }>(({ children, id, value }) => ({
-	children,
-	key: id,
-	value: { value },
-}));
+})<TestProviderProps, { value: number }>(
+	({ children, id, value }) => {
+		parentObservations[id] = useOptionalPathStore(
+			(store) => store?.value ?? null,
+		);
+		return { children, key: id, value: { value } };
+	},
+);
 
 describe("createProvider global stores", () => {
+	it("returns the provider plus strict and optional store hooks", () => {
+		expect(Object.keys(testProviderFactory).sort()).toEqual([
+			"TestProvider",
+			"useOptionalTestStore",
+			"useTestStore",
+		]);
+	});
+
+	it("does not inject a hidden read primitive into the provider factory", () => {
+		let renderer: ReactTestRenderer;
+
+		act(() => {
+			renderer = create(<TestProvider id="local" value={7} />);
+		});
+
+		expect(injectedFactoryArgument).toBeUndefined();
+		act(() => renderer.unmount());
+	});
+
 	it("preserves local context selectors", () => {
-		let observed = 0;
+		let observed: number | null = null;
 		let renderer: ReactTestRenderer;
 
 		function Reader() {
@@ -42,12 +79,49 @@ describe("createProvider global stores", () => {
 		act(() => renderer.unmount());
 	});
 
-	it("reads a provider store by key outside its context", () => {
+	it("throws when the strict store hook has no surrounding provider", () => {
+		function Reader() {
+			useTestStore((store) => store.value);
+			return null;
+		}
+
+		expect(() => {
+			act(() => {
+				create(<Reader />);
+			});
+		}).toThrow("TestStore is unavailable");
+	});
+
+	it("reads a nullable surrounding provider through the optional hook", () => {
+		const observed: Array<number | null> = [];
+		let renderer: ReactTestRenderer;
+
+		function Reader() {
+			observed.push(useOptionalTestStore((store) => store?.value ?? null));
+			return null;
+		}
+
+		act(() => {
+			renderer = create(
+			<>
+				<Reader />
+				<TestProvider id="parent" value={7}>
+					<Reader />
+				</TestProvider>
+			</>,
+			);
+		});
+
+		expect(observed).toEqual([null, 7]);
+		act(() => renderer.unmount());
+	});
+
+	it("reads a provider store by key outside its context after registration", () => {
 		let observed: number | null = null;
 		let renderer: ReactTestRenderer;
 
 		function Reader() {
-			observed = useTestStore("screen-a", (store) => store.value);
+			observed = useOptionalTestStore("screen-a", (store) => store.value);
 			return null;
 		}
 
@@ -64,33 +138,12 @@ describe("createProvider global stores", () => {
 		act(() => renderer.unmount());
 	});
 
-	it("resolves a keyed read from its matching local provider immediately", () => {
-		const observed: Array<number | null> = [];
-		let renderer: ReactTestRenderer;
-
-		function Reader() {
-			observed.push(useTestStore("screen-a", (store) => store.value));
-			return null;
-		}
-
-		act(() => {
-			renderer = create(
-				<TestProvider id="screen-a" value={1}>
-					<Reader />
-				</TestProvider>,
-			);
-		});
-
-		expect(observed).toEqual([1]);
-		act(() => renderer.unmount());
-	});
-
-	it("does not resolve a keyed read from an unrelated local provider", () => {
+	it("returns null from an optional keyed read with no matching provider", () => {
 		let observed: number | null = 1;
 		let renderer: ReactTestRenderer;
 
 		function Reader() {
-			observed = useTestStore("screen-b", (store) => store.value);
+			observed = useOptionalTestStore("screen-b", (store) => store.value);
 			return null;
 		}
 
@@ -106,12 +159,29 @@ describe("createProvider global stores", () => {
 		act(() => renderer.unmount());
 	});
 
-	it("isolates keyed stores and forwards updates from their providers", () => {
+	it("throws when a strict keyed read has no matching provider", () => {
+		function Reader() {
+			useTestStore("screen-b", (store) => store.value);
+			return null;
+		}
+
+		expect(() => {
+			act(() => {
+				create(
+					<TestProvider id="screen-a" value={1}>
+						<Reader />
+					</TestProvider>,
+				);
+			});
+		}).toThrow("TestStore is unavailable for key \"screen-b\"");
+	});
+
+	it("isolates keyed stores and subscribes to provider updates", () => {
 		const observed: Record<string, number | null> = {};
 		let renderer: ReactTestRenderer;
 
 		function Reader({ id }: { id: string }) {
-			observed[id] = useTestStore(id, (store) => store.value);
+			observed[id] = useOptionalTestStore(id, (store) => store.value);
 			return null;
 		}
 
@@ -138,42 +208,18 @@ describe("createProvider global stores", () => {
 		act(() => renderer.unmount());
 	});
 
-	it("does not let stale cleanup remove a newer store with the same key", () => {
-		let observed: number | null = null;
+	it("reads the surrounding provider during nested provider construction", () => {
 		let renderer: ReactTestRenderer;
 
-		function Reader() {
-			observed = useTestStore("shared", (store) => store.value);
-			return null;
-		}
-
-		const renderTree = (showFirst: boolean, showSecond: boolean) => (
-			<>
-				{showFirst ? (
-					<TestProvider key="first" id="shared" value={1} />
-				) : null}
-				{showSecond ? (
-					<TestProvider key="second" id="shared" value={2} />
-				) : null}
-				<Reader />
-			</>
-		);
-
 		act(() => {
-			renderer = create(renderTree(true, true));
+			renderer = create(
+				<PathProvider id="parent" value={7}>
+					<PathProvider id="child" value={8} />
+				</PathProvider>,
+			);
 		});
-		expect(observed).toBe(2);
 
-		act(() => {
-			renderer.update(renderTree(false, true));
-		});
-		expect(observed).toBe(2);
-
-		act(() => {
-			renderer.update(renderTree(false, false));
-		});
-		expect(observed).toBeNull();
-
+		expect(parentObservations).toMatchObject({ parent: null, child: 7 });
 		act(() => renderer.unmount());
 	});
 });

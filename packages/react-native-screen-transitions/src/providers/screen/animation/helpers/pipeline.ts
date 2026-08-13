@@ -283,7 +283,6 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 	const currDescriptor = useDescriptorsStore((store) => store.current);
 	const nextDescriptor = useDescriptorsStore((store) => store.next);
 	const prevDescriptor = useDescriptorsStore((store) => store.previous);
-
 	const currentAnimation = useBuildTransitionState(currDescriptor);
 	const nextAnimation = useBuildTransitionState(nextDescriptor);
 	const prevAnimation = useBuildTransitionState(prevDescriptor);
@@ -329,12 +328,8 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 			});
 		}, false);
 
-		// Critical reactive dependency for `screenInterpolatorProps`.
-		//
-		// `screenInterpolatorProps` is mutated in place to avoid allocating a large
-		// interpolator frame every tick. Consumers must read this revision before
-		// reading `screenInterpolatorProps`, otherwise Reanimated may not subscribe
-		// to frame updates and can observe stale transition state.
+		// `screenInterpolatorProps` is mutated in place. Consumers read this
+		// revision first so Reanimated subscribes to the hydrated frame.
 		propsRevisionState.modify((revision) => {
 			"worklet";
 			revision.value += 1;
@@ -345,7 +340,7 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 	});
 
 	const nextInterpolator = nextDescriptor?.options.screenStyleInterpolator;
-	const currentInterpolator = currDescriptor?.options.screenStyleInterpolator;
+	const currentInterpolator = currDescriptor.options.screenStyleInterpolator;
 
 	return {
 		screenInterpolatorProps,

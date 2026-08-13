@@ -10,15 +10,14 @@ import {
 	type BaseDescriptor,
 	useDescriptorsStore,
 } from "../../../screen/descriptors";
-import { useBlankStackStore } from "../../../stack/blank-stack.provider";
-import { useGestureStore } from "../gestures.provider";
-import { walkGestureAncestors } from "../shared/ancestors";
+import { useOptionalBlankStackStore } from "../../../stack/blank-stack.provider";
+import { useScreenGestureStore } from "../gestures.provider";
 import { resolveScreenGestureConfig } from "../shared/policy";
-import type { GestureContextType } from "../types";
+import type { ScreenGestureSource } from "../types";
 import { resolveShadowingClaimDirections } from "./shadowing-claims";
 
 type ShadowedAncestor = {
-	ancestor: GestureContextType;
+	ancestor: ScreenGestureSource;
 	directions: Direction[];
 };
 
@@ -40,15 +39,15 @@ const findShadowedDirections = (
 };
 
 const findShadowedAncestors = (
-	parentContext: GestureContextType | null,
+	ancestorGestures: readonly ScreenGestureSource[],
 	claimedDirections: ClaimedDirections,
 ) => {
-	if (!parentContext) {
+	if (ancestorGestures.length === 0) {
 		return NO_SHADOWED_ANCESTORS;
 	}
 
 	const ancestors: ShadowedAncestor[] = [];
-	for (const ancestor of walkGestureAncestors(parentContext)) {
+	for (const ancestor of ancestorGestures) {
 		const directions = findShadowedDirections(
 			claimedDirections,
 			ancestor.claimedDirections,
@@ -107,7 +106,7 @@ const getDescriptorIsFirstKey = (descriptor: BaseDescriptor): boolean => {
 
 const getDescriptorClaimedDirections = (
 	descriptor: BaseDescriptor | undefined,
-	gestureContext: GestureContextType | null,
+	ancestorGestures: readonly ScreenGestureSource[],
 ): ClaimedDirections => {
 	if (!descriptor) {
 		return NO_CLAIMS;
@@ -116,32 +115,20 @@ const getDescriptorClaimedDirections = (
 	return resolveScreenGestureConfig({
 		options: descriptor.options,
 		isFirstKey: getDescriptorIsFirstKey(descriptor),
-		gestureContext,
+		ancestorGestures,
 	}).participation.claimedDirections;
 };
 
-const requireGestureContext = (
-	gestureContext: GestureContextType | null,
-): GestureContextType => {
-	if (!gestureContext) {
-		throw new Error(
-			"GestureOwnershipBridge must be rendered within a ScreenGestureProvider",
-		);
-	}
-
-	return gestureContext;
-};
-
 function ActiveGestureOwnershipBridge() {
-	const gestureContext = requireGestureContext(useGestureStore());
+	const gestureContext = useScreenGestureStore();
 	const previous = useDescriptorsStore((store) => store.previous);
-	const isCurrentScreenClosing = useBlankStackStore(
+	const isCurrentScreenClosing = useOptionalBlankStackStore(
 		(store) =>
 			store?.scenesByKey[gestureContext.routeKey]?.activity === "closing",
 	);
 	const {
 		claimedDirections,
-		gestureContext: parentContext,
+		ancestorGestures,
 		routeKey: currentScreenKey,
 	} = gestureContext;
 	const effectiveClaimedDirections = useMemo(
@@ -151,14 +138,14 @@ function ActiveGestureOwnershipBridge() {
 				currentClaimedDirections: claimedDirections,
 				previousClaimedDirections: getDescriptorClaimedDirections(
 					previous,
-					parentContext,
+					ancestorGestures,
 				),
 			}),
-		[isCurrentScreenClosing, claimedDirections, previous, parentContext],
+		[isCurrentScreenClosing, claimedDirections, previous, ancestorGestures],
 	);
 	const shadowedAncestors = useMemo(
-		() => findShadowedAncestors(parentContext, effectiveClaimedDirections),
-		[parentContext, effectiveClaimedDirections],
+		() => findShadowedAncestors(ancestorGestures, effectiveClaimedDirections),
+		[ancestorGestures, effectiveClaimedDirections],
 	);
 
 	useLayoutEffect(() => {

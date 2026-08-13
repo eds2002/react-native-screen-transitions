@@ -13,7 +13,7 @@ import {
 import { BoundaryPortal } from "../portal/components/boundary-portal";
 import {
 	TARGET_OUTSIDE_ROOT_WARNING,
-	useBoundaryRootStore,
+	useOptionalBoundaryRootStore,
 } from "../providers/boundary-root.provider";
 
 type BoundaryTargetProps = Omit<
@@ -36,7 +36,7 @@ const BoundaryTargetInner = (props: InternalBoundaryTargetProps) => {
 		style,
 		...rest
 	} = props;
-	const rootContext = useBoundaryRootStore();
+	const rootContext = useOptionalBoundaryRootStore();
 	const boundaryId = rootContext?.boundTag.tag;
 	const isActiveTarget = active === true && rootContext !== null;
 	const portalRuntime = rootContext?.portalRuntime;

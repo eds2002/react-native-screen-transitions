@@ -2,10 +2,10 @@ import { usePreventRemoveContext } from "@react-navigation/native";
 import { useMemo } from "react";
 import { useDescriptorsStore } from "../../descriptors";
 import { resolveScreenGestureConfig } from "../shared/policy";
-import type { GestureContextType, ScreenGestureConfig } from "../types";
+import type { ScreenGestureConfig, ScreenGestureSource } from "../types";
 
 export function useScreenGestureConfig(
-	gestureContext: GestureContextType | null,
+	ancestorGestures: readonly ScreenGestureSource[],
 ): ScreenGestureConfig {
 	const options = useDescriptorsStore((store) => store.options);
 	const isFirstKey = useDescriptorsStore(
@@ -23,9 +23,9 @@ export function useScreenGestureConfig(
 			resolveScreenGestureConfig({
 				options,
 				isFirstKey,
-				gestureContext,
+				ancestorGestures,
 				isRemovePrevented,
 			}),
-		[isFirstKey, options, gestureContext, isRemovePrevented],
+		[isFirstKey, options, ancestorGestures, isRemovePrevented],
 	);
 }

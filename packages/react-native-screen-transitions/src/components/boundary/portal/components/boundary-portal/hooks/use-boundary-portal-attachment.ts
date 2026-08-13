@@ -1,6 +1,6 @@
 import { useAnimatedProps, useSharedValue } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../../../../providers/screen/descriptors";
-import { useScreenSlots } from "../../../../../../providers/screen/styles";
+import { useScreenSlotStore } from "../../../../../../providers/screen/styles";
 import { useBoundaryRootStore } from "../../../../providers/boundary-root.provider";
 import { PORTAL_HOST_NAME_RESET_VALUE } from "../../../utils/naming";
 import { isTeleportEnabled } from "../../../utils/teleport-control";
@@ -24,7 +24,7 @@ export const useBoundaryPortalAttachment = ({
 	const currentScreenKey = useDescriptorsStore(
 		(s) => s.derivations.currentScreenKey,
 	);
-	const { slotsMap } = useScreenSlots();
+	const slotsMap = useScreenSlotStore((store) => store.slotsMap);
 	const portalHostName = useSharedValue<string | null>(null);
 	const portalHostReady = useSharedValue(false);
 	const escapeHostKey = useActiveHostKey(currentScreenKey);

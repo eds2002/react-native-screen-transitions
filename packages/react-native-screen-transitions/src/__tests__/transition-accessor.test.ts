@@ -4,17 +4,14 @@ import type { TransitionAccessorSource } from "../providers/screen/animation/hel
 import type { ScreenInterpolatorFrame } from "../providers/screen/animation/helpers/pipeline";
 import { readScreenAnimationRevisions } from "../providers/screen/animation/helpers/read-screen-animation-revisions";
 import type {
-	ScreenAnimationDescendantSources,
-	ScreenAnimationSource,
+	ScreenAnimationTransitionSource,
 	ScreenInterpolatorPropsRevision,
 } from "../providers/screen/animation/types";
 
 mock.module("../providers/screen/animation/animation.provider", () => ({
 	useScreenAnimationStore: () => ({
-		screenInterpolatorProps: { get: () => ({}) },
-		screenInterpolatorPropsRevision: { get: () => 0 },
-		ancestorScreenAnimationSources: [],
-		descendantScreenAnimationSources: { get: () => [] },
+		transitionSources: [],
+		transitionOriginIndex: 0,
 	}),
 }));
 
@@ -56,13 +53,14 @@ const createTrackedRevision = () => {
 
 const createRevisionSource = (
 	revision: ScreenInterpolatorPropsRevision,
-): ScreenAnimationSource =>
+): ScreenAnimationTransitionSource =>
 	({
 		screenInterpolatorProps: {
 			get: () => ({}),
 		},
 		screenInterpolatorPropsRevision: revision,
-	}) as ScreenAnimationSource;
+		boundsAccessor: {},
+	}) as ScreenAnimationTransitionSource;
 
 describe("createTransitionAccessor", () => {
 	beforeAll(async () => {
@@ -117,33 +115,6 @@ describe("createTransitionAccessor", () => {
 		expect(transition({ depth: 2 })?.current.route.key).toBe("grandchild");
 	});
 
-	it("reads descendant sources without rebuilding the accessor", () => {
-		const grandparent = createSource("grandparent");
-		const parent = createSource("parent");
-		const self = createSource("self");
-		const child = createSource("child");
-		const grandchild = createSource("grandchild");
-		let registered = [] as ScreenAnimationDescendantSources["value"];
-		const descendants: ScreenAnimationDescendantSources = {
-			get: () => registered,
-		} as ScreenAnimationDescendantSources;
-		const transition = createTransitionAccessor(
-			[grandparent, parent, self],
-			2,
-			descendants,
-		);
-
-		expect(transition({ depth: 1 })).toBeNull();
-
-		registered = [
-			{ source: child, depth: 1 },
-			{ source: grandchild, depth: 2 },
-		];
-
-		expect(transition({ depth: 1 })?.current.route.key).toBe("child");
-		expect(transition({ depth: 2 })?.current.route.key).toBe("grandchild");
-	});
-
 	it("resolves nested transition calls relative to the current scope", () => {
 		const grandparent = createSource("grandparent");
 		const parent = createSource("parent");
@@ -181,22 +152,13 @@ describe("createTransitionAccessor", () => {
 		const ancestor = createTrackedRevision();
 		const descendant = createTrackedRevision();
 		const external = createTrackedRevision();
-		const descendants = {
-			get: () => [
-				{
-					source: {
-						...createRevisionSource(descendant.revision),
-						boundsAccessor: {},
-					},
-					depth: 1,
-				},
-			],
-		} as ScreenAnimationDescendantSources;
 
 		readScreenAnimationRevisions(
-			self.revision,
-			[createRevisionSource(ancestor.revision)],
-			descendants,
+			[
+				createRevisionSource(ancestor.revision),
+				createRevisionSource(self.revision),
+				createRevisionSource(descendant.revision),
+			],
 			[external.revision],
 		);
 

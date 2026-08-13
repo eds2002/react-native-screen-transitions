@@ -3,7 +3,7 @@ import type { View } from "react-native";
 import { useWindowDimensions } from "react-native";
 import type { AnimatedRef, StyleProps } from "react-native-reanimated";
 import { applyMeasuredBoundsWrites } from "../../../providers/helpers/measured-bounds-writes";
-import { useScreenSlots } from "../../../providers/screen/styles";
+import { useScreenSlotStore } from "../../../providers/screen/styles";
 import type { BoundTag } from "../../../stores/bounds/types";
 import { ScrollStore } from "../../../stores/scroll.store";
 import { SystemStore } from "../../../stores/system.store";
@@ -46,7 +46,9 @@ export const useMeasurer = ({
 		currentScreenKey,
 		"pendingLifecycleStartBlockCount",
 	);
-	const { visibilityBlocked } = useScreenSlots();
+	const visibilityBlocked = useScreenSlotStore(
+		(store) => store.visibilityBlocked,
+	);
 
 	return useCallback(
 		(target) => {

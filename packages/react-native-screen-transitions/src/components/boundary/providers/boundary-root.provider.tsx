@@ -14,7 +14,7 @@ import {
 	useComposedSlotStyles,
 	useSlotStackingStyles,
 } from "../../../providers/screen/styles";
-import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
+import { useOptionalBlankStackStore } from "../../../providers/stack/blank-stack.provider";
 import { createBoundTag } from "../../../stores/bounds/helpers/link-pairs.helpers";
 import type { BoundTag } from "../../../stores/bounds/types";
 import createProvider from "../../../utils/create-provider";
@@ -68,10 +68,14 @@ type BoundaryRootProviderProps = Pick<
 	targetStyle?: unknown;
 };
 
-export const { BoundaryRootProvider, useBoundaryRootStore } = createProvider(
-	"BoundaryRoot",
-	{ guarded: false },
-)<BoundaryRootProviderProps, BoundaryRootContextValue>(
+export const {
+	BoundaryRootProvider,
+	useBoundaryRootStore,
+	useOptionalBoundaryRootStore,
+} = createProvider("BoundaryRoot")<
+	BoundaryRootProviderProps,
+	BoundaryRootContextValue
+>(
 	({
 		children,
 		config,
@@ -98,7 +102,7 @@ export const { BoundaryRootProvider, useBoundaryRootStore } = createProvider(
 		const currentScreenKey = useDescriptorsStore(
 			(s) => s.derivations.currentScreenKey,
 		);
-		const isCurrentScreenClosing = useBlankStackStore(
+		const isCurrentScreenClosing = useOptionalBlankStackStore(
 			(store) =>
 				portalRuntime.handoff &&
 				store?.scenesByKey[currentScreenKey]?.activity === "closing",

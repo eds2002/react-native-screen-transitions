@@ -25,11 +25,11 @@ import type {
 import { computeClaimedDirections } from "../ownership/compute-claimed-directions";
 import { resolveOwnership } from "../ownership/resolve-ownership";
 import type {
-	GestureContextType,
 	PanGesturePolicy,
 	PinchGesturePolicy,
 	ScreenGestureConfig,
 	ScreenGestureParticipation,
+	ScreenGestureSource,
 } from "../types";
 import {
 	getGestureDirectionEntries,
@@ -305,12 +305,12 @@ export const resolvePinchPolicy = (
 const resolveGestureParticipation = ({
 	options,
 	isFirstKey,
-	gestureContext,
+	ancestorGestures,
 	isRemovePrevented,
 }: {
 	options: GesturePolicyOptions;
 	isFirstKey: boolean;
-	gestureContext: GestureContextType | null;
+	ancestorGestures: readonly ScreenGestureSource[];
 	isRemovePrevented: boolean;
 }): ScreenGestureParticipation => {
 	const canDismiss =
@@ -342,25 +342,25 @@ const resolveGestureParticipation = ({
 		canTrackGesture,
 		effectiveSnapPoints,
 		claimedDirections,
-		ownershipStatus: resolveOwnership(claimedDirections, gestureContext),
+		ownershipStatus: resolveOwnership(claimedDirections, ancestorGestures),
 	};
 };
 
 export const resolveScreenGestureConfig = ({
 	options,
 	isFirstKey,
-	gestureContext,
+	ancestorGestures,
 	isRemovePrevented = false,
 }: {
 	options: ScreenTransitionConfig;
 	isFirstKey: boolean;
-	gestureContext: GestureContextType | null;
+	ancestorGestures: readonly ScreenGestureSource[];
 	isRemovePrevented?: boolean;
 }): ScreenGestureConfig => {
 	const participation = resolveGestureParticipation({
 		options,
 		isFirstKey,
-		gestureContext,
+		ancestorGestures,
 		isRemovePrevented,
 	});
 	const hasSnapPoints = participation.effectiveSnapPoints.hasSnapPoints;

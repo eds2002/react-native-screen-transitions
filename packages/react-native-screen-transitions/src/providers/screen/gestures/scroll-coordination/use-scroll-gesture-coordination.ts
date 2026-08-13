@@ -10,7 +10,7 @@ import { useSharedValueState } from "../../../../hooks/reanimated/use-shared-val
 import useStableCallback from "../../../../hooks/use-stable-callback";
 import { AnimationStore } from "../../../../stores/animation.store";
 import { ScrollStore } from "../../../../stores/scroll.store";
-import { useGestureStore } from "../gestures.provider";
+import { useOptionalScreenGestureStore } from "../gestures.provider";
 import type {
 	ScrollGestureAxis,
 	ScrollGestureAxisState,
@@ -18,8 +18,8 @@ import type {
 	ScrollMetadataState,
 } from "../types";
 import {
+	useOptionalScrollMetadataOwnerStore,
 	useScrollMetadataOwnerProviderValue,
-	useScrollMetadataOwnerStore,
 } from "./scroll-metadata-owner";
 import {
 	clearScrollMetadataAxisState,
@@ -88,21 +88,25 @@ const clearScrollMetadataAxis = (
 export const useScrollGestureCoordination = (
 	props: ScrollGestureCoordinationProps,
 ) => {
-	const context = useGestureStore();
+	const context = useOptionalScreenGestureStore();
 	const scrollDirection = props.direction ?? "vertical";
+	const gesturePath = useMemo(
+		() => (context ? [context, ...context.ancestorGestures] : []),
+		[context],
+	);
 
-	const metadataOwnerContext = useScrollMetadataOwnerStore();
+	const metadataOwnerContext = useOptionalScrollMetadataOwnerStore();
 	const metadataOwnerProviderValue =
 		useScrollMetadataOwnerProviderValue(scrollDirection);
-	const isFirstMetadataWriterInTree = !metadataOwnerContext[scrollDirection];
+	const isFirstMetadataWriterInTree = !metadataOwnerContext?.[scrollDirection];
 	const [metadataWriterId] = useState(() =>
 		ScrollStore.createMetadataWriterId(),
 	);
 	const [writesMetadata, setWritesMetadata] = useState(false);
 
 	const { scrollStates, panGestures, pinchGestures, ownerRouteKeys } = useMemo(
-		() => walkUpScrollGestureCoordination(context, scrollDirection),
-		[context, scrollDirection],
+		() => walkUpScrollGestureCoordination(gesturePath, scrollDirection),
+		[gesturePath, scrollDirection],
 	);
 
 	const routeKey = context?.routeKey;

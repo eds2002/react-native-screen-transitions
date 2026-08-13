@@ -42,11 +42,14 @@ type BlankStackStoreProviderProps = {
 	value: BlankStackStoreValue<BaseStackDescriptor>;
 };
 
-const { BlankStackProvider: BlankStackStoreProvider, useBlankStackStore } =
-	createProvider("BlankStack", { guarded: false })<
-		BlankStackStoreProviderProps,
-		BlankStackStoreValue<BaseStackDescriptor>
-	>(({ children, value }) => ({ children, value }));
+const {
+	BlankStackProvider: BlankStackStoreProvider,
+	useBlankStackStore,
+	useOptionalBlankStackStore,
+} = createProvider("BlankStack")<
+	BlankStackStoreProviderProps,
+	BlankStackStoreValue<BaseStackDescriptor>
+>(({ children, value }) => ({ children, value }));
 
 function BlankStackProvider({
 	state: stackState,
@@ -111,4 +114,4 @@ function BlankStackProvider({
 }
 
 export type { BlankStackProviderProps, BlankStackStoreValue };
-export { BlankStackProvider, useBlankStackStore };
+export { BlankStackProvider, useBlankStackStore, useOptionalBlankStackStore };
