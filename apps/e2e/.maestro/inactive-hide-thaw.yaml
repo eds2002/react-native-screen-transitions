@@ -1,0 +1,55 @@
+appId: "com.eds2002.e2e"
+name: "Inactive hide thaw restores gestures"
+tags:
+  - maestro
+  - regression
+---
+- launchApp:
+    clearState: true
+- openLink: "e2e:///blank-stack/inactive-behavior"
+- assertVisible:
+    id: "blank-inactive-behavior-hide"
+- tapOn:
+    id: "blank-inactive-behavior-hide"
+- assertVisible:
+    id: "inactive-behavior-hide-push-next"
+
+# Control: the same screen gesture works before it has ever been frozen.
+- swipe:
+    start: "2%, 50%"
+    end: "99%, 50%"
+    duration: 250
+- waitForAnimationToEnd
+- assertVisible:
+    id: "blank-inactive-behavior-hide"
+- tapOn:
+    id: "blank-inactive-behavior-hide"
+- assertVisible:
+    id: "inactive-behavior-hide-push-next"
+
+# Push far enough for the original route to become inactive, frozen, and hidden.
+- tapOn:
+    id: "inactive-behavior-hide-push-next"
+- waitForAnimationToEnd
+- tapOn:
+    id: "inactive-behavior-hide-push-next"
+- waitForAnimationToEnd
+
+# Pop both newer routes so the original route thaws and becomes active again.
+- tapOn:
+    id: "inactive-behavior-hide-back"
+- waitForAnimationToEnd
+- tapOn:
+    id: "inactive-behavior-hide-back"
+- waitForAnimationToEnd
+
+# The gesture detector on the previously hidden route must reattach.
+- swipe:
+    start: "2%, 50%"
+    end: "99%, 50%"
+    duration: 250
+- waitForAnimationToEnd
+- assertVisible:
+    id: "blank-inactive-behavior-hide"
+- assertNotVisible:
+    id: "inactive-behavior-hide-push-next"

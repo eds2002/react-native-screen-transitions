@@ -1,6 +1,6 @@
 import type * as React from "react";
 import { memo } from "react";
-import { StyleSheet, View, type ViewProps } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useDerivedValue } from "react-native-reanimated";
 import { Screen } from "react-native-screens";
 import { IS_WEB } from "../../../constants";
@@ -8,23 +8,12 @@ import { useStack } from "../../../hooks/navigation/use-stack";
 import { useSharedValueState } from "../../../hooks/reanimated/use-shared-value-state";
 import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
 import { AnimationStore } from "../../../stores/animation.store";
-import type { StackSceneActivity } from "../../../types/stack.types";
-import { DEFAULT_INACTIVE_BEHAVIOR, type InactiveBehavior } from "../helpers";
-
-type ActivityState = 0 | 1 | 2;
-const ActivityStateByActivity = {
-	active: 2,
-	inert: 1,
-	inactive: 0,
-	closing: 1,
-} satisfies Record<StackSceneActivity, ActivityState>;
-
-const PointerEventsByActivity = {
-	active: "auto",
-	inert: "auto",
-	inactive: "none",
-	closing: "none",
-} satisfies Record<StackSceneActivity, ViewProps["pointerEvents"]>;
+import {
+	DEFAULT_INACTIVE_BEHAVIOR,
+	HIDDEN_ACTIVITY_SCREEN_STYLE,
+	type InactiveBehavior,
+	resolveActivityScreenPresentation,
+} from "../helpers";
 
 interface ActivityScreenProps {
 	children: React.ReactNode;
@@ -90,41 +79,17 @@ export const ActivityScreen = memo(function ActivityScreen({
 
 	const isPaintDriverSettledOnJS = useSharedValueState(isPaintDriverSettled);
 
-	let activityState: ActivityState = ActivityStateByActivity[activity];
-	let shouldFreeze = false;
-	let visible = activity !== "inactive";
-
-	const shouldWaitForPaintDriver = !isPaintDriverSettledOnJS;
-
-	if (activity === "inactive") {
-		if (resolvedInactiveBehavior === "keep") {
-			activityState = 1;
-			visible = true;
-		} else if (shouldWaitForPaintDriver) {
-			// Delay hiding until the paint driver has settled to avoid
-			// a blank frame during the transition.
-			activityState = 1;
-			visible = true;
-		} else if (resolvedInactiveBehavior === "pause") {
-			activityState = 1;
-			shouldFreeze = true;
-			visible = true;
-		} else {
-			// `hide` freezes and hides native presentation. Non-nested
-			// `unmount` removes the React subtree through the JS guard below.
-			activityState = 0;
-			shouldFreeze = true;
-			visible = false;
-		}
-	}
+	const { visible, ...screenPresentation } = resolveActivityScreenPresentation({
+		activity,
+		inactiveBehavior: resolvedInactiveBehavior,
+		waitForPaintDriver: !isPaintDriverSettledOnJS,
+	});
 
 	const shouldUnmount =
 		resolvedInactiveBehavior === "unmount" &&
 		activity === "inactive" &&
 		!resolvedHasNestedState &&
 		isPaintDriverSettledOnJS;
-
-	const pointerEvents = PointerEventsByActivity[activity];
 
 	if (shouldUnmount) {
 		return null;
@@ -134,33 +99,23 @@ export const ActivityScreen = memo(function ActivityScreen({
 
 	if (IS_WEB || nativeScreenDisabled) {
 		return (
-			<View style={style} pointerEvents={pointerEvents} collapsable={false}>
+			<View
+				style={style}
+				pointerEvents={screenPresentation.pointerEvents}
+				collapsable={false}
+			>
 				{children}
 			</View>
 		);
 	}
 
 	return (
-		<Screen
-			style={style}
-			activityState={activityState}
-			shouldFreeze={shouldFreeze}
-			pointerEvents={pointerEvents}
-			collapsable={false}
-		>
+		<Screen {...screenPresentation} style={style} collapsable={false}>
 			{children}
 		</Screen>
 	);
 });
 
-const HIDDEN_SCREEN_OFFSET = 10_000;
 const styles = StyleSheet.create({
-	hidden: {
-		// NOTE:
-		// When setting a screen to display:"none", the gesture detector will not recognize anymore. Since I believe
-		// rngh is attaching itself to its nearest native view, this of course would kill the detector.
-		// To avoid this, we use a transform to move the screen off-screen instead of display: "none". This isn't my favorite approach,
-		// but i'm hoping react 19's activity could mitigate this better and avoid dependence on rns.
-		transform: [{ translateY: HIDDEN_SCREEN_OFFSET }],
-	},
+	hidden: HIDDEN_ACTIVITY_SCREEN_STYLE,
 });
