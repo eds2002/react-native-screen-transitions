@@ -73,7 +73,7 @@ function buildTransitionStackState({
 	const routes = state.routes as BaseStackRoute[];
 	const preloadedRoutes = getPreloadedRoutes(state) as BaseStackRoute[];
 	const allRoutes = routes.concat(preloadedRoutes);
-	const routeKeys: string[] = [];
+	const routeKeys = routes.map((route) => route.key);
 	const scenes: ScreenTransitionsAdapterScene[] = [];
 	const routeIndexByKey = new Map<string, number>();
 	let shouldShowFloatOverlay = false;
@@ -112,7 +112,6 @@ function buildTransitionStackState({
 			descriptor: normalizedDescriptor,
 			previousDescriptor,
 		});
-		routeKeys.push(route.key);
 		routeIndexByKey.set(route.key, sceneIndex);
 
 		if (

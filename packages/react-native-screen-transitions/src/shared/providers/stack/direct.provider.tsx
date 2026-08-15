@@ -51,7 +51,7 @@ function DirectStackProvider({
 		useMemo(() => {
 			const allRoutes = state.routes.concat(state.preloadedRoutes);
 			const scenes: DirectStackScene[] = [];
-			const routeKeys: string[] = [];
+			const routeKeys = state.routes.map((route) => route.key);
 			const allDescriptors: NativeStackDescriptorMap = {
 				...preloadedDescriptors,
 				...descriptors,
@@ -85,8 +85,6 @@ function DirectStackProvider({
 					descriptor,
 					isPreloaded,
 				});
-				routeKeys.push(route.key);
-
 				if (
 					!shouldShowFloatOverlay &&
 					descriptor.options?.enableTransitions === true &&

@@ -19,6 +19,7 @@ mock.module("react-native-safe-area-context", () => ({
 
 mock.module("../hooks/navigation/use-stack", () => ({
 	useStack: () => false,
+	useStackProgressEntries: () => [],
 }));
 
 mock.module("../providers/screen/descriptors", () => ({

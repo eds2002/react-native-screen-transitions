@@ -17,11 +17,15 @@ mock.module("../providers/screen/animation/animation.provider", () => ({
 
 let createTransitionAccessor: typeof TransitionAccessorModule.createTransitionAccessor;
 
-const createSource = (routeKey: string): TransitionAccessorSource => {
+const createSource = (
+	routeKey: string,
+	stackProgress = 0,
+): TransitionAccessorSource => {
 	const frame = {
 		current: {
 			route: { key: routeKey },
 		},
+		stackProgress,
 	} as unknown as ScreenInterpolatorFrame;
 
 	return {
@@ -84,6 +88,13 @@ describe("createTransitionAccessor", () => {
 		expect(scope?.current.route.key).toBe("self");
 		expect(scope?.bounds).toBe(self.boundsAccessor);
 		expect(transition({ depth: 0 })?.current.route.key).toBe("self");
+	});
+
+	it("preserves stack progress from the selected frame", () => {
+		const source = createSource("self", 3.25);
+		const transition = createTransitionAccessor([source]);
+
+		expect(transition()?.stackProgress).toBe(3.25);
 	});
 
 	it("resolves negative depth to ancestors", () => {

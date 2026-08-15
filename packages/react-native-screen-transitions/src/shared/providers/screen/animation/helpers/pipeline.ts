@@ -11,7 +11,10 @@ import {
 	createScreenTransitionState,
 	DEFAULT_SCREEN_TRANSITION_STATE,
 } from "../../../../constants";
-import { useStack } from "../../../../hooks/navigation/use-stack";
+import {
+	useStack,
+	useStackProgressEntries,
+} from "../../../../hooks/navigation/use-stack";
 import type {
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
@@ -24,7 +27,7 @@ import { updateDerivations } from "./derivations";
 import { hasTransitionsEnabled } from "./has-transitions-enabled";
 import { hydrateTransitionState } from "./hydrate-transition-state";
 import type { SelectedInterpolatorOptions } from "./selected-interpolator-options";
-import { resolveStackProgress } from "./stack-progress";
+import { readStackProgress, type StackProgressEntry } from "./stack-progress";
 import { useBuildTransitionState } from "./use-build-transition-state";
 import { toPlainRoute, toPlainValue } from "./worklet";
 
@@ -212,6 +215,8 @@ const hydrateInterpolatorFrame = <TFrame extends ScreenInterpolatorFrame>({
 	prevAnimation,
 	nextHasTransitions,
 	interpolatorOptions,
+	stackProgressEntries,
+	currentRouteKey,
 }: {
 	frame: TFrame;
 	dimensions: ScreenInterpolatorFrame["layouts"]["screen"];
@@ -221,6 +226,8 @@ const hydrateInterpolatorFrame = <TFrame extends ScreenInterpolatorFrame>({
 	prevAnimation: BuiltTransitionState | undefined;
 	nextHasTransitions: boolean;
 	interpolatorOptions: SelectedInterpolatorOptions;
+	stackProgressEntries: readonly StackProgressEntry[];
+	currentRouteKey: string;
 }): TFrame => {
 	"worklet";
 	const shouldApplyOptionsToCurrent = interpolatorOptions.owner === "current";
@@ -228,12 +235,6 @@ const hydrateInterpolatorFrame = <TFrame extends ScreenInterpolatorFrame>({
 		interpolatorOptions.owner === "next" &&
 		!!nextAnimation &&
 		nextHasTransitions;
-	const previousCurrentProgress = currentAnimation?.visualProgress.get();
-	const previousNextProgress =
-		nextAnimation && nextHasTransitions
-			? nextAnimation.visualProgress.get()
-			: undefined;
-
 	frame.previous = prevAnimation
 		? hydrateTransitionState(prevAnimation, dimensions)
 		: undefined;
@@ -260,13 +261,10 @@ const hydrateInterpolatorFrame = <TFrame extends ScreenInterpolatorFrame>({
 
 	updateDerivations(frame);
 
-	frame.stackProgress = resolveStackProgress(
-		currentAnimation?.stackProgress,
+	frame.stackProgress = readStackProgress(
+		stackProgressEntries,
+		currentRouteKey,
 		frame.progress,
-		frame.current.progress,
-		previousCurrentProgress,
-		frame.next?.progress,
-		previousNextProgress,
 	);
 	frame.logicallySettled = frame.active.settled;
 
@@ -279,6 +277,7 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 	);
 	const dimensions = useWindowDimensions();
 	const insets = useSafeAreaInsets();
+	const stackProgressEntries = useStackProgressEntries();
 
 	const currDescriptor = useDescriptorsStore((store) => store.current);
 	const nextDescriptor = useDescriptorsStore((store) => store.next);
@@ -286,6 +285,7 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 	const currentAnimation = useBuildTransitionState(currDescriptor);
 	const nextAnimation = useBuildTransitionState(nextDescriptor);
 	const prevAnimation = useBuildTransitionState(prevDescriptor);
+	const currentRouteKey = currDescriptor.route.key;
 
 	const nextRouteKey = nextDescriptor?.route?.key;
 	const nextHasTransitions =
@@ -325,6 +325,8 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 				prevAnimation,
 				nextHasTransitions,
 				interpolatorOptions,
+				stackProgressEntries,
+				currentRouteKey,
 			});
 		}, false);
 
