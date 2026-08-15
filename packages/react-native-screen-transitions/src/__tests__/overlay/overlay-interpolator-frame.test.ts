@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { createOverlayInterpolatorFrame } from "../../components/overlay/helpers/create-overlay-interpolator-frame";
 import type { ScreenInterpolatorFrame } from "../../providers/screen/animation/helpers/pipeline";
 
-const createFrame = (key: string, progress: number) =>
+const createFrame = (key: string, progress: number, stackProgress = progress) =>
 	({
 		current: {
 			route: { key },
@@ -12,18 +12,20 @@ const createFrame = (key: string, progress: number) =>
 			layouts: { screen: { width: 390, height: 844 } },
 		},
 		insets: { top: 0, right: 0, bottom: 0, left: 0 },
+		stackProgress,
 	}) as ScreenInterpolatorFrame;
 
 describe("overlay interpolator frame", () => {
 	it("presents sparse overlays as adjacent to the destination interpolator", () => {
 		const frame = createOverlayInterpolatorFrame({
-			overlayFrame: createFrame("A", 1),
+			overlayFrame: createFrame("A", 1, 2.25),
 			driverFrame: createFrame("C", 0.25),
 		});
 
 		expect(frame.current.route.key).toBe("A");
 		expect(frame.next?.route.key).toBe("C");
 		expect(frame.progress).toBe(1.25);
+		expect(frame.stackProgress).toBe(2.25);
 		expect(frame.active.route.key).toBe("C");
 		expect(frame.inactive?.route.key).toBe("A");
 	});

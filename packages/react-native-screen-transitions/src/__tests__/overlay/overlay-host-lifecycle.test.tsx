@@ -49,6 +49,7 @@ const useScreenSlotStore = <Selected,>(
 
 mock.module("../../hooks/navigation/use-stack", () => ({
 	useStack: () => stackState,
+	useStackProgressEntries: () => [],
 }));
 
 mock.module("@react-navigation/native", () => ({
@@ -128,7 +129,7 @@ const createAnimationStore = (routeKey: string) => {
 				layouts: { screen: { width: 390, height: 844 } },
 			},
 			stackProgress: 1,
-		});
+	});
 	const screenInterpolatorPropsRevision = shared(0);
 
 	return {

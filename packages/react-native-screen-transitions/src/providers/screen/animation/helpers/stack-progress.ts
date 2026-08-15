@@ -1,44 +1,25 @@
 import type { SharedValue } from "react-native-reanimated";
 
-export const syncStackProgressValues = (
-	visualProgressValues: SharedValue<number>[],
-	stackProgressValues: SharedValue<number>[],
-) => {
-	"worklet";
-	let total = 0;
-
-	for (let i = visualProgressValues.length - 1; i >= 0; i--) {
-		total += visualProgressValues[i]?.get() ?? 0;
-		const stackProgress = stackProgressValues[i];
-
-		if (stackProgress && stackProgress.get() !== total) {
-			stackProgress.set(total);
-		}
-	}
+export type StackProgressEntry = {
+	routeKey: string;
+	visualProgress: SharedValue<number>;
 };
 
-export const resolveStackProgress = (
-	stackProgress: SharedValue<number> | undefined,
+export const readStackProgress = (
+	entries: readonly StackProgressEntry[],
+	routeKey: string,
 	fallbackProgress: number,
-	currentProgress: number,
-	previousCurrentProgress: number | undefined,
-	nextProgress: number | undefined,
-	previousNextProgress: number | undefined,
 ) => {
 	"worklet";
-	if (!stackProgress) {
-		return fallbackProgress;
+	let progress = 0;
+
+	for (let index = entries.length - 1; index >= 0; index--) {
+		const entry = entries[index];
+		if (!entry) continue;
+
+		progress += entry.visualProgress.get();
+		if (entry.routeKey === routeKey) return progress;
 	}
 
-	let total = stackProgress.get();
-
-	if (previousCurrentProgress !== undefined) {
-		total += currentProgress - previousCurrentProgress;
-	}
-
-	if (nextProgress !== undefined && previousNextProgress !== undefined) {
-		total += nextProgress - previousNextProgress;
-	}
-
-	return total;
+	return fallbackProgress;
 };

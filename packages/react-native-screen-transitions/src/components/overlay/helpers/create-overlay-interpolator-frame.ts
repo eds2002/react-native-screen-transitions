@@ -22,7 +22,7 @@ export const createOverlayInterpolatorFrame = ({
 	};
 
 	updateDerivations(frame);
-	frame.stackProgress = frame.progress;
+	frame.stackProgress = overlayFrame.stackProgress;
 	frame.logicallySettled = frame.active.settled;
 
 	return frame;
