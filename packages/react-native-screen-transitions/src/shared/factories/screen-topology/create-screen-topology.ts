@@ -106,53 +106,12 @@ export const createScreenTopology = (): ScreenTopology => {
 		}
 	};
 
-	const assertAcyclicParentEdge = (
-		screenKey: string,
-		parentScreenKey?: string,
-	) => {
-		const visited = new Set<string>([screenKey]);
-		let ancestorScreenKey = parentScreenKey;
-
-		while (ancestorScreenKey) {
-			if (visited.has(ancestorScreenKey)) {
-				throw new Error(
-					"Screen topology cannot register a cyclic parent edge.",
-				);
-			}
-
-			visited.add(ancestorScreenKey);
-			ancestorScreenKey = getParent(ancestorScreenKey) ?? undefined;
-		}
-	};
-
 	const register = ({
 		screenKey,
 		parentScreenKey,
 	}: ScreenTopologyRegistration) => {
-		assertAcyclicParentEdge(screenKey, parentScreenKey);
-		const previousParentScreenKey = getParent(screenKey);
-		const nextParentScreenKey = parentScreenKey ?? null;
-		const affectedScreenKeys = new Set([screenKey]);
-		if (previousParentScreenKey) {
-			affectedScreenKeys.add(previousParentScreenKey);
-		}
-
-		mutate(affectedScreenKeys, () => {
-			if (
-				previousParentScreenKey &&
-				previousParentScreenKey !== nextParentScreenKey
-			) {
-				const previousParent = getNode(previousParentScreenKey);
-				if (previousParent) {
-					previousParent.activeChildScreenKeys =
-						previousParent.activeChildScreenKeys.filter(
-							(activeScreenKey) => activeScreenKey !== screenKey,
-						);
-				}
-				removeNodeIfEmpty(previousParentScreenKey);
-			}
-
-			ensureNode(screenKey).parentScreenKey = nextParentScreenKey;
+		mutate(new Set([screenKey]), () => {
+			ensureNode(screenKey).parentScreenKey = parentScreenKey ?? null;
 		});
 	};
 

@@ -12,22 +12,13 @@ const toStorageKey = (screenKey: string) => {
 	return `screen:${screenKey}`;
 };
 
-export const workletScreenTopology = makeMutable<WorkletScreenTopology>({});
+const workletScreenTopology = makeMutable<WorkletScreenTopology>({});
 
 export const registerWorkletScreen = ({
 	screenKey,
 	parentScreenKey,
 }: ScreenTopologyRegistration) => {
 	"worklet";
-	let ancestorScreenKey = parentScreenKey;
-	const state = workletScreenTopology.get();
-	while (ancestorScreenKey) {
-		if (ancestorScreenKey === screenKey) {
-			throw new Error("Screen topology cannot register a cyclic parent edge.");
-		}
-		ancestorScreenKey = state[toStorageKey(ancestorScreenKey)]?.parentScreenKey;
-	}
-
 	workletScreenTopology.modify(
 		<T extends WorkletScreenTopology>(value: T): T => {
 			"worklet";

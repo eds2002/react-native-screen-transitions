@@ -71,6 +71,15 @@ function BlankStackProvider({
 		() => createScenesByKey(state.scenes),
 		[state.scenes],
 	);
+	const paintDriverRouteKeyByRouteKey = useMemo(() => {
+		const paintDrivers = new Map<string, string>();
+
+		for (let index = 0; index + 2 < state.routeKeys.length; index++) {
+			paintDrivers.set(state.routeKeys[index], state.routeKeys[index + 2]);
+		}
+
+		return paintDrivers;
+	}, [state.routeKeys]);
 
 	const stackValue = useMemo<StackContextValue>(
 		() => ({
@@ -98,6 +107,7 @@ function BlankStackProvider({
 		routes: state.routes,
 		scenes: state.scenes,
 		scenesByKey,
+		paintDriverRouteKeyByRouteKey,
 		focusedIndex,
 		requestDismiss,
 		shouldShowFloatOverlay: state.shouldShowFloatOverlay,
