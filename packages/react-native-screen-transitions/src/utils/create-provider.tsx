@@ -72,8 +72,7 @@ type ResolvedOptionalProviderStoreHook<
 		: unknown);
 
 type ProviderFactoryResult<ContextValue, Global extends boolean> = {
-	value?: ContextValue;
-	enabled?: boolean;
+	value: ContextValue;
 	children?: ReactNode;
 } & (Global extends true ? { key: string } : { key?: never });
 
@@ -322,25 +321,16 @@ export default function createProvider<
 		const Provider: React.FC<ProviderProps> = (props) => {
 			const {
 				children = (props as { children?: ReactNode }).children,
-				enabled = true,
 				key,
 				value,
 			} = factory(props);
-
-			if (!value) {
-				throw new Error(
-					`${name}Context value must be provided. You likely forgot to return it from the factory function.`,
-				);
-			}
-
-			const snapshotValue = enabled ? value : null;
 			const storeRef = useRef<MutableProviderStoreApi<ContextValue> | null>(
 				null,
 			);
 			const pendingNotifyRef = useRef(false);
 
 			if (storeRef.current === null) {
-				storeRef.current = createProviderStore<ContextValue>(snapshotValue);
+				storeRef.current = createProviderStore<ContextValue>(value);
 			}
 			const store = storeRef.current;
 
@@ -359,7 +349,7 @@ export default function createProvider<
 			}, [key, store]);
 
 			pendingNotifyRef.current =
-				store.setSnapshot(snapshotValue) || pendingNotifyRef.current;
+				store.setSnapshot(value) || pendingNotifyRef.current;
 
 			useLayoutEffect(() => {
 				if (!pendingNotifyRef.current) {

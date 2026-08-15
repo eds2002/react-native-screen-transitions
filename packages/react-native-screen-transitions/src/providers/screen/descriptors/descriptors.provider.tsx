@@ -46,7 +46,7 @@ const createDescriptorsProvider = createProvider("Descriptors", {
 	global: true,
 })<DescriptorsProviderProps, DescriptorStoreValue<BaseDescriptor>>;
 
-export const {
+const {
 	DescriptorsProvider,
 	useDescriptorsStore,
 	useOptionalDescriptorsStore,
@@ -147,3 +147,5 @@ export const {
 		};
 	},
 );
+
+export { DescriptorsProvider, useDescriptorsStore };

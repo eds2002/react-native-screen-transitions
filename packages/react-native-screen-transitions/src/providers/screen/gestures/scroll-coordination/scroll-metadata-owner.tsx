@@ -17,7 +17,6 @@ const DEFAULT_SCROLL_METADATA_OWNER_CONTEXT: ScrollMetadataOwnerContextValue = {
 export const {
 	ScrollMetadataOwnerProvider,
 	useOptionalScrollMetadataOwnerStore,
-	useScrollMetadataOwnerStore,
 } = createProvider("ScrollMetadataOwner")<
 	ScrollMetadataOwnerProviderProps,
 	ScrollMetadataOwnerContextValue

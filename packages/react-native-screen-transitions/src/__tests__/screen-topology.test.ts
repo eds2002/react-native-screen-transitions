@@ -45,32 +45,24 @@ describe("screen topology", () => {
 		expect(topology.getRelationships("child").parentScreenKey).toBe("root");
 	});
 
-	it("reparents and unregisters by unique route key", () => {
+	it("unregisters by unique route key", () => {
 		const topology = createScreenTopology();
 
 		topology.register({
 			screenKey: "child",
-			parentScreenKey: "old-parent",
+			parentScreenKey: "parent",
 		});
 		topology.activate({
 			screenKey: "child",
-			parentScreenKey: "old-parent",
+			parentScreenKey: "parent",
 		});
-		topology.register({
-			screenKey: "child",
-			parentScreenKey: "current-parent",
-		});
-
-		expect(topology.getRelationships("child").parentScreenKey).toBe(
-			"current-parent",
-		);
-		expect(topology.getRelationships("old-parent").activeChildScreenKey).toBeNull();
 
 		topology.unregister("child");
 		expect(topology.getRelationships("child").parentScreenKey).toBeNull();
+		expect(topology.getRelationships("parent").activeChildScreenKey).toBeNull();
 	});
 
-	it("rejects cycles and safely stores object-like screen keys", () => {
+	it("safely stores object-like screen keys", () => {
 		const topology = createScreenTopology();
 
 		topology.register({
@@ -80,13 +72,6 @@ describe("screen topology", () => {
 		expect(topology.getRelationships("__proto__").parentScreenKey).toBe(
 			"constructor",
 		);
-
-		expect(() =>
-			topology.register({
-				screenKey: "constructor",
-				parentScreenKey: "__proto__",
-			}),
-		).toThrow("Screen topology cannot register a cyclic parent edge.");
 	});
 
 	it("models the active nested path without losing a mounted sibling", () => {

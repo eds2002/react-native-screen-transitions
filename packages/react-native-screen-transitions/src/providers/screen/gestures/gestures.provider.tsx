@@ -93,8 +93,8 @@ export const {
 			],
 		);
 		const relationshipGestureSources = useMemo(
-			() => [source, ...relationshipAncestorGestures],
-			[source, relationshipAncestorGestures],
+			() => [source, ...ancestorGestures],
+			[source, ancestorGestures],
 		);
 		const value = useMemo<ScreenGestureStoreValue>(
 			() => ({

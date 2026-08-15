@@ -36,6 +36,7 @@ export interface BlankStackStoreValue<
 	routes: TDescriptor["route"][];
 	scenes: BaseStackScene<TDescriptor>[];
 	scenesByKey: Record<string, BaseStackScene<TDescriptor>>;
+	paintDriverRouteKeyByRouteKey: ReadonlyMap<string, string>;
 	focusedIndex: number;
 	requestDismiss: (payload: { route: BaseStackRoute }) => boolean;
 	shouldShowFloatOverlay: boolean;
