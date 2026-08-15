@@ -1,8 +1,8 @@
 ---
 title: "New in 3.13"
 pageTitle: "New in 3.13"
-summary: "v3.13 makes Boundary transitions more predictable across complex navigation structures and reduces work from inactive screen interpolators."
-description: "v3.13 makes Boundary transitions more predictable across complex navigation structures and reduces work from inactive screen interpolators."
+summary: "v3.13 makes Boundary transitions more predictable and reduces animation work in deep retained stacks."
+description: "v3.13 makes Boundary transitions more predictable and reduces animation work in deep retained stacks."
 eyebrow: "Changelogs"
 group: "Changelogs"
 hidden: true
@@ -11,7 +11,7 @@ order: -4
 to: /changelog/updating-to-3-13
 ---
 
-v3.13 makes bounds more global. Matching Boundaries can now coordinate across complex navigation structures without depending on where each Boundary happens to mount.
+v3.13 makes bounds more global and retained stacks less expensive. Matching Boundaries can now coordinate across complex navigation structures without depending on where each Boundary happens to mount, while `stackProgress` no longer requires a navigator-wide update on every animation frame.
 
 The result is more predictable transitions across deeply nested navigators, repeated route pushes, dynamic Boundary IDs, and flows where only one side of a bounds transition exists.
 
@@ -25,35 +25,21 @@ Bounds transitions also account more reliably for scale and position styles appl
 
 Escaped Boundary portals and live handoffs follow the same behavior. Content remains with its current screen until the next destination is ready, reducing flicker during multi-screen push and pop sequences.
 
-## Faster deep stacks
+## Less animation work in deep stacks
 
-The new bounds architecture avoids repeating as much work across retained screens. In preliminary release-mode profiling on a Pixel 8, deeply repeated pushes no longer accumulated the large transition delay seen with the previous implementation. An equivalent deep-stack run that previously produced repeated UI hangs completed without those hangs after the redesign.
+`stackProgress` is still the accumulated visual progress from the current screen through the top of its navigator. Its public value and usage have not changed.
 
-These results are promising, but they are not yet a universal benchmark. More profiling across Android devices, navigators, and real applications is still needed to measure how much performance improves outside the tested bounds-heavy flow.
+Internally, the navigator previously recalculated and wrote `stackProgress` for every retained route whenever visual progress changed. v3.13 removes that navigator-wide reaction. A live interpolation frame now derives its value directly from the relevant route suffix, so the top screen reads one progress value and deeper consumers read only as far as their own route.
 
-## Inactive interpolators sleep by default
-
-`stackProgress` can be used to animate every screen in a stack, which previously meant retained screen interpolators could continue updating as the stack grew. This is useful for a small set of coordinated stack effects, but most transitions only need the active, inert, and closing screens.
-
-Fully inactive screen interpolators now sleep by default. For normal navigation flows, leaving them awake provides no visual benefit and makes deep JavaScript stacks do unnecessary work.
-
-If your interpolator intentionally uses `stackProgress` to animate screens more than one level behind the active route, you can keep every screen updating through the stack's `screenOptions`:
-
-```tsx
-<Stack.Navigator
-  screenOptions={{
-    experimental_updateInactiveInterpolators: true,
-  }}
->
-  {/* screens */}
-</Stack.Navigator>
-```
-
-The option can also be enabled on an individual screen. Most applications should keep the new default.
+In matched release-mode profiling on a Pixel 8 at retained depths of 1, 26, and 51, samples attributed to animation-frame work fell from 927 to 626, a 32.5% reduction, while total sampled CPU fell by 4.9%. Hermes time and native commit counts remained essentially flat. This isolates a real animation-thread improvement, but it does not remove the normal memory, layout, and native-tree cost of retaining more screens.
 
 ## More reliable inactive-screen settlement
 
 Inactive presentation now waits for the paint-driving screen's visual progress to settle. This prevents an older screen from being hidden during the final visual frames of a nested transition even when its underlying transition clock has already completed.
+
+After safe paint, blank-stack screens using `inactiveBehavior: "hide"` or `"pause"` now freeze their retained React subtree when native screens are enabled. `hide` also uses `display: "none"` instead of moving the screen far outside the viewport. The screen remains mounted and can thaw with its local state intact; use `"unmount"` when an eligible subtree and its resources should actually be released.
+
+This freezing behavior is provided by `react-native-screens`. With `nativeScreens={false}`, hidden screens still use `display: "none"`, but the regular React Native view does not provide the same native-screen freeze behavior.
 
 ## More predictable locked snap gestures
 
@@ -63,6 +49,8 @@ Cancelled gestures now return to their starting snap point without carrying rele
 
 ## Upgrade notes
 
-No Boundary API migration is required. Existing `id`, `group`, `handoff`, `escapeClipping`, `.styles()`, `.values()`, `.link()`, navigation zoom, and reveal usage keeps the same shape.
+No Boundary or `stackProgress` API migration is required. Existing `id`, `group`, `handoff`, `escapeClipping`, `.styles()`, `.values()`, `.link()`, navigation zoom, reveal, and interpolator APIs retain the same shape.
 
-If an interpolator relies on `stackProgress` to animate fully inactive routes, enable `experimental_updateInactiveInterpolators` for that screen or navigator.
+The `experimental_updateInactiveInterpolators` option included in `3.13.0-beta.0` was removed before the final release. Remove it if you tested that beta; there is no replacement option to configure.
+
+The hidden-screen gesture reattachment path was verified with React Native Gesture Handler 2.31.1. The package's peer range has not changed, but 2.31.1 is the known-good version to use if gestures on a hidden screen do not respond after it becomes active again.
