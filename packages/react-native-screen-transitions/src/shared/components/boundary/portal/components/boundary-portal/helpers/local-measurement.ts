@@ -30,8 +30,6 @@ export const resolveActiveBoundaryPortalPairKey = (
 	if (group) {
 		const activeId = pairsState[measurement.pairKey]?.groups[group]?.activeId;
 		if (activeId !== getLinkKeyFromTag(boundaryId)) return null;
-	} else if (!slot) {
-		return null;
 	}
 
 	if (slot && !isTeleportEnabled(slot.props?.teleport)) return null;
