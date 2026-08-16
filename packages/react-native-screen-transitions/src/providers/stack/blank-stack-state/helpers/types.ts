@@ -1,54 +1,41 @@
+import type { BlankStackDescriptor } from "../../../../types/blank-stack.types";
 import type { BlankStackProviderProps } from "../../../../types/providers/blank-stack-provider.types";
 import type {
-	BaseStackDescriptor,
-	BaseStackNavigation,
 	BaseStackRoute,
 	BaseStackScene,
-	StackDescriptorSource,
 } from "../../../../types/stack.types";
 
-export type BlankStackRoutes<TDescriptor extends BaseStackDescriptor> =
-	TDescriptor["route"][];
+export type BlankStackRoutes = BlankStackDescriptor["route"][];
 
-export type BlankStackDescriptors<TDescriptor extends BaseStackDescriptor> =
-	Record<string, TDescriptor>;
+export type BlankStackDescriptors = Record<string, BlankStackDescriptor>;
 
-export type BlankStackDescriptorSources<
-	TDescriptor extends BaseStackDescriptor,
-> = Record<string, StackDescriptorSource<TDescriptor>>;
-
-export type LocalRoutesState<TDescriptor extends BaseStackDescriptor> = {
-	routes: BlankStackRoutes<TDescriptor>;
-	descriptors: BlankStackDescriptors<TDescriptor>;
-	sourceDescriptors: BlankStackDescriptorSources<TDescriptor>;
+export type LocalRoutesState = {
+	routes: BlankStackRoutes;
+	descriptors: BlankStackDescriptors;
+	sourceDescriptors: BlankStackDescriptors;
 	focusedRouteKey?: string;
 	routeChildStates: Record<string, unknown>;
-	scenes: BaseStackScene<TDescriptor>[];
+	scenes: BaseStackScene<BlankStackDescriptor>[];
 	routeKeys: string[];
 	shouldShowFloatOverlay: boolean;
 	closingRouteKeys: ReadonlySet<string>;
 };
 
-export type BlankStackControllerSnapshot<
-	TDescriptor extends BaseStackDescriptor,
-> = {
-	state: LocalRoutesState<TDescriptor>;
+export type BlankStackControllerSnapshot = {
+	state: LocalRoutesState;
 };
 
-export type BlankStackController<
-	TDescriptor extends BaseStackDescriptor,
-	TNavigation extends BaseStackNavigation,
-> = {
+export type BlankStackController = {
 	subscribe: (listener: () => void) => () => void;
-	getSnapshot: () => BlankStackControllerSnapshot<TDescriptor>;
-	update: (props: BlankStackProviderProps<TDescriptor, TNavigation>) => void;
+	getSnapshot: () => BlankStackControllerSnapshot;
+	update: (props: BlankStackProviderProps) => void;
 	handleCloseRoute: (payload: { route: BaseStackRoute }) => void;
 	requestDismiss: (payload: { route: BaseStackRoute }) => boolean;
 };
 
-export type ReconciledRoutes<TDescriptor extends BaseStackDescriptor> = {
-	routes: BlankStackRoutes<TDescriptor>;
-	descriptors: BlankStackDescriptorSources<TDescriptor>;
+export type ReconciledRoutes = {
+	routes: BlankStackRoutes;
+	descriptors: BlankStackDescriptors;
 };
 
 export type SceneActivityWindow = {

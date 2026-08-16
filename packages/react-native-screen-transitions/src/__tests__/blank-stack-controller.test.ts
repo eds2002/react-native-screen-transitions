@@ -68,7 +68,7 @@ const createProps = (
 	routes: BaseStackRoute[],
 	descriptors: Record<string, BaseStackDescriptor>,
 	navigation: BaseStackNavigation,
-): BlankStackProviderProps<BaseStackDescriptor, BaseStackNavigation> => ({
+): BlankStackProviderProps => ({
 	state: {
 		key: "stack",
 		index: routes.length - 1,

@@ -6,7 +6,6 @@ import {
 	LifecycleTransitionRequestKind,
 	SystemStore,
 } from "../stores/system.store";
-import { StackType } from "../types/stack.types";
 import { isCloseActionReplay } from "../utils/navigation/close-action-replay";
 
 const route = { key: "soft-dismiss-route", name: "details" };
@@ -53,7 +52,7 @@ current.navigation = navigation;
 let requestStackDismiss: ((payload: { route: typeof route }) => boolean) | null;
 let softDismissCount: number;
 let blankCloseCount: number;
-let stackType: StackType;
+let handleBlankClose: boolean;
 let preventedRoutes: Record<string, { preventRemove: boolean }>;
 
 mock.module("@react-navigation/native", () => ({
@@ -91,9 +90,11 @@ mock.module("../hooks/navigation/use-stack", () => ({
 mock.module("../providers/stack/blank-stack.provider", () => ({
 	useOptionalBlankStackStore: (selector: (stack: any) => unknown) =>
 		selector({
-			handleCloseRoute: () => {
-				blankCloseCount += 1;
-			},
+			handleCloseRoute: handleBlankClose
+				? () => {
+						blankCloseCount += 1;
+					}
+				: undefined,
 			scenesByKey: {
 				[route.key]: { activity: "active" },
 			},
@@ -104,7 +105,6 @@ mock.module("../providers/stack/core.provider", () => ({
 	useStackCoreStore: (selector: (store: any) => unknown) =>
 		selector({
 			flags: {
-				STACK_TYPE: stackType,
 				TRANSITIONS_ALWAYS_ON: true,
 			},
 		}),
@@ -128,7 +128,7 @@ beforeEach(() => {
 	replayPreventCount = 0;
 	softDismissCount = 0;
 	blankCloseCount = 0;
-	stackType = StackType.BLANK;
+	handleBlankClose = true;
 	preventedRoutes = {};
 	requestStackDismiss = () => {
 		softDismissCount += 1;
@@ -254,7 +254,7 @@ describe("soft dismissal", () => {
 
 	it("uses the current native stack for terminal gesture removal", () => {
 		let completeClose: (() => void) | undefined;
-		stackType = StackType.NATIVE;
+		handleBlankClose = false;
 		requestStackDismiss = null;
 		emitBeforeRemoveOnDispatch = true;
 

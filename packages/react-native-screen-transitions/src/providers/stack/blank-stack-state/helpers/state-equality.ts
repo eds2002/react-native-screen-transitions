@@ -1,9 +1,6 @@
-import type {
-	BaseStackDescriptor,
-	RouteWithKey,
-	StackDescriptorSource,
-} from "../../../../types/stack.types";
-import type { BlankStackDescriptorSources } from "./types";
+import type { BlankStackDescriptor } from "../../../../types/blank-stack.types";
+import type { RouteWithKey } from "../../../../types/stack.types";
+import type { BlankStackDescriptors } from "./types";
 
 export const areDescriptorsEqual = <
 	DescriptorMap extends Record<string, unknown>,
@@ -113,11 +110,9 @@ export const areRecordsShallowEqual = (
 	return aKeys.every((key) => Object.is(a[key], b[key]));
 };
 
-export const areDescriptorSourcesEquivalent = <
-	TDescriptor extends BaseStackDescriptor,
->(
-	previous: StackDescriptorSource<TDescriptor>,
-	next: StackDescriptorSource<TDescriptor>,
+export const areDescriptorSourcesEquivalent = (
+	previous: BlankStackDescriptor,
+	next: BlankStackDescriptor,
 ): boolean => {
 	return (
 		previous.navigation === next.navigation &&
@@ -132,11 +127,9 @@ export const areDescriptorSourcesEquivalent = <
 	);
 };
 
-export const areDescriptorSourceMapsEquivalent = <
-	TDescriptor extends BaseStackDescriptor,
->(
-	previous: BlankStackDescriptorSources<TDescriptor>,
-	next: BlankStackDescriptorSources<TDescriptor>,
+export const areDescriptorSourceMapsEquivalent = (
+	previous: BlankStackDescriptors,
+	next: BlankStackDescriptors,
 ): boolean => {
 	if (previous === next) return true;
 

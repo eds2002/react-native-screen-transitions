@@ -16,22 +16,18 @@ import { deriveDescriptorDerivations } from "./helpers/derive-descriptor-derivat
  */
 export type BaseDescriptor = BaseStackDescriptor;
 
-export interface DescriptorsContextValue<
-	TDescriptor extends BaseDescriptor = BaseDescriptor,
-> {
-	previous?: TDescriptor;
-	current: TDescriptor;
-	next?: TDescriptor;
+export interface DescriptorsContextValue {
+	previous?: BaseDescriptor;
+	current: BaseDescriptor;
+	next?: BaseDescriptor;
 }
 
 export type DescriptorDerivationsContextValue = DescriptorDerivations;
 
-interface DescriptorStoreValue<
-	TDescriptor extends BaseDescriptor = BaseDescriptor,
-> extends DescriptorsContextValue<TDescriptor> {
-	descriptors: DescriptorsContextValue<TDescriptor>;
+interface DescriptorStoreValue extends DescriptorsContextValue {
+	descriptors: DescriptorsContextValue;
 	derivations: DescriptorDerivationsContextValue;
-	options: TDescriptor["options"];
+	options: BaseDescriptor["options"];
 }
 
 type DescriptorsProviderProps = {
@@ -44,7 +40,7 @@ type DescriptorsProviderProps = {
 
 const createDescriptorsProvider = createProvider("Descriptors", {
 	global: true,
-})<DescriptorsProviderProps, DescriptorStoreValue<BaseDescriptor>>;
+})<DescriptorsProviderProps, DescriptorStoreValue>;
 
 const {
 	DescriptorsProvider,

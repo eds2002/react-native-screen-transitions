@@ -14,10 +14,6 @@ import {
 	type StackCoreConfig,
 	StackCoreProvider,
 } from "../providers/stack/core.provider";
-import type {
-	BlankStackDescriptor,
-	BlankStackNavigationHelpers,
-} from "../types/blank-stack.types";
 import type { BlankStackProviderProps } from "../types/providers/blank-stack-provider.types";
 import { ActivityContainer, ActivityScreen } from "./activity";
 import { PortalProvider } from "./boundary/portal";
@@ -93,17 +89,12 @@ const StackViewContent = memo(function StackViewContent() {
 	);
 });
 
-type StackViewProps = BlankStackProviderProps<
-	BlankStackDescriptor,
-	BlankStackNavigationHelpers
-> &
-	StackCoreConfig;
+type StackViewProps = BlankStackProviderProps & StackCoreConfig;
 
 export const StackView = memo(function StackView({
 	DISABLE_NATIVE_SCREENS,
 	DISABLE_NATIVE_SCREEN_CONTAINER,
 	TRANSITIONS_ALWAYS_ON,
-	STACK_TYPE,
 	state,
 	navigation,
 	descriptors,
@@ -113,7 +104,6 @@ export const StackView = memo(function StackView({
 		<StackCoreProvider
 			config={{
 				TRANSITIONS_ALWAYS_ON: TRANSITIONS_ALWAYS_ON ?? true,
-				STACK_TYPE,
 				DISABLE_NATIVE_SCREENS: DISABLE_NATIVE_SCREENS ?? false,
 				DISABLE_NATIVE_SCREEN_CONTAINER,
 			}}

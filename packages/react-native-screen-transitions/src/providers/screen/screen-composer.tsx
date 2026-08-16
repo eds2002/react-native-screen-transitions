@@ -7,21 +7,21 @@ import { ScreenGestureProvider } from "./gestures";
 import { ScreenOptionsProvider } from "./options";
 import { ScreenSlotProvider } from "./styles";
 
-type Props<TDescriptor extends BaseDescriptor> = {
-	previous?: TDescriptor;
-	current?: TDescriptor;
-	next?: TDescriptor;
+type Props = {
+	previous?: BaseDescriptor;
+	current?: BaseDescriptor;
+	next?: BaseDescriptor;
 	routeKey?: string;
 	children: React.ReactNode;
 };
 
-export function ScreenComposer<TDescriptor extends BaseDescriptor>({
+export function ScreenComposer({
 	previous,
 	current,
 	next,
 	routeKey,
 	children,
-}: Props<TDescriptor>) {
+}: Props) {
 	return (
 		<DescriptorsProvider
 			previous={previous}

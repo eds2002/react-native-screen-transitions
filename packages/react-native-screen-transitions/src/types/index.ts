@@ -71,7 +71,6 @@ export type {
 	BaseStackRoute,
 	BaseStackScene,
 	BaseStackState,
-	DescriptorMap,
-	StackDescriptorSource,
 	StackSceneActivity,
+	StackTransitionOptions,
 } from "./stack.types";

@@ -11,28 +11,9 @@ import {
 import type { StackProgressEntry } from "../../providers/screen/animation/helpers/stack-progress";
 import type { StackCoreContextValue } from "../../providers/stack/core.provider";
 import { AnimationStore } from "../../stores/animation.store";
-import type { OverlayProps } from "../../types/overlay.types";
-import type {
-	BaseStackDescriptor,
-	BaseStackNavigation,
-	BaseStackRoute,
-	BaseStackScene,
-} from "../../types/stack.types";
+import type { BaseStackRoute, BaseStackScene } from "../../types/stack.types";
 
-export interface StackDescriptor<
-	TRoute extends BaseStackRoute = Route<string>,
-	TNavigation extends BaseStackNavigation = BaseStackNavigation,
-> extends BaseStackDescriptor<TRoute, TNavigation> {
-	options: BaseStackDescriptor["options"] & {
-		overlay?: (props: OverlayProps) => React.ReactNode;
-		overlayShown?: boolean;
-		meta?: Record<string, unknown>;
-		enableTransitions?: boolean;
-	};
-}
-
-export type StackScene<TDescriptor extends StackDescriptor = StackDescriptor> =
-	BaseStackScene<TDescriptor>;
+export type StackScene = BaseStackScene;
 
 type StackDismissRequest = (payload: { route: BaseStackRoute }) => boolean;
 type StackSelector<T> = (stack: StackContextValue) => T;
@@ -41,7 +22,7 @@ export interface StackContextValue extends StackCoreContextValue {
 	navigatorKey: string;
 	routeKeys: string[];
 	routes: Route<string>[];
-	scenes: StackScene[];
+	scenes: BaseStackScene[];
 	focusedIndex: number;
 	requestDismiss?: StackDismissRequest;
 }

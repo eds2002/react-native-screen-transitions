@@ -1,5 +1,9 @@
 import type { ScreenTransitionConfig } from "./screen.types";
 
+export type StackTransitionOptions = ScreenTransitionConfig & {
+	enableTransitions?: boolean;
+};
+
 /**
  * Minimal route shape for navigation utilities.
  * Used as a generic constraint across route comparison functions.
@@ -9,7 +13,7 @@ export interface RouteWithKey {
 }
 
 /**
- * Base route interface - minimal contract all stacks satisfy.
+ * Minimal route contract shared by BlankStack and the native-stack adapter.
  * Uses `object` for params to be compatible with React Navigation's `Readonly<object | undefined>`.
  */
 export interface BaseStackRoute {
@@ -21,8 +25,7 @@ export interface BaseStackRoute {
 export type StackSceneActivity = "active" | "inert" | "inactive" | "closing";
 
 /**
- * Base navigation interface - minimal contract for gesture handling.
- * Both React Navigation helpers and ComponentNavigation satisfy this.
+ * Minimal navigation contract used by transition lifecycle code.
  */
 export interface BaseStackNavigation {
 	getState: () => {
@@ -36,27 +39,20 @@ export interface BaseStackNavigation {
 }
 
 /**
- * Base descriptor interface - generic over route, navigation, and options.
- * All stack descriptors (BlankStack, NativeStack) extend this.
+ * Descriptor contract consumed by the shared transition renderer.
  */
 export interface BaseStackDescriptor<
 	TRoute extends BaseStackRoute = BaseStackRoute,
 	TNavigation extends BaseStackNavigation = BaseStackNavigation,
-	TOptions extends ScreenTransitionConfig = ScreenTransitionConfig,
 > {
 	route: TRoute;
 	navigation: TNavigation;
-	options: TOptions;
+	options: StackTransitionOptions;
 	render?: () => React.JSX.Element | null;
 }
 
-export type StackDescriptorSource<
-	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
-> = TDescriptor;
-
 /**
- * Base scene interface - route + descriptor pair.
- * Used by all stack views to iterate over screens.
+ * Route and descriptor pair consumed by the shared transition renderer.
  */
 export interface BaseStackScene<
 	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
@@ -69,8 +65,7 @@ export interface BaseStackScene<
 }
 
 /**
- * Base state interface - routes array with index.
- * Common structure across all navigation states.
+ * Minimal navigation state accepted by BlankStack.
  */
 export interface BaseStackState<
 	TRoute extends BaseStackRoute = BaseStackRoute,
@@ -78,20 +73,4 @@ export interface BaseStackState<
 	routes: TRoute[];
 	index: number;
 	key: string;
-}
-
-/**
- * Generic descriptor map - keyed by route key.
- * Use this instead of defining stack-specific DescriptorMap types.
- */
-export type DescriptorMap<
-	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
-> = {
-	[key: string]: TDescriptor;
-};
-
-export enum StackType {
-	NATIVE = "native",
-	BLANK = "blank",
-	COMPONENT = "component",
 }

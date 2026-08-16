@@ -1,11 +1,7 @@
 import { createContext, useContext } from "react";
 import type { BaseStackDescriptor, BaseStackScene } from "../../types";
 
-export type ScreenTransitionsAdapterScene =
-	BaseStackScene<BaseStackDescriptor> & {
-		previousDescriptor?: BaseStackDescriptor;
-		nextDescriptor?: BaseStackDescriptor;
-	};
+export type ScreenTransitionsAdapterScene = BaseStackScene<BaseStackDescriptor>;
 
 export interface ScreenTransitionsAdapterContextValue {
 	routeIndexByKey: ReadonlyMap<string, number>;

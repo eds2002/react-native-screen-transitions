@@ -1,41 +1,33 @@
 import type {
-	BaseStackDescriptor,
-	BaseStackNavigation,
+	BlankStackDescriptor,
+	BlankStackNavigationHelpers,
+} from "../blank-stack.types";
+import type {
 	BaseStackRoute,
 	BaseStackScene,
 	BaseStackState,
-	StackDescriptorSource,
 } from "../stack.types";
 
-/**
- * Props for blank stack - generic over descriptor and navigation types.
- * Defaults to the shared base types.
- */
-export interface BlankStackProviderProps<
-	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
-	TNavigation extends BaseStackNavigation = BaseStackNavigation,
-> {
-	state: BaseStackState<TDescriptor["route"]>;
-	navigation: TNavigation;
-	descriptors: Record<string, StackDescriptorSource<TDescriptor>>;
+export interface BlankStackProviderProps {
+	state: BaseStackState<BlankStackDescriptor["route"]>;
+	navigation: BlankStackNavigationHelpers;
+	descriptors: Record<string, BlankStackDescriptor>;
 	describe: (
-		route: TDescriptor["route"],
+		route: BlankStackDescriptor["route"],
 		placeholder: boolean,
-	) => StackDescriptorSource<TDescriptor>;
+	) => BlankStackDescriptor;
 }
 
 /**
  * Context value for blank stack — only fields unique to blank stack lifecycle.
  * Shared fields (routes, scenes, etc.) live in StackContext.
  */
-export interface BlankStackStoreValue<
-	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
-> {
+export interface BlankStackStoreValue {
 	navigatorKey: string;
 	routeKeys: string[];
-	routes: TDescriptor["route"][];
-	scenes: BaseStackScene<TDescriptor>[];
-	scenesByKey: Record<string, BaseStackScene<TDescriptor>>;
+	routes: BlankStackDescriptor["route"][];
+	scenes: BaseStackScene<BlankStackDescriptor>[];
+	scenesByKey: Record<string, BaseStackScene<BlankStackDescriptor>>;
 	paintDriverRouteKeyByRouteKey: ReadonlyMap<string, string>;
 	focusedIndex: number;
 	requestDismiss: (payload: { route: BaseStackRoute }) => boolean;

@@ -1,25 +1,21 @@
-import type {
-	BaseStackDescriptor,
-	RouteWithKey,
-} from "../../../../types/stack.types";
+import type { RouteWithKey } from "../../../../types/stack.types";
 import { composeDescriptors } from "./navigation/compose-descriptors";
 import { syncRoutesWithRemoved } from "./navigation/sync-routes-with-removed";
 import { routesHaveSameKeys } from "./state-equality";
 import type {
-	BlankStackDescriptorSources,
+	BlankStackDescriptors,
 	BlankStackRoutes,
 	LocalRoutesState,
 	ReconciledRoutes,
 } from "./types";
 
-type ReconcileBlankStackRoutesParams<TDescriptor extends BaseStackDescriptor> =
-	{
-		current: LocalRoutesState<TDescriptor>;
-		previousRoutesSnapshot: BlankStackRoutes<TDescriptor>;
-		nextRoutesSnapshot: BlankStackRoutes<TDescriptor>;
-		nextDescriptors: BlankStackDescriptorSources<TDescriptor>;
-		closingRouteKeys: Set<string>;
-	};
+type ReconcileBlankStackRoutesParams = {
+	current: LocalRoutesState;
+	previousRoutesSnapshot: BlankStackRoutes;
+	nextRoutesSnapshot: BlankStackRoutes;
+	nextDescriptors: BlankStackDescriptors;
+	closingRouteKeys: Set<string>;
+};
 
 const alignRoutesWithLatest = <
 	Route extends RouteWithKey,
@@ -73,15 +69,13 @@ const alignRoutesWithLatest = <
 	};
 };
 
-const acceptAlreadyClosingRouteRemovals = <
-	TDescriptor extends BaseStackDescriptor,
->({
+const acceptAlreadyClosingRouteRemovals = ({
 	current,
 	previousRoutesSnapshot,
 	nextRoutesSnapshot,
 	nextDescriptors,
 	closingRouteKeys,
-}: ReconcileBlankStackRoutesParams<TDescriptor>): ReconciledRoutes<TDescriptor> | null => {
+}: ReconcileBlankStackRoutesParams): ReconciledRoutes | null => {
 	const nextRouteKeys = new Set(nextRoutesSnapshot.map((route) => route.key));
 	const acceptedRemovedKeys = new Set<string>();
 
@@ -114,13 +108,10 @@ const acceptAlreadyClosingRouteRemovals = <
 		return closingRouteKeys.has(route.key);
 	});
 
-	const routes = [
-		...nextRoutesSnapshot,
-		...remainingClosingRoutes,
-	] as BlankStackRoutes<TDescriptor>;
+	const routes = [...nextRoutesSnapshot, ...remainingClosingRoutes];
 	const descriptors = {
 		...nextDescriptors,
-	} as BlankStackDescriptorSources<TDescriptor>;
+	};
 
 	for (const route of remainingClosingRoutes) {
 		const descriptor = current.sourceDescriptors[route.key];
@@ -135,11 +126,9 @@ const acceptAlreadyClosingRouteRemovals = <
 	};
 };
 
-export const reconcileBlankStackRoutes = <
-	TDescriptor extends BaseStackDescriptor,
->(
-	params: ReconcileBlankStackRoutesParams<TDescriptor>,
-): ReconciledRoutes<TDescriptor> => {
+export const reconcileBlankStackRoutes = (
+	params: ReconcileBlankStackRoutesParams,
+): ReconciledRoutes => {
 	const {
 		current,
 		previousRoutesSnapshot,
@@ -162,9 +151,8 @@ export const reconcileBlankStackRoutes = <
 		);
 
 		return {
-			routes: result.routes as BlankStackRoutes<TDescriptor>,
-			descriptors:
-				result.descriptors as BlankStackDescriptorSources<TDescriptor>,
+			routes: result.routes,
+			descriptors: result.descriptors,
 		};
 	}
 
@@ -186,7 +174,7 @@ export const reconcileBlankStackRoutes = <
 	});
 
 	return {
-		routes: result.routes as BlankStackRoutes<TDescriptor>,
-		descriptors: result.descriptors as BlankStackDescriptorSources<TDescriptor>,
+		routes: result.routes,
+		descriptors: result.descriptors,
 	};
 };

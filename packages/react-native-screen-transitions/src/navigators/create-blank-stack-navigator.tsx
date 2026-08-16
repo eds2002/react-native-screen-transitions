@@ -18,7 +18,6 @@ import type {
 	BaseStackNavigation,
 	BaseStackRoute,
 	BaseStackState,
-	StackDescriptorSource,
 } from "../types/stack.types";
 
 export type BlankStackStandardEventMap = {};
@@ -35,10 +34,7 @@ type StandardDescriptor = NavigatorDescriptor<BlankStackNavigationOptions> & {
 };
 
 type StandardDescriptorMap = Record<string, StandardDescriptor>;
-type BlankStackDescriptorSourceMap = Record<
-	string,
-	StackDescriptorSource<BlankStackDescriptor>
->;
+type BlankStackDescriptorMap = Record<string, BlankStackDescriptor>;
 
 function createDescriptorMap({
 	routes,
@@ -48,8 +44,8 @@ function createDescriptorMap({
 	routes: BaseStackRoute[];
 	descriptors: StandardDescriptorMap;
 	navigation: BaseStackNavigation;
-}): BlankStackDescriptorSourceMap {
-	const result: BlankStackDescriptorSourceMap = {};
+}): BlankStackDescriptorMap {
+	const result: BlankStackDescriptorMap = {};
 
 	for (const route of routes) {
 		const descriptor = descriptors[route.key];

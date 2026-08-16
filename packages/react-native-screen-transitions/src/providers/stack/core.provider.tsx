@@ -6,12 +6,10 @@ import {
 	SafeAreaInsetsContext,
 	SafeAreaProvider,
 } from "react-native-safe-area-context";
-import { StackType } from "../../types/stack.types";
 import createProvider from "../../utils/create-provider";
 
 export interface StackCoreConfig {
 	TRANSITIONS_ALWAYS_ON?: boolean;
-	STACK_TYPE?: StackType;
 	DISABLE_NATIVE_SCREENS?: boolean;
 	DISABLE_NATIVE_SCREEN_CONTAINER?: boolean;
 }
@@ -24,7 +22,6 @@ interface StackCoreProviderProps {
 export interface StackCoreContextValue {
 	flags: {
 		TRANSITIONS_ALWAYS_ON: boolean;
-		STACK_TYPE?: StackType;
 		DISABLE_NATIVE_SCREENS: boolean;
 		DISABLE_NATIVE_SCREEN_CONTAINER: boolean;
 	};
@@ -63,16 +60,11 @@ const StackSafeAreaProvider = memo(function StackSafeAreaProvider({
 
 const StackCoreRoot = memo(function StackCoreRoot({
 	children,
-	stackType,
 }: {
 	children: ReactNode;
-	stackType: StackType;
 }) {
 	return (
-		<GestureHandlerRootView
-			style={styles.container}
-			pointerEvents={stackType === StackType.COMPONENT ? "box-none" : undefined}
-		>
+		<GestureHandlerRootView style={styles.container}>
 			<StackSafeAreaProvider>{children}</StackSafeAreaProvider>
 		</GestureHandlerRootView>
 	);
@@ -85,19 +77,16 @@ export const { StackCoreProvider, useStackCoreStore } = createProvider(
 		TRANSITIONS_ALWAYS_ON = false,
 		DISABLE_NATIVE_SCREENS = false,
 		DISABLE_NATIVE_SCREEN_CONTAINER = false,
-		STACK_TYPE = StackType.BLANK,
 	} = config;
 
 	const flags = useMemo(
 		() => ({
 			TRANSITIONS_ALWAYS_ON,
-			STACK_TYPE,
 			DISABLE_NATIVE_SCREENS,
 			DISABLE_NATIVE_SCREEN_CONTAINER,
 		}),
 		[
 			TRANSITIONS_ALWAYS_ON,
-			STACK_TYPE,
 			DISABLE_NATIVE_SCREENS,
 			DISABLE_NATIVE_SCREEN_CONTAINER,
 		],
@@ -105,7 +94,7 @@ export const { StackCoreProvider, useStackCoreStore } = createProvider(
 
 	return {
 		value: { flags },
-		children: <StackCoreRoot stackType={STACK_TYPE}>{children}</StackCoreRoot>,
+		children: <StackCoreRoot>{children}</StackCoreRoot>,
 	};
 });
 

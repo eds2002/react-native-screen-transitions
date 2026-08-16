@@ -4,31 +4,23 @@ import {
 	type StackContextValue,
 	StackProvider,
 } from "../../hooks/navigation/use-stack";
+import type { BlankStackDescriptor } from "../../types/blank-stack.types";
 import type {
 	BlankStackProviderProps,
 	BlankStackStoreValue,
 } from "../../types/providers/blank-stack-provider.types";
-import type {
-	BaseStackDescriptor,
-	BaseStackNavigation,
-	BaseStackScene,
-} from "../../types/stack.types";
+import type { BaseStackScene } from "../../types/stack.types";
 import createProvider from "../../utils/create-provider";
 import { useBlankStackState } from "./blank-stack-state";
 import { resolvePresentedIndex } from "./blank-stack-state/helpers/resolve-presented-index";
 import { useStackCoreStore } from "./core.provider";
 
-type InternalBlankStackProviderProps = BlankStackProviderProps<
-	BaseStackDescriptor,
-	BaseStackNavigation
-> & {
+type InternalBlankStackProviderProps = BlankStackProviderProps & {
 	children: ReactNode;
 };
 
-const createScenesByKey = <TDescriptor extends BaseStackDescriptor>(
-	scenes: BaseStackScene<TDescriptor>[],
-) => {
-	const scenesByKey: Record<string, BaseStackScene<TDescriptor>> = {};
+const createScenesByKey = (scenes: BaseStackScene<BlankStackDescriptor>[]) => {
+	const scenesByKey: Record<string, BaseStackScene<BlankStackDescriptor>> = {};
 
 	for (const scene of scenes) {
 		scenesByKey[scene.route.key] = scene;
@@ -39,7 +31,7 @@ const createScenesByKey = <TDescriptor extends BaseStackDescriptor>(
 
 type BlankStackStoreProviderProps = {
 	children: ReactNode;
-	value: BlankStackStoreValue<BaseStackDescriptor>;
+	value: BlankStackStoreValue;
 };
 
 const {
@@ -48,7 +40,7 @@ const {
 	useOptionalBlankStackStore,
 } = createProvider("BlankStack")<
 	BlankStackStoreProviderProps,
-	BlankStackStoreValue<BaseStackDescriptor>
+	BlankStackStoreValue
 >(({ children, value }) => ({ children, value }));
 
 function BlankStackProvider({
@@ -87,7 +79,7 @@ function BlankStackProvider({
 			navigatorKey,
 			routeKeys: state.routeKeys,
 			routes: state.routes as Route<string>[],
-			scenes: state.scenes as BaseStackScene[],
+			scenes: state.scenes,
 			focusedIndex,
 			requestDismiss,
 		}),

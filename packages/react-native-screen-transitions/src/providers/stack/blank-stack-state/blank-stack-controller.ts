@@ -1,17 +1,12 @@
 import { StackActions } from "@react-navigation/native";
 import type { BlankStackProviderProps } from "../../../types/providers/blank-stack-provider.types";
-import type {
-	BaseStackDescriptor,
-	BaseStackNavigation,
-	BaseStackRoute,
-} from "../../../types/stack.types";
+import type { BaseStackRoute } from "../../../types/stack.types";
 import { dispatchCloseAction } from "../../../utils/navigation/close-action-replay";
 import { buildBlankStackState } from "./helpers/build-blank-stack-state";
 import { deriveBlankStackState } from "./helpers/derive-blank-stack-state";
 import type {
 	BlankStackControllerSnapshot,
 	BlankStackController as BlankStackControllerType,
-	BlankStackDescriptorSources,
 } from "./helpers/types";
 
 export type { BlankStackController } from "./helpers/types";
@@ -23,21 +18,17 @@ export type { BlankStackController } from "./helpers/types";
  * remove descriptors before our close animation has finished. This controller
  * keeps those closing routes locally until their lifecycle reports completion.
  */
-export const createBlankStackController = <
-	TDescriptor extends BaseStackDescriptor,
-	TNavigation extends BaseStackNavigation,
->(
-	initialProps: BlankStackProviderProps<TDescriptor, TNavigation>,
-): BlankStackControllerType<TDescriptor, TNavigation> => {
+export const createBlankStackController = (
+	initialProps: BlankStackProviderProps,
+): BlankStackControllerType => {
 	const closingRouteKeys = new Set<string>();
 	let props = initialProps;
 	let previousRoutesSnapshot = initialProps.state.routes;
-	let snapshot: BlankStackControllerSnapshot<TDescriptor> = {
+	let snapshot: BlankStackControllerSnapshot = {
 		state: buildBlankStackState({
 			props,
 			routes: initialProps.state.routes,
-			descriptors:
-				initialProps.descriptors as BlankStackDescriptorSources<TDescriptor>,
+			descriptors: initialProps.descriptors,
 			closingRouteKeys,
 		}),
 	};
@@ -56,13 +47,11 @@ export const createBlankStackController = <
 		};
 	};
 
-	const getSnapshot = (): BlankStackControllerSnapshot<TDescriptor> => {
+	const getSnapshot = (): BlankStackControllerSnapshot => {
 		return snapshot;
 	};
 
-	const update = (
-		nextProps: BlankStackProviderProps<TDescriptor, TNavigation>,
-	) => {
+	const update = (nextProps: BlankStackProviderProps) => {
 		const lastRoutesSnapshot = previousRoutesSnapshot;
 		props = nextProps;
 

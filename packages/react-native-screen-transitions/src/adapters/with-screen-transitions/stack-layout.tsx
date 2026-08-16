@@ -11,7 +11,6 @@ import {
 	useStackCoreStore,
 } from "../../providers/stack/core.provider";
 import type { BaseStackDescriptor, BaseStackRoute } from "../../types";
-import { StackType } from "../../types/stack.types";
 import { isOverlayVisible } from "../../utils/overlay/visibility";
 import {
 	ScreenTransitionsAdapterProvider,
@@ -192,9 +191,7 @@ export function ScreenTransitionsStackLayout(
 	props: ScreenTransitionsStackContentProps,
 ) {
 	return (
-		<StackCoreProvider
-			config={{ TRANSITIONS_ALWAYS_ON: false, STACK_TYPE: StackType.NATIVE }}
-		>
+		<StackCoreProvider config={{ TRANSITIONS_ALWAYS_ON: false }}>
 			<ScreenTransitionsStackContent {...props} />
 		</StackCoreProvider>
 	);

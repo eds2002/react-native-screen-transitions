@@ -1,9 +1,7 @@
+import type { BlankStackDescriptor } from "../../../../types/blank-stack.types";
 import type { BlankStackProviderProps } from "../../../../types/providers/blank-stack-provider.types";
 import type {
-	BaseStackDescriptor,
-	BaseStackNavigation,
 	BaseStackScene,
-	StackDescriptorSource,
 	StackSceneActivity,
 } from "../../../../types/stack.types";
 import { isOverlayVisible } from "../../../../utils/overlay/visibility";
@@ -17,35 +15,29 @@ import {
 	setsAreEqual,
 } from "./state-equality";
 import type {
-	BlankStackDescriptorSources,
 	BlankStackDescriptors,
 	BlankStackRoutes,
 	LocalRoutesState,
 	SceneActivityWindow,
 } from "./types";
 
-type BuildBlankStackStateParams<
-	TDescriptor extends BaseStackDescriptor,
-	TNavigation extends BaseStackNavigation,
-> = {
-	props: BlankStackProviderProps<TDescriptor, TNavigation>;
-	routes: BlankStackRoutes<TDescriptor>;
-	descriptors: BlankStackDescriptorSources<TDescriptor>;
+type BuildBlankStackStateParams = {
+	props: BlankStackProviderProps;
+	routes: BlankStackRoutes;
+	descriptors: BlankStackDescriptors;
 	closingRouteKeys: ReadonlySet<string>;
-	previousState?: LocalRoutesState<TDescriptor>;
+	previousState?: LocalRoutesState;
 };
 
-const resolveStableDescriptorSource = <
-	TDescriptor extends BaseStackDescriptor,
->({
+const resolveStableDescriptorSource = ({
 	routeKey,
 	sourceDescriptor,
 	previousState,
 }: {
 	routeKey: string;
-	sourceDescriptor: StackDescriptorSource<TDescriptor>;
-	previousState?: LocalRoutesState<TDescriptor>;
-}): StackDescriptorSource<TDescriptor> => {
+	sourceDescriptor: BlankStackDescriptor;
+	previousState?: LocalRoutesState;
+}): BlankStackDescriptor => {
 	const previousSourceDescriptor = previousState?.sourceDescriptors[routeKey];
 
 	if (
@@ -82,8 +74,8 @@ const getSceneActivity = ({
 	return "inactive";
 };
 
-const getNonClosingSceneIndices = <TDescriptor extends BaseStackDescriptor>(
-	routes: BlankStackRoutes<TDescriptor>,
+const getNonClosingSceneIndices = (
+	routes: BlankStackRoutes,
 	closingRouteKeys: ReadonlySet<string>,
 ) => {
 	const indices: number[] = [];
@@ -98,17 +90,11 @@ const getNonClosingSceneIndices = <TDescriptor extends BaseStackDescriptor>(
 	return indices;
 };
 
-const getSceneActivityWindow = <
-	TDescriptor extends BaseStackDescriptor,
-	TNavigation extends BaseStackNavigation,
->({
+const getSceneActivityWindow = ({
 	props,
 	routes,
 	closingRouteKeys,
-}: BuildBlankStackStateParams<
-	TDescriptor,
-	TNavigation
->): SceneActivityWindow => {
+}: BuildBlankStackStateParams): SceneActivityWindow => {
 	const nonClosingIndices = getNonClosingSceneIndices(routes, closingRouteKeys);
 
 	const topNonClosingIndex =
@@ -138,31 +124,26 @@ const getSceneActivityWindow = <
 	};
 };
 
-const buildBaseScenes = <
-	TDescriptor extends BaseStackDescriptor,
-	TNavigation extends BaseStackNavigation,
->({
+const buildBaseScenes = ({
 	routes,
 	descriptors,
 	closingRouteKeys,
 	previousState,
 	activityWindow,
-}: BuildBlankStackStateParams<TDescriptor, TNavigation> & {
+}: BuildBlankStackStateParams & {
 	activityWindow: SceneActivityWindow;
 }) => {
 	const routeKeys: string[] = [];
-	const scenes: BaseStackScene<TDescriptor>[] = [];
+	const scenes: BaseStackScene<BlankStackDescriptor>[] = [];
 	const routeChildStates: Record<string, unknown> = {};
-	const sourceDescriptors = {} as BlankStackDescriptorSources<TDescriptor>;
-	const blankStackDescriptors = {} as BlankStackDescriptors<TDescriptor>;
+	const sourceDescriptors: BlankStackDescriptors = {};
+	const blankStackDescriptors: BlankStackDescriptors = {};
 	let shouldShowFloatOverlay = false;
 
 	for (let sceneIndex = 0; sceneIndex < routes.length; sceneIndex++) {
-		const route = routes[sceneIndex] as TDescriptor["route"];
+		const route = routes[sceneIndex] as BlankStackDescriptor["route"];
 
-		const rawSourceDescriptor = descriptors[route.key] as
-			| StackDescriptorSource<TDescriptor>
-			| undefined;
+		const rawSourceDescriptor = descriptors[route.key];
 
 		if (!rawSourceDescriptor) {
 			throw new Error(`Missing descriptor for route "${route.key}"`);
@@ -195,7 +176,7 @@ const buildBaseScenes = <
 			previousDescriptor.navigation === sourceDescriptor.navigation &&
 			previousDescriptor.options === sourceDescriptor.options
 				? previousDescriptor
-				: (sourceDescriptor as TDescriptor);
+				: sourceDescriptor;
 
 		routeKeys.push(route.key);
 		routeChildStates[route.key] = routeChildState;
@@ -223,17 +204,17 @@ const buildBaseScenes = <
 	};
 };
 
-const withSceneRelationships = <TDescriptor extends BaseStackDescriptor>({
+const withSceneRelationships = ({
 	scenes,
 	sourceDescriptors,
 	closingRouteKeys,
 	previousState,
 }: {
-	scenes: BaseStackScene<TDescriptor>[];
-	sourceDescriptors: BlankStackDescriptorSources<TDescriptor>;
+	scenes: BaseStackScene<BlankStackDescriptor>[];
+	sourceDescriptors: BlankStackDescriptors;
 	closingRouteKeys: ReadonlySet<string>;
-	previousState?: LocalRoutesState<TDescriptor>;
-}): BaseStackScene<TDescriptor>[] => {
+	previousState?: LocalRoutesState;
+}): BaseStackScene<BlankStackDescriptor>[] => {
 	const isRouteClosing = (routeKey: string) => closingRouteKeys.has(routeKey);
 
 	const closingRouteOrder = new Map(
@@ -250,8 +231,7 @@ const withSceneRelationships = <TDescriptor extends BaseStackDescriptor>({
 
 	const relationshipScenes = scenes.map((scene) => ({
 		route: scene.route,
-		descriptor: (sourceDescriptors[scene.route.key] ??
-			scene.descriptor) as TDescriptor,
+		descriptor: sourceDescriptors[scene.route.key] ?? scene.descriptor,
 	}));
 
 	const nextScenes = scenes.map((scene, sceneIndex) => {
@@ -295,12 +275,9 @@ const withSceneRelationships = <TDescriptor extends BaseStackDescriptor>({
 	return nextScenes;
 };
 
-export const buildBlankStackState = <
-	TDescriptor extends BaseStackDescriptor,
-	TNavigation extends BaseStackNavigation,
->(
-	params: BuildBlankStackStateParams<TDescriptor, TNavigation>,
-): LocalRoutesState<TDescriptor> => {
+export const buildBlankStackState = (
+	params: BuildBlankStackStateParams,
+): LocalRoutesState => {
 	const activityWindow = getSceneActivityWindow(params);
 	const focusedRouteKey =
 		params.props.state.routes[params.props.state.index]?.key;

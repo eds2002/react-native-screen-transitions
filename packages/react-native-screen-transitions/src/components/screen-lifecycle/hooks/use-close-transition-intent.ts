@@ -7,7 +7,6 @@ import { useCurrentScreenRelationships } from "../../../providers/screen/use-cur
 import { useOptionalBlankStackStore } from "../../../providers/stack/blank-stack.provider";
 import { useStackCoreStore } from "../../../providers/stack/core.provider";
 import { GestureStore } from "../../../stores/gesture.store";
-import { StackType } from "../../../types/stack.types";
 import {
 	dispatchCloseAction,
 	isCloseActionReplay,
@@ -22,9 +21,9 @@ export function useCloseTransitionIntent(current: BaseDescriptor): {
 	completeClose: () => void;
 } {
 	const routeKey = current.route.key;
-	const flags = useStackCoreStore((store) => store.flags);
-	const { STACK_TYPE: stackType, TRANSITIONS_ALWAYS_ON: transitionsAlwaysOn } =
-		flags;
+	const transitionsAlwaysOn = useStackCoreStore(
+		(store) => store.flags.TRANSITIONS_ALWAYS_ON,
+	);
 	const handleCloseRoute = useOptionalBlankStackStore(
 		(store) => store?.handleCloseRoute,
 	);
@@ -55,7 +54,7 @@ export function useCloseTransitionIntent(current: BaseDescriptor): {
 			dispatchCloseAction(pendingAction, (action) => {
 				current.navigation.dispatch(action);
 			});
-		} else if (stackType !== StackType.NATIVE && handleCloseRoute) {
+		} else if (handleCloseRoute) {
 			handleCloseRoute({ route: current.route });
 		} else {
 			dismissScreen();

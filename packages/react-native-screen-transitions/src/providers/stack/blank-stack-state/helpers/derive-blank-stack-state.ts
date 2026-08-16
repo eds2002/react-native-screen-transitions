@@ -1,9 +1,5 @@
 import type { BlankStackProviderProps } from "../../../../types/providers/blank-stack-provider.types";
-import type {
-	BaseStackDescriptor,
-	BaseStackNavigation,
-	RouteWithKey,
-} from "../../../../types/stack.types";
+import type { RouteWithKey } from "../../../../types/stack.types";
 import { buildBlankStackState } from "./build-blank-stack-state";
 import { reconcileBlankStackRoutes } from "./reconcile-blank-stack-routes";
 import {
@@ -16,13 +12,10 @@ import {
 } from "./state-equality";
 import type { BlankStackRoutes, LocalRoutesState } from "./types";
 
-type DeriveBlankStackStateParams<
-	TDescriptor extends BaseStackDescriptor,
-	TNavigation extends BaseStackNavigation,
-> = {
-	props: BlankStackProviderProps<TDescriptor, TNavigation>;
-	current: LocalRoutesState<TDescriptor>;
-	previousRoutesSnapshot: BlankStackRoutes<TDescriptor>;
+type DeriveBlankStackStateParams = {
+	props: BlankStackProviderProps;
+	current: LocalRoutesState;
+	previousRoutesSnapshot: BlankStackRoutes;
 	closingRouteKeys: Set<string>;
 };
 
@@ -36,18 +29,12 @@ const routesAreIdentical = <Route extends RouteWithKey>(
 	return a.every((route, index) => route === b[index]);
 };
 
-export const deriveBlankStackState = <
-	TDescriptor extends BaseStackDescriptor,
-	TNavigation extends BaseStackNavigation,
->({
+export const deriveBlankStackState = ({
 	props,
 	current,
 	previousRoutesSnapshot,
 	closingRouteKeys,
-}: DeriveBlankStackStateParams<
-	TDescriptor,
-	TNavigation
->): LocalRoutesState<TDescriptor> => {
+}: DeriveBlankStackStateParams): LocalRoutesState => {
 	const nextRoutesSnapshot = props.state.routes;
 	const nextDescriptors = props.descriptors;
 	const nextRouteChildStates = getRouteChildStateMap(nextRoutesSnapshot);
