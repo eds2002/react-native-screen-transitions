@@ -5,7 +5,8 @@ import {
 	type ReactNode,
 } from "react";
 import type { View } from "react-native";
-import Animated, { type AnimatedRef, runOnUI } from "react-native-reanimated";
+import Animated, { type AnimatedRef } from "react-native-reanimated";
+import { scheduleOnUI } from "react-native-worklets";
 import { logger } from "../../../../../utils/logger";
 import {
 	isTeleportAvailable,
@@ -78,7 +79,7 @@ const EnabledBoundaryPortal = memo(function EnabledBoundaryPortal({
 		<Animated.View
 			ref={placeholderRef}
 			onLayout={({ nativeEvent: { layout } }) =>
-				runOnUI(handleOnLayout)(layout)
+				scheduleOnUI(handleOnLayout, layout)
 			}
 			style={placeholderStyle}
 			pointerEvents={PORTAL_POINTER_EVENTS}

@@ -1,17 +1,16 @@
 import { useCallback, useRef } from "react";
 import { type SharedValue, useAnimatedReaction } from "react-native-reanimated";
-import { executeOnUIRuntimeSync, scheduleOnRN } from "react-native-worklets";
+import { runOnUISync, scheduleOnRN } from "react-native-worklets";
 import { IS_WEB } from "../../constants";
 
 export function readInitialValue<T>(sharedValue: SharedValue<T>): T {
 	if (IS_WEB) {
 		return sharedValue.get();
 	}
-	const readOnUI = executeOnUIRuntimeSync((sv: SharedValue<T>) => {
+	return runOnUISync((sv: SharedValue<T>) => {
 		"worklet";
 		return sv.get();
-	});
-	return readOnUI(sharedValue);
+	}, sharedValue);
 }
 
 /**

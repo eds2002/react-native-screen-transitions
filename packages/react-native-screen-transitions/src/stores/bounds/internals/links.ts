@@ -1,5 +1,4 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
-import { screenBelongsToScope } from "../../../factories/screen-topology";
 import {
 	createGroupTag,
 	ensurePairGroups,
