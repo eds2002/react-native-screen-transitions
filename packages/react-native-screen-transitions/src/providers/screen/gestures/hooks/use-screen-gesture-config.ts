@@ -1,4 +1,3 @@
-import { usePreventRemoveContext } from "@react-navigation/native";
 import { useMemo } from "react";
 import { useDescriptorsStore } from "../../descriptors";
 import { resolveScreenGestureConfig } from "../shared/policy";
@@ -11,21 +10,13 @@ export function useScreenGestureConfig(
 	const isFirstKey = useDescriptorsStore(
 		(store) => store.derivations.isFirstKey,
 	);
-	const currentScreenKey = useDescriptorsStore(
-		(store) => store.derivations.currentScreenKey,
-	);
-	const { preventedRoutes } = usePreventRemoveContext();
-	const isRemovePrevented =
-		preventedRoutes[currentScreenKey]?.preventRemove === true;
-
 	return useMemo(
 		() =>
 			resolveScreenGestureConfig({
 				options,
 				isFirstKey,
 				ancestorGestures,
-				isRemovePrevented,
 			}),
-		[isFirstKey, options, ancestorGestures, isRemovePrevented],
+		[isFirstKey, options, ancestorGestures],
 	);
 }

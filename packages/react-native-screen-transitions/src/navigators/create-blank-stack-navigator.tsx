@@ -78,8 +78,6 @@ export const BlankStackNavigator = createStandardNavigator<
 		navigation,
 		navigationHost,
 		navigationState,
-		nativeScreens,
-		enableNativeScreens,
 	}) => {
 		const stackState = navigationState ?? {
 			key: "blank-stack",
@@ -107,7 +105,6 @@ export const BlankStackNavigator = createStandardNavigator<
 			[actions],
 		);
 		const stackNavigation = navigation ?? fallbackNavigation;
-		const nativeScreensEnabled = nativeScreens ?? enableNativeScreens ?? true;
 		const stackDescriptors = React.useMemo(
 			() =>
 				createDescriptorMap({
@@ -135,7 +132,6 @@ export const BlankStackNavigator = createStandardNavigator<
 		return (
 			<NavigationHostProvider value={navigationHost}>
 				<StackView
-					DISABLE_NATIVE_SCREENS={!nativeScreensEnabled}
 					state={stackState}
 					navigation={stackNavigation as BlankStackNavigationHelpers}
 					descriptors={stackDescriptors}

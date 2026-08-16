@@ -27,6 +27,9 @@ const NavigationHostContext = createContext<NavigationHostContextValue>(
 );
 NavigationHostContext.displayName = "NavigationHost";
 
+const NavigationRouteContext = createContext<BaseStackRoute | null>(null);
+NavigationRouteContext.displayName = "StandardNavigationRoute";
+
 export function NavigationHostProvider({
 	children,
 	value,
@@ -53,8 +56,20 @@ export function NavigationScreenProvider({
 	const { ScreenProvider } = useContext(NavigationHostContext);
 
 	return (
-		<ScreenProvider navigation={navigation} route={route}>
-			{children}
-		</ScreenProvider>
+		<NavigationRouteContext.Provider value={route}>
+			<ScreenProvider navigation={navigation} route={route}>
+				{children}
+			</ScreenProvider>
+		</NavigationRouteContext.Provider>
 	);
+}
+
+export function useNavigationRoute() {
+	const route = useContext(NavigationRouteContext);
+
+	if (!route) {
+		throw new Error("Navigation route is unavailable");
+	}
+
+	return route;
 }

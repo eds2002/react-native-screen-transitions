@@ -1,7 +1,3 @@
-import {
-	StackActions,
-	usePreventRemoveContext,
-} from "@react-navigation/native";
 import { useCallback } from "react";
 import { useDescriptorsStore } from "../../providers/screen/descriptors";
 import { useBlankStackStore } from "../../providers/stack/blank-stack.provider";
@@ -18,8 +14,6 @@ export function useNavigationHelpers() {
 	const requestStackDismiss = useBlankStackStore(
 		(stack) => stack.requestDismiss,
 	);
-	const { preventedRoutes } = usePreventRemoveContext();
-	const isRemovePrevented = preventedRoutes[route.key]?.preventRemove === true;
 
 	const dismissScreen = useCallback((): boolean => {
 		const state = navigation.getState();
@@ -30,7 +24,8 @@ export function useNavigationHelpers() {
 		if (!routeStillPresent || routeIndex === 0) return false;
 
 		const action = {
-			...StackActions.pop(),
+			type: "POP",
+			payload: { count: 1 },
 			source: route.key,
 			target: state.key,
 		};
@@ -41,8 +36,6 @@ export function useNavigationHelpers() {
 	}, [navigation, route.key]);
 
 	const requestDismiss = useCallback((): boolean => {
-		if (isRemovePrevented) return false;
-
 		if (requestStackDismiss) {
 			if (!requestStackDismiss({ route })) return false;
 		} else {
@@ -60,7 +53,7 @@ export function useNavigationHelpers() {
 			);
 		}
 		return true;
-	}, [isRemovePrevented, navigation, route, requestStackDismiss]);
+	}, [navigation, route, requestStackDismiss]);
 
-	return { dismissScreen, isRemovePrevented, requestDismiss };
+	return { dismissScreen, requestDismiss };
 }

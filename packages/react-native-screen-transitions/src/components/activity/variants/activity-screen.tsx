@@ -1,19 +1,20 @@
 import type * as React from "react";
 import { memo } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, type ViewProps } from "react-native";
 import { useDerivedValue } from "react-native-reanimated";
-import { Screen } from "react-native-screens";
-import { IS_WEB } from "../../../constants";
 import { useSharedValueState } from "../../../hooks/reanimated/use-shared-value-state";
 import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
-import { useStackCoreStore } from "../../../providers/stack/core.provider";
 import { AnimationStore } from "../../../stores/animation.store";
-import {
-	DEFAULT_INACTIVE_BEHAVIOR,
-	HIDDEN_ACTIVITY_SCREEN_STYLE,
-	type InactiveBehavior,
-	resolveActivityScreenPresentation,
-} from "../helpers";
+import type { StackSceneActivity } from "../../../types/stack.types";
+import { ActivityView, type ActivityViewMode } from "../activity-view";
+import { DEFAULT_INACTIVE_BEHAVIOR, type InactiveBehavior } from "../helpers";
+
+const PointerEventsByActivity = {
+	active: "auto",
+	inert: "auto",
+	inactive: "none",
+	closing: "none",
+} satisfies Record<StackSceneActivity, ViewProps["pointerEvents"]>;
 
 interface ActivityScreenProps {
 	children: React.ReactNode;
@@ -42,9 +43,6 @@ export const ActivityScreen = memo(function ActivityScreen({
 	const resolvedPaintDriverRouteKey =
 		paintDriverRouteKey ?? stackPaintDriverRouteKey;
 	const resolvedHasNestedState = hasNestedState ?? "state" in scene.route;
-	const nativeScreenDisabled = useStackCoreStore(
-		(store) => store.flags.DISABLE_NATIVE_SCREENS,
-	);
 	const paintDriverAnimations = resolvedPaintDriverRouteKey
 		? AnimationStore.getBag(resolvedPaintDriverRouteKey)
 		: undefined;
@@ -68,11 +66,21 @@ export const ActivityScreen = memo(function ActivityScreen({
 
 	const isPaintDriverSettledOnJS = useSharedValueState(isPaintDriverSettled);
 
-	const { visible, ...screenPresentation } = resolveActivityScreenPresentation({
-		activity: scene.activity,
-		inactiveBehavior: resolvedInactiveBehavior,
-		waitForPaintDriver: !isPaintDriverSettledOnJS,
-	});
+	let activityViewMode: ActivityViewMode =
+		scene.activity === "active" ? "normal" : "inert";
+	let visible = scene.activity !== "inactive";
+
+	if (scene.activity === "inactive") {
+		if (resolvedInactiveBehavior === "keep" || !isPaintDriverSettledOnJS) {
+			visible = true;
+		} else if (resolvedInactiveBehavior === "pause") {
+			activityViewMode = "paused";
+			visible = true;
+		} else {
+			activityViewMode = "paused";
+			visible = false;
+		}
+	}
 
 	const shouldUnmount =
 		resolvedInactiveBehavior === "unmount" &&
@@ -84,27 +92,15 @@ export const ActivityScreen = memo(function ActivityScreen({
 		return null;
 	}
 
-	const style = [StyleSheet.absoluteFill, visible ? undefined : styles.hidden];
-
-	if (IS_WEB || nativeScreenDisabled) {
-		return (
-			<View
-				style={style}
-				pointerEvents={screenPresentation.pointerEvents}
-				collapsable={false}
-			>
-				{children}
-			</View>
-		);
-	}
-
 	return (
-		<Screen {...screenPresentation} style={style} collapsable={false}>
-			{children}
-		</Screen>
+		<View
+			style={StyleSheet.absoluteFill}
+			pointerEvents={PointerEventsByActivity[scene.activity]}
+			collapsable={false}
+		>
+			<ActivityView mode={activityViewMode} visible={visible}>
+				{children}
+			</ActivityView>
+		</View>
 	);
-});
-
-const styles = StyleSheet.create({
-	hidden: HIDDEN_ACTIVITY_SCREEN_STYLE,
 });

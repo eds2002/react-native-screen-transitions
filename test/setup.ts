@@ -55,6 +55,9 @@ globalThis.resetMutableRegistry = () => {
 
 mock.module("react-native", () => ({
 	View: "View",
+	NativeComponentRegistry: {
+		get: (name: string) => name,
+	},
 	Platform: {
 		OS: "ios",
 		select: <T>(obj: { ios?: T; android?: T; default?: T }) =>

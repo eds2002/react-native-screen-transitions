@@ -24,7 +24,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 	backdropBehavior: BackdropBehavior;
 	isBackdropActive: boolean;
 }) {
-	const { isRemovePrevented, requestDismiss } = useNavigationHelpers();
+	const { requestDismiss } = useNavigationHelpers();
 
 	const routeKey = useDescriptorsStore(
 		(store) => store.derivations.currentScreenKey,
@@ -38,7 +38,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 	const isGestureDismissEnabled = useDescriptorsStore(
 		(store) => store.options.gestureEnabled !== false,
 	);
-	const canDismiss = isGestureDismissEnabled && !isRemovePrevented;
+	const canDismiss = isGestureDismissEnabled;
 	const transitionSpec = useDescriptorsStore(
 		(store) => store.options.transitionSpec,
 	);

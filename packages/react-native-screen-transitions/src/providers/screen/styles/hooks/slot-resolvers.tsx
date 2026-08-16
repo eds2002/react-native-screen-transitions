@@ -1,7 +1,7 @@
-import { useRoute } from "@react-navigation/native";
 import { useMemo } from "react";
 import { useAnimatedProps, useAnimatedStyle } from "react-native-reanimated";
 import { NO_PROPS, NO_STYLES } from "../../../../constants";
+import { useNavigationRoute } from "../../../navigation/navigation-host.provider";
 import {
 	composeSlotStyleWithLocalTransform,
 	getLocalTransformForSlotComposition,
@@ -9,18 +9,18 @@ import {
 import { useOptionalScreenSlotStore } from "../slot.provider";
 
 const useCurrentScreenSlotsMap = () => {
-	const route = useRoute();
+	const routeKey = useNavigationRoute().key;
 	const localSlotsMap = useOptionalScreenSlotStore(
 		(store) => store?.slotsMap ?? null,
 	);
 	const keyedSlotsMap = useOptionalScreenSlotStore(
-		localSlotsMap ? null : route.key,
+		localSlotsMap ? null : routeKey,
 		(store) => store.slotsMap,
 	);
 	const slotsMap = localSlotsMap ?? keyedSlotsMap;
 
 	if (!slotsMap) {
-		throw new Error(`ScreenSlotStore is unavailable for route "${route.key}"`);
+		throw new Error(`ScreenSlotStore is unavailable for route "${routeKey}"`);
 	}
 
 	return slotsMap;

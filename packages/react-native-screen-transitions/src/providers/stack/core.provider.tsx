@@ -10,8 +10,6 @@ import createProvider from "../../utils/create-provider";
 
 export interface StackCoreConfig {
 	TRANSITIONS_ALWAYS_ON?: boolean;
-	DISABLE_NATIVE_SCREENS?: boolean;
-	DISABLE_NATIVE_SCREEN_CONTAINER?: boolean;
 }
 
 interface StackCoreProviderProps {
@@ -22,8 +20,6 @@ interface StackCoreProviderProps {
 export interface StackCoreContextValue {
 	flags: {
 		TRANSITIONS_ALWAYS_ON: boolean;
-		DISABLE_NATIVE_SCREENS: boolean;
-		DISABLE_NATIVE_SCREEN_CONTAINER: boolean;
 	};
 }
 
@@ -73,23 +69,13 @@ const StackCoreRoot = memo(function StackCoreRoot({
 export const { StackCoreProvider, useStackCoreStore } = createProvider(
 	"StackCore",
 )<StackCoreProviderProps, StackCoreContextValue>(({ config, children }) => {
-	const {
-		TRANSITIONS_ALWAYS_ON = false,
-		DISABLE_NATIVE_SCREENS = false,
-		DISABLE_NATIVE_SCREEN_CONTAINER = false,
-	} = config;
+	const { TRANSITIONS_ALWAYS_ON = false } = config;
 
 	const flags = useMemo(
 		() => ({
 			TRANSITIONS_ALWAYS_ON,
-			DISABLE_NATIVE_SCREENS,
-			DISABLE_NATIVE_SCREEN_CONTAINER,
 		}),
-		[
-			TRANSITIONS_ALWAYS_ON,
-			DISABLE_NATIVE_SCREENS,
-			DISABLE_NATIVE_SCREEN_CONTAINER,
-		],
+		[TRANSITIONS_ALWAYS_ON],
 	);
 
 	return {

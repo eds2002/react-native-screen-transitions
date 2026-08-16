@@ -35,6 +35,12 @@ const BOUNDS_EXAMPLES = [
 		title: "Handoff multiflow",
 		description: "One payload handed across a multi-screen push and pop flow",
 	},
+	{
+		id: "stacking",
+		title: "Repeated route stacking",
+		description:
+			"Alternating route pushes with independently selectable card and button sources",
+	},
 ];
 
 export default function BoundsHubIndex() {

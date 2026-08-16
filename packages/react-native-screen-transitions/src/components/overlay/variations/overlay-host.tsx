@@ -1,11 +1,8 @@
-import {
-	NavigationContext,
-	NavigationRouteContext,
-} from "@react-navigation/native";
 import { memo, useMemo, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, { useDerivedValue } from "react-native-reanimated";
 import { snapDescriptorToIndex } from "../../../animation/snap-to";
+import { NavigationScreenProvider } from "../../../providers/navigation/navigation-host.provider";
 import { useOptionalScreenAnimationStore } from "../../../providers/screen/animation";
 import type { ScreenAnimationContextValue } from "../../../providers/screen/animation/animation.provider";
 import {
@@ -158,16 +155,17 @@ function ReadyOverlayHost({
 				animatedStyle,
 			]}
 		>
-			<NavigationContext.Provider value={descriptor.navigation as any}>
-				<NavigationRouteContext.Provider value={descriptor.route}>
-					<View
-						pointerEvents="box-none"
-						style={[StyleSheet.absoluteFill, styles.overlay]}
-					>
-						<OverlayComponent {...overlayProps} />
-					</View>
-				</NavigationRouteContext.Provider>
-			</NavigationContext.Provider>
+			<NavigationScreenProvider
+				navigation={descriptor.navigation}
+				route={descriptor.route}
+			>
+				<View
+					pointerEvents="box-none"
+					style={[StyleSheet.absoluteFill, styles.overlay]}
+				>
+					<OverlayComponent {...overlayProps} />
+				</View>
+			</NavigationScreenProvider>
 		</Animated.View>
 	);
 }

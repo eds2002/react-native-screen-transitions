@@ -21,7 +21,6 @@ import type { ScreenSlotContextValue } from "../../providers/screen/styles/slot.
 
 const animationStores = new Map<string, ScreenAnimationContextValue>();
 const slotStores = new Map<string, ScreenSlotContextValue>();
-const NavigationContext = createContext<unknown>(undefined);
 const NavigationRouteContext = createContext<
 	{ key: string; name: string } | undefined
 >(undefined);
@@ -51,18 +50,6 @@ mock.module("../../providers/stack/blank-stack.provider", () => ({
 	useBlankStackStore: () => stackState,
 }));
 
-mock.module("@react-navigation/native", () => ({
-	NavigationContext,
-	NavigationRouteContext,
-	useRoute: () => {
-		const route = useContext(NavigationRouteContext);
-		if (!route) {
-			throw new Error("Navigation route was not provided");
-		}
-		return route;
-	},
-}));
-
 mock.module(
 	"../../providers/navigation/navigation-host.provider",
 	() => ({
@@ -75,12 +62,17 @@ mock.module(
 			navigation: unknown;
 			route: { key: string; name: string };
 		}) => (
-			<NavigationContext.Provider value={navigation}>
-				<NavigationRouteContext.Provider value={route}>
-					{children}
-				</NavigationRouteContext.Provider>
-			</NavigationContext.Provider>
+			<NavigationRouteContext.Provider value={route}>
+				{children}
+			</NavigationRouteContext.Provider>
 		),
+		useNavigationRoute: () => {
+			const route = useContext(NavigationRouteContext);
+			if (!route) {
+				throw new Error("Navigation route was not provided");
+			}
+			return route;
+		},
 	}),
 );
 

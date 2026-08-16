@@ -23,6 +23,7 @@ export default function BoundsLayout() {
 				name="handoff-multiflow"
 				options={{ ...IOSSlide() }}
 			/>
+			<StackNavigator.Screen name="stacking" options={{ ...IOSSlide() }} />
 		</StackNavigator>
 	);
 }

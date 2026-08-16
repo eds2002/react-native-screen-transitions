@@ -1,10 +1,5 @@
-import {
-	NavigationContext,
-	type NavigationProp,
-	NavigationRouteContext,
-	type ParamListBase,
-} from "@react-navigation/native";
 import { memo, type ReactNode } from "react";
+import { NavigationScreenProvider } from "../providers/navigation/navigation-host.provider";
 import { ScreenComposer } from "../providers/screen/screen-composer";
 import {
 	BlankStackProvider,
@@ -28,10 +23,10 @@ const BlankNavigationProvider = memo(function BlankNavigationProvider({
 	routeKey,
 }: RouteKeyProps & { children: ReactNode }) {
 	const navigation = useBlankStackStore(
-		(store) => store?.scenesByKey[routeKey]?.descriptor.navigation,
-	) as NavigationProp<ParamListBase> | undefined;
+		(store) => store.scenesByKey[routeKey]?.descriptor.navigation,
+	);
 	const route = useBlankStackStore(
-		(store) => store?.scenesByKey[routeKey]?.route,
+		(store) => store.scenesByKey[routeKey]?.route,
 	);
 
 	if (!navigation || !route) {
@@ -39,11 +34,9 @@ const BlankNavigationProvider = memo(function BlankNavigationProvider({
 	}
 
 	return (
-		<NavigationContext.Provider value={navigation}>
-			<NavigationRouteContext.Provider value={route}>
-				{children}
-			</NavigationRouteContext.Provider>
-		</NavigationContext.Provider>
+		<NavigationScreenProvider navigation={navigation} route={route}>
+			{children}
+		</NavigationScreenProvider>
 	);
 });
 
@@ -92,8 +85,6 @@ const StackViewContent = memo(function StackViewContent() {
 type StackViewProps = BlankStackProviderProps & StackCoreConfig;
 
 export const StackView = memo(function StackView({
-	DISABLE_NATIVE_SCREENS,
-	DISABLE_NATIVE_SCREEN_CONTAINER,
 	TRANSITIONS_ALWAYS_ON,
 	state,
 	navigation,
@@ -104,8 +95,6 @@ export const StackView = memo(function StackView({
 		<StackCoreProvider
 			config={{
 				TRANSITIONS_ALWAYS_ON: TRANSITIONS_ALWAYS_ON ?? true,
-				DISABLE_NATIVE_SCREENS: DISABLE_NATIVE_SCREENS ?? false,
-				DISABLE_NATIVE_SCREEN_CONTAINER,
 			}}
 		>
 			<BlankStackProvider

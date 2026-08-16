@@ -1,4 +1,3 @@
-import { StackActions } from "@react-navigation/native";
 import type { BlankStackProviderProps } from "../../../types/providers/blank-stack-provider.types";
 import type { BaseStackRoute } from "../../../types/stack.types";
 import { dispatchCloseAction } from "../../../utils/navigation/close-action-replay";
@@ -77,7 +76,8 @@ export const createBlankStackController = (
 
 		if (state.routes.some((candidate) => candidate.key === route.key)) {
 			const action = {
-				...StackActions.pop(),
+				type: "POP",
+				payload: { count: 1 },
 				source: route.key,
 				target: state.key,
 			};
