@@ -324,7 +324,7 @@ describe("refresh boundary signals", () => {
 				}).sourceBounds,
 			).toEqual(electricViolet);
 
-			gestures.active.set("vertical");
+			gestures.initiator.set("vertical");
 			startPanBase(runtime as any);
 
 			const signal = getRefreshBoundarySignal({

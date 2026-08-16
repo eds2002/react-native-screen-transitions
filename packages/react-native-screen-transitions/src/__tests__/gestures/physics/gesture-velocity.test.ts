@@ -170,7 +170,6 @@ const createGestureSnapshotStore = () => ({
 		rotation: createSharedValue(0),
 	},
 	active: createSharedValue(null),
-	direction: createSharedValue(null),
 });
 
 const createScreenOptions = (
@@ -249,8 +248,7 @@ const createGestureStore = () =>
 		dismissing: createSharedValue(0),
 		dragging: createSharedValue(0),
 		settling: createSharedValue(0),
-		active: createSharedValue(null),
-		direction: createSharedValue(null),
+		initiator: createSharedValue(null),
 	}) as any;
 
 const createSensitivityRawChangeState = () => ({
@@ -799,7 +797,7 @@ describe("trackPinchGesture", () => {
 			gestures,
 		);
 
-		expect(gestures.active.get()).toBe("pinch-in");
+		expect(gestures.initiator.get()).toBe("pinch-in");
 		expect(gestures.scale.get()).toBeCloseTo(1.01, 5);
 		expect(gestures.normScale.get()).toBeCloseTo(0.01, 5);
 	});

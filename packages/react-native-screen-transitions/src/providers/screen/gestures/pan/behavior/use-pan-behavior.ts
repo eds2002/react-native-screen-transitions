@@ -47,8 +47,7 @@ export const usePanBehavior = (
 
 		const direction = pendingDirection.get();
 		if (direction) {
-			latestRuntime.stores.gestures.active.set(direction);
-			latestRuntime.stores.gestures.direction.set(direction);
+			latestRuntime.stores.gestures.initiator.set(direction);
 		}
 		pendingDirection.set(null);
 		gestureCompositionOwner.set("pan");

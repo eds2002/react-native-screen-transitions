@@ -24,8 +24,7 @@ export const startPinchBase = (runtime: PinchGestureRuntime) => {
 	gestures.dragging.set(TRUE);
 	gestures.dismissing.set(0);
 	gestures.settling.set(0);
-	gestures.active.set(null);
-	gestures.direction.set(null);
+	gestures.initiator.set(null);
 	gestures.velocity.set(0);
 	clearTransformTrackingValues(gestures);
 	gestures.internal.progressBaseline.set(animations.transitionProgress.get());
@@ -47,8 +46,8 @@ export const trackPinchGesture = (
 	gestures.raw.scale.set(rawScale);
 	gestures.raw.normScale.set(rawNormScale);
 
-	if (gestures.active.get() === null) {
-		gestures.active.set(
+	if (gestures.initiator.get() === null) {
+		gestures.initiator.set(
 			normScale < 0 ? "pinch-in" : normScale > 0 ? "pinch-out" : null,
 		);
 	}

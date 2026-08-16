@@ -3,10 +3,7 @@ import {
 	makeMutable,
 	type SharedValue,
 } from "react-native-reanimated";
-import type {
-	ActiveGesture,
-	ResolvedPanGestureDirection,
-} from "../types/gesture.types";
+import type { ActiveGesture } from "../types/gesture.types";
 import { createStore } from "../utils/create-store";
 
 type GestureRawStoreMap = {
@@ -34,7 +31,6 @@ type GestureSnapshotStoreMap = {
 	rotation: SharedValue<number>;
 	raw: GestureRawStoreMap;
 	active: SharedValue<ActiveGesture | null>;
-	direction: SharedValue<ResolvedPanGestureDirection | null>;
 };
 
 type GestureInternalStoreMap = {
@@ -63,9 +59,7 @@ export type GestureStoreMap = {
 	dismissing: SharedValue<number>;
 	dragging: SharedValue<number>;
 	settling: SharedValue<number>;
-	active: SharedValue<ActiveGesture | null>;
-	/** @deprecated Use `active` instead. */
-	direction: SharedValue<ResolvedPanGestureDirection | null>;
+	initiator: SharedValue<ActiveGesture | null>;
 
 	/**
 	 * @deprecated Use `normX` instead.
@@ -97,7 +91,7 @@ function createGestureBag(): GestureStoreMap {
 	const dismissing = makeMutable(0);
 	const dragging = makeMutable(0);
 	const settling = makeMutable(0);
-	const active = makeMutable<ActiveGesture | null>(null);
+	const initiator = makeMutable<ActiveGesture | null>(null);
 
 	return {
 		x: makeMutable(0),
@@ -149,14 +143,12 @@ function createGestureBag(): GestureStoreMap {
 					rotation: makeMutable(0),
 				},
 				active: makeMutable<ActiveGesture | null>(null),
-				direction: makeMutable<ResolvedPanGestureDirection | null>(null),
 			},
 		},
 		dismissing,
 		dragging,
 		settling,
-		active,
-		direction: makeMutable<ResolvedPanGestureDirection | null>(null),
+		initiator,
 
 		// Deprecated aliases (same underlying SharedValue)
 		normalizedX: normX,
@@ -219,11 +211,9 @@ export const GestureStore = createStore<GestureStoreMap>({
 		cancelAnimation(bag.internal.snapshot.raw.normScale);
 		cancelAnimation(bag.internal.snapshot.raw.rotation);
 		cancelAnimation(bag.internal.snapshot.active);
-		cancelAnimation(bag.internal.snapshot.direction);
 		cancelAnimation(bag.dismissing);
 		cancelAnimation(bag.dragging);
 		cancelAnimation(bag.settling);
-		cancelAnimation(bag.active);
-		cancelAnimation(bag.direction);
+		cancelAnimation(bag.initiator);
 	},
 });

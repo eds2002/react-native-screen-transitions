@@ -55,7 +55,6 @@ const createGestureSnapshotStore = (
 		rotation: shared(0),
 	},
 	active: shared(overrides.active ?? null),
-	direction: shared(overrides.active ?? null),
 });
 
 const createGestureStore = (
@@ -132,8 +131,7 @@ const createGestureStore = (
 		dismissing,
 		dragging,
 		settling: shared(overrides.settling ?? 0),
-		active: shared(overrides.active ?? null),
-		direction: shared(overrides.active ?? null),
+		initiator: shared(overrides.active ?? null),
 		normalizedX: normX,
 		normalizedY: normY,
 		isDismissing: dismissing,

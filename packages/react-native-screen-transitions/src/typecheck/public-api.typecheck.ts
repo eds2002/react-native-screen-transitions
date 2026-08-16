@@ -263,7 +263,11 @@ const maybeScrollOffset: number | undefined =
 	interpolationProps.current.layouts.scroll?.vertical?.offset;
 const currentTransitionProgress: number =
 	interpolationProps.current.transitionProgress;
-const currentActiveGesture = interpolationProps.current.gesture.active;
+const currentGestureInitiator = interpolationProps.current.gesture.initiator;
+// @ts-expect-error v4 exposes the live gesture identity through `initiator`.
+interpolationProps.current.gesture.active;
+// @ts-expect-error v4 no longer exposes the pan-only gesture direction alias.
+interpolationProps.current.gesture.direction;
 const currentRawGestureNormX = interpolationProps.current.gesture.raw.normX;
 const currentGestureVelocity: number =
 	interpolationProps.current.gesture.velocity;
@@ -273,6 +277,8 @@ const currentGestureHandoffRawNormX: number =
 	interpolationProps.current.gesture.handoff.raw.normX;
 const currentGestureHandoff: GestureHandoffValues =
 	interpolationProps.current.gesture.handoff;
+// @ts-expect-error v4 exposes the captured identity through `handoff.active`.
+interpolationProps.current.gesture.handoff.direction;
 const currentRawGesture: RawGestureValues =
 	interpolationProps.current.gesture.raw;
 const currentGestureRotation: number =
@@ -310,7 +316,7 @@ void currentRawGestureNormX;
 void currentGestureVelocity;
 void currentGestureRotation;
 void currentRawGestureRotation;
-void currentActiveGesture;
+void currentGestureInitiator;
 void currentAnimatedSnapIndex;
 void currentSnapIndex;
 void optionsInterpolatedStyle;
@@ -485,7 +491,7 @@ const publicApiTypecheck = {
 	scrollState,
 	scrollMetadataState,
 	maybeScrollOffset,
-	currentActiveGesture,
+	currentGestureInitiator,
 	currentSnapIndex,
 	zoomOptions,
 	zoomTransitionSpec,

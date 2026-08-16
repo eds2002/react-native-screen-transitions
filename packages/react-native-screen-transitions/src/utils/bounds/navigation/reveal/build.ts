@@ -92,7 +92,7 @@ export function buildRevealStyles({
 
 	const liveGesture = props.active.gesture;
 	const gestureHandoff = liveGesture.handoff;
-	const initialGesture = gestureHandoff.active ?? gestureHandoff.direction;
+	const initialGesture = gestureHandoff.active;
 
 	const isHorizontalDismiss =
 		initialGesture === "horizontal" || initialGesture === "horizontal-inverted";

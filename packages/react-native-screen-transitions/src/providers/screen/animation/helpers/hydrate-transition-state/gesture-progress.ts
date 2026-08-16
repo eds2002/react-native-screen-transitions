@@ -30,7 +30,8 @@ const resolvePanGestureAffectedProgress = (
 	"worklet";
 
 	if (hasSnapPoints) {
-		const activeGesture = gesture.active;
+		const activeGesture =
+			gesture.initiator === "none" ? null : gesture.initiator;
 		const activeAxis = isResolvedPanGestureDirection(activeGesture)
 			? getPanSnapAxisConfigForDirection(
 					getPanSnapAxisDirections(gestureDirection),
@@ -141,8 +142,8 @@ export const resolveGestureAffectedProgress = (
 	const hasSnapPoints = snapBounds !== null;
 
 	if (
-		gesture.active === "pinch-in" ||
-		gesture.active === "pinch-out" ||
+		gesture.initiator === "pinch-in" ||
+		gesture.initiator === "pinch-out" ||
 		Math.abs(gesture.normScale) > EPSILON
 	) {
 		return resolvePinchGestureAffectedProgress(

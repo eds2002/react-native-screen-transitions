@@ -30,8 +30,7 @@ export const resetPanGestureValues = ({
 			return;
 		}
 
-		gestures.active.set(null);
-		gestures.direction.set(null);
+		gestures.initiator.set(null);
 		gestures.settling.set(FALSE);
 		if (completeMotion) {
 			animations?.progressAnimating.set(FALSE);

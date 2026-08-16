@@ -70,7 +70,6 @@ const createGestureSnapshotStore = () => ({
 		rotation: shared(0),
 	},
 	active: shared(null),
-	direction: shared(null),
 });
 
 const createGestureStore = (): GestureStoreMap => {
@@ -111,8 +110,7 @@ const createGestureStore = (): GestureStoreMap => {
 		dismissing,
 		dragging,
 		settling: shared(0),
-		active: shared(null),
-		direction: shared(null),
+		initiator: shared(null),
 		normalizedX: normX,
 		normalizedY: normY,
 		isDismissing: dismissing,
@@ -518,7 +516,7 @@ describe("gesture lifecycle state", () => {
 	it("exposes an accepted idle pan with its public initiator and one pulse", () => {
 		const raf = installDeferredAnimationFrame();
 		const { runtime, gestures, animations } = createRuntime();
-		gestures.active.set("vertical");
+		gestures.initiator.set("vertical");
 
 		startPanBase(runtime);
 
@@ -892,7 +890,7 @@ describe("gesture lifecycle state", () => {
 	it("keeps visual motion active while a cancelled drag resets to rest", () => {
 		const raf = installDeferredAnimationFrame();
 		const state = createRuntime();
-		state.gestures.active.set("vertical");
+		state.gestures.initiator.set("vertical");
 
 		try {
 			startPanBase(state.runtime);
@@ -929,7 +927,7 @@ describe("gesture lifecycle state", () => {
 	it("keeps visual motion active while a cancelled pinch resets to rest", () => {
 		const state = createRuntime();
 		state.gestures.dragging.set(1);
-		state.gestures.active.set("pinch-in");
+		state.gestures.initiator.set("pinch-in");
 		state.gestures.scale.set(0.7);
 		state.gestures.normScale.set(-0.3);
 
@@ -973,7 +971,7 @@ describe("gesture lifecycle state", () => {
 				isDragging: state.gestures.dragging,
 			});
 
-			state.gestures.active.set("vertical");
+			state.gestures.initiator.set("vertical");
 			startPanBase(state.runtime);
 			trackPanGesture(
 				{
@@ -1069,7 +1067,7 @@ describe("gesture lifecycle state", () => {
 	it("does not mark a dismissing pan release as settling", () => {
 		const { runtime, gestures } = createRuntime();
 		gestures.dragging.set(1);
-		gestures.active.set("vertical");
+		gestures.initiator.set("vertical");
 
 		finalizePanRelease(
 			{
@@ -1096,7 +1094,7 @@ describe("gesture lifecycle state", () => {
 	it("sets public closing only when a pan dismissal is committed", () => {
 		const raf = installDeferredAnimationFrame();
 		const state = createRuntime();
-		state.gestures.active.set("vertical");
+		state.gestures.initiator.set("vertical");
 
 		startPanBase(state.runtime);
 

@@ -32,8 +32,7 @@ export const resetPinchGestureValues = ({
 		}
 
 		clearFocalPoint(gestures);
-		gestures.active.set(null);
-		gestures.direction.set(null);
+		gestures.initiator.set(null);
 		gestures.settling.set(FALSE);
 		animations?.progressAnimating.set(FALSE);
 		animations?.progressSettled.set(TRUE);

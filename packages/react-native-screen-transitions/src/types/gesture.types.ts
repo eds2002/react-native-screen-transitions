@@ -158,12 +158,6 @@ export type GestureHandoffValues = {
 	 * The gesture associated with the handoff values.
 	 */
 	active: ActiveGesture | null;
-	/**
-	 * The pan direction associated with the handoff values.
-	 *
-	 * @deprecated Use `active` instead.
-	 */
-	direction: ResolvedPanGestureDirection | null;
 };
 
 export type GestureValues = {
@@ -221,21 +215,9 @@ export type GestureValues = {
 	 */
 	raw: RawGestureValues;
 	/**
-	 * The gesture that is currently active.
-	 *
-	 * @deprecated Use `initiator` for the accepted activation identity.
-	 */
-	active: ActiveGesture | null;
-	/**
 	 * The accepted activation identity for the current gesture attempt.
 	 */
 	initiator: ActiveGesture | "none";
-	/**
-	 * The initial pan direction that activated the gesture.
-	 *
-	 * @deprecated Use `active` instead.
-	 */
-	direction: ResolvedPanGestureDirection | null;
 	/**
 	 * Gesture values latched at the release boundary for animation handoff.
 	 *

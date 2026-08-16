@@ -90,9 +90,7 @@ export const hydrateTransitionState = (
 	out.gesture.dismissing = s.gesture.dismissing.get();
 	out.gesture.dragging = s.gesture.dragging.get();
 	out.gesture.settling = s.gesture.settling.get();
-	out.gesture.active = s.gesture.active.get();
-	out.gesture.initiator = out.gesture.active ?? "none";
-	out.gesture.direction = s.gesture.direction.get();
+	out.gesture.initiator = s.gesture.initiator.get() ?? "none";
 	const handoff = out.gesture.handoff;
 	const useHandoffSnapshot = out.gesture.dismissing;
 
@@ -155,10 +153,7 @@ export const hydrateTransitionState = (
 		: out.gesture.raw.rotation;
 	handoff.active = useHandoffSnapshot
 		? s.gesture.internal.snapshot.active.get()
-		: out.gesture.active;
-	handoff.direction = useHandoffSnapshot
-		? s.gesture.internal.snapshot.direction.get()
-		: out.gesture.direction;
+		: s.gesture.initiator.get();
 	out.progress = resolveGestureAffectedProgress(
 		transitionProgress,
 		out.gesture,

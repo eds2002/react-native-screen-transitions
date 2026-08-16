@@ -23,7 +23,7 @@ const createRuntime = (gestureReleaseVelocityScale = 1) =>
 		},
 		stores: {
 			gestures: {
-				active: shared("horizontal" as ActiveGesture),
+				initiator: shared("horizontal" as ActiveGesture),
 			},
 		},
 	}) as PanGestureRuntime;
@@ -62,7 +62,6 @@ const createGestureSnapshotStore = () => ({
 		rotation: shared(0),
 	},
 	active: shared(null),
-	direction: shared(null),
 });
 
 const createSnapRuntime = ({
@@ -106,7 +105,7 @@ const createSnapRuntime = ({
 				resolvedAutoSnapPoint: shared(0),
 			},
 			gestures: {
-				active: shared(activeGesture),
+				initiator: shared(activeGesture),
 				internal: {
 					progressBaseline: shared(baseline),
 					progressDeltaX: shared(0),

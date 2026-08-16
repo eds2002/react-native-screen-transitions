@@ -42,7 +42,6 @@ const createGestureSnapshotStore = () => ({
 		rotation: shared(0),
 	},
 	active: shared(null),
-	direction: shared(null),
 });
 
 const createGestureStore = (): GestureStoreMap => ({
@@ -77,8 +76,7 @@ const createGestureStore = (): GestureStoreMap => ({
 	dismissing: shared(0),
 	dragging: shared(0),
 	settling: shared(0),
-	active: shared(null),
-	direction: shared(null),
+	initiator: shared(null),
 	normalizedX: shared(0),
 	normalizedY: shared(0),
 	isDismissing: shared(0),

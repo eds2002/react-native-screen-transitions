@@ -30,6 +30,5 @@ export const snapshotGestureHandoff = (
 	snapshot.raw.scale.set(gestures.raw.scale.get());
 	snapshot.raw.normScale.set(gestures.raw.normScale.get());
 	snapshot.raw.rotation.set(gestures.raw.rotation.get());
-	snapshot.active.set(gestures.active.get());
-	snapshot.direction.set(gestures.direction.get());
+	snapshot.active.set(gestures.initiator.get());
 };

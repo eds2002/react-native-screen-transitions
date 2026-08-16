@@ -31,7 +31,7 @@ const resolvePanReleaseVelocity = (
 	velocityNormY: number,
 ) => {
 	"worklet";
-	const activeGesture = runtime.stores.gestures.active.get();
+	const activeGesture = runtime.stores.gestures.initiator.get();
 
 	switch (activeGesture) {
 		case "horizontal":
@@ -47,7 +47,7 @@ const resolvePanReleaseVelocity = (
 
 const resolveActivePanSnapAxis = (runtime: PanGestureRuntime) => {
 	"worklet";
-	const activeGesture = runtime.stores.gestures.active.get();
+	const activeGesture = runtime.stores.gestures.initiator.get();
 
 	return isResolvedPanGestureDirection(activeGesture)
 		? getPanSnapAxisConfigForDirection(

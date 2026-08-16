@@ -405,8 +405,7 @@ export const SharedAppleMusic = ({
 
 			const normX = active.gesture.handoff.normX;
 			const normY = active.gesture.handoff.normY;
-			const initialGesture =
-				active.gesture.handoff.active ?? active.gesture.handoff.direction;
+			const initialGesture = active.gesture.handoff.active;
 
 			/**
 			 * ===============================

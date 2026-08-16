@@ -42,7 +42,6 @@ const createGestureSnapshotStore = () => ({
 		rotation: shared(0),
 	},
 	active: shared(null),
-	direction: shared(null),
 });
 
 const createSnapRuntime = ({

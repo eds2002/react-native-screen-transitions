@@ -65,14 +65,11 @@ const DEFAULT_GESTURE_VALUES = {
 		pinchOriginY: 0,
 		raw: DEFAULT_RAW_GESTURE_VALUES,
 		active: null,
-		direction: null,
 	},
 	dismissing: 0,
 	dragging: 0,
 	settling: 0,
-	active: null,
 	initiator: "none",
-	direction: null,
 
 	// Deprecated aliases
 	normalizedX: 0,
