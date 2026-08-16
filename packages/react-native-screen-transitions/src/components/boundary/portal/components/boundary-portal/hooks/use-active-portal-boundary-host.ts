@@ -21,6 +21,23 @@ type UseActivePortalBoundaryHostParams = {
 	slotsMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
 };
 
+export const resolveActivePortalPairKey = ({
+	pairKey,
+	measurementPairKey,
+	hasAnimatedSlot,
+}: {
+	pairKey: ScreenPairKey | null;
+	measurementPairKey: ScreenPairKey | null | undefined;
+	hasAnimatedSlot: boolean;
+}): ScreenPairKey | null => {
+	"worklet";
+	if (!pairKey || measurementPairKey !== pairKey || !hasAnimatedSlot) {
+		return null;
+	}
+
+	return pairKey;
+};
+
 export const useActivePortalBoundaryHost = ({
 	boundaryId,
 	currentScreenKey,
@@ -43,11 +60,12 @@ export const useActivePortalBoundaryHost = ({
 			"worklet";
 			const pairKey = getPairKeyForSource(boundaryId, currentScreenKey);
 			const measurement = localMeasurement.get();
-			if (!pairKey || measurement?.pairKey !== pairKey) {
-				return null;
-			}
 
-			return pairKey;
+			return resolveActivePortalPairKey({
+				pairKey,
+				measurementPairKey: measurement?.pairKey,
+				hasAnimatedSlot: slotsMap.get()[boundaryId] !== undefined,
+			});
 		},
 		(pairKey, previousPairKey) => {
 			"worklet";
