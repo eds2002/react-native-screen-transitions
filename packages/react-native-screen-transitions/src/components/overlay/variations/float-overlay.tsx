@@ -1,4 +1,5 @@
-import { useStack } from "../../../hooks/navigation/use-stack";
+import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
+import { useStackCoreStore } from "../../../providers/stack/core.provider";
 
 import {
 	getFloatOverlayStack,
@@ -11,12 +12,12 @@ import { OverlayHost } from "./overlay-host";
  * Gets routes and descriptors from stack context.
  */
 export function FloatOverlay() {
-	const { scenes, flags } = useStack();
-
-	const overlayStack = getFloatOverlayStack(
-		scenes,
-		flags.TRANSITIONS_ALWAYS_ON,
+	const scenes = useBlankStackStore((store) => store.scenes);
+	const transitionsAlwaysOn = useStackCoreStore(
+		(store) => store.flags.TRANSITIONS_ALWAYS_ON,
 	);
+
+	const overlayStack = getFloatOverlayStack(scenes, transitionsAlwaysOn);
 	if (overlayStack.length === 0) {
 		return null;
 	}

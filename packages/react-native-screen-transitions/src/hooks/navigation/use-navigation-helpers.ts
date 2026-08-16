@@ -4,18 +4,20 @@ import {
 } from "@react-navigation/native";
 import { useCallback } from "react";
 import { useDescriptorsStore } from "../../providers/screen/descriptors";
+import { useBlankStackStore } from "../../providers/stack/blank-stack.provider";
 import { AnimationStore } from "../../stores/animation.store";
 import {
 	LifecycleTransitionRequestKind,
 	SystemStore,
 } from "../../stores/system.store";
 import { dispatchCloseAction } from "../../utils/navigation/close-action-replay";
-import { useStack } from "./use-stack";
 
 export function useNavigationHelpers() {
 	const route = useDescriptorsStore((store) => store.current.route);
 	const navigation = useDescriptorsStore((store) => store.current.navigation);
-	const requestStackDismiss = useStack((stack) => stack.requestDismiss);
+	const requestStackDismiss = useBlankStackStore(
+		(stack) => stack.requestDismiss,
+	);
 	const { preventedRoutes } = usePreventRemoveContext();
 	const isRemovePrevented = preventedRoutes[route.key]?.preventRemove === true;
 

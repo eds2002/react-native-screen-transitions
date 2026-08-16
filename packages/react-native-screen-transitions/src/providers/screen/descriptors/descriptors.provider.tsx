@@ -1,9 +1,7 @@
 import type { ReactNode } from "react";
 import { useLayoutEffect, useMemo } from "react";
-import { useScreenTransitionsAdapterOptionalContext } from "../../../adapters/with-screen-transitions/context";
 import { screenTopology } from "../../../factories/screen-topology";
-import { useStack } from "../../../hooks/navigation/use-stack";
-import { useOptionalBlankStackStore } from "../../../providers/stack/blank-stack.provider";
+import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
 import type { BaseStackDescriptor } from "../../../types/stack.types";
 import createProvider from "../../../utils/create-provider";
 import type { DescriptorDerivations } from "./helpers/derive-descriptor-derivations";
@@ -51,36 +49,26 @@ const {
 		const parentScreenKey = useOptionalDescriptorsStore(
 			(store) => store?.derivations.currentScreenKey,
 		);
-		const blankStackCurrent = useOptionalBlankStackStore((store) =>
-			routeKey ? store?.scenesByKey[routeKey]?.descriptor : undefined,
+		const blankStackCurrent = useBlankStackStore((store) =>
+			routeKey ? store.scenesByKey[routeKey]?.descriptor : undefined,
 		);
-		const blankStackPrevious = useOptionalBlankStackStore((store) =>
-			routeKey ? store?.scenesByKey[routeKey]?.previousDescriptor : undefined,
+		const blankStackPrevious = useBlankStackStore((store) =>
+			routeKey ? store.scenesByKey[routeKey]?.previousDescriptor : undefined,
 		);
-		const blankStackNext = useOptionalBlankStackStore((store) =>
-			routeKey ? store?.scenesByKey[routeKey]?.nextDescriptor : undefined,
+		const blankStackNext = useBlankStackStore((store) =>
+			routeKey ? store.scenesByKey[routeKey]?.nextDescriptor : undefined,
 		);
-		const adapterContext = useScreenTransitionsAdapterOptionalContext();
-		const adapterScene = routeKey
-			? (adapterContext?.scenesByKey?.[routeKey] ??
-				adapterContext?.scenes[
-					adapterContext.routeIndexByKey.get(routeKey) ?? -1
-				])
-			: undefined;
-
-		const resolvedCurrent =
-			current ?? blankStackCurrent ?? adapterScene?.descriptor;
-		const resolvedPrevious =
-			previous ?? blankStackPrevious ?? adapterScene?.previousDescriptor;
-		const resolvedNext = next ?? blankStackNext ?? adapterScene?.nextDescriptor;
+		const blankStackFocusedScene = useBlankStackStore(
+			(store) => store.scenes[store.focusedIndex],
+		);
+		const resolvedCurrent = current ?? blankStackCurrent;
+		const resolvedPrevious = previous ?? blankStackPrevious;
+		const resolvedNext = next ?? blankStackNext;
 		const currentScreenKey = current?.route.key ?? routeKey;
-		const isActiveScreen = useStack((store) => {
-			const focusedScene = store.scenes[store.focusedIndex];
-			return (
-				focusedScene?.route.key === currentScreenKey &&
-				focusedScene.activity === "active"
-			);
-		});
+		const focusedScene = blankStackFocusedScene;
+		const isActiveScreen =
+			focusedScene?.route.key === currentScreenKey &&
+			focusedScene?.activity === "active";
 
 		if (!resolvedCurrent) {
 			throw new Error(

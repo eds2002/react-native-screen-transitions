@@ -14,7 +14,7 @@ import {
 	useComposedSlotStyles,
 	useSlotStackingStyles,
 } from "../../../providers/screen/styles";
-import { useOptionalBlankStackStore } from "../../../providers/stack/blank-stack.provider";
+import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
 import { createBoundTag } from "../../../stores/bounds/helpers/link-pairs.helpers";
 import type { BoundTag } from "../../../stores/bounds/types";
 import createProvider from "../../../utils/create-provider";
@@ -102,10 +102,10 @@ export const {
 		const currentScreenKey = useDescriptorsStore(
 			(s) => s.derivations.currentScreenKey,
 		);
-		const isCurrentScreenClosing = useOptionalBlankStackStore(
+		const isCurrentScreenClosing = useBlankStackStore(
 			(store) =>
 				portalRuntime.handoff &&
-				store?.scenesByKey[currentScreenKey]?.activity === "closing",
+				store.scenesByKey[currentScreenKey]?.activity === "closing",
 		);
 		const retainedBoundTagRef = useRef(requestedBoundTag);
 		const shouldRetainClosingBoundTag =

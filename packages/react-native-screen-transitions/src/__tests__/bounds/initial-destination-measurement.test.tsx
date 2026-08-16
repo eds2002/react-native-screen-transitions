@@ -25,9 +25,10 @@ mock.module("../../providers/screen/descriptors", () => ({
 		selector(descriptorState),
 }));
 
-mock.module("../../hooks/navigation/use-stack", () => ({
-	useStack: <T,>(selector: (state: typeof stackState) => T) =>
-		selector(stackState),
+mock.module("../../providers/stack/blank-stack.provider", () => ({
+	useBlankStackStore: <T,>(
+		selector: (state: typeof stackState) => T,
+	) => selector(stackState),
 }));
 
 let useInitialDestinationMeasurement: typeof import("../../components/boundary/hooks/lifecycles/use-initial-destination-measurement").useInitialDestinationMeasurement;

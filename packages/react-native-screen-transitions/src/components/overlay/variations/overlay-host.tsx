@@ -6,13 +6,13 @@ import { memo, useMemo, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, { useDerivedValue } from "react-native-reanimated";
 import { snapDescriptorToIndex } from "../../../animation/snap-to";
-import { useStack } from "../../../hooks/navigation/use-stack";
 import { useOptionalScreenAnimationStore } from "../../../providers/screen/animation";
 import type { ScreenAnimationContextValue } from "../../../providers/screen/animation/animation.provider";
 import {
 	type ScreenSlotContextValue,
 	useOptionalScreenSlotStore,
 } from "../../../providers/screen/styles/slot.provider";
+import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
 import type { OverlayProps } from "../../../types/overlay.types";
 import type {
 	FloatOverlayActivity,
@@ -103,7 +103,7 @@ function ReadyOverlayHost({
 	driverSlots,
 	OverlayComponent,
 }: ReadyOverlayHostProps) {
-	const { scenes, focusedIndex, routeKeys, routes } = useStack();
+	const { scenes, focusedIndex, routeKeys, routes } = useBlankStackStore();
 	const descriptor = scene.descriptor;
 	const focusedScene = scenes[focusedIndex] ?? scenes[scenes.length - 1];
 	const focusedDescriptor = focusedScene?.descriptor;

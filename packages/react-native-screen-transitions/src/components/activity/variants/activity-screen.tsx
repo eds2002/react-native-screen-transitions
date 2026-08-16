@@ -4,9 +4,9 @@ import { StyleSheet, View } from "react-native";
 import { useDerivedValue } from "react-native-reanimated";
 import { Screen } from "react-native-screens";
 import { IS_WEB } from "../../../constants";
-import { useStack } from "../../../hooks/navigation/use-stack";
 import { useSharedValueState } from "../../../hooks/reanimated/use-shared-value-state";
 import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
+import { useStackCoreStore } from "../../../providers/stack/core.provider";
 import { AnimationStore } from "../../../stores/animation.store";
 import {
 	DEFAULT_INACTIVE_BEHAVIOR,
@@ -42,7 +42,9 @@ export const ActivityScreen = memo(function ActivityScreen({
 	const resolvedPaintDriverRouteKey =
 		paintDriverRouteKey ?? stackPaintDriverRouteKey;
 	const resolvedHasNestedState = hasNestedState ?? "state" in scene.route;
-	const nativeScreenDisabled = useStack((s) => s.flags.DISABLE_NATIVE_SCREENS);
+	const nativeScreenDisabled = useStackCoreStore(
+		(store) => store.flags.DISABLE_NATIVE_SCREENS,
+	);
 	const paintDriverAnimations = resolvedPaintDriverRouteKey
 		? AnimationStore.getBag(resolvedPaintDriverRouteKey)
 		: undefined;

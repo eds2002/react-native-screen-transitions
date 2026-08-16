@@ -318,12 +318,15 @@ export default function createProvider<
 					| undefined,
 				globalSelector,
 			);
-		const Provider: React.FC<ProviderProps> = (props) => {
-			const {
-				children = (props as { children?: ReactNode }).children,
-				key,
-				value,
-			} = factory(props);
+		const StoreProvider = ({
+			children,
+			storeKey,
+			value,
+		}: {
+			children?: ReactNode;
+			storeKey?: string;
+			value: ContextValue;
+		}) => {
 			const storeRef = useRef<MutableProviderStoreApi<ContextValue> | null>(
 				null,
 			);
@@ -339,14 +342,14 @@ export default function createProvider<
 					return;
 				}
 
-				if (typeof key !== "string") {
+				if (typeof storeKey !== "string") {
 					throw new Error(
-						`${name}Provider must return a key when global mode is enabled`,
+						`${name}StoreProvider requires a storeKey when global mode is enabled`,
 					);
 				}
 
-				return globalRegistry.register(key, store);
-			}, [key, store]);
+				return globalRegistry.register(storeKey, store);
+			}, [storeKey, store]);
 
 			pendingNotifyRef.current =
 				store.setSnapshot(value) || pendingNotifyRef.current;
@@ -364,13 +367,28 @@ export default function createProvider<
 				<StoreContext.Provider value={store}>{children}</StoreContext.Provider>
 			);
 		};
+		StoreProvider.displayName = `${name}StoreProvider`;
+
+		const Provider: React.FC<ProviderProps> = (props) => {
+			const {
+				children = (props as { children?: ReactNode }).children,
+				key,
+				value,
+			} = factory(props);
+			return (
+				<StoreProvider storeKey={key} value={value}>
+					{children}
+				</StoreProvider>
+			);
+		};
 		Provider.displayName = providerDisplayName;
 
 		return {
+			StoreProvider,
 			[`${name}Provider`]: Provider,
 			[`useOptional${name}Store`]: useOptionalStoreSelector,
 			[`use${name}Store`]: useStoreSelector,
-		} as {
+		} as { StoreProvider: typeof StoreProvider } & {
 			[P in ProviderName as `${P}Provider`]: React.FC<ProviderProps>;
 		} & {
 			[P in ProviderName as `useOptional${P}Store`]: ResolvedOptionalProviderStoreHook<

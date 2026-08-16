@@ -1,4 +1,7 @@
-import type { StackScene } from "../../../hooks/navigation/use-stack";
+import type { BaseStackScene } from "../../../types/stack.types";
+
+type StackScene = BaseStackScene;
+
 import { isOverlayVisible } from "../../../utils/overlay/visibility";
 
 export type FloatOverlayActivity = "active" | "inert" | "inactive" | "closing";

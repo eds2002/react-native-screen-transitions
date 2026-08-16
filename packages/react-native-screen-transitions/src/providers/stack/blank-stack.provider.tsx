@@ -1,9 +1,4 @@
-import type { Route } from "@react-navigation/native";
 import { type ReactNode, useMemo } from "react";
-import {
-	type StackContextValue,
-	StackProvider,
-} from "../../hooks/navigation/use-stack";
 import type { BlankStackDescriptor } from "../../types/blank-stack.types";
 import type {
 	BlankStackProviderProps,
@@ -13,7 +8,6 @@ import type { BaseStackScene } from "../../types/stack.types";
 import createProvider from "../../utils/create-provider";
 import { useBlankStackState } from "./blank-stack-state";
 import { resolvePresentedIndex } from "./blank-stack-state/helpers/resolve-presented-index";
-import { useStackCoreStore } from "./core.provider";
 
 type InternalBlankStackProviderProps = BlankStackProviderProps & {
 	children: ReactNode;
@@ -29,26 +23,14 @@ const createScenesByKey = (scenes: BaseStackScene<BlankStackDescriptor>[]) => {
 	return scenesByKey;
 };
 
-type BlankStackStoreProviderProps = {
-	children: ReactNode;
-	value: BlankStackStoreValue;
-};
-
 const {
-	BlankStackProvider: BlankStackStoreProvider,
+	StoreProvider: BlankStackStoreProvider,
+	BlankStackProvider,
 	useBlankStackStore,
-	useOptionalBlankStackStore,
 } = createProvider("BlankStack")<
-	BlankStackStoreProviderProps,
+	InternalBlankStackProviderProps,
 	BlankStackStoreValue
->(({ children, value }) => ({ children, value }));
-
-function BlankStackProvider({
-	state: stackState,
-	children,
-	...props
-}: InternalBlankStackProviderProps) {
-	const flags = useStackCoreStore((store) => store.flags);
+>(({ state: stackState, children, ...props }) => {
 	const { state, handleCloseRoute, requestDismiss } = useBlankStackState({
 		...props,
 		state: stackState,
@@ -73,47 +55,22 @@ function BlankStackProvider({
 		return paintDrivers;
 	}, [state.routeKeys]);
 
-	const stackValue = useMemo<StackContextValue>(
-		() => ({
-			flags,
+	return {
+		value: {
 			navigatorKey,
 			routeKeys: state.routeKeys,
-			routes: state.routes as Route<string>[],
+			routes: state.routes,
 			scenes: state.scenes,
+			scenesByKey,
+			paintDriverRouteKeyByRouteKey,
 			focusedIndex,
 			requestDismiss,
-		}),
-		[
-			flags,
-			navigatorKey,
-			state.routeKeys,
-			state.routes,
-			state.scenes,
-			focusedIndex,
-			requestDismiss,
-		],
-	);
-	const blankStackValue = {
-		navigatorKey,
-		routeKeys: state.routeKeys,
-		routes: state.routes,
-		scenes: state.scenes,
-		scenesByKey,
-		paintDriverRouteKeyByRouteKey,
-		focusedIndex,
-		requestDismiss,
-		shouldShowFloatOverlay: state.shouldShowFloatOverlay,
-		handleCloseRoute,
+			shouldShowFloatOverlay: state.shouldShowFloatOverlay,
+			handleCloseRoute,
+		},
+		children,
 	};
-
-	return (
-		<StackProvider value={stackValue}>
-			<BlankStackStoreProvider value={blankStackValue}>
-				{children}
-			</BlankStackStoreProvider>
-		</StackProvider>
-	);
-}
+});
 
 export type { BlankStackProviderProps, BlankStackStoreValue };
-export { BlankStackProvider, useBlankStackStore, useOptionalBlankStackStore };
+export { BlankStackProvider, BlankStackStoreProvider, useBlankStackStore };

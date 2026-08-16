@@ -4,7 +4,7 @@ import useStableCallback from "../../../hooks/use-stable-callback";
 import { hasTransitionsEnabled } from "../../../providers/screen/animation/helpers/has-transitions-enabled";
 import type { BaseDescriptor } from "../../../providers/screen/descriptors";
 import { useCurrentScreenRelationships } from "../../../providers/screen/use-current-screen-relationships";
-import { useOptionalBlankStackStore } from "../../../providers/stack/blank-stack.provider";
+import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
 import { useStackCoreStore } from "../../../providers/stack/core.provider";
 import { GestureStore } from "../../../stores/gesture.store";
 import {
@@ -24,11 +24,11 @@ export function useCloseTransitionIntent(current: BaseDescriptor): {
 	const transitionsAlwaysOn = useStackCoreStore(
 		(store) => store.flags.TRANSITIONS_ALWAYS_ON,
 	);
-	const handleCloseRoute = useOptionalBlankStackStore(
-		(store) => store?.handleCloseRoute,
+	const handleCloseRoute = useBlankStackStore(
+		(store) => store.handleCloseRoute,
 	);
-	const isBlankStackClosing = useOptionalBlankStackStore(
-		(store) => store?.scenesByKey[routeKey]?.activity === "closing",
+	const isBlankStackClosing = useBlankStackStore(
+		(store) => store.scenesByKey[routeKey]?.activity === "closing",
 	);
 	const { parentScreenKey } = useCurrentScreenRelationships();
 	const { dismissScreen, requestDismiss } = useNavigationHelpers();

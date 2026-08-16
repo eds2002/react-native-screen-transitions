@@ -1,15 +1,9 @@
 import type { NavigationState, Route } from "@react-navigation/native";
 import { useMemo } from "react";
 import { Overlay } from "../../components/overlay";
-import {
-	type StackContextValue,
-	StackProvider,
-} from "../../hooks/navigation/use-stack";
 import { ScreenComposer } from "../../providers/screen/screen-composer";
-import {
-	StackCoreProvider,
-	useStackCoreStore,
-} from "../../providers/stack/core.provider";
+import { BlankStackStoreProvider } from "../../providers/stack/blank-stack.provider";
+import { StackCoreProvider } from "../../providers/stack/core.provider";
 import type { BaseStackDescriptor, BaseStackRoute } from "../../types";
 import { isOverlayVisible } from "../../utils/overlay/visibility";
 import {
@@ -141,7 +135,6 @@ function ScreenTransitionsStackContent({
 	layout,
 	layoutArgs,
 }: ScreenTransitionsStackContentProps) {
-	const flags = useStackCoreStore((store) => store.flags);
 	const transitionState = useMemo(
 		() =>
 			buildTransitionStackState({
@@ -150,24 +143,6 @@ function ScreenTransitionsStackContent({
 			}),
 		[layoutArgs.state, layoutArgs.descriptors],
 	);
-	const stackContextValue = useMemo<StackContextValue>(
-		() => ({
-			flags,
-			navigatorKey: layoutArgs.state.key,
-			routeKeys: transitionState.routeKeys,
-			routes: transitionState.routes as Route<string>[],
-			scenes: transitionState.scenes,
-			focusedIndex: layoutArgs.state.index,
-		}),
-		[
-			flags,
-			layoutArgs.state.key,
-			layoutArgs.state.index,
-			transitionState.routeKeys,
-			transitionState.routes,
-			transitionState.scenes,
-		],
-	);
 	const adapterContextValue = useMemo(
 		() => ({
 			routeIndexByKey: transitionState.routeIndexByKey,
@@ -175,14 +150,30 @@ function ScreenTransitionsStackContent({
 		}),
 		[transitionState.routeIndexByKey, transitionState.scenes],
 	);
+	const blankStackValue = useMemo(() => {
+		const scenesByKey = Object.fromEntries(
+			transitionState.scenes.map((scene) => [scene.route.key, scene]),
+		);
+
+		return {
+			navigatorKey: layoutArgs.state.key,
+			routeKeys: transitionState.routeKeys,
+			routes: transitionState.routes,
+			scenes: transitionState.scenes,
+			scenesByKey,
+			paintDriverRouteKeyByRouteKey: new Map<string, string>(),
+			focusedIndex: layoutArgs.state.index,
+			shouldShowFloatOverlay: transitionState.shouldShowFloatOverlay,
+		};
+	}, [layoutArgs.state.key, layoutArgs.state.index, transitionState]);
 	const children = layout ? layout(layoutArgs) : layoutArgs.children;
 
 	return (
 		<ScreenTransitionsAdapterProvider value={adapterContextValue}>
-			<StackProvider value={stackContextValue}>
+			<BlankStackStoreProvider value={blankStackValue}>
 				<Overlay.Float />
 				{children}
-			</StackProvider>
+			</BlankStackStoreProvider>
 		</ScreenTransitionsAdapterProvider>
 	);
 }

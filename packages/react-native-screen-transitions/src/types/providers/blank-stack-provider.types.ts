@@ -3,6 +3,7 @@ import type {
 	BlankStackNavigationHelpers,
 } from "../blank-stack.types";
 import type {
+	BaseStackDescriptor,
 	BaseStackRoute,
 	BaseStackScene,
 	BaseStackState,
@@ -18,19 +19,15 @@ export interface BlankStackProviderProps {
 	) => BlankStackDescriptor;
 }
 
-/**
- * Context value for blank stack — only fields unique to blank stack lifecycle.
- * Shared fields (routes, scenes, etc.) live in StackContext.
- */
 export interface BlankStackStoreValue {
 	navigatorKey: string;
 	routeKeys: string[];
-	routes: BlankStackDescriptor["route"][];
-	scenes: BaseStackScene<BlankStackDescriptor>[];
-	scenesByKey: Record<string, BaseStackScene<BlankStackDescriptor>>;
+	routes: BaseStackRoute[];
+	scenes: BaseStackScene<BaseStackDescriptor>[];
+	scenesByKey: Record<string, BaseStackScene<BaseStackDescriptor>>;
 	paintDriverRouteKeyByRouteKey: ReadonlyMap<string, string>;
 	focusedIndex: number;
-	requestDismiss: (payload: { route: BaseStackRoute }) => boolean;
+	requestDismiss?: (payload: { route: BaseStackRoute }) => boolean;
 	shouldShowFloatOverlay: boolean;
-	handleCloseRoute: (payload: { route: BaseStackRoute }) => void;
+	handleCloseRoute?: (payload: { route: BaseStackRoute }) => void;
 }

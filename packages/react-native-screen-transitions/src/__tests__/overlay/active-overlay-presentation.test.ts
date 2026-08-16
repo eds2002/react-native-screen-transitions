@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import type { StackScene } from "../../hooks/navigation/use-stack";
+import type { BaseStackScene as StackScene } from "../../types/stack.types";
 import {
 	getFloatOverlayStack,
 	getFloatOverlayTransitions,

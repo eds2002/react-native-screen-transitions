@@ -17,9 +17,14 @@ mock.module("react-native-safe-area-context", () => ({
 	useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }),
 }));
 
-mock.module("../hooks/navigation/use-stack", () => ({
-	useStack: () => false,
-	useStackProgressEntries: () => [],
+mock.module("../providers/stack/core.provider", () => ({
+	useStackCoreStore: (selector: (state: any) => unknown) =>
+		selector({ flags: { TRANSITIONS_ALWAYS_ON: false } }),
+}));
+
+mock.module("../providers/stack/blank-stack.provider", () => ({
+	useBlankStackStore: (selector: (state: any) => unknown) =>
+		selector({ routeKeys: [] }),
 }));
 
 mock.module("../providers/screen/descriptors", () => ({

@@ -11,16 +11,14 @@ import {
 	createScreenTransitionState,
 	DEFAULT_SCREEN_TRANSITION_STATE,
 } from "../../../../constants";
-import {
-	useStack,
-	useStackProgressEntries,
-} from "../../../../hooks/navigation/use-stack";
+import { AnimationStore } from "../../../../stores/animation.store";
 import type {
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
 	ScreenTransitionState,
 } from "../../../../types/animation.types";
-
+import { useBlankStackStore } from "../../../stack/blank-stack.provider";
+import { useStackCoreStore } from "../../../stack/core.provider";
 import { type BaseDescriptor, useDescriptorsStore } from "../../descriptors";
 import { buildScreenTransitionOptions } from "./build-screen-transition-options";
 import { updateDerivations } from "./derivations";
@@ -272,12 +270,20 @@ const hydrateInterpolatorFrame = <TFrame extends ScreenInterpolatorFrame>({
 };
 
 export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
-	const transitionsAlwaysOn = useStack(
-		(stack) => stack.flags.TRANSITIONS_ALWAYS_ON,
+	const transitionsAlwaysOn = useStackCoreStore(
+		(store) => store.flags.TRANSITIONS_ALWAYS_ON,
 	);
+	const routeKeys = useBlankStackStore((store) => store.routeKeys);
 	const dimensions = useWindowDimensions();
 	const insets = useSafeAreaInsets();
-	const stackProgressEntries = useStackProgressEntries();
+	const stackProgressEntries = useMemo(
+		() =>
+			routeKeys.map((routeKey) => ({
+				routeKey,
+				visualProgress: AnimationStore.getValue(routeKey, "visualProgress"),
+			})),
+		[routeKeys],
+	);
 
 	const currDescriptor = useDescriptorsStore((store) => store.current);
 	const nextDescriptor = useDescriptorsStore((store) => store.next);

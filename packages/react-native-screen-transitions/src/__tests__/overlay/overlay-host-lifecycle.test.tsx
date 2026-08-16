@@ -47,9 +47,8 @@ const useScreenSlotStore = <Selected,>(
 	return selector ? selector(store) : store;
 };
 
-mock.module("../../hooks/navigation/use-stack", () => ({
-	useStack: () => stackState,
-	useStackProgressEntries: () => [],
+mock.module("../../providers/stack/blank-stack.provider", () => ({
+	useBlankStackStore: () => stackState,
 }));
 
 mock.module("@react-navigation/native", () => ({

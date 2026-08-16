@@ -81,20 +81,17 @@ mock.module("../providers/screen/descriptors", () => ({
 		}),
 }));
 
-mock.module("../hooks/navigation/use-stack", () => ({
-	useStack: (selector: (stack: any) => unknown) =>
-		selector({ requestDismiss: requestStackDismiss }),
-	useStackProgressEntries: () => [],
-}));
-
 mock.module("../providers/stack/blank-stack.provider", () => ({
-	useOptionalBlankStackStore: (selector: (stack: any) => unknown) =>
+	useBlankStackStore: (selector: (stack: any) => unknown) =>
 		selector({
+			requestDismiss: requestStackDismiss,
 			handleCloseRoute: handleBlankClose
 				? () => {
 						blankCloseCount += 1;
 					}
 				: undefined,
+			routeKeys: [],
+			scenes: [],
 			scenesByKey: {
 				[route.key]: { activity: "active" },
 			},

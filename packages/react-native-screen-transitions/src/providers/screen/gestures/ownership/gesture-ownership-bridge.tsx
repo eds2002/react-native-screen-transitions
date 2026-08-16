@@ -10,7 +10,7 @@ import {
 	type BaseDescriptor,
 	useDescriptorsStore,
 } from "../../../screen/descriptors";
-import { useOptionalBlankStackStore } from "../../../stack/blank-stack.provider";
+import { useBlankStackStore } from "../../../stack/blank-stack.provider";
 import { useScreenGestureStore } from "../gestures.provider";
 import { resolveScreenGestureConfig } from "../shared/policy";
 import type { ScreenGestureSource } from "../types";
@@ -122,9 +122,9 @@ const getDescriptorClaimedDirections = (
 function ActiveGestureOwnershipBridge() {
 	const gestureContext = useScreenGestureStore();
 	const previous = useDescriptorsStore((store) => store.previous);
-	const isCurrentScreenClosing = useOptionalBlankStackStore(
+	const isCurrentScreenClosing = useBlankStackStore(
 		(store) =>
-			store?.scenesByKey[gestureContext.routeKey]?.activity === "closing",
+			store.scenesByKey[gestureContext.routeKey]?.activity === "closing",
 	);
 	const {
 		claimedDirections,

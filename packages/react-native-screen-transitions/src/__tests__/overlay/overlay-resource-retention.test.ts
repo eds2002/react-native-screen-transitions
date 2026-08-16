@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { retainReadyOverlayResources } from "../../components/overlay/helpers/retain-ready-overlay-resources";
-import type { StackScene } from "../../hooks/navigation/use-stack";
+import type { BaseStackScene as StackScene } from "../../types/stack.types";
 import type { ScreenAnimationContextValue } from "../../providers/screen/animation/animation.provider";
 import type { ScreenSlotContextValue } from "../../providers/screen/styles/slot.provider";
 

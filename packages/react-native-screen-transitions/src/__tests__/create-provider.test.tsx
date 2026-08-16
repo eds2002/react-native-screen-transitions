@@ -24,7 +24,12 @@ const testProviderFactory = createProvider("Test", { global: true })<
 		value: { value },
 	};
 });
-const { TestProvider, useOptionalTestStore, useTestStore } = testProviderFactory;
+const {
+	StoreProvider: TestStoreProvider,
+	TestProvider,
+	useOptionalTestStore,
+	useTestStore,
+} = testProviderFactory;
 
 const parentObservations: Record<string, number | null> = {};
 const { PathProvider, useOptionalPathStore } = createProvider("Path", {
@@ -41,6 +46,7 @@ const { PathProvider, useOptionalPathStore } = createProvider("Path", {
 describe("createProvider global stores", () => {
 	it("returns the provider plus strict and optional store hooks", () => {
 		expect(Object.keys(testProviderFactory).sort()).toEqual([
+			"StoreProvider",
 			"TestProvider",
 			"useOptionalTestStore",
 			"useTestStore",
@@ -76,6 +82,27 @@ describe("createProvider global stores", () => {
 		});
 
 		expect(observed).toBe(7);
+		act(() => renderer.unmount());
+	});
+
+	it("accepts an adapted value through the shared store provider", () => {
+		let observed: number | null = null;
+		let renderer: ReactTestRenderer;
+
+		function Reader() {
+			observed = useTestStore((store) => store.value);
+			return null;
+		}
+
+		act(() => {
+			renderer = create(
+				<TestStoreProvider storeKey="adapted" value={{ value: 9 }}>
+					<Reader />
+				</TestStoreProvider>,
+			);
+		});
+
+		expect(observed).toBe(9);
 		act(() => renderer.unmount());
 	});
 

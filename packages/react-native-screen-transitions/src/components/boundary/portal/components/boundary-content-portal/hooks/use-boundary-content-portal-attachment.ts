@@ -1,11 +1,11 @@
 import { useAnimatedProps, useSharedValue } from "react-native-reanimated";
-import { useStack } from "../../../../../../hooks/navigation/use-stack";
 import { useDescriptorsStore } from "../../../../../../providers/screen/descriptors";
 import {
 	useOptionalScreenSlotStore,
 	useScreenSlotStore,
 } from "../../../../../../providers/screen/styles";
 import { hasCloseTransitionFinished } from "../../../../../../providers/screen/styles/helpers/transition-visual-state";
+import { useBlankStackStore } from "../../../../../../providers/stack/blank-stack.provider";
 import { AnimationStore } from "../../../../../../stores/animation.store";
 import { getLinkKeyFromTag } from "../../../../../../stores/bounds/helpers/link-pairs.helpers";
 import { getEntry } from "../../../../../../stores/bounds/internals/entries";
@@ -41,8 +41,12 @@ export const useBoundaryContentPortalAttachment = ({
 	const interpolatorReady =
 		destinationSlots?.interpolatorReady ?? unavailableInterpolatorReady;
 
-	const activeReceiverScreenKey = useStack(resolveActiveHandoffReceiver);
-	const previousReceiverScreenKey = useStack(resolvePreviousHandoffReceiver);
+	const activeReceiverScreenKey = useBlankStackStore(
+		resolveActiveHandoffReceiver,
+	);
+	const previousReceiverScreenKey = useBlankStackStore(
+		resolvePreviousHandoffReceiver,
+	);
 
 	const activeReceiverAnimationProgress = SystemStore.getValue(
 		activeReceiverScreenKey ?? currentScreenKey,
