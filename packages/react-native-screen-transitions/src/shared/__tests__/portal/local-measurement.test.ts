@@ -72,6 +72,17 @@ describe("resolveActiveBoundaryPortalPairKey", () => {
 		).toBeNull();
 	});
 
+	it("keeps an unselected ungrouped boundary inside its screen", () => {
+		expect(
+			resolveActiveBoundaryPortalPairKey(
+				measurement,
+				undefined,
+				"button",
+				pairs,
+			),
+		).toBeNull();
+	});
+
 	it("unmounts the host when teleportation settles", () => {
 		expect(
 			resolveActiveBoundaryPortalPairKey(
