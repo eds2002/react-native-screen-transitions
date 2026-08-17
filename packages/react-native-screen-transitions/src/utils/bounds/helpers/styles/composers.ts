@@ -496,8 +496,8 @@ export function composeTransformRelative(
 				Extrapolation.CLAMP,
 			);
 
-	const offsetX = computeOptions.offset?.x ?? computeOptions.gestures?.x ?? 0;
-	const offsetY = computeOptions.offset?.y ?? computeOptions.gestures?.y ?? 0;
+	const offsetX = computeOptions.offset?.x ?? 0;
+	const offsetY = computeOptions.offset?.y ?? 0;
 	const currentScale = getUniformScale(scaleX, scaleY);
 	const motion = resolveMotionTransform({
 		computeOptions,

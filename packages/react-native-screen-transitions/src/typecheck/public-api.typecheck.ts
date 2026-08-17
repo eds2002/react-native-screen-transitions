@@ -74,24 +74,8 @@ const navigationMaskInterpolatedStyle: TransitionInterpolatedStyle = {
 
 const zoomOptions: BoundsNavigationZoomOptions = {
 	target: "bound",
-	debug: true,
 	borderRadius: 36,
-	focusedElementOpacity: {
-		open: [0, 0.35, 0, 1],
-		close: [0.65, 1, 0, 1],
-	},
-	unfocusedElementOpacity: {
-		open: [1, 2, 1, 0],
-		close: [1.85, 2, 1, 0],
-	},
 	backgroundScale: 0.97,
-	maxSensitivity: 0.6,
-	velocityDepth: 0.35,
-	gestureProgressMode: "freeform",
-	horizontalDragScale: [0.9, 1.02, 2],
-	verticalDragScale: [0.96, 1.01, 2.25],
-	horizontalDragTranslation: [0.5, 1, 1.5],
-	verticalDragTranslation: [0, 0, 1],
 };
 declare const zoomTransitionSpec: typeof Transition.Specs.Zoom;
 const typedZoomTransitionSpec: TransitionSpec = zoomTransitionSpec;
@@ -178,15 +162,12 @@ const boundsMotion: BoundsMotion = ({ current, progress, props, start }) => {
 const motionBoundsResult = scopedBounds.styles({
 	motion: boundsMotion,
 });
-const deprecatedGesturesBoundsResult = scopedBounds.styles({
-	gestures: { x: 10, y: -10 },
-});
-const absoluteRawBoundsResult = scopedBounds.math({
+const absoluteRawBoundsResult = scopedBounds.values({
 	method: "size",
 	space: "absolute",
 	progress: interpolationProps.current.transitionProgress,
 });
-const motionRawBoundsResult = scopedBounds.math({
+const motionRawBoundsResult = scopedBounds.values({
 	method: "content",
 	motion: boundsMotion,
 	progress: interpolationProps.current.transitionProgress,
@@ -206,7 +187,6 @@ const configuredRevealInterpolatedStyle: BoundsNavigationRevealStyle =
 		borderContinuous: true,
 		maxSensitivity: 0.6,
 		velocityDepth: 0.35,
-		gestureProgressMode: "freeform",
 		backgroundScale: 0.96,
 		shouldBackgroundScaleResetOnSettled: true,
 		disablePointerEventsTillElementTransition: false,
@@ -230,7 +210,6 @@ void scopedCurrentLink;
 void numericBoundsResult;
 void offsetBoundsResult;
 void motionBoundsResult;
-void deprecatedGesturesBoundsResult;
 void absoluteRawBoundsResult;
 void motionRawBoundsResult;
 const absoluteRawBoundsWidth: number = absoluteRawBoundsResult.width;
@@ -480,7 +459,6 @@ const publicApiTypecheck = {
 	leafTransitionBounds,
 	numericBoundsResult,
 	offsetBoundsResult,
-	deprecatedGesturesBoundsResult,
 	absoluteRawBoundsResult,
 	absoluteRawBoundsWidth,
 	absoluteRawBoundsTranslateX,

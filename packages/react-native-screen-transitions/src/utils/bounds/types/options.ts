@@ -208,13 +208,6 @@ export type BoundsOptions = {
 	progress?: number;
 
 	/**
-	 * The x/y offsets to apply to the bounds.
-	 *
-	 * @deprecated Use `offset` instead.
-	 */
-	gestures?: { x?: number; y?: number };
-
-	/**
 	 * How the bounds should be scaled between each other.
 	 * @default "match"
 	 */
@@ -258,10 +251,3 @@ export type BoundsStyleResult = StyleProps;
 export type BoundsValuesResult<
 	T extends BoundsComputeOptions = BoundsComputeOptions,
 > = BoundsOptionsResult<T & { id: BoundId; raw: true }>;
-
-/**
- * @deprecated Use {@linkcode BoundsValuesResult}.
- */
-export type BoundsMathResult<
-	T extends BoundsComputeOptions = BoundsComputeOptions,
-> = BoundsValuesResult<T>;

@@ -18,7 +18,6 @@ import type {
 	TransitionInterpolatedStyle,
 	TransitionSlotStyle,
 } from "./animation.types";
-import type { GestureProgressMode } from "./gesture.types";
 
 export type { BoundsLink, BoundsLinkStatus } from "../stores/bounds/types";
 
@@ -70,23 +69,6 @@ export type BoundsNavigationZoomDragOptions = {
  *
  * @deprecated Zoom opacity ownership now follows the native preset.
  */
-export type BoundsNavigationZoomOpacityRange = readonly [
-	inputStart: number,
-	inputEnd: number,
-	outputStart?: number,
-	outputEnd?: number,
-];
-
-/**
- * Legacy opening and closing zoom opacity ranges.
- *
- * @deprecated Zoom opacity ownership now follows the native preset.
- */
-export type BoundsNavigationZoomOpacityRanges = {
-	open?: BoundsNavigationZoomOpacityRange;
-	close?: BoundsNavigationZoomOpacityRange;
-};
-
 export type BoundsNavigationZoomOptions = {
 	/**
 	 * Geometry that the zoomed content should resolve against.
@@ -139,67 +121,6 @@ export type BoundsNavigationZoomOptions = {
 	 * Native drag-response intensity controls.
 	 */
 	drag?: BoundsNavigationZoomDragOptions;
-	/**
-	 * @deprecated Ignored. Zoom no longer exposes a transition-specific debug
-	 * overlay.
-	 */
-	debug?: boolean;
-	/**
-	 * @deprecated Ignored. Zoom opacity ownership now follows the native preset.
-	 */
-	focusedElementOpacity?: BoundsNavigationZoomOpacityRanges;
-	/**
-	 * @deprecated Ignored. Zoom opacity ownership now follows the native preset.
-	 */
-	unfocusedElementOpacity?: BoundsNavigationZoomOpacityRanges;
-	/**
-	 * @deprecated Ignored. Zoom now owns its gesture sensitivity curve.
-	 */
-	maxSensitivity?: number;
-	/**
-	 * @deprecated Ignored. Zoom now owns its velocity-depth behavior.
-	 */
-	velocityDepth?: number;
-	/**
-	 * @deprecated Ignored. Gesture movement always contributes to `progress`.
-	 */
-	gestureProgressMode?: GestureProgressMode;
-	/**
-	 * @deprecated Ignored. Use `drag.scale.horizontal` to adjust response
-	 * intensity without replacing the native curve.
-	 */
-	horizontalDragScale?: readonly [
-		shrinkMin: number,
-		growMax: number,
-		exponent?: number,
-	];
-	/**
-	 * @deprecated Ignored. Use `drag.scale.vertical` to adjust response intensity
-	 * without replacing the native curve.
-	 */
-	verticalDragScale?: readonly [
-		shrinkMin: number,
-		growMax: number,
-		exponent?: number,
-	];
-	/**
-	 * @deprecated Ignored. Use `drag.translation.horizontal` to adjust response
-	 * intensity without replacing the native curve.
-	 */
-	horizontalDragTranslation?: readonly [
-		negativeMax: number,
-		positiveMax: number,
-		exponent?: number,
-	];
-	/**
-	 * @deprecated Ignored. Use `drag.translation.vertical` to adjust response
-	 * intensity without replacing the native curve.
-	 */
-	verticalDragTranslation?: readonly [
-		negativeMax: number,
-		positiveMax: number,
-		exponent?: number,
-	];
 };
 
 export type BoundsNavigationZoomStyle = TransitionInterpolatedStyle & {
@@ -251,7 +172,6 @@ export type BoundsNavigationRevealOptions = {
 	 *
 	 * @deprecated Use `transitionProgress` from interpolation state instead.
 	 */
-	gestureProgressMode?: GestureProgressMode;
 	/**
 	 * Scale applied to the unfocused background content while the reveal runs
 	 * above it.
@@ -314,12 +234,6 @@ export type BoundsScopedAccessor = BoundsBoundNavigationAccessor & {
 	styles: (options?: BoundsComputeOptions) => BoundsStyleResult;
 	/** Returns numeric bounds values for custom style composition. */
 	values: <T extends BoundsComputeOptions = BoundsComputeOptions>(
-		options?: T,
-	) => BoundsValuesResult<T>;
-	/**
-	 * @deprecated Use {@linkcode values}.
-	 */
-	math: <T extends BoundsComputeOptions = BoundsComputeOptions>(
 		options?: T,
 	) => BoundsValuesResult<T>;
 	link: (id?: BoundsIdentityInput) => BoundsLink | null;

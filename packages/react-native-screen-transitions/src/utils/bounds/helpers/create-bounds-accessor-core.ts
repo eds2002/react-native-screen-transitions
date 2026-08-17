@@ -81,12 +81,6 @@ const createBoundsAccessorParts = ({
 				}) as BoundsStyleResult;
 			},
 			values: getValues,
-			math: <T extends BoundsComputeOptions = BoundsComputeOptions>(
-				options?: T,
-			) => {
-				"worklet";
-				return getValues(options);
-			},
 			link: (id?: BoundsIdentityInput) => {
 				"worklet";
 				const linkIdentity =
