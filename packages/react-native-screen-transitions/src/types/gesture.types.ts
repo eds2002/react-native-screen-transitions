@@ -227,10 +227,10 @@ export type GestureValues = {
 	 */
 	handoff: GestureHandoffValues;
 	/**
-	 * A flag indicating if the screen is in the process of dismissing (0 or 1).
+	 * Whether a released gesture is completing a dismissal (0 or 1).
 	 *
-	 * @deprecated Use `closing` for public screen lifecycle state. Release handoff
-	 * details do not have a public replacement.
+	 * Use `closing` for screen lifecycle state. This value specifically describes
+	 * the gesture release handoff.
 	 */
 	dismissing: number;
 	/**
@@ -238,9 +238,7 @@ export type GestureValues = {
 	 */
 	dragging: number;
 	/**
-	 * A flag indicating if released gesture values are animating back to neutral.
-	 *
-	 * @deprecated Use `animating` or `settled` for public motion state.
+	 * Whether released gesture values are animating back to neutral (0 or 1).
 	 */
 	settling: number;
 };

@@ -2,7 +2,6 @@ import { FlatList, Pressable, ScrollView, View } from "react-native";
 import { withScreenTransitions } from "./adapters/with-screen-transitions";
 import { Boundary, createBoundaryComponent } from "./components/boundary";
 import { createTransitionAwareComponent } from "./components/create-transition-aware-component";
-import MaskedView from "./components/masked-view";
 import { Presets, Specs } from "./configs";
 
 export default {
@@ -18,11 +17,6 @@ export default {
 	FlatList: createTransitionAwareComponent(FlatList, {
 		isScrollable: true,
 	}),
-	/**
-	 * @deprecated Use `navigationMaskEnabled` with the navigation mask style IDs
-	 * instead.
-	 */
-	MaskedView: MaskedView,
 	Presets,
 	Specs,
 };

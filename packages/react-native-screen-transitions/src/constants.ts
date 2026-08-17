@@ -14,13 +14,6 @@ import type {
 import type { BaseStackRoute } from "./types/stack.types";
 
 /**
- * Masked view integration
- * @deprecated No longer in use. Use {@link NAVIGATION_MASK_ELEMENT_STYLE_ID} and {@link NAVIGATION_MASK_CONTAINER_STYLE_ID} instead.
- */
-export const MASK_STYLE_ID = "_ROOT_MASKED";
-export const CONTAINER_STYLE_ID = "_ROOT_CONTAINER";
-
-/**
  * Navigation mask integration
  */
 export const NAVIGATION_MASK_ELEMENT_STYLE_ID =
@@ -70,8 +63,6 @@ const DEFAULT_GESTURE_VALUES = {
 	dragging: 0,
 	settling: 0,
 	initiator: "none",
-
-	// Deprecated aliases
 } as const;
 
 const createDefaultGestureValues = () => ({
