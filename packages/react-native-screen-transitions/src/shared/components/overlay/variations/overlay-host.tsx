@@ -109,6 +109,7 @@ function ReadyOverlayHost({
 	const focusedDescriptor = focusedScene?.descriptor;
 	const { animatedProps, animatedStyle } = useOverlaySlot({
 		overlayAnimationStore,
+		overlayInterpolator: scene.descriptor.options.screenStyleInterpolator,
 		driverAnimationStore,
 		previousOverlayAnimationStore: previousOverlayAnimationStore ?? undefined,
 		driverInterpolator: driverScene.descriptor.options.screenStyleInterpolator,
