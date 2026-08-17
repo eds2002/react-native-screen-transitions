@@ -77,8 +77,33 @@ export function getFloatOverlayTransitions(
 ): FloatOverlayTransitionEntry[] {
 	const topScene = scenes[scenes.length - 1];
 
-	return overlayStack.map((entry, index) => ({
-		...entry,
-		driverScene: overlayStack[index + 1]?.scene ?? topScene ?? entry.scene,
-	}));
+	return overlayStack.map((entry, index) => {
+		const nextEntry = overlayStack[index + 1];
+		let nextPresentedEntry: FloatOverlayEntry | undefined;
+
+		for (
+			let nextIndex = index + 1;
+			nextIndex < overlayStack.length;
+			nextIndex++
+		) {
+			const candidate = overlayStack[nextIndex];
+			if (candidate?.scene.activity !== "closing") {
+				nextPresentedEntry = candidate;
+				break;
+			}
+		}
+
+		const driverScene =
+			entry.scene.activity === "closing" && nextEntry
+				? entry.scene
+				: (nextPresentedEntry?.scene ??
+					nextEntry?.scene ??
+					topScene ??
+					entry.scene);
+
+		return {
+			...entry,
+			driverScene,
+		};
+	});
 }

@@ -1,5 +1,8 @@
 import { describe, expect, it } from "bun:test";
-import { createOverlayInterpolatorFrame } from "../../components/overlay/helpers/create-overlay-interpolator-frame";
+import {
+	createOverlayInterpolatorFrame,
+	shouldUseOverlayGestureDriver,
+} from "../../components/overlay/helpers/create-overlay-interpolator-frame";
 import type { ScreenInterpolatorFrame } from "../../providers/screen/animation/helpers/pipeline";
 
 const createFrame = (key: string, progress: number, stackProgress = progress) =>
@@ -16,6 +19,29 @@ const createFrame = (key: string, progress: number, stackProgress = progress) =>
 	}) as ScreenInterpolatorFrame;
 
 describe("overlay interpolator frame", () => {
+	it("hands a retained closing driver's overlay to the underlying gesture", () => {
+		const overlayFrame = createFrame("C", 1);
+		const driverFrame = createFrame("D", 0.2);
+		overlayFrame.current.gesture = {
+			dragging: 1,
+			dismissing: 0,
+			settling: 0,
+		} as ScreenInterpolatorFrame["current"]["gesture"];
+
+		expect(shouldUseOverlayGestureDriver(overlayFrame, driverFrame)).toBe(true);
+
+		overlayFrame.current.gesture.dragging = 0;
+		overlayFrame.current.gesture.dismissing = 1;
+		expect(shouldUseOverlayGestureDriver(overlayFrame, driverFrame)).toBe(true);
+
+		overlayFrame.current.gesture.dismissing = 0;
+		overlayFrame.current.gesture.settling = 1;
+		expect(shouldUseOverlayGestureDriver(overlayFrame, driverFrame)).toBe(true);
+
+		overlayFrame.current.gesture.settling = 0;
+		expect(shouldUseOverlayGestureDriver(overlayFrame, driverFrame)).toBe(false);
+	});
+
 	it("presents sparse overlays as adjacent to the destination interpolator", () => {
 		const frame = createOverlayInterpolatorFrame({
 			overlayFrame: createFrame("A", 1, 2.25),

@@ -15,11 +15,15 @@ import type {
 	ScreenStyleInterpolator,
 } from "../../../types/animation.types";
 import { getVisibilityBlockOffset } from "../../../utils/visibility-block-offset";
-import { createOverlayInterpolatorFrame } from "../helpers/create-overlay-interpolator-frame";
+import {
+	createOverlayInterpolatorFrame,
+	shouldUseOverlayGestureDriver,
+} from "../helpers/create-overlay-interpolator-frame";
 import { runOverlaySlotInterpolator } from "../helpers/run-overlay-slot-interpolator";
 
 export const useOverlaySlot = ({
 	overlayAnimationStore,
+	overlayInterpolator,
 	driverAnimationStore,
 	previousOverlayAnimationStore,
 	driverInterpolator,
@@ -27,6 +31,7 @@ export const useOverlaySlot = ({
 	isIncoming,
 }: {
 	overlayAnimationStore: ScreenAnimationContextValue;
+	overlayInterpolator: ScreenStyleInterpolator | undefined;
 	driverAnimationStore: ScreenAnimationContextValue;
 	previousOverlayAnimationStore?: ScreenAnimationContextValue;
 	driverInterpolator: ScreenStyleInterpolator | undefined;
@@ -34,11 +39,16 @@ export const useOverlaySlot = ({
 	isIncoming: boolean;
 }) => {
 	const { height } = useWindowDimensions();
-	const transition = useBuildTransitionAccessor(driverAnimationStore);
+	const overlayTransition = useBuildTransitionAccessor(overlayAnimationStore);
+	const driverTransition = useBuildTransitionAccessor(driverAnimationStore);
 
 	const interpolatorSharedValues = useMemo(
-		() => collectInterpolatorSharedValues([driverInterpolator]),
-		[driverInterpolator],
+		() =>
+			collectInterpolatorSharedValues([
+				overlayInterpolator,
+				driverInterpolator,
+			]),
+		[overlayInterpolator, driverInterpolator],
 	);
 
 	const overlaySlot = useDerivedValue<
@@ -53,17 +63,25 @@ export const useOverlaySlot = ({
 			interpolatorSharedValues[index]?.get();
 		}
 
+		const overlayFrame = overlayAnimationStore.screenInterpolatorProps.get();
+		const driverFrame = driverAnimationStore.screenInterpolatorProps.get();
+		const overlayOwnsGesture = shouldUseOverlayGestureDriver(
+			overlayFrame,
+			driverFrame,
+		);
 		const frame = createOverlayInterpolatorFrame({
-			overlayFrame: overlayAnimationStore.screenInterpolatorProps.get(),
-			driverFrame: driverAnimationStore.screenInterpolatorProps.get(),
+			overlayFrame,
+			driverFrame: overlayOwnsGesture ? overlayFrame : driverFrame,
 			previousOverlayFrame:
 				previousOverlayAnimationStore?.screenInterpolatorProps.get(),
 		});
 
 		return runOverlaySlotInterpolator({
 			frame,
-			interpolator: driverInterpolator,
-			transition,
+			interpolator: overlayOwnsGesture
+				? overlayInterpolator
+				: driverInterpolator,
+			transition: overlayOwnsGesture ? overlayTransition : driverTransition,
 		});
 	});
 

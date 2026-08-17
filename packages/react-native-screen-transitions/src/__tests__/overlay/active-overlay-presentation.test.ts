@@ -107,6 +107,32 @@ describe("floating overlay presentation", () => {
 		]);
 	});
 
+	it("lets a new overlay bypass a retained closing checkpoint", () => {
+		const scenes = [
+			createScene("A", OverlayA),
+			createScene("B"),
+			createScene("C-1", OverlayC),
+			createScene("C-2", OverlayC),
+		];
+		scenes[2].activity = "closing";
+
+		const transitions = getFloatOverlayTransitions(
+			getFloatOverlayStack(scenes, true),
+			scenes,
+		);
+
+		expect(
+			transitions.map(({ scene, driverScene }) => [
+				scene.route.key,
+				driverScene.route.key,
+			]),
+		).toEqual([
+			["A", "C-2"],
+			["C-1", "C-1"],
+			["C-2", "C-2"],
+		]);
+	});
+
 	it("with A through E overlays, keeps D visible underneath E", () => {
 		const scenes = [
 			createScene("A", OverlayA),
