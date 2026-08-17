@@ -45,7 +45,7 @@ function SharedImage({
 	const theme = useTheme();
 	const insets = useSafeAreaInsets();
 	return (
-		<Transition.Boundary.View
+		<Transition.Boundary
 			id={id}
 			style={[
 				styles.sharedImage,
@@ -58,7 +58,7 @@ function SharedImage({
 			]}
 		>
 			<Image source={image} style={styles.imageContent} contentFit="cover" />
-		</Transition.Boundary.View>
+		</Transition.Boundary>
 	);
 }
 

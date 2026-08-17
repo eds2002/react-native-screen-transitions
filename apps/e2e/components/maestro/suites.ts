@@ -27,7 +27,8 @@ export const MAESTRO_SUITES = [
 	{
 		id: "pointer-events-during-transitions",
 		title: "Pointer Events During Transitions",
-		description: "Touch blocking while screens are opening or already dismissed.",
+		description:
+			"Touch blocking while screens are opening or already dismissed.",
 		cases: [
 			"While B is opening over A, A cannot receive taps.",
 			"After B is dismissed, B cannot still receive taps.",
@@ -36,7 +37,8 @@ export const MAESTRO_SUITES = [
 	{
 		id: "swipe-dismiss-gestures",
 		title: "Swipe Dismiss Gestures",
-		description: "All pan directions plus wrong-axis and short-swipe rejection.",
+		description:
+			"All pan directions plus wrong-axis and short-swipe rejection.",
 		cases: [
 			"Horizontal dismiss works.",
 			"Horizontal-inverted dismiss works.",
@@ -59,7 +61,8 @@ export const MAESTRO_SUITES = [
 	{
 		id: "gesture-enablement",
 		title: "Gesture Enablement",
-		description: "Disabled gestures, visible fallback actions, and edge activation.",
+		description:
+			"Disabled gestures, visible fallback actions, and edge activation.",
 		cases: [
 			"Disabled gesture does not dismiss.",
 			"Visible dismiss action still works when gestures are disabled.",
@@ -70,7 +73,8 @@ export const MAESTRO_SUITES = [
 	{
 		id: "snap-points",
 		title: "Snap Points",
-		description: "Sheet snap positions, weak swipes, wrong axes, and dismissal.",
+		description:
+			"Sheet snap positions, weak swipes, wrong axes, and dismissal.",
 		cases: [
 			"Sheet opens at its configured initial snap point.",
 			"Swipe collapses to a lower snap point.",
@@ -147,7 +151,8 @@ export const MAESTRO_SUITES = [
 	{
 		id: "gesture-ownership",
 		title: "Gesture Ownership",
-		description: "Nested gesture claims, ownership, unmount, and ancestor leaks.",
+		description:
+			"Nested gesture claims, ownership, unmount, and ancestor leaks.",
 		cases: [
 			"A horizontal child inside a vertical parent can scroll horizontally without dismissing the parent.",
 			"A vertical child inside a vertical parent handles its own visible gesture behavior when configured to do so.",
@@ -172,7 +177,8 @@ export const MAESTRO_SUITES = [
 	{
 		id: "overlay-behavior",
 		title: "Overlay Behavior",
-		description: "Overlay presence, navigation persistence, and touch behavior.",
+		description:
+			"Overlay presence, navigation persistence, and touch behavior.",
 		cases: [
 			"Overlay is visibly present when configured.",
 			"Overlay visibility remains correct across push and dismiss.",
@@ -182,7 +188,8 @@ export const MAESTRO_SUITES = [
 	{
 		id: "bounds-and-shared-transitions",
 		title: "Bounds And Shared Transitions",
-		description: "Shared-bound targeting, retargeting, layout changes, and scope.",
+		description:
+			"Shared-bound targeting, retargeting, layout changes, and scope.",
 		cases: [
 			"Tapping a source item opens a destination screen with the matching item visible.",
 			"The open transition visibly connects the tapped source item to the destination item.",
@@ -197,7 +204,8 @@ export const MAESTRO_SUITES = [
 	{
 		id: "style-reset-behavior",
 		title: "Style Reset Behavior",
-		description: "Owner-aware layered style reset cases without grouped bounds.",
+		description:
+			"Owner-aware layered style reset cases without grouped bounds.",
 		cases: [
 			"The source route renders the half-screen style reset fixture.",
 			"Style ID override opens a transparent destination and returns to the source.",

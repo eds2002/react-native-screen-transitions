@@ -20,7 +20,11 @@ export const MAESTRO_STYLE_RESET_ID = "style-reset";
 export const activeMaestroStyleCaseId = makeMutable("style-id-override");
 
 export function slideOptions(
-	direction: "horizontal" | "horizontal-inverted" | "vertical" | "vertical-inverted",
+	direction:
+		| "horizontal"
+		| "horizontal-inverted"
+		| "vertical"
+		| "vertical-inverted",
 	config: Partial<ScreenTransitionConfig> = {},
 ): ScreenTransitionConfig {
 	const isHorizontal =
@@ -103,7 +107,11 @@ export function sheetOptions({
 	sheetScrollGestureBehavior,
 	gestureDirection,
 }: {
-	direction?: "vertical" | "vertical-inverted" | "horizontal" | "horizontal-inverted";
+	direction?:
+		| "vertical"
+		| "vertical-inverted"
+		| "horizontal"
+		| "horizontal-inverted";
 	snapPoints?: SnapPoint[];
 	initialSnapIndex?: number;
 	backdropBehavior?: ScreenTransitionConfig["backdropBehavior"];

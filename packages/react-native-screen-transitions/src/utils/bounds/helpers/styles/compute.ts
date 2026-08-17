@@ -14,7 +14,7 @@ import type { Layout } from "../../../../types/screen.types";
 import type {
 	BoundId,
 	BoundsComputeParams,
-	BoundsOptions,
+	BoundsInternalOptions,
 } from "../../types/options";
 import {
 	computeContentTransformGeometry,
@@ -37,7 +37,7 @@ const resolveStartEnd = (params: {
 	next?: ScreenTransitionState;
 	toRect?: Partial<MeasuredDimensions>;
 	dimensions: Layout;
-	computeOptions: BoundsOptions;
+	computeOptions: BoundsInternalOptions;
 	resolvedPair?: ResolvedTransitionPair;
 }) => {
 	"worklet";
@@ -133,7 +133,7 @@ export const computeBoundStyles = (
 		dimensions,
 		interpolationProps,
 	}: BoundsComputeParams,
-	computeOptions: BoundsOptions = { id: "bound-id" },
+	computeOptions: BoundsInternalOptions = { id: "bound-id" },
 	resolvedPair?: ResolvedTransitionPair,
 ) => {
 	"worklet";

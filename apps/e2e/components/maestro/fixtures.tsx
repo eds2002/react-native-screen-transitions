@@ -267,7 +267,10 @@ export function PointerEventsDetailFixture() {
 			title="Pointer Events B"
 			subtitle="This control should disappear after dismissal."
 		>
-			<ProbeText id="maestro-pointer-top-count" value={`top-count:${topCount}`} />
+			<ProbeText
+				id="maestro-pointer-top-count"
+				value={`top-count:${topCount}`}
+			/>
 			<ButtonGrid>
 				<ActionButton
 					id="maestro-pointer-stale-target"
@@ -1101,7 +1104,7 @@ export function BoundsFixture() {
 						testID={`maestro-bound-open-${item}`}
 						onPress={() => openItem(item)}
 					>
-						<Transition.Boundary.View
+						<Transition.Boundary
 							id={`maestro-bound-${item}`}
 							style={[
 								styles.boundCard,
@@ -1110,7 +1113,7 @@ export function BoundsFixture() {
 							]}
 						>
 							<Text style={styles.boundText}>source {item}</Text>
-						</Transition.Boundary.View>
+						</Transition.Boundary>
 					</Pressable>
 				))}
 			</View>
@@ -1134,12 +1137,9 @@ export function BoundsDetailFixture() {
 			title="Bounds Destination"
 			subtitle={`Destination for item ${item}.`}
 		>
-			<Transition.Boundary.View
+			<Transition.Boundary
 				id={`maestro-bound-${item}`}
-				style={[
-					styles.boundHero,
-					item === "b" && styles.boundCardAlt,
-				]}
+				style={[styles.boundHero, item === "b" && styles.boundCardAlt]}
 			>
 				<Text
 					testID={`maestro-bound-destination-${item}`}
@@ -1147,7 +1147,7 @@ export function BoundsDetailFixture() {
 				>
 					destination {item}
 				</Text>
-			</Transition.Boundary.View>
+			</Transition.Boundary>
 			<ActionButton
 				id="maestro-bounds-back"
 				label="Back to source"

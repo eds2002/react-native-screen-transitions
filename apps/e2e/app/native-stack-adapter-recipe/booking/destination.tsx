@@ -7,7 +7,7 @@ export default function BookingDestination() {
 	return (
 		<SafeAreaView style={styles.screen}>
 			<ScrollView contentContainerStyle={styles.content}>
-				<Transition.Boundary.View id="booking-destination" style={styles.hero}>
+				<Transition.Boundary id="booking-destination" style={styles.hero}>
 					<View style={styles.sun} />
 					<View style={styles.heroCopy}>
 						<Text style={styles.location}>ERICEIRA, PORTUGAL</Text>
@@ -15,7 +15,7 @@ export default function BookingDestination() {
 							Atlantic light,{"\n"}slow mornings.
 						</Text>
 					</View>
-				</Transition.Boundary.View>
+				</Transition.Boundary>
 
 				<View style={styles.body}>
 					<View style={styles.facts}>

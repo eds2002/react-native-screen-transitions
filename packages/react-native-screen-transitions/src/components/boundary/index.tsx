@@ -24,11 +24,7 @@ const BoundaryPrimitive = forwardRef<View, BoundaryPrimitiveProps>(
 BoundaryPrimitive.displayName = "Transition.Boundary.Primitive";
 
 const BoundaryRoot = createBoundaryComponent(BoundaryPrimitive);
-const BoundaryView = createBoundaryComponent(View);
-const BoundaryTrigger = createBoundaryComponent(Pressable);
 BoundaryRoot.displayName = "Transition.Boundary";
-BoundaryView.displayName = "Transition.Boundary.View";
-BoundaryTrigger.displayName = "Transition.Boundary.Trigger";
 BoundaryTarget.displayName = "Transition.Boundary.Target";
 Host.displayName = "Transition.Boundary.Host";
 
@@ -60,14 +56,6 @@ export interface BoundaryComponent extends BoundaryRootComponent {
 	 * Explicit host for clipping-escape placement.
 	 */
 	Host: typeof Host;
-	/**
-	 * @deprecated Use `Transition.Boundary` without `onPress`.
-	 */
-	View: typeof BoundaryView;
-	/**
-	 * @deprecated Use `Transition.Boundary` with `onPress`.
-	 */
-	Trigger: typeof BoundaryTrigger;
 }
 
 export type BoundaryProps = BoundaryComponentProps<BoundaryPrimitiveProps>;
@@ -75,6 +63,4 @@ export type BoundaryProps = BoundaryComponentProps<BoundaryPrimitiveProps>;
 export const Boundary = Object.assign(BoundaryRoot, {
 	Target: BoundaryTarget,
 	Host,
-	View: BoundaryView,
-	Trigger: BoundaryTrigger,
 }) as BoundaryComponent;

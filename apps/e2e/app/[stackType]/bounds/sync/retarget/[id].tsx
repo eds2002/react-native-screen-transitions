@@ -98,7 +98,7 @@ export default function SyncRetargetDetail() {
 							<Text style={styles.layoutGuideLabel}>layout frame</Text>
 						</View>
 					) : null}
-					<Transition.Boundary.View
+					<Transition.Boundary
 						id="retarget"
 						anchor="center"
 						scaleMode="match"
@@ -126,7 +126,7 @@ export default function SyncRetargetDetail() {
 								DST1
 							</Text>
 						</Animated.View>
-					</Transition.Boundary.View>
+					</Transition.Boundary>
 				</Animated.View>
 			</Animated.View>
 

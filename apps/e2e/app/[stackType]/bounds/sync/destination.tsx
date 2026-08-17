@@ -66,7 +66,7 @@ export default function BoundsSyncDestination() {
 				{destination.description}
 			</Text>
 			<View style={styles.arena}>
-				<Transition.Boundary.View
+				<Transition.Boundary
 					id={BOUNDARY_TAG}
 					method={destinationBoundary?.method}
 					target={destinationBoundary?.target}
@@ -83,7 +83,7 @@ export default function BoundsSyncDestination() {
 					]}
 				>
 					<Text style={[styles.boxLabel, { color: theme.text }]}>DST</Text>
-				</Transition.Boundary.View>
+				</Transition.Boundary>
 
 				{/* Ghost outline showing where the source was */}
 				<View

@@ -23,7 +23,7 @@ export default function CustomBackgroundScreen() {
 						Surface Slot
 					</Text>
 					<Text style={[styles.cardBody, { color: theme.textSecondary }]}>
-						This route renders `surfaceComponent` and drives styles/props via
+						This route renders `contentComponent` and drives styles/props via
 						the `surface` slot while screen motion stays in `content`.
 					</Text>
 				</View>

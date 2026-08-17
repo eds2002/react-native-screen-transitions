@@ -64,11 +64,6 @@ export type BoundsNavigationZoomDragOptions = {
 	scale?: BoundsNavigationZoomAxisResponse;
 };
 
-/**
- * Legacy zoom opacity interpolation tuple.
- *
- * @deprecated Zoom opacity ownership now follows the native preset.
- */
 export type BoundsNavigationZoomOptions = {
 	/**
 	 * Geometry that the zoomed content should resolve against.
@@ -163,15 +158,6 @@ export type BoundsNavigationRevealOptions = {
 	 * @default 0.5
 	 */
 	velocityDepth?: number;
-	/**
-	 * Deprecated compatibility option.
-	 *
-	 * Gesture movement now always contributes to `progress`; use `transitionProgress`
-	 * when a recipe needs transition progress without live gesture contribution.
-	 * The reveal helper no longer reads this option.
-	 *
-	 * @deprecated Use `transitionProgress` from interpolation state instead.
-	 */
 	/**
 	 * Scale applied to the unfocused background content while the reveal runs
 	 * above it.

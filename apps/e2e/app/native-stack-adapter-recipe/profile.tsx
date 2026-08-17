@@ -33,7 +33,7 @@ export default function NativeStackAdapterRecipeProfile() {
 				contentContainerStyle={styles.content}
 				showsVerticalScrollIndicator={false}
 			>
-				<Transition.Boundary.Trigger
+				<Transition.Boundary
 					id={PROFILE_IMAGE_BOUNDARY_ID}
 					testID="native-stack-adapter-recipe-profile-image"
 					style={styles.avatarButton}
@@ -44,7 +44,7 @@ export default function NativeStackAdapterRecipeProfile() {
 						style={styles.avatar}
 						contentFit="cover"
 					/>
-				</Transition.Boundary.Trigger>
+				</Transition.Boundary>
 
 				<View style={styles.identity}>
 					<Text style={[styles.name, { color: theme.text }]}>Maya Chen</Text>

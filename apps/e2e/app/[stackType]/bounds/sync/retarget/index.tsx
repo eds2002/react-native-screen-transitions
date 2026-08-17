@@ -30,7 +30,7 @@ export default function SyncRetargetIndex() {
 			/>
 
 			<View style={[styles.arena]}>
-				<Transition.Boundary.Trigger
+				<Transition.Boundary
 					id="retarget"
 					anchor="center"
 					scaleMode="match"
@@ -60,7 +60,7 @@ export default function SyncRetargetIndex() {
 					>
 						return target
 					</Text>
-				</Transition.Boundary.Trigger>
+				</Transition.Boundary>
 			</View>
 		</View>
 	);

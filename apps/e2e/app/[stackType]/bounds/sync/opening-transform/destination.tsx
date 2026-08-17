@@ -152,7 +152,7 @@ export default function OpeningTransformBoundsDestination() {
 						collapsable={false}
 						style={styles.boundaryWrapper}
 					>
-						<Transition.Boundary.View
+						<Transition.Boundary
 							id={OPENING_TRANSFORM_BOUNDARY_ID}
 							style={[
 								styles.destinationCard,
@@ -162,7 +162,7 @@ export default function OpeningTransformBoundsDestination() {
 							<Text style={[styles.destinationLabel, { color: theme.text }]}>
 								Destination
 							</Text>
-						</Transition.Boundary.View>
+						</Transition.Boundary>
 					</View>
 				</View>
 

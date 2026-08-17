@@ -13,8 +13,8 @@ import type {
 } from "../../types/geometry";
 import type {
 	BoundsAnchor,
+	BoundsInternalOptions,
 	BoundsMotionTransform,
-	BoundsOptions,
 } from "../../types/options";
 
 /**
@@ -29,7 +29,7 @@ export type ElementComposeParams = {
 	geometry: RelativeGeometry;
 	progress: number;
 	ranges: readonly [number, number];
-	computeOptions: BoundsOptions;
+	computeOptions: BoundsInternalOptions;
 	interpolationProps: BoundsInterpolationProps;
 };
 
@@ -46,7 +46,7 @@ type ContentComposeParams = {
 	geometry: ContentTransformGeometry;
 	progress: number;
 	ranges: readonly [number, number];
-	computeOptions: BoundsOptions;
+	computeOptions: BoundsInternalOptions;
 	interpolationProps: BoundsInterpolationProps;
 };
 
@@ -157,7 +157,7 @@ const resolveMotionTransform = ({
 	end,
 	current,
 }: {
-	computeOptions: BoundsOptions;
+	computeOptions: BoundsInternalOptions;
 	interpolationProps: BoundsInterpolationProps;
 	progress: number;
 	ranges: readonly [number, number];

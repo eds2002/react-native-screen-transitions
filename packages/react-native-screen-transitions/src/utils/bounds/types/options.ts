@@ -141,17 +141,18 @@ type RawContentReturn = RawMotionRotation & {
 };
 
 // Conditional return type based on options
-export type BoundsOptionsResult<T extends BoundsOptions> = T["raw"] extends true
-	? T["method"] extends "size"
-		? T["space"] extends "absolute"
-			? RawSizeAbsoluteReturn
-			: RawSizeRelativeReturn
-		: T["method"] extends "content"
-			? RawContentReturn
-			: T["space"] extends "absolute"
-				? RawTransformAbsoluteReturn
-				: RawTransformRelativeReturn
-	: StyleProps;
+export type BoundsOptionsResult<T extends BoundsInternalOptions> =
+	T["raw"] extends true
+		? T["method"] extends "size"
+			? T["space"] extends "absolute"
+				? RawSizeAbsoluteReturn
+				: RawSizeRelativeReturn
+			: T["method"] extends "content"
+				? RawContentReturn
+				: T["space"] extends "absolute"
+					? RawTransformAbsoluteReturn
+					: RawTransformRelativeReturn
+		: StyleProps;
 
 export type BoundsOptions = {
 	/**
@@ -227,15 +228,9 @@ export type BoundsOptions = {
 	 * returned `scale` is applied to the generated width and height.
 	 */
 	motion?: BoundsMotion;
-
-	/**
-	 * If true, the raw values will be returned instead of the computed values.
-	 *
-	 * @deprecated Use `bounds(id).values(options)` instead of passing `raw`.
-	 * @default false
-	 */
-	raw?: boolean;
 };
+
+export type BoundsInternalOptions = BoundsOptions & { raw?: boolean };
 
 export type BoundsIdentity = {
 	id: BoundId;
@@ -244,7 +239,7 @@ export type BoundsIdentity = {
 
 export type BoundsIdentityInput = BoundId | BoundsIdentity;
 
-export type BoundsComputeOptions = Omit<BoundsOptions, "group" | "id" | "raw">;
+export type BoundsComputeOptions = Omit<BoundsOptions, "group" | "id">;
 
 export type BoundsStyleResult = StyleProps;
 

@@ -76,7 +76,7 @@ export default function RootLayout() {
 					options={{
 						gestureEnabled: true,
 						gestureDirection: "vertical",
-						surfaceComponent: SquircleView,
+						contentComponent: SquircleView,
 						screenStyleInterpolator: ({ progress, active }) => {
 							"worklet";
 							return {

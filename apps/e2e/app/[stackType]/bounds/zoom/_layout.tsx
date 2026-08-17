@@ -56,7 +56,6 @@ export default function NavigationZoomGroupTransitionsLayout() {
 					gestureEnabled: true,
 					gestureDirection: ["bidirectional", "pinch-in"],
 					gestureReleaseVelocityScale: 1.6,
-					gestureProgressMode: "freeform",
 					screenStyleInterpolator: navigationZoomInterpolator,
 					transitionSpec: Transition.Specs.Zoom,
 				}}

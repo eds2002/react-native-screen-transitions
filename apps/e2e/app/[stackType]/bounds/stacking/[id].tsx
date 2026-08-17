@@ -56,13 +56,13 @@ export default function StackingBoundsDetail() {
 					testID="stacking-detail-boundary"
 					onPress={() => pushIndex(STACKING_CARD_BOUNDARY_ID)}
 				>
-					<Transition.Boundary.View
+					<Transition.Boundary
 						id={STACKING_CARD_BOUNDARY_ID}
 						escapeClipping
 						style={styles.hero}
 					>
 						<StackingCardContent />
-					</Transition.Boundary.View>
+					</Transition.Boundary>
 				</Pressable>
 
 				<View style={styles.copy}>
@@ -79,7 +79,7 @@ export default function StackingBoundsDetail() {
 					testID="stacking-push-index"
 					onPress={() => pushIndex(STACKING_BUTTON_BOUNDARY_ID)}
 				>
-					<Transition.Boundary.View
+					<Transition.Boundary
 						id={STACKING_BUTTON_BOUNDARY_ID}
 						escapeClipping
 						style={[styles.button, { backgroundColor: theme.actionButton }]}
@@ -94,7 +94,7 @@ export default function StackingBoundsDetail() {
 						>
 							depth {depth + 1} →
 						</Text>
-					</Transition.Boundary.View>
+					</Transition.Boundary>
 				</Pressable>
 
 				<Text style={[styles.hint, { color: theme.textTertiary }]}>

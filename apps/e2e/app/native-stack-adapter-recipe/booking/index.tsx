@@ -20,7 +20,7 @@ export default function BookingIndex() {
 				</Text>
 			</View>
 
-			<Transition.Boundary.Trigger
+			<Transition.Boundary
 				id="booking-destination"
 				testID="adapter-booking-open-destination"
 				onPress={() =>
@@ -36,7 +36,7 @@ export default function BookingIndex() {
 					</Text>
 					<Text style={styles.price}>From $480</Text>
 				</View>
-			</Transition.Boundary.Trigger>
+			</Transition.Boundary>
 
 			<View style={styles.secondaryRow}>
 				<View style={[styles.smallCard, { backgroundColor: theme.card }]}>

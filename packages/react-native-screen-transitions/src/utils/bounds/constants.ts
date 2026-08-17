@@ -1,4 +1,4 @@
-import type { BoundsOptions } from "./types/options";
+import type { BoundsInternalOptions } from "./types/options";
 
 export const DEFAULT_BOUNDS_OPTIONS = {
 	target: "bound",
@@ -7,4 +7,4 @@ export const DEFAULT_BOUNDS_OPTIONS = {
 	scaleMode: "match",
 	anchor: "center",
 	raw: false,
-} as const satisfies Omit<BoundsOptions, "id" | "group" | "gestures">;
+} as const satisfies Omit<BoundsInternalOptions, "id" | "group" | "gestures">;

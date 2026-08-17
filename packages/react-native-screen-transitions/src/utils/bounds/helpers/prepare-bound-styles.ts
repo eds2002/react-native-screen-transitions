@@ -8,7 +8,7 @@ import type { BoundsInterpolationProps } from "../../../types/bounds.types";
 import { DEFAULT_BOUNDS_OPTIONS } from "../constants";
 import type {
 	BoundId,
-	BoundsOptions,
+	BoundsInternalOptions,
 	BoundsOptionsResult,
 } from "../types/options";
 import { createBoundTag } from "./create-bound-tag";
@@ -17,7 +17,7 @@ import { computeBoundStyles } from "./styles/compute";
 
 type BaseInterpolatorProps = BoundsInterpolationProps;
 
-type ComputeResolvedBoundsStylesParams<T extends BoundsOptions> = {
+type ComputeResolvedBoundsStylesParams<T extends BoundsInternalOptions> = {
 	props: BaseInterpolatorProps;
 	options: T;
 	resolvedPair?: ResolvedTransitionPair;
@@ -27,7 +27,7 @@ type BuildBoundsOptionsParams = {
 	props: BoundsInterpolationProps;
 	id?: BoundId;
 	group?: string;
-	overrides?: Partial<BoundsOptions>;
+	overrides?: Partial<BoundsInternalOptions>;
 };
 
 const buildBoundsOptions = ({
@@ -35,7 +35,7 @@ const buildBoundsOptions = ({
 	id,
 	group,
 	overrides,
-}: BuildBoundsOptionsParams): BoundsOptions => {
+}: BuildBoundsOptionsParams): BoundsInternalOptions => {
 	"worklet";
 
 	const tag = createBoundTag({ id, group });
@@ -75,7 +75,7 @@ export const syncActiveGroupId = (params: {
 	setActiveGroupId(pairKey, group, activeId);
 };
 
-export const prepareBoundStyles = <T extends BoundsOptions>({
+export const prepareBoundStyles = <T extends BoundsInternalOptions>({
 	props,
 	options,
 	resolvedPair,
