@@ -216,10 +216,38 @@ describe("soft dismissal", () => {
 		]);
 	});
 
-	it("converts a programmatic removal into a soft dismiss", () => {
+	it("does not intercept a blank-stack programmatic removal", () => {
+		const action = { type: "POP", payload: { count: 1 } };
+		let prevented = false;
+
+		const Harness = () => {
+			useCloseTransitionIntent(current as any);
+			return null;
+		};
+
+		act(() => {
+			create(React.createElement(Harness));
+		});
+		act(() => {
+			beforeRemoveListener?.({
+				data: { action },
+				preventDefault: () => {
+					prevented = true;
+				},
+			});
+		});
+
+		expect(prevented).toBe(false);
+		expect(softDismissCount).toBe(0);
+		expect(dispatchedActions).toEqual([]);
+	});
+
+	it("converts an adapter programmatic removal into a soft dismiss", () => {
 		const action = { type: "POP", payload: { count: 1 } };
 		let prevented = false;
 		let completeClose: (() => void) | undefined;
+		handleBlankClose = false;
+		requestStackDismiss = null;
 
 		const Harness = () => {
 			completeClose = useCloseTransitionIntent(current as any).completeClose;
@@ -239,7 +267,7 @@ describe("soft dismissal", () => {
 		});
 
 		expect(prevented).toBe(true);
-		expect(softDismissCount).toBe(1);
+		expect(softDismissCount).toBe(0);
 		expect(dispatchedActions).toEqual([]);
 		expect(
 			SystemStore.getBag(route.key).pendingLifecycleRequestKind.get(),

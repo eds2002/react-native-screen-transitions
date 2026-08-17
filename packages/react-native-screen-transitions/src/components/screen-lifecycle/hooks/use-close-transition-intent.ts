@@ -98,10 +98,13 @@ export function useCloseTransitionIntent(current: BaseDescriptor): {
 		event.preventDefault();
 	});
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: navigation listener should only rebind when the navigator instance changes
 	useLayoutEffect(() => {
+		if (handleCloseRoute) {
+			return;
+		}
+
 		return current.navigation.addListener?.("beforeRemove", handleBeforeRemove);
-	}, [current.navigation]);
+	}, [current.navigation, handleBeforeRemove, handleCloseRoute]);
 
 	return { completeClose };
 }
