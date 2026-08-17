@@ -10,7 +10,6 @@ import {
 	DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR,
 } from "../../../../constants";
 import type {
-	GestureActivationArea,
 	GestureDirectionActivationArea,
 	GestureDirectionEntry,
 	GestureDirectionOption,
@@ -43,13 +42,10 @@ import {
 import { validateSnapPoints } from "./snap-points";
 
 export type GesturePolicyOptions = {
-	expandViaScrollView?: boolean;
-	gestureActivationArea?: GestureActivationArea;
 	gestureDirection?: GestureDirectionOption;
 	gestureEnabled?: boolean;
 	gestureTracking?: GestureTracking;
 	gestureReleaseVelocityScale?: number;
-	gestureResponseDistance?: number;
 	gestureSensitivity?: number;
 	gestureSnapLocked?: boolean;
 	gestureSnapVelocityImpact?: number;
@@ -138,14 +134,12 @@ const resolveConfiguredGestureActivationArea = (
 };
 
 const resolveGestureActivationArea = (
-	options: GesturePolicyOptions,
 	gestureDirection: GestureDirectionOption,
 	hasSnapPoints: boolean,
 ): ResolvedGestureActivationArea => {
 	"worklet";
 	return (
 		resolveConfiguredGestureActivationArea(gestureDirection, hasSnapPoints) ??
-		options.gestureActivationArea ??
 		DEFAULT_GESTURE_ACTIVATION_AREA
 	);
 };
@@ -169,17 +163,9 @@ function resolvePolicySheetScrollGestureBehavior(
 	options: GesturePolicyOptions,
 ): SheetScrollGestureBehavior {
 	"worklet";
-	const explicitBehavior = options.sheetScrollGestureBehavior;
-	if (explicitBehavior) {
-		return explicitBehavior;
-	}
-
-	const legacyBehavior = options.expandViaScrollView;
-	if (legacyBehavior !== undefined) {
-		return legacyBehavior ? "expand-and-collapse" : "collapse-only";
-	}
-
-	return DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR;
+	return (
+		options.sheetScrollGestureBehavior ?? DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR
+	);
 }
 
 const resolvePinchDirections = (
@@ -273,13 +259,11 @@ export const resolvePanPolicy = (
 		gestureVelocityImpact:
 			options.gestureVelocityImpact ?? DEFAULT_GESTURE_VELOCITY_IMPACT,
 		gestureActivationArea: resolveGestureActivationArea(
-			options,
 			gestureDirection,
 			hasSnapPoints,
 		),
 		sheetScrollGestureBehavior:
 			resolvePolicySheetScrollGestureBehavior(options),
-		gestureResponseDistance: options.gestureResponseDistance,
 	};
 };
 

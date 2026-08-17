@@ -15,7 +15,6 @@ interface ResolveOffsetRulesProps {
 	activationState: GestureActivationState;
 	activationArea?: ResolvedGestureActivationArea;
 	dimensions: Layout;
-	responseDistance?: number;
 }
 
 type NormalizedSides = {
@@ -137,11 +136,10 @@ export function computeEdgeConstraints(
 	initialTouch: { x: number; y: number },
 	dimensions: Layout,
 	sides: NormalizedSides,
-	responseDistance?: number,
 ) {
 	"worklet";
-	const xDist = responseDistance ?? DEFAULT_EDGE_DISTANCE_HORIZONTAL;
-	const yDist = responseDistance ?? DEFAULT_EDGE_DISTANCE_VERTICAL;
+	const xDist = DEFAULT_EDGE_DISTANCE_HORIZONTAL;
+	const yDist = DEFAULT_EDGE_DISTANCE_VERTICAL;
 
 	return {
 		horizontalRight: canActivateFromStartEdge(
@@ -293,7 +291,6 @@ export const resolveOffsetRules = ({
 	activationState,
 	activationArea,
 	dimensions,
-	responseDistance,
 }: ResolveOffsetRulesProps): OffsetRuleResult => {
 	"worklet";
 
@@ -331,7 +328,7 @@ export const resolveOffsetRules = ({
 		horizontalLeft: horizontalGateLeft,
 		verticalDown: verticalGateDown,
 		verticalUp: verticalGateUp,
-	} = computeEdgeConstraints(initialTouch, dimensions, sides, responseDistance);
+	} = computeEdgeConstraints(initialTouch, dimensions, sides);
 
 	const { shouldActivate, shouldFail } = shouldActivateOrFail({
 		deltaX,

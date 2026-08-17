@@ -1,5 +1,4 @@
 import {
-	DEFAULT_GESTURE_ACTIVATION_AREA,
 	DEFAULT_GESTURE_DIRECTION,
 	DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
 	DEFAULT_GESTURE_SENSITIVITY,
@@ -10,8 +9,6 @@ import {
 	DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR,
 } from "../../../constants";
 import type {
-	ActivationArea,
-	GestureActivationArea,
 	GestureDirection,
 	GestureDirectionActivationArea,
 	GestureDirectionEntry,
@@ -122,31 +119,6 @@ const resolveGestureDirectionOption = (
 	return fallback;
 };
 
-const isActivationArea = (value: unknown): value is ActivationArea => {
-	"worklet";
-	return value === "edge" || value === "screen";
-};
-
-const resolveGestureActivationAreaOption = (
-	value: unknown,
-	fallback: RequiredScreenOption<"gestureActivationArea">,
-): RequiredScreenOption<"gestureActivationArea"> => {
-	"worklet";
-	if (isActivationArea(value)) {
-		return value;
-	}
-	if (typeof value === "object" && value !== null && !Array.isArray(value)) {
-		const area = value as Record<string, unknown>;
-		const isValid =
-			(area.left === undefined || isActivationArea(area.left)) &&
-			(area.right === undefined || isActivationArea(area.right)) &&
-			(area.top === undefined || isActivationArea(area.top)) &&
-			(area.bottom === undefined || isActivationArea(area.bottom));
-		return isValid ? (area as GestureActivationArea) : fallback;
-	}
-	return fallback;
-};
-
 const resolveSheetScrollGestureBehaviorOption = (
 	value: unknown,
 	fallback: RequiredScreenOption<"sheetScrollGestureBehavior">,
@@ -178,30 +150,6 @@ const resolveBackdropBehaviorOption = (
 		value === "collapse"
 		? value
 		: fallback;
-};
-
-const areGestureActivationAreasEqual = (
-	left: RequiredScreenOption<"gestureActivationArea">,
-	right: RequiredScreenOption<"gestureActivationArea">,
-) => {
-	"worklet";
-	if (left === right) return true;
-
-	if (
-		typeof left !== "object" ||
-		left === null ||
-		typeof right !== "object" ||
-		right === null
-	) {
-		return false;
-	}
-
-	return (
-		left.left === right.left &&
-		left.right === right.right &&
-		left.top === right.top &&
-		left.bottom === right.bottom
-	);
 };
 
 const areGestureDirectionEntriesEqual = (
@@ -256,11 +204,6 @@ const areScreenOptionsEqual = (
 		left.gestureVelocityImpact === right.gestureVelocityImpact &&
 		left.gestureSnapVelocityImpact === right.gestureSnapVelocityImpact &&
 		left.gestureReleaseVelocityScale === right.gestureReleaseVelocityScale &&
-		left.gestureResponseDistance === right.gestureResponseDistance &&
-		areGestureActivationAreasEqual(
-			left.gestureActivationArea,
-			right.gestureActivationArea,
-		) &&
 		left.gestureSnapLocked === right.gestureSnapLocked &&
 		left.sheetScrollGestureBehavior === right.sheetScrollGestureBehavior &&
 		left.backdropBehavior === right.backdropBehavior &&
@@ -301,14 +244,6 @@ export const resolveBaseScreenOptions = (
 		gestureReleaseVelocityScale: resolveNumberOption(
 			options.gestureReleaseVelocityScale,
 			DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
-		),
-		gestureResponseDistance: resolveNumberOption(
-			options.gestureResponseDistance,
-			undefined,
-		),
-		gestureActivationArea: resolveGestureActivationAreaOption(
-			options.gestureActivationArea,
-			DEFAULT_GESTURE_ACTIVATION_AREA,
 		),
 		gestureSnapLocked: resolveBooleanOption(
 			options.gestureSnapLocked,
@@ -375,14 +310,6 @@ export const syncScreenOptionsOverrides = (
 		gestureReleaseVelocityScale: resolveNumberOption(
 			options?.gestureReleaseVelocityScale,
 			base.gestureReleaseVelocityScale,
-		),
-		gestureResponseDistance: resolveNumberOption(
-			options?.gestureResponseDistance,
-			base.gestureResponseDistance,
-		),
-		gestureActivationArea: resolveGestureActivationAreaOption(
-			options?.gestureActivationArea,
-			base.gestureActivationArea,
 		),
 		gestureSnapLocked: resolveBooleanOption(
 			options?.gestureSnapLocked,

@@ -452,27 +452,6 @@ describe("transition state rules", () => {
 		expect(hydrated.progress).toBe(1);
 	});
 
-	it("keeps transitionProgress gesture-free when deprecated freeform mode is provided", () => {
-		const state = createBuiltState({
-			progress: 1,
-			gesture: createGestureStore({
-				normY: 0.25,
-				progressDeltaY: 0.25,
-			}),
-			options: {
-				gestureDirection: "vertical",
-			},
-		});
-		const hydrated = hydrate(state, {
-			gestureDirection: "vertical",
-			gestureProgressMode: "freeform",
-		});
-
-		expect(hydrated.transitionProgress).toBe(1);
-		expect(hydrated.progress).toBe(0.75);
-		expect(state.visualProgress.get()).toBe(0.75);
-	});
-
 	it("clamps snap gesture progress to the minimum snap point when dismiss is disabled", () => {
 		const state = createBuiltState({
 			progress: 0.3,
@@ -513,25 +492,6 @@ describe("transition state rules", () => {
 		expect(hydrated.transitionProgress).toBe(0.3);
 		expect(hydrated.progress).toBeCloseTo(0.05);
 		expect(state.visualProgress.get()).toBeCloseTo(0.05);
-	});
-
-	it("ignores legacy gestureDrivesProgress for derived progress", () => {
-		const hydrated = hydrate(
-			createBuiltState({
-				progress: 1,
-				gesture: createGestureStore({
-					normY: 0.25,
-					progressDeltaY: 0.25,
-				}),
-				options: {
-					gestureDirection: "vertical",
-					gestureDrivesProgress: false,
-				},
-			}),
-		);
-
-		expect(hydrated.transitionProgress).toBe(1);
-		expect(hydrated.progress).toBe(0.75);
 	});
 
 });

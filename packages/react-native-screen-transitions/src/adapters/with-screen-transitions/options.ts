@@ -30,14 +30,9 @@ const ADAPTER_GESTURE_ENABLED_RESTORE = Symbol(
 const ADAPTER_GESTURE_DIRECTION_RESTORE = Symbol(
 	"react-native-screen-transitions.adapterGestureDirectionRestore",
 );
-const ADAPTER_GESTURE_RESPONSE_DISTANCE_RESTORE = Symbol(
-	"react-native-screen-transitions.adapterGestureResponseDistanceRestore",
-);
-
 type OptionsWithTransitionRestore = Record<string, unknown> & {
 	[ADAPTER_GESTURE_ENABLED_RESTORE]?: ScreenTransitionConfig["gestureEnabled"];
 	[ADAPTER_GESTURE_DIRECTION_RESTORE]?: ScreenTransitionConfig["gestureDirection"];
-	[ADAPTER_GESTURE_RESPONSE_DISTANCE_RESTORE]?: ScreenTransitionConfig["gestureResponseDistance"];
 };
 
 export type NativeStackAdapterOptionInput =
@@ -94,13 +89,6 @@ export function adaptNativeStackTransitionOptions<
 			nativeOptions.gestureDirection as ScreenTransitionConfig["gestureDirection"];
 	}
 
-	if (hasOwnOption(nativeOptions, "gestureResponseDistance")) {
-		(adaptedOptions as OptionsWithTransitionRestore)[
-			ADAPTER_GESTURE_RESPONSE_DISTANCE_RESTORE
-		] =
-			nativeOptions.gestureResponseDistance as ScreenTransitionConfig["gestureResponseDistance"];
-	}
-
 	return adaptedOptions as TOptions;
 }
 
@@ -116,16 +104,7 @@ export function resolveAdapterTransitionOptions<
 		optionRecord,
 		ADAPTER_GESTURE_DIRECTION_RESTORE,
 	);
-	const hasGestureResponseDistanceRestore = hasOwnOption(
-		optionRecord,
-		ADAPTER_GESTURE_RESPONSE_DISTANCE_RESTORE,
-	);
-
-	if (
-		!hasGestureEnabledRestore &&
-		!hasGestureDirectionRestore &&
-		!hasGestureResponseDistanceRestore
-	) {
+	if (!hasGestureEnabledRestore && !hasGestureDirectionRestore) {
 		return options;
 	}
 
@@ -138,9 +117,6 @@ export function resolveAdapterTransitionOptions<
 	];
 	delete (resolvedOptions as OptionsWithTransitionRestore)[
 		ADAPTER_GESTURE_DIRECTION_RESTORE
-	];
-	delete (resolvedOptions as OptionsWithTransitionRestore)[
-		ADAPTER_GESTURE_RESPONSE_DISTANCE_RESTORE
 	];
 
 	if (hasGestureEnabledRestore) {
@@ -155,13 +131,6 @@ export function resolveAdapterTransitionOptions<
 			optionRecord[ADAPTER_GESTURE_DIRECTION_RESTORE];
 	} else {
 		delete resolvedOptions.gestureDirection;
-	}
-
-	if (hasGestureResponseDistanceRestore) {
-		resolvedOptions.gestureResponseDistance =
-			optionRecord[ADAPTER_GESTURE_RESPONSE_DISTANCE_RESTORE];
-	} else {
-		delete resolvedOptions.gestureResponseDistance;
 	}
 
 	return resolvedOptions;

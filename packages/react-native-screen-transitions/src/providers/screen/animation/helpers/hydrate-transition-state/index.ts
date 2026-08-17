@@ -33,14 +33,6 @@ const mergeTransitionOptions = (
 		effective.gestureSnapVelocityImpact ?? base.gestureSnapVelocityImpact;
 	slot.gestureReleaseVelocityScale =
 		effective.gestureReleaseVelocityScale ?? base.gestureReleaseVelocityScale;
-	slot.gestureResponseDistance =
-		effective.gestureResponseDistance ?? base.gestureResponseDistance;
-	slot.gestureProgressMode =
-		effective.gestureProgressMode ?? base.gestureProgressMode;
-	slot.gestureDrivesProgress =
-		effective.gestureDrivesProgress ?? base.gestureDrivesProgress;
-	slot.gestureActivationArea =
-		effective.gestureActivationArea ?? base.gestureActivationArea;
 	slot.gestureSnapLocked =
 		effective.gestureSnapLocked ?? base.gestureSnapLocked;
 	slot.sheetScrollGestureBehavior =

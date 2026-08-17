@@ -7,10 +7,6 @@ import { resolveSheetScrollGestureBehavior } from "../../../../utils/resolve-scr
 export const buildScreenTransitionOptions = (
 	options: ScreenTransitionConfig,
 ): ScreenTransitionOptions => {
-	const hasSheetScrollGestureBehavior =
-		options.sheetScrollGestureBehavior !== undefined ||
-		options.expandViaScrollView !== undefined;
-
 	return {
 		navigationMaskEnabled: options.navigationMaskEnabled,
 		gestureEnabled: options.gestureEnabled,
@@ -20,14 +16,11 @@ export const buildScreenTransitionOptions = (
 		gestureVelocityImpact: options.gestureVelocityImpact,
 		gestureSnapVelocityImpact: options.gestureSnapVelocityImpact,
 		gestureReleaseVelocityScale: options.gestureReleaseVelocityScale,
-		gestureResponseDistance: options.gestureResponseDistance,
-		gestureProgressMode: options.gestureProgressMode,
-		gestureDrivesProgress: options.gestureDrivesProgress,
-		gestureActivationArea: options.gestureActivationArea,
 		gestureSnapLocked: options.gestureSnapLocked,
-		sheetScrollGestureBehavior: hasSheetScrollGestureBehavior
-			? resolveSheetScrollGestureBehavior(options)
-			: undefined,
+		sheetScrollGestureBehavior:
+			options.sheetScrollGestureBehavior !== undefined
+				? resolveSheetScrollGestureBehavior(options)
+				: undefined,
 		backdropBehavior: options.backdropBehavior,
 	};
 };

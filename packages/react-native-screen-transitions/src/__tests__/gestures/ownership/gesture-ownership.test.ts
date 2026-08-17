@@ -43,7 +43,6 @@ const createRuntime = () =>
 				horizontalInverted: false,
 			},
 			gestureActivationArea: "screen",
-			gestureResponseDistance: undefined,
 		},
 		stores: {
 			gestures: {

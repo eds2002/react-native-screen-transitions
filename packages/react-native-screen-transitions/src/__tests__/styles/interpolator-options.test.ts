@@ -26,8 +26,6 @@ const BASE_SCREEN_OPTIONS = {
 	gestureVelocityImpact: 0.3,
 	gestureSnapVelocityImpact: 0.1,
 	gestureReleaseVelocityScale: 1,
-	gestureResponseDistance: undefined,
-	gestureActivationArea: "screen",
 	gestureSnapLocked: false,
 	sheetScrollGestureBehavior: "expand-and-collapse",
 	backdropBehavior: "block",
@@ -100,11 +98,6 @@ describe("syncScreenOptionsOverrides", () => {
 				gestureVelocityImpact: 0.4,
 				gestureSnapVelocityImpact: 0.2,
 				gestureReleaseVelocityScale: 1.5,
-				gestureResponseDistance: 24,
-				gestureActivationArea: {
-					left: "edge",
-					right: "screen",
-				},
 				gestureSnapLocked: true,
 				sheetScrollGestureBehavior: "collapse-only",
 				backdropBehavior: "dismiss",
@@ -126,11 +119,6 @@ describe("syncScreenOptionsOverrides", () => {
 		expect(next.gestureVelocityImpact).toBe(0.4);
 		expect(next.gestureSnapVelocityImpact).toBe(0.2);
 		expect(next.gestureReleaseVelocityScale).toBe(1.5);
-		expect(next.gestureResponseDistance).toBe(24);
-		expect(next.gestureActivationArea).toEqual({
-			left: "edge",
-			right: "screen",
-		});
 		expect(next.gestureSnapLocked).toBe(true);
 		expect(next.sheetScrollGestureBehavior).toBe("collapse-only");
 		expect(next.backdropBehavior).toBe("dismiss");
@@ -154,23 +142,6 @@ describe("syncScreenOptionsOverrides", () => {
 			BASE_SCREEN_OPTIONS.navigationMaskEnabled,
 		);
 		expect(next.gestureTracking).toBe(BASE_SCREEN_OPTIONS.gestureTracking);
-	});
-
-	it("ignores deprecated gesture progress mode overrides", () => {
-		const screenOptions = createScreenOptionsContext();
-		const previous = screenOptions.get();
-
-		syncScreenOptionsOverrides(
-			{
-				options: {
-					gestureProgressMode: "freeform",
-					gestureDrivesProgress: false,
-				},
-			},
-			screenOptions,
-		);
-
-		expect(screenOptions.get()).toBe(previous);
 	});
 
 	it("resets screen options to their base values when options are missing", () => {
@@ -211,7 +182,6 @@ describe("syncScreenOptionsOverrides", () => {
 				options: {
 					gestureDirection: "vertical",
 					gestureSensitivity: 0.25,
-					gestureActivationArea: "edge",
 					sheetScrollGestureBehavior: "collapse-only",
 					backdropBehavior: "dismiss",
 				},
@@ -223,7 +193,6 @@ describe("syncScreenOptionsOverrides", () => {
 				options: {
 					gestureSensitivity: "fast",
 					gestureDirection: [{ gesture: "vertical", area: -1 }],
-					gestureActivationArea: { left: "corner" },
 					sheetScrollGestureBehavior: "expand-only",
 					backdropBehavior: "fade",
 				},
@@ -240,9 +209,6 @@ describe("syncScreenOptionsOverrides", () => {
 		);
 		expect(next.gestureSensitivity).toBe(
 			BASE_SCREEN_OPTIONS.gestureSensitivity,
-		);
-		expect(next.gestureActivationArea).toBe(
-			BASE_SCREEN_OPTIONS.gestureActivationArea,
 		);
 		expect(next.sheetScrollGestureBehavior).toBe(
 			BASE_SCREEN_OPTIONS.sheetScrollGestureBehavior,

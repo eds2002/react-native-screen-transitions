@@ -17,8 +17,6 @@ export type ScreenOptionsSnapshot = {
 	gestureVelocityImpact: RequiredScreenOption<"gestureVelocityImpact">;
 	gestureSnapVelocityImpact: RequiredScreenOption<"gestureSnapVelocityImpact">;
 	gestureReleaseVelocityScale: RequiredScreenOption<"gestureReleaseVelocityScale">;
-	gestureResponseDistance: OptionalScreenOption<"gestureResponseDistance">;
-	gestureActivationArea: RequiredScreenOption<"gestureActivationArea">;
 	gestureSnapLocked: RequiredScreenOption<"gestureSnapLocked">;
 	sheetScrollGestureBehavior: RequiredScreenOption<"sheetScrollGestureBehavior">;
 	backdropBehavior: OptionalScreenOption<"backdropBehavior">;

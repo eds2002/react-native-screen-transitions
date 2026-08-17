@@ -49,30 +49,6 @@ const areGestureDirectionsEqual = (
 	return true;
 };
 
-const areGestureActivationAreasEqual = (
-	left: TransitionInterpolatorOptions["gestureActivationArea"],
-	right: TransitionInterpolatorOptions["gestureActivationArea"],
-) => {
-	"worklet";
-	if (left === right) return true;
-
-	if (
-		typeof left !== "object" ||
-		left === null ||
-		typeof right !== "object" ||
-		right === null
-	) {
-		return false;
-	}
-
-	return (
-		left.left === right.left &&
-		left.right === right.right &&
-		left.top === right.top &&
-		left.bottom === right.bottom
-	);
-};
-
 const areInterpolatorOptionsEqual = (
 	left?: TransitionInterpolatorOptions,
 	right?: TransitionInterpolatorOptions,
@@ -88,13 +64,6 @@ const areInterpolatorOptionsEqual = (
 		left.gestureVelocityImpact === right.gestureVelocityImpact &&
 		left.gestureSnapVelocityImpact === right.gestureSnapVelocityImpact &&
 		left.gestureReleaseVelocityScale === right.gestureReleaseVelocityScale &&
-		left.gestureResponseDistance === right.gestureResponseDistance &&
-		left.gestureProgressMode === right.gestureProgressMode &&
-		left.gestureDrivesProgress === right.gestureDrivesProgress &&
-		areGestureActivationAreasEqual(
-			left.gestureActivationArea,
-			right.gestureActivationArea,
-		) &&
 		left.gestureSnapLocked === right.gestureSnapLocked &&
 		left.sheetScrollGestureBehavior === right.sheetScrollGestureBehavior &&
 		left.backdropBehavior === right.backdropBehavior

@@ -6,9 +6,7 @@ import type {
 	TransitionSpec,
 } from "./animation.types";
 import type {
-	GestureActivationArea,
 	GestureDirectionOption,
-	GestureProgressMode,
 	ScrollMetadataState,
 } from "./gesture.types";
 import type { OverlayComponent } from "./overlay.types";
@@ -249,15 +247,6 @@ export type ScreenTransitionConfig = {
 	 * How much velocity affects snap point targeting. Lower values make snapping
 	 * feel more deliberate (iOS-like), higher values make it more responsive to flicks.
 	 *
-	 * @deprecated Use `gestureSnapVelocityImpact` instead.
-	 * @default 0.1
-	 */
-	snapVelocityImpact?: number;
-
-	/**
-	 * How much velocity affects snap point targeting. Lower values make snapping
-	 * feel more deliberate (iOS-like), higher values make it more responsive to flicks.
-	 *
 	 * @default 0.1
 	 */
 	gestureSnapVelocityImpact?: number;
@@ -266,64 +255,12 @@ export type ScreenTransitionConfig = {
 	 * Multiplies gesture release velocity used for gesture reset/handoff energy.
 	 *
 	 * This does NOT affect dismissal threshold decisions (`gestureVelocityImpact`)
-	 * or snap target selection (`snapVelocityImpact`). It changes the release
+	 * or snap target selection (`gestureSnapVelocityImpact`). It changes the release
 	 * impulse used by gesture values and interpolator handoff values.
 	 *
 	 * @default 1
 	 */
 	gestureReleaseVelocityScale?: number;
-
-	/**
-	 * Deprecated compatibility option.
-	 *
-	 * This option is no longer read by the runtime transition options. Use
-	 * `gestureReleaseVelocityScale` to tune post-release spring energy.
-	 *
-	 * @deprecated v3 compatibility only.
-	 */
-	gestureReleaseVelocityMax?: number;
-
-	/**
-	 * Deprecated compatibility option.
-	 *
-	 * Overrides the default edge-start distance when `gestureDirection` uses
-	 * `area: "edge"`. Prefer a numeric `area` on each `gestureDirection` entry.
-	 *
-	 * @example
-	 * gestureDirection: { gesture: "horizontal", area: 24 }
-	 *
-	 * @deprecated Use numeric `gestureDirection` entry `area` instead.
-	 */
-	gestureResponseDistance?: number;
-
-	/**
-	 * Deprecated compatibility option.
-	 *
-	 * Gesture movement now always contributes to `progress`. Use `transitionProgress`
-	 * in interpolators when you need transition progress without live gesture
-	 * contribution.
-	 *
-	 * @deprecated Use `transitionProgress` from interpolation state instead.
-	 */
-	gestureProgressMode?: GestureProgressMode;
-
-	/**
-	 * Deprecated compatibility alias for `gestureProgressMode`.
-	 *
-	 * Gesture movement now always contributes to `progress`. Use `transitionProgress`
-	 * in interpolators when you need transition progress without live gesture
-	 * contribution.
-	 *
-	 * @deprecated Use `transitionProgress` from interpolation state instead.
-	 */
-	gestureDrivesProgress?: boolean;
-
-	/**
-	 * The area of the screen where the gesture is activated.
-	 *
-	 * @deprecated Use `gestureDirection` entries with per-direction `area`.
-	 */
-	gestureActivationArea?: GestureActivationArea;
 
 	/**
 	 * Custom metadata passed through to animation props.
@@ -407,15 +344,6 @@ export type ScreenTransitionConfig = {
 	sheetScrollGestureBehavior?: SheetScrollGestureBehavior;
 
 	/**
-	 * @deprecated Use `sheetScrollGestureBehavior` instead.
-	 *
-	 * Mapping:
-	 * - `true` -> `"expand-and-collapse"`
-	 * - `false` -> `"collapse-only"`
-	 */
-	expandViaScrollView?: boolean;
-
-	/**
 	 * Locks gesture-based snap movement to the current snap point.
 	 *
 	 * When enabled, users cannot gesture between snap points. If dismiss gestures
@@ -478,8 +406,6 @@ export type ScreenTransitionConfig = {
 	 * a function component can receive `{ styles, props, pointerEvents, children }`
 	 * and decide how to render the layer.
 	 *
-	 * `contentComponent` replaces `surfaceComponent` for custom screen shells.
-	 *
 	 * @example
 	 * contentComponent: ({ styles, props, pointerEvents, children }) => (
 	 *   <AnimatedSquircleView
@@ -494,30 +420,4 @@ export type ScreenTransitionConfig = {
 	 * @default undefined
 	 */
 	contentComponent?: ScreenContentComponent;
-
-	/**
-	 * Custom component to render as the screen's surface layer.
-	 *
-	 * Renders inside the content animation scope (moves with the screen) as an
-	 * absolutely-positioned layer behind the screen's children.
-	 *
-	 * The library wraps this component with `Animated.createAnimatedComponent` internally.
-	 * Animated styles and props are driven by the `surface` slot in the interpolator return value.
-	 *
-	 * @example
-	 * surfaceComponent: SquircleView,
-	 * screenStyleInterpolator: ({ progress }) => {
-	 *   "worklet";
-	 *   return {
-	 *     surface: {
-	 *       style: { opacity: interpolate(progress, [0, 1], [0, 1]) },
-	 *       props: { cornerRadius: 24, cornerSmoothing: 0.7 },
-	 *     },
-	 *   };
-	 * }
-	 *
-	 * @default undefined
-	 * @deprecated Use `contentComponent` instead.
-	 */
-	surfaceComponent?: React.ComponentType<any>;
 };

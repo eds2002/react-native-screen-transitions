@@ -16,14 +16,11 @@ describe("withScreenTransitions options", () => {
 			enableTransitions: true,
 			gestureEnabled: true,
 			gestureDirection: "bidirectional",
-			gestureResponseDistance: 48,
-			gestureProgressMode: "freeform",
 			screenStyleInterpolator,
 		});
 
 		expect(stringProps(options)).toEqual({
 			title: "Avatar",
-			gestureProgressMode: "freeform",
 			screenStyleInterpolator,
 			presentation: "containedTransparentModal",
 			animation: "none",
@@ -36,7 +33,6 @@ describe("withScreenTransitions options", () => {
 
 		expect(resolvedOptions.gestureEnabled).toBe(true);
 		expect(resolvedOptions.gestureDirection).toBe("bidirectional");
-		expect(resolvedOptions.gestureResponseDistance).toBe(48);
 	});
 
 	it("leaves native-stack gesture options unchanged when transitions are disabled", () => {
@@ -100,32 +96,18 @@ describe("withScreenTransitions options", () => {
 		expect(resolvedOptions.gestureDirection).toBe("vertical");
 	});
 
-	it("keeps adapter gesture response distance away from native-stack props", () => {
-		const options = adaptNativeStackTransitionOptions({
-			enableTransitions: true,
-			gestureResponseDistance: 36,
-		});
-		const resolvedOptions = resolveAdapterTransitionOptions(options);
-
-		expect(options.gestureResponseDistance).toBeUndefined();
-		expect(resolvedOptions.gestureResponseDistance).toBe(36);
-	});
-
 	it("restores transition-only gesture options after React Navigation merges descriptors", () => {
 		const options = adaptNativeStackTransitionOptions({
 			enableTransitions: true,
 			gestureEnabled: true,
 			gestureDirection: "bidirectional",
-			gestureResponseDistance: 24,
 		});
 		const mergedOptions = Object.assign({}, options);
 		const resolvedOptions = resolveAdapterTransitionOptions(mergedOptions);
 
 		expect(mergedOptions.gestureDirection).toBeUndefined();
-		expect(mergedOptions.gestureResponseDistance).toBeUndefined();
 		expect(resolvedOptions.gestureEnabled).toBe(true);
 		expect(resolvedOptions.gestureDirection).toBe("bidirectional");
-		expect(resolvedOptions.gestureResponseDistance).toBe(24);
 	});
 
 	it("preserves inherited adapter gesture options through screen option merges", () => {
@@ -133,7 +115,6 @@ describe("withScreenTransitions options", () => {
 			enableTransitions: true,
 			gestureEnabled: true,
 			gestureDirection: "vertical",
-			gestureResponseDistance: 52,
 		});
 		const screenSpecificOptions = adaptNativeStackTransitionOptions({
 			enableTransitions: true,
@@ -143,10 +124,8 @@ describe("withScreenTransitions options", () => {
 		const resolvedOptions = resolveAdapterTransitionOptions(mergedOptions);
 
 		expect(mergedOptions.gestureDirection).toBeUndefined();
-		expect(mergedOptions.gestureResponseDistance).toBeUndefined();
 		expect(resolvedOptions.gestureEnabled).toBe(true);
 		expect(resolvedOptions.gestureDirection).toBe("vertical");
-		expect(resolvedOptions.gestureResponseDistance).toBe(52);
 	});
 
 	it("leaves unadapted transition options unchanged", () => {

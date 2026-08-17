@@ -410,7 +410,6 @@ export const resolvePanActivationMoveDecision = ({
 		dimensions,
 		activationState,
 		activationArea: policy.gestureActivationArea,
-		responseDistance: policy.gestureResponseDistance,
 	});
 
 	const offsetFailureDecision = resolveOffsetFailureDecision(offset);

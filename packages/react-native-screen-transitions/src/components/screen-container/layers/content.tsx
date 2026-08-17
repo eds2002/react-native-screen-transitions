@@ -10,7 +10,6 @@ import { ScreenFallbackHost } from "../../boundary/portal/components/boundary-po
 import { useContentLayout } from "../hooks/use-content-layout";
 import { MaybeMaskedNavigationContainer } from "./maybe-masked-navigation-container";
 import { usesLayerRenderProps } from "./render-component";
-import { SurfaceContainer } from "./surface-container";
 
 type Props = {
 	children: React.ReactNode;
@@ -56,16 +55,14 @@ export const ContentLayer = memo(
 				pointerEvents={contentPointerEvents}
 				enabled={isNavigationMaskEnabled}
 			>
-				<SurfaceContainer pointerEvents={contentPointerEvents}>
-					{hasAutoSnapPoint ? (
-						<View collapsable={false} onLayout={handleContentLayout}>
-							{children}
-						</View>
-					) : (
-						children
-					)}
-					<ScreenFallbackHost />
-				</SurfaceContainer>
+				{hasAutoSnapPoint ? (
+					<View collapsable={false} onLayout={handleContentLayout}>
+						{children}
+					</View>
+				) : (
+					children
+				)}
+				<ScreenFallbackHost />
 			</MaybeMaskedNavigationContainer>
 		);
 

@@ -5,18 +5,9 @@ import type {
 } from "../types/screen.types";
 
 export const resolveSheetScrollGestureBehavior = (
-	options: Pick<
-		ScreenTransitionConfig,
-		"sheetScrollGestureBehavior" | "expandViaScrollView"
-	>,
+	options: Pick<ScreenTransitionConfig, "sheetScrollGestureBehavior">,
 ): SheetScrollGestureBehavior => {
-	const explicitBehavior = options.sheetScrollGestureBehavior;
-	if (explicitBehavior) return explicitBehavior;
-
-	const legacyBehavior = options.expandViaScrollView;
-	if (legacyBehavior !== undefined) {
-		return legacyBehavior ? "expand-and-collapse" : "collapse-only";
-	}
-
-	return DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR;
+	return (
+		options.sheetScrollGestureBehavior ?? DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR
+	);
 };

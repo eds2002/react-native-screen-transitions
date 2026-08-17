@@ -117,7 +117,6 @@ export interface PanGesturePolicy {
 	sheetScrollGestureBehavior: NonNullable<
 		ScreenTransitionConfig["sheetScrollGestureBehavior"]
 	>;
-	gestureResponseDistance: ScreenTransitionConfig["gestureResponseDistance"];
 	transitionSpec: TransitionSpec | undefined;
 }
 

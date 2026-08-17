@@ -61,14 +61,13 @@ describe("resolveGestureCanTrack", () => {
 });
 
 describe("gestureDirection activation areas", () => {
-	it("uses structured pan direction areas instead of legacy gestureActivationArea", () => {
+	it("uses structured pan direction areas", () => {
 		const policy = resolvePanPolicy(
 			{
 				gestureDirection: [
 					{ gesture: "vertical", area: "edge" },
 					"horizontal",
 				],
-				gestureActivationArea: "edge",
 			},
 			false,
 		);
@@ -86,18 +85,6 @@ describe("gestureDirection activation areas", () => {
 			top: "edge",
 			bottom: "screen",
 		});
-	});
-
-	it("keeps legacy gestureActivationArea as fallback for string directions", () => {
-		const policy = resolvePanPolicy(
-			{
-				gestureDirection: "vertical",
-				gestureActivationArea: "edge",
-			},
-			false,
-		);
-
-		expect(policy.gestureActivationArea).toBe("edge");
 	});
 
 	it("supports numeric edge distance on structured pan directions", () => {

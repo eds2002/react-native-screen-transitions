@@ -93,11 +93,6 @@ describe("hydrateTransitionState snap indices", () => {
 			gestureVelocityImpact: 0.45,
 			gestureSnapVelocityImpact: 0.2,
 			gestureReleaseVelocityScale: 1.4,
-			gestureReleaseVelocityMax: 9,
-			gestureResponseDistance: 38,
-			gestureProgressMode: "freeform",
-			gestureDrivesProgress: false,
-			gestureActivationArea: { left: "edge", top: "screen" },
 			gestureSnapLocked: true,
 			sheetScrollGestureBehavior: "collapse-only",
 			backdropBehavior: "dismiss",
@@ -146,15 +141,10 @@ describe("hydrateTransitionState snap indices", () => {
 			gestureVelocityImpact: 0.45,
 			gestureSnapVelocityImpact: 0.2,
 			gestureReleaseVelocityScale: 1.4,
-			gestureResponseDistance: 38,
-			gestureProgressMode: "freeform",
-			gestureDrivesProgress: false,
-			gestureActivationArea: { left: "edge", top: "screen" },
 			gestureSnapLocked: true,
 			sheetScrollGestureBehavior: "collapse-only",
 			backdropBehavior: "dismiss",
 		});
-		expect("gestureReleaseVelocityMax" in hydrated.options).toBe(false);
 	});
 
 	it("keeps static structural options while applying runtime option overrides", () => {
@@ -196,33 +186,15 @@ describe("hydrateTransitionState snap indices", () => {
 				unwrapped: state,
 			},
 			{ width: 390, height: 844 },
-			{
-				gestureProgressMode: "freeform",
-				gestureTracking: "never",
-			} as unknown as Parameters<typeof hydrateTransitionState>[2],
+			{ gestureTracking: "never" } as unknown as Parameters<
+				typeof hydrateTransitionState
+			>[2],
 		);
 
 		expect(hydrated.options.navigationMaskEnabled).toBe(false);
 		expect(hydrated.options.gestureTracking).toBe("always");
 		expect(hydrated.options.gestureSensitivity).toBe(0.5);
-		expect(hydrated.options.gestureProgressMode).toBe("freeform");
 		expect("navigationMaskEnabled" in hydrated.layouts).toBe(false);
-	});
-
-	it("canonicalizes deprecated sheet scroll behavior aliases", () => {
-		expect(
-			buildScreenTransitionOptions({
-				expandViaScrollView: true,
-			}).sheetScrollGestureBehavior,
-		).toBe("expand-and-collapse");
-		expect(
-			buildScreenTransitionOptions({
-				expandViaScrollView: false,
-			}).sheetScrollGestureBehavior,
-		).toBe("collapse-only");
-		expect(buildScreenTransitionOptions({}).sheetScrollGestureBehavior).toBe(
-			undefined,
-		);
 	});
 
 	it("keeps animatedSnapIndex fractional while snapIndex follows the target index", () => {
