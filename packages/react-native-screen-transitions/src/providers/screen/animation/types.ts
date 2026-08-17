@@ -5,15 +5,7 @@ import type { ScreenInterpolatorFrame } from "./helpers/pipeline";
 
 export type ScreenInterpolatorPropsRevision = Pick<SharedValue<number>, "get">;
 
-export type ScreenAnimationLegacyTarget =
-	| "self"
-	| "parent"
-	| "root"
-	| { ancestor: number };
-
-export type ScreenAnimationTarget =
-	| ScreenTransitionTarget
-	| ScreenAnimationLegacyTarget;
+export type ScreenAnimationTarget = ScreenTransitionTarget;
 
 export type ScreenAnimationTransitionSource = {
 	screenInterpolatorProps: SharedValue<ScreenInterpolatorFrame>;

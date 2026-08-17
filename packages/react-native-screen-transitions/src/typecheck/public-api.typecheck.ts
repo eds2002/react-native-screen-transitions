@@ -84,7 +84,6 @@ declare const interpolationProps: ScreenInterpolationProps;
 
 const gestureTarget: ScreenGestureTarget = { depth: -2 };
 const animationTarget: ScreenAnimationTarget = { depth: -2 };
-const legacyAnimationTarget: ScreenAnimationTarget = { ancestor: 2 };
 const transitionTarget: ScreenTransitionTarget = { depth: 2 };
 const transitionDepthTarget: ScreenTransitionDepthTarget = { depth: 0 };
 
@@ -97,14 +96,6 @@ function usePublicApiHooksTypecheck() {
 		useScreenAnimation({ depth: -1 });
 	const childAnimation: DerivedValue<ScreenInterpolationProps | null> =
 		useScreenAnimation({ depth: 1 });
-	const legacySelfAnimation: DerivedValue<ScreenInterpolationProps> =
-		useScreenAnimation("self");
-	const legacyParentAnimation: DerivedValue<ScreenInterpolationProps | null> =
-		useScreenAnimation("parent");
-	const legacyRootAnimation: DerivedValue<ScreenInterpolationProps | null> =
-		useScreenAnimation("root");
-	const legacyAncestorAnimation: DerivedValue<ScreenInterpolationProps | null> =
-		useScreenAnimation({ ancestor: 2 });
 	const inheritedGesture = useScreenGesture();
 	const ancestorGesture = useScreenGesture({ depth: -1 });
 
@@ -113,17 +104,12 @@ function usePublicApiHooksTypecheck() {
 		selfTargetAnimation,
 		ancestorAnimation,
 		childAnimation,
-		legacySelfAnimation,
-		legacyParentAnimation,
-		legacyRootAnimation,
-		legacyAncestorAnimation,
 		inheritedGesture,
 		ancestorGesture,
 	};
 }
 
 void usePublicApiHooksTypecheck;
-void legacyAnimationTarget;
 void transitionTarget;
 void transitionDepthTarget;
 
