@@ -411,16 +411,24 @@ function getPairKeyForSource(
 	"worklet";
 	const state = pairs.get();
 	const linkKey = getLinkKeyFromTag(tag);
+	let latestPairKey: ScreenPairKey | null = null;
+	let latestPairAwaitingSource: ScreenPairKey | null = null;
+
 	for (const pairKey in state) {
 		if (getSourceScreenKeyFromPairKey(pairKey) !== screenKey) continue;
-		if (
-			getResolvedLink(pairKey, tag).link?.destination ||
-			state[pairKey]?.sourceRequests?.[linkKey]
-		) {
-			return pairKey;
+
+		const link = getResolvedLink(pairKey, tag).link;
+		const hasSourceRequest = state[pairKey]?.sourceRequests?.[linkKey];
+
+		if (!link?.destination && !hasSourceRequest) continue;
+
+		latestPairKey = pairKey;
+		if (!link?.source) {
+			latestPairAwaitingSource = pairKey;
 		}
 	}
-	return null;
+
+	return latestPairAwaitingSource ?? latestPairKey;
 }
 
 function getPairKeyForDestination(

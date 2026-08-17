@@ -306,6 +306,32 @@ describe("BoundStore.link pair writes", () => {
 		expect(getPairKeyForSource("card", "screen-a")).toBe(pairKey);
 	});
 
+	it("prefers a new pair awaiting source capture over a retained closing pair", () => {
+		const closingPairKey = createScreenPairKey("screen-a", "screen-b-1");
+		const openingPairKey = createScreenPairKey("screen-a", "screen-b-2");
+
+		BoundStore.link.setSource(
+			closingPairKey,
+			"card",
+			"screen-a",
+			createBounds(10),
+		);
+		BoundStore.link.setDestination(
+			closingPairKey,
+			"card",
+			"screen-b-1",
+			createBounds(20),
+		);
+		BoundStore.link.setDestination(
+			openingPairKey,
+			"card",
+			"screen-b-2",
+			createBounds(30),
+		);
+
+		expect(getPairKeyForSource("card", "screen-a")).toBe(openingPairKey);
+	});
+
 	it("sets a source by pair key and id", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 		const bounds = createBounds();
