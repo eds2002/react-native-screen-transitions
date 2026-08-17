@@ -281,7 +281,7 @@ export const SharedIGImage = ({
 					id,
 				}).navigation.zoom() ?? {};
 
-			// Extract raw style values from bounds result (legacy format)
+			// Read the bound-specific slots before normalizing the full result.
 			const sourceStyle = navigationStyles[id] as
 				| Record<string, unknown>
 				| undefined;
@@ -292,10 +292,9 @@ export const SharedIGImage = ({
 				| Record<string, unknown>
 				| undefined;
 
-			// Normalize bounds result to new slot format for spreading
 			const normalizedNav = normalizeInterpolatedStyle(
 				navigationStyles as Record<string, any>,
-			).result;
+			);
 
 			if (focused) {
 				return {
@@ -621,10 +620,9 @@ export const SharedXImage = ({
 				| Record<string, unknown>
 				| undefined;
 
-			// Normalize bounds result to new slot format for spreading
 			const normalizedNav = normalizeInterpolatedStyle(
 				navigationStyles as Record<string, any>,
-			).result;
+			);
 
 			const dragY = interpolate(
 				current.gesture.normY,
