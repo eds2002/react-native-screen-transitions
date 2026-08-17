@@ -57,6 +57,12 @@ export default function NativeStackAdapterRecipeLayout() {
 					transitionSpec: Transition.Specs.Zoom,
 				}}
 			/>
+			<NativeStackAdapter.Screen
+				name="booking"
+				options={{
+					headerShown: false,
+				}}
+			/>
 		</NativeStackAdapter>
 	);
 }
