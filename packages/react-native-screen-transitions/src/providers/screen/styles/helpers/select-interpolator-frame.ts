@@ -2,13 +2,7 @@ import type { ScreenInterpolatorFrame } from "../../animation/helpers/pipeline";
 
 export type SelectedInterpolatorFrame = Pick<
 	ScreenInterpolatorFrame,
-	| "progress"
-	| "transitionProgress"
-	| "next"
-	| "focused"
-	| "active"
-	| "inactive"
-	| "logicallySettled"
+	"progress" | "transitionProgress" | "next" | "focused" | "active" | "inactive"
 >;
 
 export const selectInterpolatorFrame = (
@@ -25,7 +19,6 @@ export const selectInterpolatorFrame = (
 			focused: frame.focused,
 			active: frame.active,
 			inactive: frame.inactive,
-			logicallySettled: frame.logicallySettled,
 		};
 	}
 
@@ -36,6 +29,5 @@ export const selectInterpolatorFrame = (
 		focused: true,
 		active: frame.current,
 		inactive: frame.previous,
-		logicallySettled: frame.current.settled,
 	};
 };

@@ -96,7 +96,6 @@ describe("initial interpolator state", () => {
 			closing: 0,
 			willAnimate: 0,
 			settled: 0,
-			logicallySettled: 0,
 			gesture: { dragging: 0, dismissing: 0, settling: 0 },
 		});
 	});

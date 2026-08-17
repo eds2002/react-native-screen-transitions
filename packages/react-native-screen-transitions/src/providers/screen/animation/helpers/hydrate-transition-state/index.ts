@@ -167,13 +167,7 @@ export const hydrateTransitionState = (
 
 	out.animating = s.progressAnimating.get();
 
-	out.gesture.normalizedX = out.gesture.normX;
-	out.gesture.normalizedY = out.gesture.normY;
-	out.gesture.isDismissing = out.gesture.dismissing;
-	out.gesture.isDragging = out.gesture.dragging;
-
 	out.settled = s.progressSettled.get();
-	out.logicallySettled = out.settled;
 
 	out.meta = s.meta;
 	out.options = options;

@@ -72,10 +72,6 @@ const DEFAULT_GESTURE_VALUES = {
 	initiator: "none",
 
 	// Deprecated aliases
-	normalizedX: 0,
-	normalizedY: 0,
-	isDismissing: 0,
-	isDragging: 0,
 } as const;
 
 const createDefaultGestureValues = () => ({
@@ -104,7 +100,6 @@ export const createScreenTransitionState = (
 	animating: 0,
 	willAnimate: 0,
 	settled: 1,
-	logicallySettled: 1,
 	entering: 0,
 	gesture: createDefaultGestureValues(),
 	route,
@@ -131,7 +126,6 @@ export const DEFAULT_SCREEN_TRANSITION_STATE: ScreenTransitionState =
 		animating: 0,
 		willAnimate: 0,
 		settled: 1,
-		logicallySettled: 1,
 		entering: 0,
 		gesture: createDefaultGestureValues(),
 		route: {} as RouteProp<ParamListBase>,

@@ -24,7 +24,6 @@ describe("selectInterpolatorFrame", () => {
 			focused: false,
 			active: next,
 			inactive: current,
-			logicallySettled: 0,
 		} as unknown as ScreenInterpolatorFrame;
 
 		expect(selectInterpolatorFrame(frame, true)).toEqual({
@@ -34,7 +33,6 @@ describe("selectInterpolatorFrame", () => {
 			focused: true,
 			active: current,
 			inactive: previous,
-			logicallySettled: 0,
 		});
 	});
 });

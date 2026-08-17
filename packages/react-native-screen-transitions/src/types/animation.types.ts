@@ -102,13 +102,6 @@ export type ScreenTransitionState = {
 	settled: number;
 
 	/**
-	 * Deprecated alias for `settled`.
-	 *
-	 * @deprecated Use `settled` instead.
-	 */
-	logicallySettled: number;
-
-	/**
 	 * Live gesture values for this screen.
 	 * Contains translation (x, y), normalized values (-1 to 1),
 	 * and flags for dragging/dismissing state.
@@ -237,15 +230,6 @@ export interface ScreenInterpolationProps {
 	 * Falls back to `progress` when not in blank-stack.
 	 */
 	stackProgress: number;
-
-	/**
-	 * Whether the active transition is visually close enough to its target to be
-	 * treated as complete, even if the animation is still physically settling.
-	 *
-	 * @deprecated Use `active.settled` instead. Screen settlement state
-	 * belongs on the screen state object.
-	 */
-	logicallySettled: number;
 
 	/**
 	 * Function that provides access to bounds helpers for shared screen transitions.

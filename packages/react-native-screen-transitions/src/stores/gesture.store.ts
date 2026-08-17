@@ -60,23 +60,6 @@ export type GestureStoreMap = {
 	dragging: SharedValue<number>;
 	settling: SharedValue<number>;
 	initiator: SharedValue<ActiveGesture | null>;
-
-	/**
-	 * @deprecated Use `normX` instead.
-	 */
-	normalizedX: SharedValue<number>;
-	/**
-	 * @deprecated Use `normY` instead.
-	 */
-	normalizedY: SharedValue<number>;
-	/**
-	 * @deprecated Use `dismissing` instead.
-	 */
-	isDismissing: SharedValue<number>;
-	/**
-	 * @deprecated Use `dragging` instead.
-	 */
-	isDragging: SharedValue<number>;
 };
 
 function createGestureBag(): GestureStoreMap {
@@ -149,12 +132,6 @@ function createGestureBag(): GestureStoreMap {
 		dragging,
 		settling,
 		initiator,
-
-		// Deprecated aliases (same underlying SharedValue)
-		normalizedX: normX,
-		normalizedY: normY,
-		isDismissing: dismissing,
-		isDragging: dragging,
 	};
 }
 

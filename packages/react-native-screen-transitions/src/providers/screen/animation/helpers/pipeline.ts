@@ -84,7 +84,6 @@ const applyInitialProgress = ({
 	state.animating = animating;
 	state.willAnimate = willAnimate;
 	state.settled = settled;
-	state.logicallySettled = settled;
 	state.layouts.screen = dimensions;
 
 	return state;
@@ -187,7 +186,6 @@ const createInitialInterpolatorProps = ({
 		progress: 0,
 		transitionProgress: 0,
 		stackProgress: 0,
-		logicallySettled: 1,
 		focused: true,
 		active: current,
 		inactive: undefined,
@@ -195,7 +193,6 @@ const createInitialInterpolatorProps = ({
 
 	updateDerivations(frame);
 	frame.stackProgress = frame.progress;
-	frame.logicallySettled = frame.active.settled;
 
 	return frame;
 };
@@ -264,7 +261,6 @@ const hydrateInterpolatorFrame = <TFrame extends ScreenInterpolatorFrame>({
 		currentRouteKey,
 		frame.progress,
 	);
-	frame.logicallySettled = frame.active.settled;
 
 	return frame;
 };

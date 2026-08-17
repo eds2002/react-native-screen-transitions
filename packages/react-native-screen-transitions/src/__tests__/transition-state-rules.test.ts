@@ -266,7 +266,7 @@ describe("transition state rules", () => {
 
 		expect(hydrated.animating).toBe(0);
 		expect(hydrated.settled).toBe(1);
-		expect(hydrated.logicallySettled).toBe(1);
+		expect(hydrated.settled).toBe(1);
 	});
 
 	it("does not block visual settlement while gesture dismissal is active", () => {
@@ -278,7 +278,7 @@ describe("transition state rules", () => {
 
 		expect(hydrated.animating).toBe(0);
 		expect(hydrated.settled).toBe(1);
-		expect(hydrated.logicallySettled).toBe(1);
+		expect(hydrated.settled).toBe(1);
 	});
 
 	it("uses the progress animation settle signal", () => {
@@ -289,11 +289,11 @@ describe("transition state rules", () => {
 		});
 
 		expect(hydrate(state).settled).toBe(0);
-		expect(hydrate(state).logicallySettled).toBe(0);
+		expect(hydrate(state).settled).toBe(0);
 
 		state.progressSettled.set(1);
 		expect(hydrate(state).settled).toBe(1);
-		expect(hydrate(state).logicallySettled).toBe(1);
+		expect(hydrate(state).settled).toBe(1);
 	});
 
 	it("allows visual settlement before the progress animation fully finishes", () => {
@@ -308,7 +308,7 @@ describe("transition state rules", () => {
 
 		expect(hydrated.animating).toBe(1);
 		expect(hydrated.settled).toBe(1);
-		expect(hydrated.logicallySettled).toBe(1);
+		expect(hydrated.settled).toBe(1);
 	});
 
 	it("keeps settled false until the progress animation reports settlement", () => {
@@ -320,7 +320,7 @@ describe("transition state rules", () => {
 		});
 
 		expect(hydrate(state).settled).toBe(0);
-		expect(hydrate(state).logicallySettled).toBe(0);
+		expect(hydrate(state).settled).toBe(0);
 	});
 
 	it("does not let dragging override canonical animation state", () => {
@@ -335,7 +335,7 @@ describe("transition state rules", () => {
 
 		expect(hydrated.animating).toBe(0);
 		expect(hydrated.settled).toBe(1);
-		expect(hydrated.logicallySettled).toBe(1);
+		expect(hydrated.settled).toBe(1);
 	});
 
 	it("allows visual settlement while a dismissing gesture holds residual values", () => {
@@ -354,7 +354,7 @@ describe("transition state rules", () => {
 
 		expect(hydrated.animating).toBe(0);
 		expect(hydrated.settled).toBe(1);
-		expect(hydrated.logicallySettled).toBe(1);
+		expect(hydrated.settled).toBe(1);
 	});
 
 	it("derives progress from internal gesture delta", () => {

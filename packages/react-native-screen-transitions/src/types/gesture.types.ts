@@ -243,12 +243,4 @@ export type GestureValues = {
 	 * @deprecated Use `animating` or `settled` for public motion state.
 	 */
 	settling: number;
-	/** @deprecated Use `normX` instead. */
-	normalizedX: number;
-	/** @deprecated Use `normY` instead. */
-	normalizedY: number;
-	/** @deprecated Use `dismissing` instead. */
-	isDismissing: number;
-	/** @deprecated Use `dragging` instead. */
-	isDragging: number;
 };
