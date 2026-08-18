@@ -1,0 +1,91 @@
+---
+title: "Boundary Components"
+pageTitle: "Boundary Components"
+summary: "Register, measure, and place elements used by bounds-driven transitions."
+description: "Use Transition.Boundary, Transition.Boundary.Target, and Transition.Boundary.Host."
+eyebrow: "Components"
+group: "Components"
+order: 2
+to: /boundary-components
+---
+
+`Transition.Boundary` is the compound API for bounds-driven transitions.
+
+- `Transition.Boundary`
+- `Transition.Boundary.Target`
+- `Transition.Boundary.Host`
+
+## Transition.Boundary
+
+Use this for both pressable and passive boundary registration.
+
+When `onPress` is present, it renders as a pressable boundary. When `onPress` is omitted, it renders as a passive view boundary.
+
+```tsx
+// Passive boundary
+<Transition.Boundary id="hero">
+  <Image source={heroImage} style={styles.hero} />
+</Transition.Boundary>
+
+// Pressable boundary
+<Transition.Boundary
+  id="hero"
+  onPress={() => navigation.navigate("Detail")}
+>
+  <Image source={heroImage} style={styles.hero} />
+</Transition.Boundary>
+```
+
+This is the default recommendation for new code.
+
+## Transition.Boundary.Target
+
+Use this when the measured element is nested inside the owner.
+
+```tsx
+<Transition.Boundary id={item.id} onPress={openItem} style={styles.row}>
+  <Transition.Boundary.Target style={styles.artTarget}>
+    <Image source={item.image} style={styles.artwork} />
+  </Transition.Boundary.Target>
+
+  <View style={styles.copy}>
+    <Text>{item.title}</Text>
+  </View>
+</Transition.Boundary>
+```
+
+It does not take its own `id`. It inherits the surrounding boundary owner and changes which descendant gets measured.
+
+## Transition.Boundary.Host
+
+Use this to make handoff or clipping-escape placement explicit inside a scrollable or otherwise constrained coordinate space.
+
+```tsx
+<Transition.ScrollView>
+  <Transition.Boundary.Host />
+
+  <Transition.Boundary id="card" escapeClipping onPress={openCard}>
+    <Image source={image} style={styles.card} />
+  </Transition.Boundary>
+</Transition.ScrollView>
+```
+
+Most flows do not need an explicit host. Add one when `escapeClipping` or `handoff` content should be placed inside a specific local coordinate space.
+
+## Boundary Config Props
+
+Boundary components share the same configuration props:
+
+- `id`
+- `group`
+- `anchor`
+- `scaleMode`
+- `target`
+- `method`
+- `enabled`
+- `handoff`
+- `escapeClipping`
+
+They keep the wrapped component props as well. The root `Transition.Boundary` accepts `onPress` for pressable usage.
+
+Related reading: [Bounds Transitions](/shared-elements).

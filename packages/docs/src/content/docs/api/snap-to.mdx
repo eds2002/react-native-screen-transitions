@@ -1,0 +1,22 @@
+---
+title: "snapTo"
+pageTitle: "snapTo"
+summary: "Move the active snap screen to a configured snap point."
+description: "Programmatically move the active snap screen to a configured snap-point index."
+eyebrow: "API"
+group: "API"
+order: 7
+to: /api/snap-to
+---
+
+`snapTo(index)` searches the focused screen's navigator lineage for the most recent screen with `snapPoints`, then falls back to the most recent matching screen in global history. It moves that screen to the requested zero-based index.
+
+```tsx
+import { snapTo } from "react-native-screen-transitions";
+
+snapTo(0);
+```
+
+Snap points are sorted in ascending order before the index is resolved. The call does nothing and logs a warning when no screen with snap points is available or the index is outside the configured range.
+
+See [Snap Points](/snap-points) for screen configuration and live snap state.

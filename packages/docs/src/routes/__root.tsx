@@ -11,7 +11,7 @@ import { createDocUrl, createSocialImageUrl } from "../lib/docs";
 import "../styles.css";
 
 const siteDescription =
-	"Build custom screen transitions, snap sheets, overlays, and bounds-driven navigation motion with the v3 API.";
+	"Build custom screen transitions, snap sheets, overlays, and bounds-driven navigation motion.";
 const socialImage = createSocialImageUrl("/");
 const canonicalUrl = createDocUrl("/");
 

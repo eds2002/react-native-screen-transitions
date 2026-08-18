@@ -1,0 +1,43 @@
+---
+title: "React Navigation"
+pageTitle: "React Navigation"
+summary: "Use Blank Stack with React Navigation."
+description: "Set up the stable React Navigation integration with Blank Stack."
+eyebrow: "Integrations"
+group: "Integrations"
+order: 1
+to: /react-navigation
+---
+
+React Navigation is the stable navigation host for Screen Transitions.
+
+Complete the host setup in React Navigation's [Getting Started guide](https://reactnavigation.org/docs/getting-started/) before adding Blank Stack.
+
+## Create a Blank Stack
+
+Import the navigator factory from the React Navigation entry point:
+
+```tsx
+import { NavigationContainer } from "@react-navigation/native";
+import Transition from "react-native-screen-transitions";
+import { createBlankStackNavigator } from "react-native-screen-transitions/react-navigation";
+
+const Stack = createBlankStackNavigator();
+
+export function App() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen
+          name="Detail"
+          component={DetailScreen}
+          options={Transition.Presets.SlideFromBottom()}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
+```
+
+Continue to [Quick Start](/quick-start) for the transition APIs shared by every navigation host.

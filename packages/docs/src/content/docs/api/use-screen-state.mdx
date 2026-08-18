@@ -1,0 +1,42 @@
+---
+title: "useScreenState"
+pageTitle: "useScreenState"
+summary: "Read the current Blank Stack screen and focused route state."
+description: "Read route, option, navigation, and snap state from the current Blank Stack."
+eyebrow: "API"
+group: "API"
+order: 4
+to: /api/use-screen-state
+---
+
+`useScreenState()` returns screen and focused-route state from the current Blank Stack.
+
+```tsx
+import { useScreenState } from "react-native-screen-transitions";
+
+const {
+  index,
+  routes,
+  focusedRoute,
+  focusedIndex,
+  options,
+  meta,
+  navigation,
+  snapTo,
+} = useScreenState();
+```
+
+<PropertyTable>
+
+| Field | Meaning |
+| --- | --- |
+| `index` | Index of the current screen in the stack |
+| `routes` | Routes in the current stack |
+| `focusedRoute` | Focused route in the stack |
+| `focusedIndex` | Index of the focused route |
+| `options` | Resolved options for the focused screen |
+| `meta` | Metadata from the focused screen options |
+| `navigation` | Navigation object for the current screen |
+| `snapTo(index)` | Snap the focused screen to a configured snap-point index |
+
+</PropertyTable>

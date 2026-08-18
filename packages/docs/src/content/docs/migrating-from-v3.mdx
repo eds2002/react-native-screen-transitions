@@ -1,0 +1,116 @@
+---
+title: "Upgrading from v3"
+pageTitle: "Upgrading from v3"
+summary: "Update dependencies, navigator imports, and removed compatibility aliases."
+description: "Move a Version 3 app to the current Screen Transitions architecture without rewriting its transitions."
+eyebrow: "Guides"
+group: "Guides"
+order: 1
+to: /migrating-from-v3
+---
+
+Most transition code does not need to change. Presets, screen interpolators, gestures, overlays, snap points, and bounds keep the same model. Migration work is concentrated in dependencies, navigator imports, and APIs that were already deprecated in Version 3.
+
+## Before migrating
+
+Version 3 remains available for apps that need React before 19.2, Reanimated 3, React Navigation 6, or an older Expo Router setup. Its peer floors are:
+
+- React: no package-level minimum
+- React Navigation: 6.0 or later
+- Native Stack: 7.0 or later
+- Reanimated: 3.16 or later, including 4.x
+- Gesture Handler: 2.16.1 or later
+- React Native Screens: 4.4 or later
+
+## Update the runtime
+
+The current release requires React 19.2, Reanimated 4, Worklets 0.8, and React Navigation 7.3 or later. Expo Router requires 56.2.10 or later and remains an Alpha integration.
+
+Follow [Installation](/installation), then rebuild the native app. React and `react-native-renderer` must resolve to the exact same version.
+
+## Replace navigator imports
+
+For React Navigation, replace the Version 3 Blank Stack entry point:
+
+```tsx
+// Version 3
+import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
+
+// Current
+import { createBlankStackNavigator } from "react-native-screen-transitions/react-navigation";
+```
+
+Expo Router imports `BlankStack` from its own host entry point:
+
+```tsx
+import { BlankStack } from "react-native-screen-transitions/expo-router";
+```
+
+Version 3 has no Expo Router entry point. It wraps the Blank Stack navigator with Expo Router's `withLayoutContext`:
+
+```tsx
+import type {
+  ParamListBase,
+  StackNavigationState,
+} from "@react-navigation/native";
+import { withLayoutContext } from "expo-router";
+import type { ComponentProps } from "react";
+import {
+  type BlankStackNavigationEventMap,
+  type BlankStackNavigationOptions,
+  createBlankStackNavigator,
+} from "react-native-screen-transitions/blank-stack";
+
+const { Navigator } = createBlankStackNavigator();
+
+function BlankStackNavigator(props: ComponentProps<typeof Navigator>) {
+  return <Navigator {...props} />;
+}
+
+export const BlankStack = withLayoutContext<
+  BlankStackNavigationOptions,
+  typeof BlankStackNavigator,
+  StackNavigationState<ParamListBase>,
+  BlankStackNavigationEventMap
+>(BlankStackNavigator);
+```
+
+The bundled component stack and bundled native-stack creator have been removed. Replace component stack with Blank Stack. Replace the bundled native stack with `@react-navigation/native-stack` plus `withScreenTransitions`.
+
+## Remove Version 3 navigator props
+
+The current Blank Stack is a Standard Navigator and no longer exposes the Version 3 `nativeScreens` or `enableNativeScreens` presentation switches. Remove those props. If an embedded flow needs isolation, follow the nesting rules of the navigation host rather than relying on the old component-stack path.
+
+## Remove deprecated transition aliases
+
+Version 4 removes compatibility fields that Version 3 kept temporarily. Common replacements include:
+
+- `snapVelocityImpact` → `gestureSnapVelocityImpact`
+- `expandViaScrollView` → `sheetScrollGestureBehavior`
+- `surfaceComponent` → `contentComponent`
+- `gestureResponseDistance` and `gestureActivationArea` → the `area` field on each `gestureDirection` entry
+- `gestureDrivesProgress` and `gestureProgressMode` → read `transitionProgress` when interpolation progress must exclude live gesture movement
+- gesture `active` → `initiator`
+- gesture `direction` → `initiator` for the gesture that activated the transition
+- `normalizedX`, `normalizedY`, `isDragging`, and `isDismissing` → `normX`, `normY`, `dragging`, and `dismissing`
+
+`useScreenAnimation` now uses depth targets. Replace `"self"`, `"parent"`, `"root"`, and `{ ancestor }` with the matching `{ depth }` target.
+
+Version 4 also removes ignored bounds and zoom compatibility options, including `bounds().math()`, `raw`, `gestures`, legacy zoom opacity ranges, and old drag sensitivity fields. Use `bounds(id).values()`, `offset`, and the current `drag` configuration instead.
+
+## Check inactive screen behavior
+
+The four `inactiveBehavior` values remain `hide`, `pause`, `unmount`, and `keep`. Their implementation changed from React Native Screens and React Freeze to React 19.2 Activity.
+
+Test screens with subscriptions, text inputs, scroll state, nested navigation, and expensive effects. Activity pauses effects and deprioritizes hidden work, while Screen Transitions keeps paint visible when a transition still needs the inactive route.
+
+## Verify the app
+
+Run these cases on iOS and Android:
+
+- rapid pushes and programmatic pops
+- gesture cancellation and repeated dismissals
+- deep bounds stacks
+- floating overlays during overlapping transitions
+- all four inactive behavior modes
+- nested stacks and deep links used by the app

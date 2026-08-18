@@ -1,6 +1,5 @@
 import type { ComponentType } from "react";
 
-export type DocVersionId = "v3-4" | "v4-experimental";
 export type DocSlug = string;
 
 type DocFrontmatter = {
@@ -22,12 +21,6 @@ type DocModule = {
 	frontmatter?: Partial<DocFrontmatter>;
 };
 
-type DocVersion = {
-	basePath: string;
-	id: DocVersionId;
-	label: string;
-};
-
 export type Doc = {
 	availability?: string;
 	changelogDate?: string;
@@ -43,7 +36,6 @@ export type Doc = {
 	summary: string;
 	title: string;
 	to: string;
-	versionId: DocVersionId;
 };
 
 const siteUrl = new URL("https://screen-transitions.esjr.org");
@@ -54,33 +46,18 @@ const docModules = import.meta.glob<DocModule>("../content/docs/**/*.mdx", {
 
 const groupOrder = [
 	"Get Started",
+	"Integrations",
+	"Adapters",
 	"Core Concepts",
 	"Navigation Transitions",
 	"Components",
 	"API",
 	"Recipes",
-	"Changelogs",
 	"Guides",
+	"Changelogs",
 ];
 const groupOrderIndex = new Map(
 	groupOrder.map((group, index) => [group, index] as const),
-);
-
-export const docVersions = [
-	{
-		basePath: "",
-		id: "v3-4",
-		label: "v3",
-	},
-	{
-		basePath: "/v4-experimental",
-		id: "v4-experimental",
-		label: "v4 (alpha)",
-	},
-] as const satisfies ReadonlyArray<DocVersion>;
-
-const versionIndex = new Map(
-	docVersions.map((version, index) => [version.id, index] as const),
 );
 
 function normalizePathname(pathname: string) {
@@ -91,55 +68,17 @@ function normalizePathname(pathname: string) {
 	return pathname;
 }
 
-function getVersionBasePath(versionId: DocVersionId) {
-	return docVersions.find((version) => version.id === versionId)?.basePath ?? "";
-}
-
-function createDocPath(versionId: DocVersionId, to: string) {
-	if (versionId === "v3-4") {
-		return to === "/" ? "/" : normalizePathname(to);
-	}
-
-	const basePath = getVersionBasePath(versionId);
-
-	if (to === "/") {
-		return `${basePath}/`;
-	}
-
-	return `${basePath}${normalizePathname(to)}`;
-}
-
 function fallbackDocPath(slug: DocSlug) {
 	return slug === "overview" ? "/" : `/${slug}`;
 }
 
-function resolveVersionAndSlug(modulePath: string) {
-	const relativePath = modulePath
+function resolveSlug(modulePath: string) {
+	return modulePath
 		.replace("../content/docs/", "")
 		.replace(/\.mdx$/, "");
-
-	if (relativePath.startsWith("v4-experimental/")) {
-		return {
-			slug: relativePath.slice("v4-experimental/".length),
-			versionId: "v4-experimental" as const,
-		};
-	}
-
-	return {
-		slug: relativePath,
-		versionId: "v3-4" as const,
-	};
 }
 
 function compareDocs(left: Doc, right: Doc) {
-	const versionDelta =
-		(versionIndex.get(left.versionId) ?? Number.MAX_SAFE_INTEGER) -
-		(versionIndex.get(right.versionId) ?? Number.MAX_SAFE_INTEGER);
-
-	if (versionDelta !== 0) {
-		return versionDelta;
-	}
-
 	const groupDelta =
 		(groupOrderIndex.get(left.group) ?? Number.MAX_SAFE_INTEGER) -
 		(groupOrderIndex.get(right.group) ?? Number.MAX_SAFE_INTEGER);
@@ -168,7 +107,7 @@ function asBoolean(value: unknown, fallback = false) {
 }
 
 function createDoc(modulePath: string, module: DocModule): Doc {
-	const { slug, versionId } = resolveVersionAndSlug(modulePath);
+	const slug = resolveSlug(modulePath);
 	const frontmatter = module.frontmatter ?? {};
 	const localPath = asString(frontmatter.to, fallbackDocPath(slug));
 
@@ -186,17 +125,12 @@ function createDoc(modulePath: string, module: DocModule): Doc {
 		slug,
 		summary: asString(frontmatter.summary),
 		title: asString(frontmatter.title, asString(frontmatter.pageTitle)),
-		to: createDocPath(versionId, localPath),
-		versionId,
+		to: localPath === "/" ? "/" : normalizePathname(localPath),
 	};
 }
 
-function getDocsForVersion(versionId: DocVersionId) {
-	return flatDocs.filter((doc) => doc.versionId === versionId);
-}
-
-function getVisibleDocsForVersion(versionId: DocVersionId) {
-	return getDocsForVersion(versionId).filter((doc) => !doc.hidden);
+function getVisibleDocs() {
+	return flatDocs.filter((doc) => !doc.hidden);
 }
 
 export const flatDocs = Object.entries(docModules)
@@ -211,23 +145,11 @@ export function getDocByPath(pathname: string) {
 	);
 }
 
-export function getDocVersion(versionId: DocVersionId) {
-	const version = docVersions.find((entry) => entry.id === versionId);
-
-	if (!version) {
-		throw new Error(`Unknown doc version: ${versionId}`);
-	}
-
-	return version;
-}
-
-export function getDocByVersionAndSlug(versionId: DocVersionId, slug: DocSlug) {
-	const doc = flatDocs.find(
-		(entry) => entry.versionId === versionId && entry.slug === slug,
-	);
+export function getDocBySlug(slug: DocSlug) {
+	const doc = flatDocs.find((entry) => entry.slug === slug);
 
 	if (!doc) {
-		throw new Error(`Unknown doc: ${versionId}/${slug}`);
+		throw new Error(`Unknown doc: ${slug}`);
 	}
 
 	return doc;
@@ -237,18 +159,15 @@ function isChangelogDoc(doc: Doc) {
 	return doc.group === "Changelogs";
 }
 
-export function getChangelogDocs(versionId: DocVersionId) {
-	return getDocsForVersion(versionId).filter(isChangelogDoc);
+export function getChangelogDocs() {
+	return flatDocs.filter(isChangelogDoc);
 }
 
-export function getChangelogDocBySlug(
-	versionId: DocVersionId,
-	slug: DocSlug,
-) {
-	const doc = getDocByVersionAndSlug(versionId, slug);
+export function getChangelogDocBySlug(slug: DocSlug) {
+	const doc = getDocBySlug(slug);
 
 	if (!isChangelogDoc(doc)) {
-		throw new Error(`Unknown changelog doc: ${versionId}/${slug}`);
+		throw new Error(`Unknown changelog doc: ${slug}`);
 	}
 
 	return doc;
@@ -259,15 +178,15 @@ export function findDoc(pathname: string) {
 
 	return (
 		flatDocs.find((doc) => normalizePathname(doc.to) === normalizedPathname) ??
-		getDocByVersionAndSlug("v3-4", "overview")
+		getDocBySlug("overview")
 	);
 }
 
-export function getDocArticleId(versionId: DocVersionId, slug: DocSlug) {
-	return `doc-${versionId}-${slug}`.replace(/[^a-z0-9-]/gi, "-").toLowerCase();
+export function getDocArticleId(slug: DocSlug) {
+	return `doc-${slug}`.replace(/[^a-z0-9-]/gi, "-").toLowerCase();
 }
 
-export function getDocsGroups(versionId: DocVersionId) {
+export function getDocsGroups() {
 	const groups = new Map<
 		string,
 		{
@@ -279,7 +198,7 @@ export function getDocsGroups(versionId: DocVersionId) {
 		}
 	>();
 
-	for (const doc of getVisibleDocsForVersion(versionId)) {
+	for (const doc of getVisibleDocs()) {
 		const group = groups.get(doc.group) ?? {
 			items: [],
 			title: doc.group,
@@ -301,8 +220,8 @@ export function getDocsGroups(versionId: DocVersionId) {
 	});
 }
 
-export function getAdjacentDocs(versionId: DocVersionId, slug: DocSlug) {
-	const docs = getVisibleDocsForVersion(versionId);
+export function getAdjacentDocs(slug: DocSlug) {
+	const docs = getVisibleDocs();
 	const currentIndex = docs.findIndex((doc) => doc.slug === slug);
 
 	return {
@@ -312,21 +231,6 @@ export function getAdjacentDocs(versionId: DocVersionId, slug: DocSlug) {
 				: null,
 		previous: currentIndex > 0 ? docs[currentIndex - 1] : null,
 	};
-}
-
-export function getVersionSwitchTarget(
-	currentSlug: DocSlug,
-	versionId: DocVersionId,
-) {
-	const sameSlug = getVisibleDocsForVersion(versionId).find(
-		(doc) => doc.slug === currentSlug,
-	);
-
-	if (sameSlug) {
-		return sameSlug.to;
-	}
-
-	return getVisibleDocsForVersion(versionId)[0]?.to ?? "/";
 }
 
 export function createSocialImageUrl(pathname: string) {

@@ -8,10 +8,9 @@ import {
 import {
 	createDocHead,
 	type DocSlug,
-	type DocVersionId,
 	getAdjacentDocs,
 	getDocArticleId,
-	getDocByVersionAndSlug,
+	getDocBySlug,
 } from "../../lib/docs";
 import { flattenReactText } from "../../utils/headings";
 import { BulletList } from "../ui/bullet-list";
@@ -20,6 +19,7 @@ import { InfoGrid } from "../ui/info-grid";
 import { Note } from "../ui/note";
 import { PageIntro } from "../ui/page-intro";
 import { PageLinks } from "../ui/page-links";
+import { PropertyTable } from "../ui/property-table";
 import { Section } from "../ui/section";
 import { Step } from "../ui/step";
 import { Steps } from "../ui/steps";
@@ -289,6 +289,7 @@ export const mdxComponents = {
 	InfoGrid,
 	Note,
 	PageLinks,
+	PropertyTable,
 	Section,
 	Step,
 	Steps,
@@ -299,17 +300,11 @@ export const mdxComponents = {
 export const markdownArticleClassName =
 	"docs-markdown mt-10 min-w-0 [&>*+*]:mt-3 sm:[&>*+*]:mt-4 [&>[data-doc-heading='true']]:mt-12 sm:[&>[data-doc-heading='true']]:mt-14 [&>[data-doc-heading='true']:first-child]:mt-0 [&>[data-doc-heading='true']+*]:mt-3 sm:[&>[data-doc-heading='true']+*]:mt-4";
 
-export function MarkdownBody({
-	versionId,
-	slug,
-}: {
-	versionId: DocVersionId;
-	slug: DocSlug;
-}) {
-	const doc = getDocByVersionAndSlug(versionId, slug);
-	const adjacentDocs = getAdjacentDocs(versionId, slug);
+export function MarkdownBody({ slug }: { slug: DocSlug }) {
+	const doc = getDocBySlug(slug);
+	const adjacentDocs = getAdjacentDocs(slug);
 	const Content = doc.Content;
-	const articleId = getDocArticleId(versionId, slug);
+	const articleId = getDocArticleId(slug);
 	const pageLinks = [
 		adjacentDocs.previous
 			? {
@@ -351,13 +346,13 @@ export function MarkdownBody({
 	);
 }
 
-export function createDocRouteConfig(versionId: DocVersionId, slug: DocSlug) {
-	const doc = getDocByVersionAndSlug(versionId, slug);
+export function createDocRouteConfig(slug: DocSlug) {
+	const doc = getDocBySlug(slug);
 
 	return {
 		head: () => createDocHead(doc),
 		component: function DocRouteComponent() {
-			return <MarkdownBody versionId={versionId} slug={slug} />;
+			return <MarkdownBody slug={slug} />;
 		},
 	};
 }

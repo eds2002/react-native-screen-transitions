@@ -1,8 +1,8 @@
 ---
 title: "Custom Animations"
 pageTitle: "Custom Animations"
-summary: "Write screen interpolators against the v3 transition model: per-screen state, derived helpers, runtime options, and slot output."
-description: "Write screen interpolators against the v3 transition model: per-screen state, derived helpers, runtime options, and slot output."
+summary: "Write screen interpolators with per-screen state, derived helpers, runtime options, and slot output."
+description: "Write screen interpolators with per-screen state, derived helpers, runtime options, and slot output."
 eyebrow: "Core Concepts"
 group: "Core Concepts"
 order: 5
@@ -69,6 +69,8 @@ In practice:
 
 ## Interpolator Props
 
+<PropertyTable>
+
 | Prop | Meaning |
 | --- | --- |
 | `current` | The screen whose `options.screenStyleInterpolator` is being evaluated |
@@ -83,7 +85,11 @@ In practice:
 | `insets` | Safe-area insets |
 | `layouts` | Layout measurements for the current screen |
 
+</PropertyTable>
+
 Each screen state object contains the same fields:
+
+<PropertyTable>
 
 | Field | Meaning |
 | --- | --- |
@@ -93,7 +99,7 @@ Each screen state object contains the same fields:
 | `entering` | `1` while this screen is opening |
 | `willAnimate` | One-frame pre-animation handoff signal |
 | `animating` | `1` while animation or gesture motion is active |
-| `settled` | `1` when the screen is idle and not dismissing |
+| `settled` | `1` when the screen is visually close enough to its animation target to be treated as settled |
 | `gesture` | Live gesture values for this screen |
 | `meta` | The value from `options.meta` |
 | `options` | Runtime transition options after base screen options and interpolator overrides are resolved |
@@ -104,15 +110,17 @@ Each screen state object contains the same fields:
 | `animatedSnapIndex` | Live snap index during gestures and animations, including fractional values between detents |
 | `snapIndex` | Current target snap index, updated by mount, `snapTo()`, and gesture release |
 
+</PropertyTable>
+
 <Note>
   Use `current.animatedSnapIndex` when the visual state should follow the user's finger. Use `current.snapIndex` when the visual state should follow the selected target detent.
 </Note>
 
-`logicallySettled` still exists as a deprecated alias for `settled`. New code should read `settled`.
-
 ## Gesture Values
 
 Each screen state's `gesture` object includes live pan, pinch, rotation, and handoff values:
+
+<PropertyTable>
 
 | Field | Meaning |
 | --- | --- |
@@ -123,11 +131,11 @@ Each screen state's `gesture` object includes live pan, pinch, rotation, and han
 | `pinchOriginX`, `pinchOriginY` | Screen-coordinate focal point captured when the pinch activates |
 | `rotation` | Two-finger rotation in radians |
 | `raw` | Physical pan, pinch, and rotation values before `gestureSensitivity` |
-| `handoff` | Release-time gesture snapshot for dismiss handoff animations |
-| `active` | The active gesture: a resolved pan direction, `pinch-in`, `pinch-out`, or `null` |
+| `initiator` | Gesture that activated the current attempt, or `"none"` |
+| `handoff` | Release-time gesture snapshot for dismiss handoff animations; `handoff.active` identifies the released gesture |
 | `dragging`, `dismissing` | Gesture state flags |
 
-Prefer `gesture.active` for new code. The older pan-only `gesture.direction` field still exists for compatibility.
+</PropertyTable>
 
 `focalX` and `focalY` can move with the fingers. Use `pinchOriginX` and `pinchOriginY` when a transform should stay anchored to the point where the pinch began.
 
@@ -198,13 +206,6 @@ Supported runtime option keys are:
 - `sheetScrollGestureBehavior`
 - `backdropBehavior`
 
-Deprecated compatibility keys are still accepted:
-
-- `gestureProgressMode`
-- `gestureDrivesProgress`
-- `gestureActivationArea`
-- `gestureResponseDistance`
-
 ## Returning Styles
 
 Return built-in layer slots or any custom key that matches a `styleId` on a transition-aware component:
@@ -217,10 +218,6 @@ return {
   backdrop: {
     style: { opacity: 0.4 },
   },
-  surface: {
-    style: { borderRadius: 24 },
-    props: { pointerEvents: "none" },
-  },
   "hero-title": {
     style: { transform: [{ translateY: -8 }] },
   },
@@ -231,7 +228,6 @@ Reserved layer slots are:
 
 - `content`
 - `backdrop`
-- `surface`
 
 Any other key is treated as a `styleId` target. Each slot accepts either shorthand style output or the explicit `{ style, props }` form.
 

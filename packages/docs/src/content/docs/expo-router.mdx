@@ -1,81 +1,37 @@
 ---
-title: "Expo Router"
+title: "Expo Router (Alpha)"
 pageTitle: "Expo Router"
-summary: "Use the blank stack Expo Router adapter inside Expo Router layouts."
-description: "Use the blank stack Expo Router adapter inside Expo Router layouts."
-eyebrow: "Guides"
-group: "Guides"
+summary: "Use the Alpha Blank Stack integration in an Expo Router layout."
+description: "Set up the Alpha Expo Router integration with the Blank Stack Standard Navigator."
+eyebrow: "Integrations · Alpha"
+group: "Integrations"
+availability: "Alpha"
 order: 2
 to: /expo-router
 ---
 
-## Overview
+<Note>
+  The Expo Router integration is Alpha. It uses Expo Router's Standard Navigator integration and currently requires Expo Router 56.2.10 or later.
+</Note>
 
-Expo Router integration uses the package's Expo Router adapter. It is built on Expo Router's standard navigator APIs, so route layouts can import `BlankStack` directly.
+## Add Blank Stack to a layout
 
-Most work should use blank stack. Reach for native stack only when you specifically need `@react-navigation/native-stack`.
-
-## Blank Stack Layout
-
-This is the pattern from the e2e app:
+Import `BlankStack` from the Expo Router entry point:
 
 ```tsx
-// layouts/blank-stack.tsx
-import "react-native-reanimated";
-
-export { BlankStack } from "react-native-screen-transitions/expo-router";
-```
-
-This adapter lets your screens use screen options like `screenStyleInterpolator`, `gestureEnabled`, `snapPoints`, and `overlay`.
-
-The blank-stack navigator itself also accepts navigator props like `independent` and `enableNativeScreens`.
-
-## Using It In Route Layouts
-
-```tsx
-// app/gestures/_layout.tsx
+// app/_layout.tsx
 import Transition from "react-native-screen-transitions";
-import { BlankStack } from "@/layouts/blank-stack";
+import { BlankStack } from "react-native-screen-transitions/expo-router";
 
-export default function GesturesLayout() {
+export default function RootLayout() {
   return (
     <BlankStack>
       <BlankStack.Screen name="index" />
       <BlankStack.Screen
-        name="sheet"
-        options={{
-          ...Transition.Presets.SlideFromBottom(),
-        }}
+        name="detail"
+        options={Transition.Presets.SlideFromBottom()}
       />
     </BlankStack>
   );
 }
 ```
-
-`router.push()`, `router.replace()`, and `router.back()` still work normally. The transition behavior comes from the options you put on `BlankStack.Screen`.
-
-## Bounds And Router Navigation
-
-```tsx
-import { router } from "expo-router";
-import Transition from "react-native-screen-transitions";
-
-<Transition.Boundary
-  id="hero"
-  onPress={() => router.push("/detail")}
->
-  <Card />
-</Transition.Boundary>
-```
-
-The destination can use a matching passive `Transition.Boundary`, `Transition.Boundary.Target`, `navigationMaskEnabled`, and `screenStyleInterpolator` the same way it would outside Expo Router.
-
-## Embedded Flows
-
-```tsx
-<BlankStack independent enableNativeScreens={false}>
-  <BlankStack.Screen name="index" />
-</BlankStack>
-```
-
-Use `independent` only when you want an isolated navigation tree, not for normal route layouts.

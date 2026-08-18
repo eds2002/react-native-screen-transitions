@@ -120,48 +120,6 @@ Controls whether the screen tracks live gesture values.
   </tbody>
 </table>
 
-### `gestureActivationArea`
-
-Deprecated. Use `gestureDirection` entries with per-direction `area` instead.
-
-<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
-  <thead>
-    <tr>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>GestureActivationArea</code></td>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>"screen"</code></td>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
-    </tr>
-  </tbody>
-</table>
-
-### `gestureResponseDistance`
-
-Deprecated. Use a numeric `area` on `gestureDirection` entries instead.
-
-<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
-  <thead>
-    <tr>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>number</code></td>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>undefined</code></td>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
-    </tr>
-  </tbody>
-</table>
-
 ### `gestureSensitivity`
 
 Multiplies live gesture movement before it drives progress and non-raw gesture values.
@@ -199,27 +157,6 @@ Release velocity influence on dismiss decisions.
     <tr>
       <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>number</code></td>
       <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>0.3</code></td>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
-    </tr>
-  </tbody>
-</table>
-
-### `gestureProgressMode`
-
-Deprecated. Gesture movement now always contributes to `progress`. Use `transitionProgress` when an interpolator needs transition progress without live gesture movement.
-
-<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
-  <thead>
-    <tr>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>"progress-driven" | "freeform"</code></td>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>"progress-driven"</code></td>
       <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
     </tr>
   </tbody>
@@ -372,27 +309,6 @@ Custom renderer for the screen content layer. Use it when a screen needs a custo
   </tbody>
 </table>
 
-### `surfaceComponent`
-
-Deprecated custom surface wrapper. It still works for compatibility, but new custom shells should use `contentComponent`.
-
-<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
-  <thead>
-    <tr>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>React.ComponentType&lt;any&gt;</code></td>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>undefined</code></td>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
-    </tr>
-  </tbody>
-</table>
-
 ## Per-Direction Activation Area
 
 ```tsx
@@ -416,23 +332,6 @@ options={{
 ```
 
 `"edge"` uses the default edge hit area. A number uses that many points from the edge.
-
-<Note>
-  `gestureActivationArea` still works for compatibility, but new code should use `gestureDirection` entries with `area`.
-</Note>
-
-## Gesture Response Distance
-
-```tsx
-options={{
-  gestureEnabled: true,
-  gestureDirection: { gesture: "horizontal", area: 24 },
-}}
-```
-
-`gestureResponseDistance` is deprecated. Use a numeric `area` on the pan direction that needs a custom edge-start distance.
-
-Despite the name, the old option controls how far from the edge a gesture may start when a direction uses `"edge"` activation. It does not change how far the pointer must move before pan activates; that movement threshold is internal.
 
 ## Release Tuning
 
@@ -520,8 +419,6 @@ screenStyleInterpolator: ({ current }) => {
   };
 };
 ```
-
-`gestureProgressMode` and `gestureDrivesProgress` remain as deprecated compatibility options. New code should choose between `progress` and `transitionProgress` inside the interpolator instead of configuring a screen-level progress mode.
 
 ## Dynamic Gesture Options
 
@@ -744,12 +641,11 @@ Useful values include:
 - `rotation`
 - `velocity`
 - `raw`
+- `initiator`
 - `handoff`
 - `dragging`
 - `dismissing`
 - `settling`
-- `active`
-- `direction` (deprecated pan-only alias)
 
 Live gesture values reset after release. If a dismiss animation needs the last release-time values while the live fields reset, read `current.gesture.handoff`.
 

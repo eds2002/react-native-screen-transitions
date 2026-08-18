@@ -1,12 +1,12 @@
 ---
 title: "Layers"
 pageTitle: "Layers"
-summary: "Understand reserved transition layers, including overlays, screen content, backdrops, surfaces, and navigation masks."
-description: "Understand reserved transition layers, including overlays, screen content, backdrops, surfaces, and navigation masks."
+summary: "Understand reserved transition layers, including overlays, screen content, backdrops, and navigation masks."
+description: "Understand reserved transition layers, including overlays, screen content, backdrops, and navigation masks."
 eyebrow: "Core Concepts"
 group: "Core Concepts"
 order: 9
-to: /surface-slots
+to: /layers
 ---
 
 ## Mental Model
@@ -18,7 +18,6 @@ The layer keys are:
 - `overlay`
 - `backdrop`
 - `content`
-- `surface`
 - `NAVIGATION_MASK_CONTAINER_STYLE_ID`
 - `NAVIGATION_MASK_ELEMENT_STYLE_ID`
 
@@ -36,7 +35,6 @@ return {
   overlay: { style: { ... }, props: { ... } },
   backdrop: { style: { ... }, props: { ... } },
   content: { style: { ... }, props: { ... } },
-  surface: { style: { ... }, props: { ... } },
   [NAVIGATION_MASK_CONTAINER_STYLE_ID]: { style: { ... } },
   [NAVIGATION_MASK_ELEMENT_STYLE_ID]: { style: { ... } },
   ["hero-card"]: { style: { ... }, props: { ... } },
@@ -61,8 +59,7 @@ Most layers render inside `screen-container` in this order:
 1. `backdrop`
 2. `content`
 3. optional navigation mask wrapper when `navigationMaskEnabled` is enabled
-4. deprecated optional surface wrapper when `surfaceComponent` is provided
-5. screen children and any matching `styleId` targets
+4. screen children and any matching `styleId` targets
 
 `overlay` is resolved separately by the floating overlay host above the navigator's screen containers. It drives the adjacent pair in the overlay stack rather than the normal screen stack.
 
@@ -175,29 +172,6 @@ The render props are:
 
 Use `contentComponent` for custom tray shells, rounded containers, glass panels, or other screen-level wrappers that should own the screen subtree.
 
-## surface
-
-`surface` targets the optional wrapper created by `surfaceComponent`.
-
-`surfaceComponent` is deprecated. It still works for compatibility, but new custom shells should use `contentComponent` instead.
-
-```tsx
-options={{
-  surfaceComponent: SquircleView,
-}}
-
-surface: {
-  style: {
-    borderRadius: interpolate(progress, [0, 1], [28, 0]),
-  },
-  props: {
-    cornerRadius: interpolate(progress, [0, 1], [28, 0]),
-  },
-}
-```
-
-Use `surface` only for older code that still relies on `surfaceComponent`. For new code, put the custom shell in `contentComponent` and drive it with the `content` slot.
-
 ## Element Targets
 
 Any non-layer key is routed to transition-aware elements inside the screen tree.
@@ -283,8 +257,6 @@ return {
   },
   content: {
     style: { borderRadius: 24 },
-  },
-  surface: {
     props: { cornerRadius: 24 },
   },
 };

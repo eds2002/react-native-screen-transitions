@@ -2,6 +2,4 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { createDocRouteConfig } from "../components/docs/markdown-doc-page";
 
-export const Route = createFileRoute("/components")(
-	createDocRouteConfig("v3-4", "components"),
-);
+export const Route = createFileRoute("/layers")(createDocRouteConfig("layers"));

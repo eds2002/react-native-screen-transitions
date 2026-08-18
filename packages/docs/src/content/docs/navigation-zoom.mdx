@@ -139,6 +139,8 @@ return bounds(id).navigation.zoom({
 });
 ```
 
+<PropertyTable>
+
 | Option | Type | Notes |
 | --- | --- | --- |
 | `target` | `"bound" \| "fullscreen" \| MeasuredDimensions` | Uses the paired destination boundary, the full screen, or an explicit rectangle. When omitted, zoom expands to a full-width rectangle that preserves the source aspect ratio. |
@@ -151,6 +153,8 @@ return bounds(id).navigation.zoom({
 | `drag.translation.vertical` | `number` | Vertical rendered-translation response. Defaults to `1`. |
 | `drag.scale.horizontal` | `number` | Horizontal drag-scale response. Defaults to `1`. |
 | `drag.scale.vertical` | `number` | Vertical drag-scale response. Defaults to `1`. |
+
+</PropertyTable>
 
 The nested `drag` values adjust intensity without replacing zoom's built-in curves. `0` disables that response on the axis, `1` keeps the default response, and values above `1` exaggerate it.
 
@@ -235,5 +239,5 @@ In that setup, some shared state usually tracks which id is currently active ins
 
 - [Bounds Transitions](/shared-elements)
 - [Custom Animations](/custom-animations)
-- [Layers](/surface-slots)
+- [Layers](/layers)
 - [Gestures](/gestures)

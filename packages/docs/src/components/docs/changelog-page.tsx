@@ -2,19 +2,18 @@ import { Link } from "@tanstack/react-router";
 
 import {
 	createDocHead,
-	type DocVersionId,
 	getChangelogDocs,
 	getDocArticleId,
-	getDocByVersionAndSlug,
+	getDocBySlug,
 } from "../../lib/docs";
 import { PageIntro } from "../ui/page-intro";
 import { PageLinks } from "../ui/page-links";
 import { DocHeading } from "./doc-heading";
 import { markdownArticleClassName, mdxComponents } from "./markdown-doc-page";
 
-function ChangelogPage({ versionId }: { versionId: DocVersionId }) {
-	const doc = getDocByVersionAndSlug(versionId, "changelog");
-	const [latest, ...olderUpdates] = getChangelogDocs(versionId);
+function ChangelogPage() {
+	const doc = getDocBySlug("changelog");
+	const [latest, ...olderUpdates] = getChangelogDocs();
 	const LatestContent = latest?.Content;
 
 	return (
@@ -26,7 +25,7 @@ function ChangelogPage({ versionId }: { versionId: DocVersionId }) {
 			/>
 
 			<article
-				id={getDocArticleId(versionId, doc.slug)}
+				id={getDocArticleId(doc.slug)}
 				className={markdownArticleClassName}
 			>
 				{latest && LatestContent ? (
@@ -73,13 +72,13 @@ function ChangelogPage({ versionId }: { versionId: DocVersionId }) {
 	);
 }
 
-export function createChangelogRouteConfig(versionId: DocVersionId) {
-	const doc = getDocByVersionAndSlug(versionId, "changelog");
+export function createChangelogRouteConfig() {
+	const doc = getDocBySlug("changelog");
 
 	return {
 		head: () => createDocHead(doc),
 		component: function ChangelogRouteComponent() {
-			return <ChangelogPage versionId={versionId} />;
+			return <ChangelogPage />;
 		},
 	};
 }
