@@ -10,7 +10,10 @@ import {
 	BOUNDARY_TARGET_ACTIVE_PROP,
 	BoundaryTarget,
 } from "./components/boundary-target";
-import { BoundaryContentPortalHost } from "./portal/components/boundary-content-portal";
+import {
+	BoundaryContentPortal,
+	BoundaryContentPortalHost,
+} from "./portal/components/boundary-content-portal";
 import { BoundaryPortal } from "./portal/components/boundary-portal";
 import { BoundaryRootProvider } from "./providers/boundary-root.provider";
 import type { BoundaryComponentProps } from "./types";
@@ -91,7 +94,12 @@ export function createBoundaryComponent<P extends object>(
 								enabled={root.shouldRenderHandoffHost}
 								screenKey={root.currentScreenKey}
 							>
-								{targetResolution.children}
+								<BoundaryContentPortal
+									boundaryId={root.boundTag.tag}
+									enabled={root.shouldRenderHandoffHost}
+								>
+									{targetResolution.children}
+								</BoundaryContentPortal>
 							</BoundaryContentPortalHost>
 						</AnimatedComponent>
 					</BoundaryPortal>
