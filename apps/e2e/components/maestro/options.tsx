@@ -265,16 +265,6 @@ export const styleResetSourceOptions: ScreenTransitionConfig = {
 						},
 					},
 				};
-			case "surface-slot":
-				return {
-					surface: {
-						style: {
-							backgroundColor: "transparent",
-							borderRadius: 16,
-							overflow: "hidden",
-						},
-					},
-				};
 			default:
 				return {};
 		}
@@ -329,16 +319,6 @@ export const styleResetDestinationOptions: ScreenTransitionConfig = {
 						style: {
 							opacity: interpolate(progress, [0, 1], [1, 0.72], "clamp"),
 							transform: [{ scale: 0.94 }],
-						},
-					},
-				};
-			case "surface-slot":
-				return {
-					surface: {
-						style: {
-							backgroundColor: "rgba(15, 23, 42, 0.2)",
-							borderRadius: 36,
-							overflow: "hidden",
 						},
 					},
 				};

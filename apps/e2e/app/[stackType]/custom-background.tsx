@@ -14,17 +14,17 @@ export default function CustomBackgroundScreen() {
 	return (
 		<SafeAreaView style={styles.container} edges={["top"]}>
 			<ScreenHeader
-				title="Custom Surface"
-				subtitle="Squircle surface component with animated content transform."
+				title="Custom Content"
+				subtitle="Squircle content component with animated styles and props."
 			/>
 			<View style={styles.content}>
 				<View style={[styles.card, { backgroundColor: theme.card }]}>
 					<Text style={[styles.cardTitle, { color: theme.text }]}>
-						Surface Slot
+						Content Slot
 					</Text>
 					<Text style={[styles.cardBody, { color: theme.textSecondary }]}>
-						This route renders `contentComponent` and drives styles/props via
-						the `surface` slot while screen motion stays in `content`.
+						This route renders `contentComponent` and drives its animated styles
+						and props through the `content` slot.
 					</Text>
 				</View>
 				<Pressable

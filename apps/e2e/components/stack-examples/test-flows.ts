@@ -16,9 +16,9 @@ export const TEST_FLOWS = [
 	},
 	{
 		id: "custom-background",
-		title: "Custom Surface",
+		title: "Custom Content",
 		description:
-			"Fast squircle surface component with animated corner smoothing",
+			"Fast squircle content component with animated corner smoothing",
 	},
 	{
 		id: "bottom-sheet",

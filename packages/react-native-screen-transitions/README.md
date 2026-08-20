@@ -11,7 +11,7 @@ Customizable screen transitions for React Native. Build gesture-driven, shared e
 - Full animation control for screen enter, exit, and gesture-driven states.
 - Shared element and fullscreen navigation zoom transitions through the Bounds API.
 - Snap-point sheets with gesture-aware `ScrollView` and `FlatList` coordination.
-- Transition slots for content, backdrop, surface, and custom tagged elements.
+- Transition slots for content, backdrop, and custom tagged elements.
 - Built-in presets for common modal, card, and shared-transition patterns.
 - Blank stack, native stack, and Expo Router integration.
 - Written in TypeScript.

@@ -996,11 +996,6 @@ const styleResetCases = [
 		description: "A content sits under B content.",
 	},
 	{
-		id: "surface-slot",
-		title: "Surface slot",
-		description: "A surface sits under B surface.",
-	},
-	{
 		id: "z-index-reveal",
 		title: "zIndex reveal",
 		description: "B moves orange below the red -1 layer.",

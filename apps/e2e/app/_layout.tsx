@@ -92,10 +92,6 @@ export default function RootLayout() {
 												),
 											},
 										],
-									},
-								},
-								surface: {
-									style: {
 										backgroundColor: "#4A90E2",
 										borderRadius: active.animating ? 48 : 0,
 										overflow: "hidden",

@@ -344,8 +344,6 @@ export type NormalizedTransitionInterpolatedStyle = {
 	content?: NormalizedTransitionSlotStyle;
 	/** Animated style and props for the backdrop layer between screens. */
 	backdrop?: NormalizedTransitionSlotStyle;
-	/** Animated style and props for the surface component layer within the screen. */
-	surface?: NormalizedTransitionSlotStyle;
 	/** Animated style and props for the navigation mask container layer. */
 	[NAVIGATION_MASK_CONTAINER_STYLE_ID]?: NormalizedTransitionSlotStyle;
 	/** Animated style and props for the navigation mask element layer. */
@@ -376,8 +374,6 @@ export type TransitionInterpolatedStyle = {
 	content?: TransitionSlotStyle;
 	/** Animated style and props for the backdrop layer between screens. */
 	backdrop?: TransitionSlotStyle;
-	/** Animated style and props for the surface component layer within the screen. */
-	surface?: TransitionSlotStyle;
 	/** Animated style and props for the navigation mask container layer. */
 	[NAVIGATION_MASK_CONTAINER_STYLE_ID]?: TransitionSlotStyle;
 	/** Animated style and props for the navigation mask element layer. */

@@ -68,7 +68,6 @@ const RESERVED_STYLE_SLOT_IDS = {
 	overlay: true,
 	content: true,
 	backdrop: true,
-	surface: true,
 	[NAVIGATION_MASK_ELEMENT_STYLE_ID]: true,
 	[NAVIGATION_MASK_CONTAINER_STYLE_ID]: true,
 } as const;

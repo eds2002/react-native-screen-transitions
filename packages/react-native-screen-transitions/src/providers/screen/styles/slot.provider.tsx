@@ -19,7 +19,6 @@ export type ScreenSlotName =
 	| "overlay"
 	| "content"
 	| "backdrop"
-	| "surface"
 	| typeof NAVIGATION_MASK_CONTAINER_STYLE_ID
 	| typeof NAVIGATION_MASK_ELEMENT_STYLE_ID;
 

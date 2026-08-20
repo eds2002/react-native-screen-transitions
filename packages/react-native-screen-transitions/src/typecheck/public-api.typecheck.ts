@@ -55,11 +55,6 @@ const nestedInterpolatedStyle: TransitionInterpolatedStyle = {
 	backdrop: {
 		opacity: 0.5,
 	},
-	surface: {
-		style: {
-			transform: [{ scale: 0.98 }],
-		},
-	},
 	"hero-image": {
 		style: {
 			borderRadius: 24,

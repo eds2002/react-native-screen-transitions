@@ -166,7 +166,6 @@ describe("resolveSlotStyles", () => {
 			"overlay",
 			"content",
 			"backdrop",
-			"surface",
 			NAVIGATION_MASK_CONTAINER_STYLE_ID,
 			NAVIGATION_MASK_ELEMENT_STYLE_ID,
 		];
