@@ -13,8 +13,12 @@ import {
 	resolveGestureSnapTransitionSpec,
 } from "../../shared/release";
 import {
+	getStepSnapProgressVelocityScale,
 	primeRuntimeSnapPoint,
 	resolveRuntimeGestureSnapPoints,
+	resolveRuntimeGestureSnapTargets,
+	resolveStepSnapProgress,
+	resolveStepSnapTargets,
 } from "../../shared/snap-points";
 import { determineDismissal, determineSnapTarget } from "../../shared/targets";
 import type {
@@ -80,6 +84,8 @@ const getPanSnapReleaseProgress = ({
 	activeAxis,
 	minSnapPoint,
 	maxSnapPoint,
+	snapPoints,
+	sheetSnapBehavior,
 }: {
 	runtime: PanGestureRuntime;
 	event: PanGestureEvent;
@@ -87,6 +93,8 @@ const getPanSnapReleaseProgress = ({
 	activeAxis: NonNullable<ReturnType<typeof resolveActivePanSnapAxis>>;
 	minSnapPoint: number;
 	maxSnapPoint: number;
+	snapPoints: number[];
+	sheetSnapBehavior: PanGestureRuntime["policy"]["sheetSnapBehavior"];
 }) => {
 	"worklet";
 	const isHorizontal = activeAxis.axis === "horizontal";
@@ -95,9 +103,17 @@ const getPanSnapReleaseProgress = ({
 		: event.translationY;
 	const axisDimension = isHorizontal ? dimensions.width : dimensions.height;
 	const axisProgress = axisTranslation / Math.max(1, axisDimension);
+	const signedProgressDelta = activeAxis.config.progressSign * axisProgress;
+	if (sheetSnapBehavior === "step") {
+		return resolveStepSnapProgress({
+			baseline: runtime.stores.gestures.internal.progressBaseline.get(),
+			normalizedDelta: signedProgressDelta,
+			snapPoints,
+		});
+	}
 	const progress =
 		runtime.stores.gestures.internal.progressBaseline.get() +
-		activeAxis.config.progressSign * axisProgress;
+		signedProgressDelta;
 
 	return clamp(progress, minSnapPoint, maxSnapPoint);
 };
@@ -180,6 +196,24 @@ export const resolveSnapPanRelease = (
 	);
 	const { resolvedSnapPoints, resolvedMinSnapPoint, resolvedMaxSnapPoint } =
 		resolveRuntimeGestureSnapPoints(runtime);
+	const allSnapTargets = resolveRuntimeGestureSnapTargets(runtime);
+	const axisTranslation =
+		activeAxis.axis === "horizontal" ? event.translationX : event.translationY;
+	const progressDirection =
+		activeAxis.config.progressSign * axisTranslation || -snapVelocity;
+	const releaseSnapPoints =
+		policy.sheetSnapBehavior === "step"
+			? resolveStepSnapTargets({
+					baseline: runtime.stores.gestures.internal.progressBaseline.get(),
+					direction: progressDirection,
+					snapPoints: allSnapTargets,
+				})
+			: resolvedSnapPoints;
+	const canDismissToReleaseTarget =
+		participation.canDismiss &&
+		(policy.gestureSnapLocked ||
+			policy.sheetSnapBehavior === "continuous" ||
+			releaseSnapPoints.includes(0));
 	const currentProgress = getPanSnapReleaseProgress({
 		runtime,
 		event,
@@ -187,6 +221,8 @@ export const resolveSnapPanRelease = (
 		activeAxis,
 		minSnapPoint: resolvedMinSnapPoint,
 		maxSnapPoint: resolvedMaxSnapPoint,
+		snapPoints: allSnapTargets,
+		sheetSnapBehavior: policy.sheetSnapBehavior,
 	});
 	const result = determineSnapTarget({
 		currentProgress,
@@ -195,24 +231,27 @@ export const resolveSnapPanRelease = (
 					runtime.stores.gestures.internal.lockedSnapPoint.get() ??
 						resolvedMaxSnapPoint,
 				]
-			: resolvedSnapPoints,
+			: releaseSnapPoints,
 		velocity: snapVelocity,
 		dimension: axisDimension,
 		velocityFactor: policy.gestureSnapVelocityImpact,
-		canDismiss: participation.canDismiss,
+		canDismiss: canDismissToReleaseTarget,
 	});
 
 	const shouldDismiss = participation.canDismiss && result.shouldDismiss;
 	const target = shouldDismiss ? 0 : result.targetProgress;
+	const progressVelocityScale =
+		policy.sheetSnapBehavior === "step" && !policy.gestureSnapLocked
+			? getStepSnapProgressVelocityScale(releaseSnapPoints)
+			: 1;
 
 	return {
 		target,
 		shouldDismiss,
 		initialVelocity: getProgressVelocityTowardTarget({
-			handoffVelocity: getPanReleaseHandoffVelocity(
-				axisVelocity,
-				axisDimension,
-			),
+			handoffVelocity:
+				getPanReleaseHandoffVelocity(axisVelocity, axisDimension) *
+				progressVelocityScale,
 			target,
 			currentProgress,
 		}),

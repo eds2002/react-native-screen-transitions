@@ -17,6 +17,7 @@ export const buildScreenTransitionOptions = (
 		gestureSnapVelocityImpact: options.gestureSnapVelocityImpact,
 		gestureReleaseVelocityScale: options.gestureReleaseVelocityScale,
 		gestureSnapLocked: options.gestureSnapLocked,
+		sheetSnapBehavior: options.sheetSnapBehavior,
 		sheetScrollGestureBehavior:
 			options.sheetScrollGestureBehavior !== undefined
 				? resolveSheetScrollGestureBehavior(options)

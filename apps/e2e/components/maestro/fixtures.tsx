@@ -467,7 +467,7 @@ export function SnapPointsSheetFixture() {
 		<SheetFrame
 			testID="maestro-snap-sheet"
 			title="Snap Sheet"
-			subtitle="Initial index is 1 in [0.35, 0.65, 1]."
+			subtitle="Step mode starts at index 1 in [0.4, 0.9, 1]."
 		>
 			<SnapIndexProbe testID="maestro-snap-index" />
 			<View style={styles.card}>

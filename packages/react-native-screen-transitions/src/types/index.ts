@@ -61,6 +61,7 @@ export type {
 	ScreenKey,
 	ScreenLayerComponentProps,
 	ScreenTransitionConfig,
+	SheetSnapBehavior,
 	TransitionAwareProps,
 } from "./screen.types";
 export type {

@@ -27,6 +27,7 @@ const BASE_SCREEN_OPTIONS = {
 	gestureSnapVelocityImpact: 0.1,
 	gestureReleaseVelocityScale: 1,
 	gestureSnapLocked: false,
+	sheetSnapBehavior: "continuous",
 	sheetScrollGestureBehavior: "expand-and-collapse",
 	backdropBehavior: "block",
 } as const;
@@ -99,6 +100,7 @@ describe("syncScreenOptionsOverrides", () => {
 				gestureSnapVelocityImpact: 0.2,
 				gestureReleaseVelocityScale: 1.5,
 				gestureSnapLocked: true,
+				sheetSnapBehavior: "step",
 				sheetScrollGestureBehavior: "collapse-only",
 				backdropBehavior: "dismiss",
 			},
@@ -120,6 +122,7 @@ describe("syncScreenOptionsOverrides", () => {
 		expect(next.gestureSnapVelocityImpact).toBe(0.2);
 		expect(next.gestureReleaseVelocityScale).toBe(1.5);
 		expect(next.gestureSnapLocked).toBe(true);
+		expect(next.sheetSnapBehavior).toBe("step");
 		expect(next.sheetScrollGestureBehavior).toBe("collapse-only");
 		expect(next.backdropBehavior).toBe("dismiss");
 	});
@@ -152,6 +155,7 @@ describe("syncScreenOptionsOverrides", () => {
 				options: {
 					gestureSensitivity: 0.25,
 					gestureSnapLocked: true,
+					sheetSnapBehavior: "step",
 					backdropBehavior: "dismiss",
 				},
 			},
@@ -169,6 +173,9 @@ describe("syncScreenOptionsOverrides", () => {
 		expect(next.gestureSnapLocked).toBe(
 			BASE_SCREEN_OPTIONS.gestureSnapLocked,
 		);
+		expect(next.sheetSnapBehavior).toBe(
+			BASE_SCREEN_OPTIONS.sheetSnapBehavior,
+		);
 		expect(next.backdropBehavior).toBe(
 			BASE_SCREEN_OPTIONS.backdropBehavior,
 		);
@@ -183,6 +190,7 @@ describe("syncScreenOptionsOverrides", () => {
 					gestureDirection: "vertical",
 					gestureSensitivity: 0.25,
 					sheetScrollGestureBehavior: "collapse-only",
+					sheetSnapBehavior: "step",
 					backdropBehavior: "dismiss",
 				},
 			},
@@ -194,6 +202,7 @@ describe("syncScreenOptionsOverrides", () => {
 					gestureSensitivity: "fast",
 					gestureDirection: [{ gesture: "vertical", area: -1 }],
 					sheetScrollGestureBehavior: "expand-only",
+					sheetSnapBehavior: "paged",
 					backdropBehavior: "fade",
 				},
 			} as unknown as TransitionInterpolatedStyle,
@@ -212,6 +221,9 @@ describe("syncScreenOptionsOverrides", () => {
 		);
 		expect(next.sheetScrollGestureBehavior).toBe(
 			BASE_SCREEN_OPTIONS.sheetScrollGestureBehavior,
+		);
+		expect(next.sheetSnapBehavior).toBe(
+			BASE_SCREEN_OPTIONS.sheetSnapBehavior,
 		);
 		expect(next.backdropBehavior).toBe(
 			BASE_SCREEN_OPTIONS.backdropBehavior,

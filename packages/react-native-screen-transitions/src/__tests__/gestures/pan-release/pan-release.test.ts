@@ -70,22 +70,26 @@ const createSnapRuntime = ({
 	activeGesture = "horizontal-inverted" as ActiveGesture,
 	gestureSnapLocked = false,
 	lockedSnapPoint = 1 as number | null,
+	sheetSnapBehavior = "continuous" as const,
+	canDismiss = false,
+	snapPoints = [0.5, 1],
 } = {}) =>
 	({
 		participation: {
-			canDismiss: false,
+			canDismiss,
 			effectiveSnapPoints: {
 				hasSnapPoints: true,
 				hasAutoSnapPoint: false,
-				snapPoints: [0.5, 1],
-				minSnapPoint: 0.5,
-				maxSnapPoint: 1,
+				snapPoints,
+				minSnapPoint: canDismiss ? 0 : (snapPoints[0] ?? -1),
+				maxSnapPoint: snapPoints[snapPoints.length - 1] ?? -1,
 			},
 		},
 		policy: {
 			gestureReleaseVelocityScale: 1,
 			gestureSnapVelocityImpact: 0.1,
 			gestureSnapLocked,
+			sheetSnapBehavior,
 			snapAxisDirections: {
 				horizontal: {
 					collapse: "horizontal",
@@ -266,5 +270,51 @@ describe("snap pan release", () => {
 
 		expect(release.target).toBe(1);
 		expect(release.commitProgress).toBe(0.725);
+	});
+
+	it("normalizes a step drag across one adjacent snap interval", () => {
+		const release = resolveSnapPanRelease(
+			{
+				translationX: -200,
+				translationY: 0,
+				velocityX: 0,
+				velocityY: 0,
+			} as PanGestureEvent,
+			createSnapRuntime({
+				progress: 0.9,
+				baseline: 0.9,
+				lockedSnapPoint: 0.9,
+				sheetSnapBehavior: "step",
+				snapPoints: [0.4, 0.9, 1],
+			}),
+			dimensions,
+		);
+
+		expect(release.target).toBe(1);
+		expect(release.commitProgress).toBeCloseTo(0.95, 5);
+	});
+
+	it("does not skip the adjacent collapse point on a hard step drag", () => {
+		const release = resolveSnapPanRelease(
+			{
+				translationX: 400,
+				translationY: 0,
+				velocityX: 4000,
+				velocityY: 0,
+			} as PanGestureEvent,
+			createSnapRuntime({
+				progress: 0.9,
+				baseline: 0.9,
+				lockedSnapPoint: 0.9,
+				sheetSnapBehavior: "step",
+				canDismiss: true,
+				snapPoints: [0.4, 0.9, 1],
+			}),
+			dimensions,
+		);
+
+		expect(release.shouldDismiss).toBe(false);
+		expect(release.target).toBe(0.4);
+		expect(release.commitProgress).toBe(0.4);
 	});
 });

@@ -41,6 +41,16 @@ export type ScreenKey = string;
 export type SheetScrollGestureBehavior =
 	| "expand-and-collapse"
 	| "collapse-only";
+
+/**
+ * Controls how a drag moves between configured {@linkcode ScreenTransitionConfig.snapPoints}.
+ *
+ * - `"continuous"` maps physical movement directly to global screen progress.
+ * - `"step"` maps each drag across one adjacent snap interval.
+ *
+ * @see {@linkcode ScreenTransitionConfig.sheetSnapBehavior}
+ */
+export type SheetSnapBehavior = "continuous" | "step";
 export type GestureTracking = "auto" | "never" | "always";
 
 /**
@@ -342,6 +352,17 @@ export type ScreenTransitionConfig = {
 	 * @default "expand-and-collapse"
 	 */
 	sheetScrollGestureBehavior?: SheetScrollGestureBehavior;
+
+	/**
+	 * Controls how gesture movement maps between adjacent snap points.
+	 *
+	 * `"continuous"` preserves direct global progress and permits one gesture to
+	 * cross multiple snap points. `"step"` gives every adjacent interval a full
+	 * normalized drag range and limits the gesture to one snap-point step.
+	 *
+	 * @default "continuous"
+	 */
+	sheetSnapBehavior?: SheetSnapBehavior;
 
 	/**
 	 * Locks gesture-based snap movement to the current snap point.

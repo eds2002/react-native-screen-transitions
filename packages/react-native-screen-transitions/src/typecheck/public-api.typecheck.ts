@@ -284,6 +284,7 @@ void invalidMaskRuntimeOptions;
 void invalidGestureTrackingRuntimeOptions;
 const nextNameOptions: ScreenTransitionConfig = {
 	navigationMaskEnabled: true,
+	sheetSnapBehavior: "step",
 	sheetScrollGestureBehavior: "collapse-only",
 	gestureSensitivity: 0.75,
 };

@@ -8,6 +8,7 @@ import {
 	DEFAULT_GESTURE_TRACKING,
 	DEFAULT_GESTURE_VELOCITY_IMPACT,
 	DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR,
+	DEFAULT_SHEET_SNAP_BEHAVIOR,
 } from "../../../../constants";
 import type {
 	GestureDirectionActivationArea,
@@ -19,6 +20,7 @@ import type {
 	GestureTracking,
 	ScreenTransitionConfig,
 	SheetScrollGestureBehavior,
+	SheetSnapBehavior,
 	SnapPoint,
 } from "../../../../types/screen.types";
 import { computeClaimedDirections } from "../ownership/compute-claimed-directions";
@@ -50,6 +52,7 @@ export type GesturePolicyOptions = {
 	gestureSnapLocked?: boolean;
 	gestureSnapVelocityImpact?: number;
 	gestureVelocityImpact?: number;
+	sheetSnapBehavior?: SheetSnapBehavior;
 	sheetScrollGestureBehavior?: SheetScrollGestureBehavior;
 	snapPoints?: SnapPoint[];
 	transitionSpec?: ScreenTransitionConfig["transitionSpec"];
@@ -152,6 +155,7 @@ const resolveCommonGesturePolicy = (options: GesturePolicyOptions) => {
 		gestureSnapVelocityImpact:
 			options.gestureSnapVelocityImpact ?? DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT,
 		gestureSnapLocked: options.gestureSnapLocked ?? DEFAULT_GESTURE_SNAP_LOCKED,
+		sheetSnapBehavior: options.sheetSnapBehavior ?? DEFAULT_SHEET_SNAP_BEHAVIOR,
 		gestureReleaseVelocityScale:
 			options.gestureReleaseVelocityScale ??
 			DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,

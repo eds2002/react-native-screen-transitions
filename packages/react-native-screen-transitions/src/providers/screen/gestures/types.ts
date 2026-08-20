@@ -114,6 +114,7 @@ export interface PanGesturePolicy {
 	gestureReleaseVelocityScale: number;
 	gestureActivationArea: ResolvedGestureActivationArea;
 	gestureSnapLocked: boolean;
+	sheetSnapBehavior: NonNullable<ScreenTransitionConfig["sheetSnapBehavior"]>;
 	sheetScrollGestureBehavior: NonNullable<
 		ScreenTransitionConfig["sheetScrollGestureBehavior"]
 	>;
@@ -129,6 +130,7 @@ export interface PinchGesturePolicy {
 	gestureSensitivity: NonNullable<ScreenTransitionConfig["gestureSensitivity"]>;
 	gestureSnapVelocityImpact: number;
 	gestureSnapLocked: boolean;
+	sheetSnapBehavior: NonNullable<ScreenTransitionConfig["sheetSnapBehavior"]>;
 	gestureReleaseVelocityScale: number;
 	transitionSpec: TransitionSpec | undefined;
 }

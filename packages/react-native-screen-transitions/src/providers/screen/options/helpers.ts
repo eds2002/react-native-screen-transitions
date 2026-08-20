@@ -7,6 +7,7 @@ import {
 	DEFAULT_GESTURE_TRACKING,
 	DEFAULT_GESTURE_VELOCITY_IMPACT,
 	DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR,
+	DEFAULT_SHEET_SNAP_BEHAVIOR,
 } from "../../../constants";
 import type {
 	GestureDirection,
@@ -129,6 +130,14 @@ const resolveSheetScrollGestureBehaviorOption = (
 		: fallback;
 };
 
+const resolveSheetSnapBehaviorOption = (
+	value: unknown,
+	fallback: RequiredScreenOption<"sheetSnapBehavior">,
+): RequiredScreenOption<"sheetSnapBehavior"> => {
+	"worklet";
+	return value === "continuous" || value === "step" ? value : fallback;
+};
+
 const resolveGestureTrackingOption = (
 	value: unknown,
 	fallback: RequiredScreenOption<"gestureTracking">,
@@ -205,6 +214,7 @@ const areScreenOptionsEqual = (
 		left.gestureSnapVelocityImpact === right.gestureSnapVelocityImpact &&
 		left.gestureReleaseVelocityScale === right.gestureReleaseVelocityScale &&
 		left.gestureSnapLocked === right.gestureSnapLocked &&
+		left.sheetSnapBehavior === right.sheetSnapBehavior &&
 		left.sheetScrollGestureBehavior === right.sheetScrollGestureBehavior &&
 		left.backdropBehavior === right.backdropBehavior &&
 		left.transitionSpec === right.transitionSpec &&
@@ -248,6 +258,10 @@ export const resolveBaseScreenOptions = (
 		gestureSnapLocked: resolveBooleanOption(
 			options.gestureSnapLocked,
 			DEFAULT_GESTURE_SNAP_LOCKED,
+		),
+		sheetSnapBehavior: resolveSheetSnapBehaviorOption(
+			options.sheetSnapBehavior,
+			DEFAULT_SHEET_SNAP_BEHAVIOR,
 		),
 		sheetScrollGestureBehavior: resolveSheetScrollGestureBehaviorOption(
 			resolveSheetScrollGestureBehavior(options),
@@ -314,6 +328,10 @@ export const syncScreenOptionsOverrides = (
 		gestureSnapLocked: resolveBooleanOption(
 			options?.gestureSnapLocked,
 			base.gestureSnapLocked,
+		),
+		sheetSnapBehavior: resolveSheetSnapBehaviorOption(
+			options?.sheetSnapBehavior,
+			base.sheetSnapBehavior,
 		),
 		sheetScrollGestureBehavior: resolveSheetScrollGestureBehaviorOption(
 			options?.sheetScrollGestureBehavior,

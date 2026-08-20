@@ -35,6 +35,8 @@ const mergeTransitionOptions = (
 		effective.gestureReleaseVelocityScale ?? base.gestureReleaseVelocityScale;
 	slot.gestureSnapLocked =
 		effective.gestureSnapLocked ?? base.gestureSnapLocked;
+	slot.sheetSnapBehavior =
+		effective.sheetSnapBehavior ?? base.sheetSnapBehavior;
 	slot.sheetScrollGestureBehavior =
 		effective.sheetScrollGestureBehavior ?? base.sheetScrollGestureBehavior;
 	slot.backdropBehavior = effective.backdropBehavior ?? base.backdropBehavior;
@@ -56,6 +58,22 @@ export const hydrateTransitionState = (
 		s.optionsSlot,
 	);
 	const canDismiss = options.gestureEnabled !== false;
+	const resolvedSnapPoints = [...s.sortedNumericSnapPoints];
+	const resolvedAutoSnapPoint = s.hasAutoSnapPoint
+		? s.resolvedAutoSnapPoint.get()
+		: null;
+	if (resolvedAutoSnapPoint !== null) {
+		resolvedSnapPoints.push(resolvedAutoSnapPoint);
+	}
+	if (canDismiss) {
+		resolvedSnapPoints.push(0);
+	}
+	resolvedSnapPoints.sort((a, b) => a - b);
+	for (let index = resolvedSnapPoints.length - 1; index > 0; index--) {
+		if (resolvedSnapPoints[index] === resolvedSnapPoints[index - 1]) {
+			resolvedSnapPoints.splice(index, 1);
+		}
+	}
 	out.transitionProgress = transitionProgress;
 	out.willAnimate = s.willAnimate.get();
 	out.closing = s.closing.get();
@@ -159,6 +177,8 @@ export const hydrateTransitionState = (
 			s.hasAutoSnapPoint ? s.resolvedAutoSnapPoint.get() : null,
 			canDismiss,
 		),
+		resolvedSnapPoints,
+		options.sheetSnapBehavior,
 	);
 
 	if (s.visualProgress.get() !== out.progress) {

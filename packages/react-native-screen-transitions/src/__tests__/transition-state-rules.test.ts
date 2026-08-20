@@ -494,4 +494,26 @@ describe("transition state rules", () => {
 		expect(state.visualProgress.get()).toBeCloseTo(0.05);
 	});
 
+	it("normalizes live step progress across the adjacent snap interval", () => {
+		const state = createBuiltState({
+			progress: 0.9,
+			gesture: createGestureStore({
+				active: "vertical",
+				normY: -0.5,
+				progressDeltaY: -0.5,
+			}),
+			options: {
+				gestureEnabled: true,
+				gestureDirection: "vertical",
+				sheetSnapBehavior: "step",
+			},
+			sortedNumericSnapPoints: [0.4, 0.9, 1],
+		});
+		const hydrated = hydrate(state);
+
+		expect(hydrated.transitionProgress).toBe(0.9);
+		expect(hydrated.progress).toBeCloseTo(0.95, 5);
+		expect(state.visualProgress.get()).toBeCloseTo(0.95, 5);
+	});
+
 });

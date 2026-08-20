@@ -10,8 +10,12 @@ import {
 	resolveGestureSnapTransitionSpec,
 } from "../../shared/release";
 import {
+	getStepSnapProgressVelocityScale,
 	primeRuntimeSnapPoint,
 	resolveRuntimeGestureSnapPoints,
+	resolveRuntimeGestureSnapTargets,
+	resolveStepSnapProgress,
+	resolveStepSnapTargets,
 } from "../../shared/snap-points";
 import { determineSnapTarget } from "../../shared/targets";
 import type {
@@ -56,11 +60,13 @@ const getPinchSnapReleaseProgress = ({
 	normalizedScale,
 	minSnapPoint,
 	maxSnapPoint,
+	snapPoints,
 }: {
 	runtime: PinchGestureRuntime;
 	normalizedScale: number;
 	minSnapPoint: number;
 	maxSnapPoint: number;
+	snapPoints: number[];
 }) => {
 	"worklet";
 	const pinchDirection = getPinchSnapDirection(normalizedScale);
@@ -74,6 +80,13 @@ const getPinchSnapReleaseProgress = ({
 		snapDirections.collapse === pinchDirection
 			? -Math.abs(normalizedScale)
 			: Math.abs(normalizedScale);
+	if (runtime.policy.sheetSnapBehavior === "step") {
+		return resolveStepSnapProgress({
+			baseline: runtime.stores.gestures.internal.progressBaseline.get(),
+			normalizedDelta: progressDelta,
+			snapPoints,
+		});
+	}
 
 	return clamp(
 		runtime.stores.gestures.internal.progressBaseline.get() + progressDelta,
@@ -141,11 +154,34 @@ export const resolveSnapPinchRelease = (
 
 	const { resolvedSnapPoints, resolvedMinSnapPoint, resolvedMaxSnapPoint } =
 		resolveRuntimeGestureSnapPoints(runtime);
+	const allSnapTargets = resolveRuntimeGestureSnapTargets(runtime);
+	const snapVelocity = getPinchSnapVelocity(event, runtime, normalizedScale);
+	const pinchDirection = getPinchSnapDirection(normalizedScale);
+	const progressDirection =
+		pinchDirection && policy.snapDirections
+			? policy.snapDirections.collapse === pinchDirection
+				? -1
+				: 1
+			: -snapVelocity;
+	const releaseSnapPoints =
+		policy.sheetSnapBehavior === "step"
+			? resolveStepSnapTargets({
+					baseline: runtime.stores.gestures.internal.progressBaseline.get(),
+					direction: progressDirection,
+					snapPoints: allSnapTargets,
+				})
+			: resolvedSnapPoints;
+	const canDismissToReleaseTarget =
+		participation.canDismiss &&
+		(policy.gestureSnapLocked ||
+			policy.sheetSnapBehavior === "continuous" ||
+			releaseSnapPoints.includes(0));
 	const currentProgress = getPinchSnapReleaseProgress({
 		runtime,
 		normalizedScale,
 		minSnapPoint: resolvedMinSnapPoint,
 		maxSnapPoint: resolvedMaxSnapPoint,
+		snapPoints: allSnapTargets,
 	});
 
 	const result = determineSnapTarget({
@@ -155,16 +191,21 @@ export const resolveSnapPinchRelease = (
 					runtime.stores.gestures.internal.lockedSnapPoint.get() ??
 						resolvedMaxSnapPoint,
 				]
-			: resolvedSnapPoints,
-		velocity: getPinchSnapVelocity(event, runtime, normalizedScale),
+			: releaseSnapPoints,
+		velocity: snapVelocity,
 		dimension: 1,
 		velocityFactor: policy.gestureSnapVelocityImpact,
-		canDismiss: participation.canDismiss,
+		canDismiss: canDismissToReleaseTarget,
 	});
 
 	const shouldDismiss = participation.canDismiss && result.shouldDismiss;
 	const target = shouldDismiss ? 0 : result.targetProgress;
-	const progressVelocity = getPinchReleaseHandoffVelocity(event.velocity);
+	const progressVelocityScale =
+		policy.sheetSnapBehavior === "step" && !policy.gestureSnapLocked
+			? getStepSnapProgressVelocityScale(releaseSnapPoints)
+			: 1;
+	const progressVelocity =
+		getPinchReleaseHandoffVelocity(event.velocity) * progressVelocityScale;
 	const handoffVelocity = getPinchReleaseHandoffVelocity(
 		event.velocity,
 		policy.gestureReleaseVelocityScale,

@@ -104,6 +104,7 @@ export function sheetOptions({
 	backdropBehavior,
 	customBackdrop = false,
 	gestureSnapLocked,
+	sheetSnapBehavior,
 	sheetScrollGestureBehavior,
 	gestureDirection,
 }: {
@@ -117,6 +118,7 @@ export function sheetOptions({
 	backdropBehavior?: ScreenTransitionConfig["backdropBehavior"];
 	customBackdrop?: boolean;
 	gestureSnapLocked?: boolean;
+	sheetSnapBehavior?: ScreenTransitionConfig["sheetSnapBehavior"];
 	sheetScrollGestureBehavior?: ScreenTransitionConfig["sheetScrollGestureBehavior"];
 	gestureDirection?: ScreenTransitionConfig["gestureDirection"];
 } = {}): ScreenTransitionConfig {
@@ -134,6 +136,7 @@ export function sheetOptions({
 		backdropBehavior,
 		backdropComponent: customBackdrop ? BlurView : undefined,
 		gestureSnapLocked,
+		sheetSnapBehavior,
 		sheetScrollGestureBehavior,
 		screenStyleInterpolator: ({
 			progress,

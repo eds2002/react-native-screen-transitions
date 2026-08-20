@@ -65,6 +65,7 @@ const areInterpolatorOptionsEqual = (
 		left.gestureSnapVelocityImpact === right.gestureSnapVelocityImpact &&
 		left.gestureReleaseVelocityScale === right.gestureReleaseVelocityScale &&
 		left.gestureSnapLocked === right.gestureSnapLocked &&
+		left.sheetSnapBehavior === right.sheetSnapBehavior &&
 		left.sheetScrollGestureBehavior === right.sheetScrollGestureBehavior &&
 		left.backdropBehavior === right.backdropBehavior
 	);

@@ -204,6 +204,30 @@ Locks gesture-driven snap movement to the current detent.
   </tbody>
 </table>
 
+### `sheetSnapBehavior`
+
+Controls how a drag maps movement between snap points. `"continuous"` maps
+movement directly to global progress and can cross multiple snap points.
+`"step"` gives the adjacent interval a full normalized drag range and limits
+each gesture to one snap-point step.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>"continuous" | "step"</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>"continuous"</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
 ### `gestureReleaseVelocityScale`
 
 Multiplies normalized release velocity before the spring runs.
@@ -488,6 +512,24 @@ Two behaviors matter here:
 
 - `gestureEnabled: false` disables dismiss at the minimum detent, but the screen can still snap between non-dismiss detents
 - `gestureSnapLocked` locks gesture-driven snap movement to the current detent, while programmatic changes such as `navigation.setOptions()` or `snapTo()` can still change behavior
+- `sheetSnapBehavior: "step"` makes each gesture operate only between its starting detent and one adjacent detent
+
+Use step behavior when nearby snap points should still require a deliberate
+drag. For example, the `0.9` to `1` interval below receives the same normalized
+drag range as any other adjacent interval:
+
+```tsx
+<Stack.Screen
+  name="Sheet"
+  component={SheetScreen}
+  options={{
+    gestureEnabled: true,
+    gestureDirection: "vertical",
+    snapPoints: [0.4, 0.9, 1],
+    sheetSnapBehavior: "step",
+  }}
+/>
+```
 
 If you want to toggle snap locking at runtime:
 

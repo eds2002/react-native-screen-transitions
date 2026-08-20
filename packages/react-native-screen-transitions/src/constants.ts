@@ -10,6 +10,7 @@ import type {
 	GestureTracking,
 	Layout,
 	SheetScrollGestureBehavior,
+	SheetSnapBehavior,
 } from "./types/screen.types";
 import type { BaseStackRoute } from "./types/stack.types";
 
@@ -167,6 +168,7 @@ export const DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE = 1;
 export const DEFAULT_GESTURE_DIRECTION = "horizontal";
 export const DEFAULT_GESTURE_TRACKING: GestureTracking = "auto";
 export const DEFAULT_GESTURE_SNAP_LOCKED = false;
+export const DEFAULT_SHEET_SNAP_BEHAVIOR: SheetSnapBehavior = "continuous";
 export const DEFAULT_GESTURE_ACTIVATION_AREA: ActivationArea = "screen";
 export const DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR: SheetScrollGestureBehavior =
 	"expand-and-collapse";

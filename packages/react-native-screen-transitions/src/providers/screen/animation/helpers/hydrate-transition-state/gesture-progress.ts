@@ -4,6 +4,7 @@ import type {
 	GestureDirectionOption,
 	GestureValues,
 } from "../../../../../types/gesture.types";
+import type { SheetSnapBehavior } from "../../../../../types/screen.types";
 import {
 	getPanActivationDirections,
 	getPanSnapAxisConfigForDirection,
@@ -12,6 +13,7 @@ import {
 	getSnapPinchDirectionConfig,
 	isResolvedPanGestureDirection,
 } from "../../../gestures/shared/directions";
+import { resolveStepSnapProgress } from "../../../gestures/shared/snap-points";
 import type { SnapBounds } from "./types";
 
 type PanProgressDelta = {
@@ -26,6 +28,8 @@ const resolvePanGestureAffectedProgress = (
 	gestureDirection: GestureDirectionOption,
 	hasSnapPoints: boolean,
 	snapBounds: SnapBounds | null,
+	snapPoints: number[],
+	sheetSnapBehavior: SheetSnapBehavior,
 ) => {
 	"worklet";
 
@@ -46,6 +50,13 @@ const resolvePanGestureAffectedProgress = (
 		const axisValue =
 			activeAxis.axis === "horizontal" ? progressDelta.x : progressDelta.y;
 		const signedProgressDelta = activeAxis.config.progressSign * axisValue;
+		if (sheetSnapBehavior === "step") {
+			return resolveStepSnapProgress({
+				baseline: transitionProgress,
+				normalizedDelta: signedProgressDelta,
+				snapPoints,
+			});
+		}
 
 		return clamp(
 			transitionProgress + signedProgressDelta,
@@ -85,6 +96,8 @@ const resolvePinchGestureAffectedProgress = (
 	gestureDirection: GestureDirectionOption,
 	hasSnapPoints: boolean,
 	snapBounds: SnapBounds | null,
+	snapPoints: number[],
+	sheetSnapBehavior: SheetSnapBehavior,
 ) => {
 	"worklet";
 	const pinchDirection =
@@ -108,6 +121,13 @@ const resolvePinchGestureAffectedProgress = (
 			snapDirections.collapse === pinchDirection
 				? -Math.abs(gesture.normScale)
 				: Math.abs(gesture.normScale);
+		if (sheetSnapBehavior === "step") {
+			return resolveStepSnapProgress({
+				baseline: transitionProgress,
+				normalizedDelta: progressDelta,
+				snapPoints,
+			});
+		}
 
 		return clamp(
 			transitionProgress + progressDelta,
@@ -134,6 +154,8 @@ export const resolveGestureAffectedProgress = (
 	panProgressDelta: PanProgressDelta,
 	gestureDirection: GestureDirectionOption | undefined,
 	snapBounds: SnapBounds | null,
+	snapPoints: number[] = [],
+	sheetSnapBehavior: SheetSnapBehavior = "continuous",
 ) => {
 	"worklet";
 	const resolvedGestureDirection =
@@ -152,6 +174,8 @@ export const resolveGestureAffectedProgress = (
 			resolvedGestureDirection,
 			hasSnapPoints,
 			snapBounds,
+			snapPoints,
+			sheetSnapBehavior,
 		);
 	}
 
@@ -162,5 +186,7 @@ export const resolveGestureAffectedProgress = (
 		resolvedGestureDirection,
 		hasSnapPoints,
 		snapBounds,
+		snapPoints,
+		sheetSnapBehavior,
 	);
 };

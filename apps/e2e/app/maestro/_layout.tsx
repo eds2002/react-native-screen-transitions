@@ -80,8 +80,9 @@ export default function MaestroLayout() {
 			<BlankStack.Screen
 				name="snap-points-sheet"
 				options={sheetOptions({
-					snapPoints: [0.35, 0.65, 1],
+					snapPoints: [0.4, 0.9, 1],
 					initialSnapIndex: 1,
+					sheetSnapBehavior: "step",
 				})}
 			/>
 

@@ -204,6 +204,18 @@ export const resolveRuntimeGestureSnapPoints = (
 	});
 };
 
+export const resolveRuntimeGestureSnapTargets = (
+	runtime: GestureRuntime<GesturePolicy>,
+): number[] => {
+	"worklet";
+	const { resolvedSnapPoints } = resolveRuntimeGestureSnapPoints(runtime);
+	const targets = runtime.participation.canDismiss
+		? [0, ...resolvedSnapPoints]
+		: resolvedSnapPoints;
+
+	return Array.from(new Set(targets)).sort((a, b) => a - b);
+};
+
 const findNearestSnapPoint = (
 	progress: number,
 	snapPoints: number[],
@@ -224,6 +236,81 @@ const findNearestSnapPoint = (
 	}
 
 	return nearest;
+};
+
+const findNearestSnapPointIndex = (
+	progress: number,
+	snapPoints: number[],
+): number => {
+	"worklet";
+	let nearestIndex = 0;
+	let smallestDistance = Math.abs(progress - (snapPoints[0] ?? progress));
+
+	for (let i = 1; i < snapPoints.length; i++) {
+		const distance = Math.abs(progress - snapPoints[i]);
+		if (distance < smallestDistance) {
+			smallestDistance = distance;
+			nearestIndex = i;
+		}
+	}
+
+	return nearestIndex;
+};
+
+interface ResolveStepSnapProps {
+	baseline: number;
+	direction: number;
+	snapPoints: number[];
+}
+
+export const resolveStepSnapTargets = ({
+	baseline,
+	direction,
+	snapPoints,
+}: ResolveStepSnapProps): number[] => {
+	"worklet";
+	if (snapPoints.length === 0) {
+		return [baseline];
+	}
+
+	const baselineIndex = findNearestSnapPointIndex(baseline, snapPoints);
+	const start = snapPoints[baselineIndex] ?? baseline;
+	const adjacentIndex = baselineIndex + Math.sign(direction);
+	const adjacent = snapPoints[adjacentIndex];
+
+	if (direction === 0 || adjacent === undefined) {
+		return [start];
+	}
+
+	return direction < 0 ? [adjacent, start] : [start, adjacent];
+};
+
+export const resolveStepSnapProgress = ({
+	baseline,
+	normalizedDelta,
+	snapPoints,
+}: Omit<ResolveStepSnapProps, "direction"> & {
+	normalizedDelta: number;
+}): number => {
+	"worklet";
+	const targets = resolveStepSnapTargets({
+		baseline,
+		direction: normalizedDelta,
+		snapPoints,
+	});
+	const target = normalizedDelta < 0 ? targets[0] : targets[targets.length - 1];
+	const localProgress = Math.min(1, Math.abs(normalizedDelta));
+
+	return baseline + (target - baseline) * localProgress;
+};
+
+export const getStepSnapProgressVelocityScale = (targets: number[]): number => {
+	"worklet";
+	if (targets.length < 2) {
+		return 0;
+	}
+
+	return Math.abs(targets[targets.length - 1] - targets[0]);
 };
 
 export const primeRuntimeSnapPoint = (

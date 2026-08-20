@@ -29,6 +29,7 @@ export type ScreenTransitionOptions = Pick<
 	| "gestureSnapVelocityImpact"
 	| "gestureReleaseVelocityScale"
 	| "gestureSnapLocked"
+	| "sheetSnapBehavior"
 	| "sheetScrollGestureBehavior"
 	| "backdropBehavior"
 >;

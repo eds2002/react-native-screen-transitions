@@ -121,6 +121,23 @@ options={{
 
 `gestureReleaseVelocityScale` affects how the sheet settles after the target is chosen. It does not replace `gestureSnapVelocityImpact`.
 
+## Step-by-Step Dragging
+
+Set `sheetSnapBehavior` to `"step"` when every adjacent interval should receive
+a full normalized drag range:
+
+```tsx
+options={{
+  snapPoints: [0.4, 0.9, 1],
+  sheetSnapBehavior: "step",
+}}
+```
+
+Each gesture can reach only the next higher or lower snap point. Release
+velocity can decide whether that adjacent step commits, but cannot skip a
+detent. The default `"continuous"` behavior maps movement directly to global
+screen progress and may cross multiple detents in one gesture.
+
 ## Snap Locking
 
 `gestureSnapLocked` locks gesture-driven movement to the current detent:
