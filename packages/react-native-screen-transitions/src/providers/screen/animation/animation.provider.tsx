@@ -1,6 +1,7 @@
 import { type ReactNode, useMemo } from "react";
 import { createBoundsAccessor } from "../../../utils/bounds";
 import createProvider from "../../../utils/create-provider";
+import { useBlankStackStore } from "../../stack/blank-stack.provider";
 import { useDescriptorsStore } from "../descriptors";
 import { useCurrentScreenRelationships } from "../use-current-screen-relationships";
 import { useScreenAnimationPipeline } from "./helpers/pipeline";
@@ -33,6 +34,9 @@ export const {
 	createScreenAnimationProvider((_props) => {
 		const currentScreenKey = useDescriptorsStore(
 			(store) => store.derivations.currentScreenKey,
+		);
+		const isClosing = useBlankStackStore(
+			(store) => store.scenesByKey[currentScreenKey]?.activity === "closing",
 		);
 		const relationships = useCurrentScreenRelationships();
 		const pipeline = useScreenAnimationPipeline();
@@ -77,6 +81,7 @@ export const {
 
 		return {
 			key: currentScreenKey,
+			unregisterOnCleanup: isClosing,
 			value: {
 				...pipeline,
 				transitionSources,

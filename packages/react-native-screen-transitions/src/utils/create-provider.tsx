@@ -74,6 +74,7 @@ type ResolvedOptionalProviderStoreHook<
 type ProviderFactoryResult<ContextValue, Global extends boolean> = {
 	value: ContextValue;
 	children?: ReactNode;
+	unregisterOnCleanup?: boolean;
 } & (Global extends true ? { key: string } : { key?: never });
 
 interface ProviderStoreApi<ContextValue> {
@@ -321,16 +322,20 @@ export default function createProvider<
 		const StoreProvider = ({
 			children,
 			storeKey,
+			unregisterOnCleanup = true,
 			value,
 		}: {
 			children?: ReactNode;
 			storeKey?: string;
+			unregisterOnCleanup?: boolean;
 			value: ContextValue;
 		}) => {
 			const storeRef = useRef<MutableProviderStoreApi<ContextValue> | null>(
 				null,
 			);
 			const pendingNotifyRef = useRef(false);
+			const unregisterOnCleanupRef = useRef(unregisterOnCleanup);
+			unregisterOnCleanupRef.current = unregisterOnCleanup;
 
 			if (storeRef.current === null) {
 				storeRef.current = createProviderStore<ContextValue>(value);
@@ -348,7 +353,13 @@ export default function createProvider<
 					);
 				}
 
-				return globalRegistry.register(storeKey, store);
+				const unregister = globalRegistry.register(storeKey, store);
+
+				return () => {
+					if (unregisterOnCleanupRef.current) {
+						unregister();
+					}
+				};
 			}, [storeKey, store]);
 
 			pendingNotifyRef.current =
@@ -373,10 +384,15 @@ export default function createProvider<
 			const {
 				children = (props as { children?: ReactNode }).children,
 				key,
+				unregisterOnCleanup,
 				value,
 			} = factory(props);
 			return (
-				<StoreProvider storeKey={key} value={value}>
+				<StoreProvider
+					storeKey={key}
+					unregisterOnCleanup={unregisterOnCleanup}
+					value={value}
+				>
 					{children}
 				</StoreProvider>
 			);
