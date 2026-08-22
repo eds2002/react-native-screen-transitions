@@ -101,6 +101,17 @@ export type ScreenContentComponentProps = ScreenLayerComponentProps & {
 };
 
 /**
+ * Props passed to {@linkcode ScreenTransitionConfig.surfaceComponent} when it
+ * is provided as a render-style component.
+ */
+export type ScreenSurfaceComponentProps = ScreenLayerComponentProps & {
+	/**
+	 * The screen subtree rendered inside the visual surface layer.
+	 */
+	children: ReactNode;
+};
+
+/**
  * Custom renderer for the backdrop layer.
  *
  * Component types such as `BlurView` are still accepted for compatibility.
@@ -125,6 +136,20 @@ export type ScreenBackdropComponent =
 export type ScreenContentComponent =
 	| ComponentType<any>
 	| ComponentType<ScreenContentComponentProps>;
+
+/**
+ * Custom renderer for the screen's visual surface layer.
+ *
+ * The surface is nested inside the content layer and does not contain the
+ * shared-element fallback host. Use it for visual effects such as filters,
+ * clipping, backgrounds, and corner treatments without changing navigation
+ * geometry.
+ *
+ * @see {@linkcode ScreenTransitionConfig.surfaceComponent}
+ */
+export type ScreenSurfaceComponent =
+	| ComponentType<any>
+	| ComponentType<ScreenSurfaceComponentProps>;
 
 /**
  * Controls how an inactive screen is retained after it is no longer active.
@@ -441,4 +466,15 @@ export type ScreenTransitionConfig = {
 	 * @default undefined
 	 */
 	contentComponent?: ScreenContentComponent;
+
+	/**
+	 * Custom component to render as the screen's visual surface layer.
+	 *
+	 * The component receives the `surface` slot's animated styles and props. It
+	 * is nested inside the content layer while shared-element fallback content
+	 * remains outside it.
+	 *
+	 * @default undefined
+	 */
+	surfaceComponent?: ScreenSurfaceComponent;
 };

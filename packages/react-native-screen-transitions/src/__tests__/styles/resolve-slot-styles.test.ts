@@ -148,6 +148,11 @@ describe("resolveSlotStyles", () => {
 						opacity: 0.4,
 					},
 				},
+				surface: {
+					style: {
+						opacity: 0.5,
+					},
+				},
 			},
 		});
 
@@ -158,6 +163,7 @@ describe("resolveSlotStyles", () => {
 			opacity: 0.7,
 		});
 		expect(result.resolvedStylesMap.content).toBeUndefined();
+		expect(result.resolvedStylesMap.surface).toBeUndefined();
 		expect(result.resolvedStylesMap.overlay).toBeUndefined();
 	});
 
@@ -165,6 +171,7 @@ describe("resolveSlotStyles", () => {
 		const reservedSlotIds = [
 			"overlay",
 			"content",
+			"surface",
 			"backdrop",
 			NAVIGATION_MASK_CONTAINER_STYLE_ID,
 			NAVIGATION_MASK_ELEMENT_STYLE_ID,
@@ -246,6 +253,7 @@ describe("resolveSlotStyles", () => {
 						card: {
 							style: {
 								borderRadius: 24,
+								filter: [{ blur: 18 }],
 								opacity: 0.45,
 							},
 							props: {
@@ -264,6 +272,7 @@ describe("resolveSlotStyles", () => {
 			expect(omitted.resolvedStylesMap.card).toEqual({
 				style: {
 					borderRadius: 0,
+					filter: [{ blur: 0.01 }],
 					opacity: 1,
 				},
 				props: {

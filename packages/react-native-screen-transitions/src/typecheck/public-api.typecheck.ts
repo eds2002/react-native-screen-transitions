@@ -16,6 +16,8 @@ import type {
 	ScreenAnimationTarget,
 	ScreenGestureTarget,
 	ScreenInterpolationProps,
+	ScreenSurfaceComponent,
+	ScreenSurfaceComponentProps,
 	ScreenTransitionConfig,
 	ScreenTransitionDepthTarget,
 	ScreenTransitionTarget,
@@ -52,6 +54,7 @@ const slotStyle: TransitionSlotStyle = {
 
 const nestedInterpolatedStyle: TransitionInterpolatedStyle = {
 	content: slotStyle,
+	surface: slotStyle,
 	backdrop: {
 		opacity: 0.5,
 	},
@@ -310,6 +313,13 @@ const scopedGestureDirectionOptions: ScreenTransitionConfig = {
 const emptyInterpolatorOptions: ScreenTransitionConfig = {
 	screenStyleInterpolator: () => null,
 };
+declare const surfaceComponent: ScreenSurfaceComponent;
+declare const surfaceComponentProps: ScreenSurfaceComponentProps;
+const surfaceOptions: ScreenTransitionConfig = {
+	surfaceComponent,
+};
+void surfaceComponentProps;
+void surfaceOptions;
 
 type NativeStackAdapterParamList = {
 	Profile: undefined;

@@ -1,8 +1,8 @@
 ---
 title: "Layers"
 pageTitle: "Layers"
-summary: "Understand reserved transition layers, including overlays, screen content, backdrops, and navigation masks."
-description: "Understand reserved transition layers, including overlays, screen content, backdrops, and navigation masks."
+summary: "Understand reserved transition layers, including overlays, screen content, surfaces, backdrops, and navigation masks."
+description: "Understand reserved transition layers, including overlays, screen content, surfaces, backdrops, and navigation masks."
 eyebrow: "Core Concepts"
 group: "Core Concepts"
 order: 9
@@ -18,6 +18,7 @@ The layer keys are:
 - `overlay`
 - `backdrop`
 - `content`
+- `surface`
 - `NAVIGATION_MASK_CONTAINER_STYLE_ID`
 - `NAVIGATION_MASK_ELEMENT_STYLE_ID`
 
@@ -35,6 +36,7 @@ return {
   overlay: { style: { ... }, props: { ... } },
   backdrop: { style: { ... }, props: { ... } },
   content: { style: { ... }, props: { ... } },
+  surface: { style: { ... }, props: { ... } },
   [NAVIGATION_MASK_CONTAINER_STYLE_ID]: { style: { ... } },
   [NAVIGATION_MASK_ELEMENT_STYLE_ID]: { style: { ... } },
   ["hero-card"]: { style: { ... }, props: { ... } },
@@ -48,6 +50,7 @@ return {
   overlay: { transform: [{ translateY: 12 }] },
   backdrop: { opacity: 0.4 },
   content: { transform: [{ translateY: 12 }] },
+  surface: { filter: [{ blur: 18 }] },
   "hero-card": { scale: 0.98 },
 };
 ```
@@ -59,7 +62,9 @@ Most layers render inside `screen-container` in this order:
 1. `backdrop`
 2. `content`
 3. optional navigation mask wrapper when `navigationMaskEnabled` is enabled
-4. screen children and any matching `styleId` targets
+4. `surface`
+5. screen children and any matching `styleId` targets
+6. shared-element fallback content outside the surface
 
 `overlay` is resolved separately by the floating overlay host above the navigator's screen containers. It drives the adjacent pair in the overlay stack rather than the normal screen stack.
 
@@ -171,6 +176,39 @@ The render props are:
 - `children`: the screen subtree
 
 Use `contentComponent` for custom tray shells, rounded containers, glass panels, or other screen-level wrappers that should own the screen subtree.
+
+## surface
+
+`surface` targets the visual shell nested inside the content layer. It wraps the screen subtree, but not the shared-element fallback host.
+
+The surface layer is created when `surfaceComponent` is configured; otherwise no additional wrapper is mounted.
+
+```tsx
+surface: {
+  style: {
+    borderRadius: 32,
+    filter: [{ blur: interpolate(progress, [0, 1], [18, 0.01]) }],
+  },
+}
+```
+
+Use `surfaceComponent` when that inner visual shell needs a custom renderer:
+
+```tsx
+options={{
+  surfaceComponent: ({ styles, props, pointerEvents, children }) => (
+    <Animated.View
+      style={styles}
+      animatedProps={props}
+      pointerEvents={pointerEvents}
+    >
+      {children}
+    </Animated.View>
+  ),
+}}
+```
+
+Use `content` for screen motion and navigation geometry. Use `surface` for visual treatments such as filters, clipping, backgrounds, and corner treatments that should not wrap shared-element fallback content.
 
 ## Element Targets
 

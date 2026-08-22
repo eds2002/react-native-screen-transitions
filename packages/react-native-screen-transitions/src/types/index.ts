@@ -60,6 +60,8 @@ export type {
 	ScreenContentComponentProps,
 	ScreenKey,
 	ScreenLayerComponentProps,
+	ScreenSurfaceComponent,
+	ScreenSurfaceComponentProps,
 	ScreenTransitionConfig,
 	SheetSnapBehavior,
 	TransitionAwareProps,

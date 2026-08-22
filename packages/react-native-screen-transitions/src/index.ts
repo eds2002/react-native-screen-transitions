@@ -73,6 +73,8 @@ export type {
 	ScreenInterpolationProps,
 	ScreenLayerComponentProps,
 	ScreenStyleInterpolator,
+	ScreenSurfaceComponent,
+	ScreenSurfaceComponentProps,
 	ScreenTransitionAccessor,
 	ScreenTransitionConfig,
 	ScreenTransitionDepthTarget,

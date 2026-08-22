@@ -333,6 +333,27 @@ Custom renderer for the screen content layer. Use it when a screen needs a custo
   </tbody>
 </table>
 
+### `surfaceComponent`
+
+Custom renderer for the visual surface inside the content layer. It receives the `surface` slot's animated styles, animated props, pointer events, and screen children. Shared-element fallback content remains outside this component.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>React.ComponentType&lt;any&gt; | ScreenSurfaceComponent</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>undefined</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
 ## Per-Direction Activation Area
 
 ```tsx

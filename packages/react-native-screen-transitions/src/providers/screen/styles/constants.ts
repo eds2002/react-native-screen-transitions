@@ -22,6 +22,7 @@ const IDENTITY_TRANSFORM = [
  * please add its identity value here in a PR.
  */
 export const STYLE_RESET_VALUES: Record<string, unknown> = {
+	filter: [{ blur: 0.01 }],
 	transform: IDENTITY_TRANSFORM,
 	translateX: 0,
 	translateY: 0,
@@ -67,6 +68,7 @@ export const PROP_RESET_VALUES: Record<string, unknown> = {
 const RESERVED_STYLE_SLOT_IDS = {
 	overlay: true,
 	content: true,
+	surface: true,
 	backdrop: true,
 	[NAVIGATION_MASK_ELEMENT_STYLE_ID]: true,
 	[NAVIGATION_MASK_CONTAINER_STYLE_ID]: true,

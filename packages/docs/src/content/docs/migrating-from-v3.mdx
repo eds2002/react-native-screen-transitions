@@ -87,7 +87,6 @@ Version 4 removes compatibility fields that Version 3 kept temporarily. Common r
 
 - `snapVelocityImpact` → `gestureSnapVelocityImpact`
 - `expandViaScrollView` → `sheetScrollGestureBehavior`
-- `surfaceComponent` → `contentComponent`
 - `gestureResponseDistance` and `gestureActivationArea` → the `area` field on each `gestureDirection` entry
 - `gestureDrivesProgress` and `gestureProgressMode` → read `transitionProgress` when interpolation progress must exclude live gesture movement
 - gesture `active` → `initiator`
@@ -95,6 +94,8 @@ Version 4 removes compatibility fields that Version 3 kept temporarily. Common r
 - `normalizedX`, `normalizedY`, `isDragging`, and `isDismissing` → `normX`, `normY`, `dragging`, and `dismissing`
 
 `useScreenAnimation` now uses depth targets. Replace `"self"`, `"parent"`, `"root"`, and `{ ancestor }` with the matching `{ depth }` target.
+
+Version 4 distinguishes `contentComponent` from `surfaceComponent`. Use `contentComponent` for the outer screen-motion and navigation-geometry layer. Use `surfaceComponent` for the nested visual shell when filters, clipping, backgrounds, or corner treatments should not wrap shared-element fallback content.
 
 Version 4 also removes ignored bounds and zoom compatibility options, including `bounds().math()`, `raw`, `gestures`, legacy zoom opacity ranges, and old drag sensitivity fields. Use `bounds(id).values()`, `offset`, and the current `drag` configuration instead.
 
