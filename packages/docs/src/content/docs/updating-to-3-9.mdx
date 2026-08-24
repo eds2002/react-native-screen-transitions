@@ -195,10 +195,10 @@ Use `handoff` and `escapeClipping` together when both behaviors are needed:
 `handoff` and `escapeClipping` use `react-native-teleport` under the hood. If you use either prop, install the optional peer dependency:
 
 ```sh
-bun add react-native-teleport@1.1.10
+bun add react-native-teleport@1.2.0
 ```
 
-The supported range is `>=1.1.0 <1.1.11`. Version `1.1.11` is excluded because its host-size synchronization can trail continuously animated boundary hosts. Pin `1.1.10` when using either feature.
+Version `1.2.0` uses the native reparenting fast path for live payloads, including handed-off video. Pin `1.2.0` when using either feature.
 
 ## Better Retargeting
 
@@ -420,7 +420,7 @@ For `method: "size"`, the returned scale is applied to the generated width and h
 - Prefer `Transition.Boundary` over `Transition.Boundary.View` and `Transition.Boundary.Trigger`.
 - Use `handoff` on every matching boundary that should send or receive a live payload.
 - Use `escapeClipping` when a boundary needs to render outside local clipping constraints during a transition.
-- Install `react-native-teleport@1.1.10` if you use `handoff` or `escapeClipping`.
+- Install `react-native-teleport@1.2.0` if you use `handoff` or `escapeClipping`.
 - Replace `bounds({ id, ...options })` style output with `bounds(id).styles(options)`.
 - Replace raw numeric bounds usage with `bounds(id).values(options)`.
 - Replace earlier beta `bounds(id).math(options)` usage with `bounds(id).values(options)`. `math()` remains as a deprecated alias.
