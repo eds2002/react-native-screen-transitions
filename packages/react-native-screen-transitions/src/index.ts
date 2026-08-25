@@ -50,7 +50,7 @@ export {
 export type {
 	AnimatedViewStyle,
 	AnimationConfig,
-	BoundaryTeleportControl,
+	BoundaryHandoffTarget,
 	BoundsMotion,
 	BoundsMotionFrame,
 	BoundsMotionTransform,

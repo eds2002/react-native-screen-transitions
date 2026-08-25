@@ -10,19 +10,37 @@ import { AnimationStore } from "../../../../../../stores/animation.store";
 import { getLinkKeyFromTag } from "../../../../../../stores/bounds/helpers/link-pairs.helpers";
 import { getEntry } from "../../../../../../stores/bounds/internals/entries";
 import { pairs } from "../../../../../../stores/bounds/internals/state";
+import type {
+	LinkPairState,
+	TagLink,
+} from "../../../../../../stores/bounds/types";
 import { SystemStore } from "../../../../../../stores/system.store";
 import { PORTAL_HOST_NAME_RESET_VALUE } from "../../../utils/naming";
-import { isTeleportEnabled } from "../../../utils/teleport-control";
 import {
 	resolveActiveHandoffReceiver,
 	resolveHandoffAttachmentCandidate,
 	resolvePreviousHandoffReceiver,
+	resolveRequestedHandoffPairKey,
+	resolveRequestedHandoffReceiver,
 } from "../helpers/active-handoff-receiver";
 import { createBoundaryContentPortalHostName } from "../helpers/host-name";
 
 interface UseBoundaryContentPortalAttachmentParams {
 	boundaryId: string;
 }
+
+const isCompleteActiveLink = (
+	pair: LinkPairState | null | undefined,
+	link: TagLink | undefined,
+	boundaryLinkKey: string,
+) => {
+	"worklet";
+
+	return (
+		link?.status === "complete" &&
+		(!link.group || pair?.groups[link.group]?.activeId === boundaryLinkKey)
+	);
+};
 
 export const useBoundaryContentPortalAttachment = ({
 	boundaryId,
@@ -34,6 +52,9 @@ export const useBoundaryContentPortalAttachment = ({
 	);
 	const nextScreenKey = useDescriptorsStore((s) => s.derivations.nextScreenKey);
 	const sourcePairKey = useDescriptorsStore((s) => s.derivations.sourcePairKey);
+	const destinationPairKey = useDescriptorsStore(
+		(s) => s.derivations.destinationPairKey,
+	);
 	const destinationSlots = useOptionalScreenSlotStore(
 		nextScreenKey ?? currentScreenKey,
 	);
@@ -67,11 +88,9 @@ export const useBoundaryContentPortalAttachment = ({
 		const slot = slotsMap.get()[boundaryId];
 		const {
 			pointerEvents: _pointerEvents,
-			teleport,
+			handoffTarget,
 			...slotProps
 		} = slot?.props ?? {};
-
-		const shouldTeleport = isTeleportEnabled(teleport);
 		const closing = activeReceiverClosing.get();
 		const animationProgress = activeReceiverAnimationProgress.get();
 
@@ -89,20 +108,56 @@ export const useBoundaryContentPortalAttachment = ({
 			animationProgress,
 		});
 
-		const pair = sourcePairKey ? pairs.get()[sourcePairKey] : null;
-		const link = pair?.links[getLinkKeyFromTag(boundaryId)];
+		const automaticPair = sourcePairKey ? pairs.get()[sourcePairKey] : null;
+		const boundaryLinkKey = getLinkKeyFromTag(boundaryId);
+		const automaticLink = automaticPair?.links[boundaryLinkKey];
 
 		const pairDestination =
-			link?.status === "complete" &&
-			(!link.group ||
-				pair?.groups[link.group]?.activeId === getLinkKeyFromTag(boundaryId))
-				? link.destination.screenKey
+			automaticLink?.status === "complete" &&
+			(!automaticLink.group ||
+				automaticPair?.groups[automaticLink.group]?.activeId ===
+					boundaryLinkKey)
+				? automaticLink.destination.screenKey
 				: null;
+		const destinationPair = destinationPairKey
+			? pairs.get()[destinationPairKey]
+			: null;
+		const destinationLink = destinationPair?.links[boundaryLinkKey];
+		const retainedSourcePairKey = sourcePairBeforeClose.get() ?? undefined;
+		const retainedSourcePair = retainedSourcePairKey
+			? pairs.get()[retainedSourcePairKey]
+			: null;
+		const retainedSourceLink = retainedSourcePair?.links[boundaryLinkKey];
+		const requestedPairKey = resolveRequestedHandoffPairKey({
+			destinationPairHasCompleteLink: isCompleteActiveLink(
+				destinationPair,
+				destinationLink,
+				boundaryLinkKey,
+			),
+			destinationPairKey,
+			handoffTarget,
+			retainedSourcePairHasCompleteLink: isCompleteActiveLink(
+				retainedSourcePair,
+				retainedSourceLink,
+				boundaryLinkKey,
+			),
+			retainedSourcePairKey,
+			sourcePairHasCompleteLink: isCompleteActiveLink(
+				automaticPair,
+				automaticLink,
+				boundaryLinkKey,
+			),
+			sourcePairKey,
+		});
+		const requestedPair = requestedPairKey
+			? pairs.get()[requestedPairKey]
+			: null;
+		const requestedLink = requestedPair?.links[boundaryLinkKey];
 
 		const isInterpolatorReady = interpolatorReady.get();
 		const attachedScreenKey = attachedReceiverScreenKey.get();
 
-		const nextReceiverScreenKey = resolveHandoffAttachmentCandidate({
+		const automaticReceiverScreenKey = resolveHandoffAttachmentCandidate({
 			activeReceiverClosing: !!closing,
 			activeReceiverScreenKey,
 			attachedReceiverScreenKey: attachedScreenKey,
@@ -111,6 +166,22 @@ export const useBoundaryContentPortalAttachment = ({
 			pairChangedDuringClose,
 			pairDestinationScreenKey: pairDestination,
 			previousReceiverScreenKey,
+		});
+		const requestedDestinationScreenKey =
+			requestedLink?.status === "complete"
+				? requestedLink.destination.screenKey
+				: null;
+		const nextReceiverScreenKey = resolveRequestedHandoffReceiver({
+			automaticScreenKey: automaticReceiverScreenKey,
+			destinationReady:
+				requestedDestinationScreenKey === activeReceiverScreenKey ||
+				!!isInterpolatorReady,
+			destinationScreenKey: requestedDestinationScreenKey,
+			handoffTarget,
+			sourceScreenKey:
+				requestedLink?.status === "complete"
+					? requestedLink.source.screenKey
+					: null,
 		});
 
 		const receiverEntry = nextReceiverScreenKey
@@ -136,9 +207,7 @@ export const useBoundaryContentPortalAttachment = ({
 			attachedReceiverScreenKey.set(nextReceiverScreenKey);
 		}
 
-		const targetScreenKey = shouldTeleport
-			? attachedReceiverScreenKey.get()
-			: null;
+		const targetScreenKey = attachedReceiverScreenKey.get();
 
 		const targetHostName = targetScreenKey
 			? createBoundaryContentPortalHostName(targetScreenKey, boundaryId)

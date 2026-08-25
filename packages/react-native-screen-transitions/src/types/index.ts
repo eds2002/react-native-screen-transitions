@@ -2,7 +2,7 @@ export { FALSE, TRUE } from "../constants";
 export type {
 	AnimatedViewStyle,
 	AnimationConfig,
-	BoundaryTeleportControl,
+	BoundaryHandoffTarget,
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
 	ScreenTransitionAccessor,

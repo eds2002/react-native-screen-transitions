@@ -3,6 +3,8 @@ import {
 	resolveActiveHandoffReceiver,
 	resolveHandoffAttachmentCandidate,
 	resolvePreviousHandoffReceiver,
+	resolveRequestedHandoffPairKey,
+	resolveRequestedHandoffReceiver,
 } from "../../components/boundary/portal/components/boundary-content-portal/helpers/active-handoff-receiver";
 
 const scene = (key: string, activity = "active") => ({
@@ -11,6 +13,100 @@ const scene = (key: string, activity = "active") => ({
 });
 
 describe("active handoff receiver", () => {
+	it("resolves the matched pair from a destination boundary", () => {
+		expect(
+			resolveRequestedHandoffPairKey({
+				destinationPairHasCompleteLink: true,
+				destinationPairKey: "world<>media",
+				handoffTarget: "source",
+				retainedSourcePairHasCompleteLink: false,
+				retainedSourcePairKey: undefined,
+				sourcePairHasCompleteLink: false,
+				sourcePairKey: undefined,
+			}),
+		).toBe("world<>media");
+	});
+
+	it("keeps a different closing boundary on its retained pair", () => {
+		const waterfallPair = resolveRequestedHandoffPairKey({
+			destinationPairHasCompleteLink: false,
+			destinationPairKey: undefined,
+			handoffTarget: "source",
+			retainedSourcePairHasCompleteLink: true,
+			retainedSourcePairKey: "world<>waterfall-media",
+			sourcePairHasCompleteLink: false,
+			sourcePairKey: "world<>green-media",
+		});
+		const greenPair = resolveRequestedHandoffPairKey({
+			destinationPairHasCompleteLink: false,
+			destinationPairKey: undefined,
+			handoffTarget: "destination",
+			retainedSourcePairHasCompleteLink: false,
+			retainedSourcePairKey: "world<>waterfall-media",
+			sourcePairHasCompleteLink: true,
+			sourcePairKey: "world<>green-media",
+		});
+
+		expect({ greenPair, waterfallPair }).toEqual({
+			greenPair: "world<>green-media",
+			waterfallPair: "world<>waterfall-media",
+		});
+	});
+
+	it("uses automatic ownership when no explicit target is requested", () => {
+		expect(
+			resolveRequestedHandoffReceiver({
+				automaticScreenKey: "media",
+				destinationScreenKey: "media",
+				handoffTarget: "auto",
+				sourceScreenKey: "world",
+			}),
+		).toBe("media");
+	});
+
+	it("returns content to the source on the first closing frame", () => {
+		expect(
+			resolveRequestedHandoffReceiver({
+				automaticScreenKey: "media",
+				destinationScreenKey: "media",
+				handoffTarget: "source",
+				sourceScreenKey: "world",
+			}),
+		).toBe("world");
+	});
+
+	it("returns content to the destination when a close is cancelled", () => {
+		expect(
+			resolveRequestedHandoffReceiver({
+				automaticScreenKey: "world",
+				destinationScreenKey: "media",
+				handoffTarget: "destination",
+				sourceScreenKey: "world",
+			}),
+		).toBe("media");
+	});
+
+	it("keeps automatic ownership until a requested destination is ready", () => {
+		expect(
+			resolveRequestedHandoffReceiver({
+				automaticScreenKey: "media-a",
+				destinationReady: false,
+				destinationScreenKey: "media-b",
+				handoffTarget: "destination",
+				sourceScreenKey: "world",
+			}),
+		).toBe("media-a");
+		expect(
+			resolveRequestedHandoffReceiver({
+				automaticScreenKey: "media-a",
+				destinationReady: true,
+				destinationScreenKey: "media-b",
+				handoffTarget: "destination",
+				sourceScreenKey: "world",
+			}),
+		).toBe("media-b");
+	});
+
 	it("follows the focused route through A to B to C", () => {
 		expect(
 			resolveActiveHandoffReceiver({

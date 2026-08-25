@@ -279,19 +279,25 @@ export type ScreenStyleInterpolator = (
  */
 export type AnimatedViewStyle = ViewStyle & TextStyle;
 
-export type BoundaryTeleportControl =
-	| boolean
-	| {
-			enabled?: boolean;
-	  };
+/**
+ * Selects which matched boundary owns handoff content during a transition.
+ *
+ * `"auto"` follows the navigator's default ownership lifecycle. Use an
+ * explicit target when ownership needs to change at a precise interpolator
+ * frame, such as returning content to its source as soon as dismissal begins.
+ *
+ * @default "auto"
+ */
+export type BoundaryHandoffTarget = "auto" | "source" | "destination";
 
 export type TransitionSlotProps = Record<string, unknown> & {
 	/**
-	 * Controls whether a handoff or clipping-escape boundary should attach for
-	 * the current interpolator frame. `false` detaches the portal while keeping
-	 * hostName ownership internal.
+	 * Selects which matched boundary owns handoff content for the current
+	 * interpolator frame.
+	 *
+	 * @default "auto"
 	 */
-	teleport?: BoundaryTeleportControl;
+	handoffTarget?: BoundaryHandoffTarget;
 };
 
 type TransitionSlotDefinition = {

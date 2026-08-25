@@ -3,7 +3,6 @@ import { useDescriptorsStore } from "../../../../../../providers/screen/descript
 import { useScreenSlotStore } from "../../../../../../providers/screen/styles";
 import { useBoundaryRootStore } from "../../../../providers/boundary-root.provider";
 import { PORTAL_HOST_NAME_RESET_VALUE } from "../../../utils/naming";
-import { isTeleportEnabled } from "../../../utils/teleport-control";
 import { useActiveHostKey } from "../stores/host-registry.store";
 import { useActivePortalBoundaryHost } from "./use-active-portal-boundary-host";
 
@@ -45,14 +44,11 @@ export const useBoundaryPortalAttachment = ({
 		const slot = slotsMap.get()[boundaryId];
 		const {
 			pointerEvents: _pointerEvents,
-			teleport,
+			handoffTarget: _handoffTarget,
 			...slotProps
 		} = slot?.props ?? {};
 
-		const shouldAttach =
-			slot !== undefined &&
-			isTeleportEnabled(teleport) &&
-			portalHostReady.get();
+		const shouldAttach = slot !== undefined && portalHostReady.get();
 
 		const hostName = shouldAttach
 			? portalHostName.get()
