@@ -268,6 +268,21 @@ describe("active handoff receiver", () => {
 		).toBe("media-a");
 	});
 
+	it("does not give a fresh payload to an unlinked closing receiver", () => {
+		expect(
+			resolveHandoffAttachmentCandidate({
+				activeReceiverClosing: true,
+				activeReceiverScreenKey: "media-a",
+				attachedReceiverScreenKey: "media-b",
+				hasActiveCloseFinished: false,
+				interpolatorReady: false,
+				pairDestinationScreenKey: null,
+				pairHasBoundaryLink: false,
+				previousReceiverScreenKey: "world",
+			}),
+		).toBe("media-b");
+	});
+
 	it("ignores a stale shallow pair while a deeper receiver closes", () => {
 		expect(
 			resolveHandoffAttachmentCandidate({

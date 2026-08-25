@@ -79,6 +79,14 @@ export const resolveHandoffAttachmentCandidate = ({
 
 	if (
 		activeReceiverClosing &&
+		attachedReceiverScreenKey !== activeReceiverScreenKey &&
+		!currentPairHasBoundaryLink
+	) {
+		return attachedReceiverScreenKey;
+	}
+
+	if (
+		activeReceiverClosing &&
 		interpolatorReady &&
 		pairDestinationScreenKey &&
 		pairChangedDuringClose
