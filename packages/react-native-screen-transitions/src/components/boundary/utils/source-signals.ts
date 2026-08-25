@@ -1,3 +1,4 @@
+import { getLinkKeyFromTag } from "../../../stores/bounds/helpers/link-pairs.helpers";
 import type {
 	LinkPairsState,
 	ScreenPairKey,
@@ -25,8 +26,9 @@ export const getInitialSourceCaptureSignal = (params: {
 	}
 
 	const pair = linkState?.[sourcePairKey];
-	const link = pair?.links?.[linkId];
-	const hasSourceRequest = pair?.sourceRequests?.[linkId];
+	const linkKey = getLinkKeyFromTag(linkId);
+	const link = pair?.links?.[linkKey];
+	const hasSourceRequest = pair?.sourceRequests?.[linkKey];
 
 	if ((!link?.destination && !hasSourceRequest) || link?.source) {
 		return null;
@@ -37,12 +39,12 @@ export const getInitialSourceCaptureSignal = (params: {
 
 		// Passive grouped sources should not measure every mounted item. Once a
 		// group has an active id, only that concrete member can auto-capture.
-		if (activeId && activeId !== linkId) {
+		if (activeId && activeId !== linkKey) {
 			return null;
 		}
 	}
 
-	const signalParts = group ? [group, linkId] : [linkId];
+	const signalParts = group ? [group, linkKey] : [linkKey];
 
 	return {
 		pairKey: sourcePairKey,

@@ -168,6 +168,30 @@ describe("bounds client measurement contract", () => {
 		expect(measuredTargets).toEqual([{ type: "source", pairKey }]);
 	});
 
+	it("normalizes tag-form ids before passive source capture", () => {
+		const pairKey = createScreenPairKey("nested-profile", "root-media");
+		const tag = "profile-moment:image-1";
+
+		BoundStore.link.setDestination(
+			pairKey,
+			tag,
+			"root-media",
+			createBounds(),
+		);
+
+		expect(
+			getInitialSourceCaptureSignal({
+				enabled: true,
+				sourcePairKey: pairKey,
+				linkId: tag,
+				linkState: pairs.get(),
+			}),
+		).toEqual({
+			pairKey,
+			signal: `source|${pairKey}|image-1`,
+		});
+	});
+
 	it("does not request source capture for normal bounds without destination", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 
