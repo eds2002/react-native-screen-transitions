@@ -26,9 +26,9 @@ const BOUNDS_EXAMPLES = [
 	},
 	{
 		id: "matched-screen",
-		title: "Handoff portals",
+		title: "Handoff ownership overlap",
 		description:
-			"One video teleported to the matched screen while the destination slides",
+			"Spam same- and different-ID handoffs in auto or explicit mode",
 	},
 	{
 		id: "handoff-multiflow",

@@ -4,14 +4,19 @@ import { StyleSheet, Text, View } from "react-native";
 import Transition from "react-native-screen-transitions";
 import {
 	MATCHED_SCREEN_ASPECT_RATIO,
-	MATCHED_SCREEN_BOUNDARY_GROUP,
 	MATCHED_SCREEN_DETAIL_WIDTH,
 	MATCHED_SCREEN_VIDEOS,
 } from "./constants";
 
 export default function MatchedScreenPlayer() {
-	const params = useLocalSearchParams<{ id?: string | string[] }>();
+	const params = useLocalSearchParams<{
+		handoffMode?: string | string[];
+		id?: string | string[];
+	}>();
 	const id = Array.isArray(params.id) ? params.id[0] : params.id;
+	const handoffMode = Array.isArray(params.handoffMode)
+		? params.handoffMode[0]
+		: params.handoffMode;
 	const example = MATCHED_SCREEN_VIDEOS.find((video) => video.id === id);
 
 	if (!example) {
@@ -34,13 +39,17 @@ export default function MatchedScreenPlayer() {
 			<StatusBar style="dark" />
 			<View style={styles.detailContent}>
 				<Transition.Boundary
-					group={MATCHED_SCREEN_BOUNDARY_GROUP}
 					handoff
 					id={example.id}
 					style={[styles.detailVideo, receiverStyle]}
 					testID={`matched-screen-destination-${example.id}`}
 				/>
 				<Text style={styles.detailCaption}>{example.title}</Text>
+				<Text style={styles.handoffMode} testID="matched-screen-player-mode">
+					{handoffMode === "explicit"
+						? "Explicit handoff target"
+						: "Automatic handoff"}
+				</Text>
 			</View>
 		</View>
 	);
@@ -65,5 +74,11 @@ const styles = StyleSheet.create({
 		color: "#69716B",
 		fontSize: 13,
 		fontWeight: "600",
+	},
+	handoffMode: {
+		color: "#98A09A",
+		fontSize: 11,
+		fontWeight: "600",
+		textTransform: "uppercase",
 	},
 });

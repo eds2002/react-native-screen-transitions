@@ -3,37 +3,61 @@ import Transition from "react-native-screen-transitions";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
-import { MATCHED_SCREEN_BOUNDARY_GROUP } from "./constants";
+import type { MatchedScreenHandoffMode } from "./constants";
 
-function getBoundaryId(route: { params?: object } | undefined) {
+function getRouteParam(route: { params?: object } | undefined, key: string) {
 	"worklet";
-	const id = (route?.params as { id?: unknown } | undefined)?.id;
-	return typeof id === "string" ? id : "";
+	const params = route?.params as Record<string, unknown> | undefined;
+	const value = params?.[key];
+	return typeof value === "string" ? value : "";
 }
 
 const navigationZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
 	({ active, bounds, current, focused, next }) => {
 		"worklet";
 		const id =
-			getBoundaryId(active.route) ||
-			getBoundaryId(next?.route) ||
-			getBoundaryId(current.route);
+			getRouteParam(active.route, "id") ||
+			getRouteParam(next?.route, "id") ||
+			getRouteParam(current.route, "id");
 
 		if (!id) {
 			return {};
 		}
 
-		if (focused) {
-			return bounds({
-				group: MATCHED_SCREEN_BOUNDARY_GROUP,
-				id,
-			}).navigation.zoom({
-				keepFocusedVisible: true,
-				target: "bound",
-			});
+		if (!focused) {
+			return null;
 		}
 
-		return null;
+		const navigationStyles = bounds(id).navigation.zoom({
+			keepFocusedVisible: true,
+			target: "bound",
+		});
+		const handoffMode = (getRouteParam(active.route, "handoffMode") ||
+			getRouteParam(next?.route, "handoffMode") ||
+			getRouteParam(current.route, "handoffMode")) as
+			| MatchedScreenHandoffMode
+			| "";
+
+		if (handoffMode !== "explicit") {
+			return navigationStyles;
+		}
+
+		const boundarySlot = navigationStyles[id];
+
+		if (!boundarySlot) {
+			return navigationStyles;
+		}
+
+		return {
+			...navigationStyles,
+			[id]: {
+				...boundarySlot,
+				props: {
+					handoffTarget:
+						active.closing && active.progress <= 0.5 ? "source" : "destination",
+				},
+			},
+		};
 	};
 
 export default function MatchedScreenLayout() {

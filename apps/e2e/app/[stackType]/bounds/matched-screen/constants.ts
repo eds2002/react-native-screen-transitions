@@ -1,6 +1,10 @@
-export const MATCHED_SCREEN_BOUNDARY_GROUP = "video-handoff";
 export const MATCHED_SCREEN_ASPECT_RATIO = 16 / 9;
 export const MATCHED_SCREEN_DETAIL_WIDTH = 328;
+
+export const MATCHED_SCREEN_HANDOFF_MODES = ["auto", "explicit"] as const;
+
+export type MatchedScreenHandoffMode =
+	(typeof MATCHED_SCREEN_HANDOFF_MODES)[number];
 
 export const MATCHED_SCREEN_VIDEOS = [
 	{
