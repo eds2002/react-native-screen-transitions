@@ -226,6 +226,48 @@ describe("active handoff receiver", () => {
 		).toBe("player-b");
 	});
 
+	it("keeps a closing payload absent from the fresh pair until close finishes", () => {
+		const params = {
+			activeReceiverClosing: true,
+			activeReceiverScreenKey: "waterfall-media",
+			attachedReceiverScreenKey: "waterfall-media",
+			interpolatorReady: false,
+			pairChangedDuringClose: true,
+			pairDestinationScreenKey: null,
+			pairHasBoundaryLink: false,
+			previousReceiverScreenKey: "world",
+		};
+
+		expect(
+			resolveHandoffAttachmentCandidate({
+				...params,
+				hasActiveCloseFinished: false,
+			}),
+		).toBe("waterfall-media");
+		expect(
+			resolveHandoffAttachmentCandidate({
+				...params,
+				hasActiveCloseFinished: true,
+			}),
+		).toBe("world");
+	});
+
+	it("keeps a same-id closing payload while its fresh pair is incomplete", () => {
+		expect(
+			resolveHandoffAttachmentCandidate({
+				activeReceiverClosing: true,
+				activeReceiverScreenKey: "media-a",
+				attachedReceiverScreenKey: "media-a",
+				hasActiveCloseFinished: false,
+				interpolatorReady: false,
+				pairChangedDuringClose: true,
+				pairDestinationScreenKey: null,
+				pairHasBoundaryLink: true,
+				previousReceiverScreenKey: "world",
+			}),
+		).toBe("media-a");
+	});
+
 	it("ignores a stale shallow pair while a deeper receiver closes", () => {
 		expect(
 			resolveHandoffAttachmentCandidate({

@@ -165,6 +165,7 @@ export const useBoundaryContentPortalAttachment = ({
 			interpolatorReady: !!isInterpolatorReady,
 			pairChangedDuringClose,
 			pairDestinationScreenKey: pairDestination,
+			pairHasBoundaryLink: automaticLink !== undefined,
 			previousReceiverScreenKey,
 		});
 		const requestedDestinationScreenKey =
