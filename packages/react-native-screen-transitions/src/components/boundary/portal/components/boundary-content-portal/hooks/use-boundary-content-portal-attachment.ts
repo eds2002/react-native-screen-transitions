@@ -9,6 +9,10 @@ import { useBlankStackStore } from "../../../../../../providers/stack/blank-stac
 import { AnimationStore } from "../../../../../../stores/animation.store";
 import { getLinkKeyFromTag } from "../../../../../../stores/bounds/helpers/link-pairs.helpers";
 import { getEntry } from "../../../../../../stores/bounds/internals/entries";
+import {
+	getPairKeyForDestination,
+	getPairKeyForSource,
+} from "../../../../../../stores/bounds/internals/links";
 import { pairs } from "../../../../../../stores/bounds/internals/state";
 import type {
 	LinkPairState,
@@ -111,6 +115,12 @@ export const useBoundaryContentPortalAttachment = ({
 		const automaticPair = sourcePairKey ? pairs.get()[sourcePairKey] : null;
 		const boundaryLinkKey = getLinkKeyFromTag(boundaryId);
 		const automaticLink = automaticPair?.links[boundaryLinkKey];
+		const requestedSourcePairKey =
+			getPairKeyForSource(boundaryId, currentScreenKey) ?? sourcePairKey;
+		const requestedSourcePair = requestedSourcePairKey
+			? pairs.get()[requestedSourcePairKey]
+			: null;
+		const requestedSourceLink = requestedSourcePair?.links[boundaryLinkKey];
 
 		const pairDestination =
 			automaticLink?.status === "complete" &&
@@ -119,8 +129,11 @@ export const useBoundaryContentPortalAttachment = ({
 					boundaryLinkKey)
 				? automaticLink.destination.screenKey
 				: null;
-		const destinationPair = destinationPairKey
-			? pairs.get()[destinationPairKey]
+		const requestedDestinationPairKey =
+			getPairKeyForDestination(boundaryId, currentScreenKey) ??
+			destinationPairKey;
+		const destinationPair = requestedDestinationPairKey
+			? pairs.get()[requestedDestinationPairKey]
 			: null;
 		const destinationLink = destinationPair?.links[boundaryLinkKey];
 		const retainedSourcePairKey = sourcePairBeforeClose.get() ?? undefined;
@@ -134,7 +147,7 @@ export const useBoundaryContentPortalAttachment = ({
 				destinationLink,
 				boundaryLinkKey,
 			),
-			destinationPairKey,
+			destinationPairKey: requestedDestinationPairKey,
 			handoffTarget,
 			retainedSourcePairHasCompleteLink: isCompleteActiveLink(
 				retainedSourcePair,
@@ -143,11 +156,11 @@ export const useBoundaryContentPortalAttachment = ({
 			),
 			retainedSourcePairKey,
 			sourcePairHasCompleteLink: isCompleteActiveLink(
-				automaticPair,
-				automaticLink,
+				requestedSourcePair,
+				requestedSourceLink,
 				boundaryLinkKey,
 			),
-			sourcePairKey,
+			sourcePairKey: requestedSourcePairKey,
 		});
 		const requestedPair = requestedPairKey
 			? pairs.get()[requestedPairKey]
