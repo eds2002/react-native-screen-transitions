@@ -108,7 +108,7 @@ The feature moves one live payload between matching boundary hosts. It's useful 
 In particular, Android video surfaces have a trade-off:
 
 - `SurfaceView` is efficient, but it may render outside normal React Native clipping, transforms, border radii, or portal stacking.
-- `TextureView` participates in the regular view hierarchy, but it can briefly flicker when native content moves between handoff hosts.
+- `TextureView` participates in the regular view hierarchy and works with the native reparenting fast path in `react-native-teleport@1.2.0`.
 
 For Expo Video content that must clip or animate with a boundary, prefer:
 
