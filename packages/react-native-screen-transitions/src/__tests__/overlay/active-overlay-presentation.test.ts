@@ -61,24 +61,24 @@ describe("floating overlay presentation", () => {
 		expect(transitions[0]?.driverScene.route.key).toBe("B");
 	});
 
-	it("when B has no overlay, keeps A as the active overlay", () => {
+	it("keeps declared overlays in route order", () => {
 		const scenes = [createScene("A", OverlayA), createScene("B")];
 
 		expect(getFloatOverlayStack(scenes, true)).toEqual([
-			{ scene: scenes[0], overlayIndex: 0, activity: "active" },
+			{ scene: scenes[0], overlayIndex: 0 },
 		]);
 	});
 
-	it("when B starts an overlay, keeps A visible and makes B active", () => {
+	it("keeps every declared overlay when another overlay is pushed", () => {
 		const scenes = [createScene("A", OverlayA), createScene("B", OverlayB)];
 
 		expect(getFloatOverlayStack(scenes, true)).toEqual([
-			{ scene: scenes[0], overlayIndex: 0, activity: "inert" },
-			{ scene: scenes[1], overlayIndex: 1, activity: "active" },
+			{ scene: scenes[0], overlayIndex: 0 },
+			{ scene: scenes[1], overlayIndex: 1 },
 		]);
 	});
 
-	it("when C starts an overlay, hides A and keeps B visible underneath C", () => {
+	it("preserves all declared overlays without assigning presentation state", () => {
 		const scenes = [
 			createScene("A", OverlayA),
 			createScene("B", OverlayB),
@@ -86,13 +86,13 @@ describe("floating overlay presentation", () => {
 		];
 
 		expect(getFloatOverlayStack(scenes, true)).toEqual([
-			{ scene: scenes[0], overlayIndex: 0, activity: "inactive" },
-			{ scene: scenes[1], overlayIndex: 1, activity: "inert" },
-			{ scene: scenes[2], overlayIndex: 2, activity: "active" },
+			{ scene: scenes[0], overlayIndex: 0 },
+			{ scene: scenes[1], overlayIndex: 1 },
+			{ scene: scenes[2], overlayIndex: 2 },
 		]);
 	});
 
-	it("when C closes back to B, keeps C above B until C leaves", () => {
+	it("keeps a closing overlay until its route is removed", () => {
 		const scenes = [
 			createScene("A", OverlayA),
 			createScene("B", OverlayB),
@@ -101,9 +101,22 @@ describe("floating overlay presentation", () => {
 		scenes[2].activity = "closing";
 
 		expect(getFloatOverlayStack(scenes, true)).toEqual([
-			{ scene: scenes[0], overlayIndex: 0, activity: "inactive" },
-			{ scene: scenes[1], overlayIndex: 1, activity: "inert" },
-			{ scene: scenes[2], overlayIndex: 2, activity: "closing" },
+			{ scene: scenes[0], overlayIndex: 0 },
+			{ scene: scenes[1], overlayIndex: 1 },
+			{ scene: scenes[2], overlayIndex: 2 },
+		]);
+		expect(getFloatOverlayStack(scenes.slice(0, 2), true)).toEqual([
+			{ scene: scenes[0], overlayIndex: 0 },
+			{ scene: scenes[1], overlayIndex: 1 },
+		]);
+	});
+
+	it("excludes overlays explicitly hidden by their owner", () => {
+		const scenes = [createScene("A", OverlayA), createScene("B", OverlayB)];
+		scenes[1].descriptor.options.overlayShown = false;
+
+		expect(getFloatOverlayStack(scenes, true)).toEqual([
+			{ scene: scenes[0], overlayIndex: 0 },
 		]);
 	});
 
@@ -133,7 +146,7 @@ describe("floating overlay presentation", () => {
 		]);
 	});
 
-	it("with A through E overlays, keeps D visible underneath E", () => {
+	it("keeps every overlay candidate in deterministic stack order", () => {
 		const scenes = [
 			createScene("A", OverlayA),
 			createScene("B", OverlayB),
@@ -143,11 +156,11 @@ describe("floating overlay presentation", () => {
 		];
 
 		expect(getFloatOverlayStack(scenes, true)).toEqual([
-			{ scene: scenes[0], overlayIndex: 0, activity: "inactive" },
-			{ scene: scenes[1], overlayIndex: 1, activity: "inactive" },
-			{ scene: scenes[2], overlayIndex: 2, activity: "inactive" },
-			{ scene: scenes[3], overlayIndex: 3, activity: "inert" },
-			{ scene: scenes[4], overlayIndex: 4, activity: "active" },
+			{ scene: scenes[0], overlayIndex: 0 },
+			{ scene: scenes[1], overlayIndex: 1 },
+			{ scene: scenes[2], overlayIndex: 2 },
+			{ scene: scenes[3], overlayIndex: 3 },
+			{ scene: scenes[4], overlayIndex: 4 },
 		]);
 	});
 });

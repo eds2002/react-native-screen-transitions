@@ -11,10 +11,7 @@ import {
 } from "../../../providers/screen/styles/slot.provider";
 import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
 import type { OverlayProps } from "../../../types/overlay.types";
-import type {
-	FloatOverlayActivity,
-	FloatOverlayEntry,
-} from "../helpers/get-active-overlay";
+import type { FloatOverlayEntry } from "../helpers/get-active-overlay";
 import {
 	type ReadyOverlayResources,
 	retainReadyOverlayResources,
@@ -25,7 +22,6 @@ type OverlayHostProps = {
 	scene: FloatOverlayEntry["scene"];
 	driverScene: FloatOverlayEntry["scene"];
 	previousOverlayScene?: FloatOverlayEntry["scene"];
-	activity: FloatOverlayActivity;
 	layerIndex: number;
 };
 
@@ -33,7 +29,6 @@ export const OverlayHost = memo(function OverlayHost({
 	scene,
 	driverScene,
 	previousOverlayScene,
-	activity,
 	layerIndex,
 }: OverlayHostProps) {
 	const overlayAnimationStore = useOptionalScreenAnimationStore(
@@ -66,7 +61,6 @@ export const OverlayHost = memo(function OverlayHost({
 		<ReadyOverlayHost
 			scene={scene}
 			driverScene={readyResources.driverScene}
-			activity={activity}
 			layerIndex={layerIndex}
 			overlayAnimationStore={readyResources.overlayAnimationStore}
 			driverAnimationStore={readyResources.driverAnimationStore}
@@ -92,7 +86,6 @@ type ReadyOverlayHostProps = OverlayHostProps & {
 function ReadyOverlayHost({
 	scene,
 	driverScene,
-	activity,
 	layerIndex,
 	overlayAnimationStore,
 	driverAnimationStore,
@@ -147,7 +140,7 @@ function ReadyOverlayHost({
 	return (
 		<Animated.View
 			animatedProps={animatedProps}
-			pointerEvents={activity === "active" ? "box-none" : "none"}
+			pointerEvents="box-none"
 			style={[
 				styles.container,
 				styles.floating,

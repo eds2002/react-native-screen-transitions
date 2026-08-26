@@ -24,16 +24,13 @@ export function FloatOverlay() {
 
 	const overlayTransitions = getFloatOverlayTransitions(overlayStack, scenes);
 
-	return overlayTransitions.map(
-		({ scene, activity, driverScene }, layerIndex) => (
-			<OverlayHost
-				key={scene.route.key}
-				scene={scene}
-				driverScene={driverScene}
-				previousOverlayScene={overlayTransitions[layerIndex - 1]?.scene}
-				activity={activity}
-				layerIndex={layerIndex}
-			/>
-		),
-	);
+	return overlayTransitions.map(({ scene, driverScene }, layerIndex) => (
+		<OverlayHost
+			key={scene.route.key}
+			scene={scene}
+			driverScene={driverScene}
+			previousOverlayScene={overlayTransitions[layerIndex - 1]?.scene}
+			layerIndex={layerIndex}
+		/>
+	));
 }

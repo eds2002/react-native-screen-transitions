@@ -91,10 +91,6 @@ mock.module("../../providers/screen/styles/slot.provider", () => ({
 	useScreenSlotStore,
 }));
 
-mock.module("../../components/overlay/hooks/use-overlay-slot", () => ({
-	useOverlaySlot: () => ({ animatedProps: {}, animatedStyle: {} }),
-}));
-
 const { OverlayHost } = await import(
 	"../../components/overlay/variations/overlay-host"
 );
@@ -115,11 +111,16 @@ const shared = <T,>(value: T) => ({
 
 const createAnimationStore = (routeKey: string) => {
 	const screenInterpolatorProps = shared({
-			current: {
-				route: { key: routeKey, name: routeKey },
-				layouts: { screen: { width: 390, height: 844 } },
-			},
-			stackProgress: 1,
+		current: {
+			gesture: { dismissing: 0, dragging: 0, settling: 0 },
+			route: { key: routeKey, name: routeKey },
+			layouts: { screen: { width: 390, height: 844 } },
+			progress: 1,
+			settled: 1,
+			transitionProgress: 1,
+		},
+		insets: { bottom: 0, left: 0, right: 0, top: 0 },
+		stackProgress: 1,
 	});
 	const screenInterpolatorPropsRevision = shared(0);
 
@@ -214,7 +215,6 @@ describe("OverlayHost lifecycle", () => {
 		act(() => {
 			renderer = create(
 				<OverlayHost
-					activity="active"
 					driverScene={sceneA as never}
 					layerIndex={0}
 					scene={sceneA as never}
@@ -239,7 +239,6 @@ describe("OverlayHost lifecycle", () => {
 		act(() => {
 			renderer!.update(
 				<OverlayHost
-					activity="active"
 					driverScene={sceneB as never}
 					layerIndex={0}
 					scene={sceneA as never}
@@ -259,7 +258,6 @@ describe("OverlayHost lifecycle", () => {
 		act(() => {
 			renderer!.update(
 				<OverlayHost
-					activity="active"
 					driverScene={sceneB as never}
 					layerIndex={1}
 					scene={sceneA as never}
@@ -278,5 +276,37 @@ describe("OverlayHost lifecycle", () => {
 
 		act(() => renderer!.unmount());
 		expect(unmounts).toBe(1);
+	});
+
+	it("defaults the host to pointer-event pass-through", () => {
+		animationStores.clear();
+		slotStores.clear();
+
+		const scene = createScene("A", (() => null) as never);
+		animationStores.set("A", createAnimationStore("A"));
+		slotStores.set("A", createSlotStore());
+		stackState = {
+			scenes: [scene],
+			focusedIndex: 0,
+			routeKeys: ["A"],
+			routes: [scene.route],
+		};
+
+		let renderer: ReactTestRenderer;
+		act(() => {
+			renderer = create(
+				<OverlayHost
+					driverScene={scene as never}
+					layerIndex={3}
+					scene={scene as never}
+				/>,
+			);
+		});
+
+		const host = renderer!.root.findByType("AnimatedView");
+		expect(host.props.pointerEvents).toBe("box-none");
+		expect(host.props.style).toContainEqual({ zIndex: 1003 });
+
+		act(() => renderer!.unmount());
 	});
 });

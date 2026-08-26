@@ -108,11 +108,7 @@ export const useOverlaySlot = ({
 			return NO_PROPS;
 		}
 
-		const {
-			pointerEvents: _pointerEvents,
-			handoffTarget: _handoffTarget,
-			...props
-		} = slotProps;
+		const { handoffTarget: _handoffTarget, ...props } = slotProps;
 
 		return props;
 	});
