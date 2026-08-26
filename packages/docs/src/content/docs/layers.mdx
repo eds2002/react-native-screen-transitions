@@ -92,6 +92,8 @@ overlay: {
 
 Overlay adjacency is sparse. Given `A[] -> B -> C[]`, the `overlay` slot returned by `C` animates `A` and `C` as the adjacent pair. A plain screen may also return this slot to animate the latest overlay without owning one itself.
 
+All retained overlays remain rendered in route order. Use the slot's `style` and `props`, including `pointerEvents`, to control their presentation and interaction. The library does not infer an inactive overlay state.
+
 `overlay` does not inherit into nested transition scopes and must not be reused as a custom `styleId`. See [Overlays](/overlays) for the complete ownership and lifecycle contract.
 
 ## backdrop

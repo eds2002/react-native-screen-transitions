@@ -31,7 +31,7 @@ A[] -> C[] -> E[]
 
 `A` keeps floating when `B` is pushed because `B` does not replace it. When `C` is pushed, its overlay appears above `A`. The same thing happens when `E` is pushed above `C`.
 
-Once shown, an overlay stays mounted while its owning route remains in the navigation stack and `overlayShown` is not disabled. This means state inside an overlay, such as a carousel position or an in-progress interaction, does not reset when another screen is pushed. Only the top overlay accepts touches; the overlays below it remain mounted as part of the visual transition.
+Once shown, an overlay stays mounted while its owning route remains in the navigation stack and `overlayShown` is not disabled. This means state inside an overlay, such as a carousel position or an in-progress interaction, does not reset when another screen is pushed. Retained overlays remain rendered in route order; interpolated styles and pointer events control how they coexist.
 
 ## Animate overlays from the interpolator
 
