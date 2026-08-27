@@ -16,18 +16,6 @@ Customizable screen transitions for React Native. Build gesture-driven, shared e
 - Blank stack, native stack, and Expo Router integration.
 - Written in TypeScript.
 
-## Navigation Compatibility
-
-This README documents the stable v3 release.
-
-| Navigation setup | v3 status | Integration |
-| ---------------- | --------- | ----------- |
-| React Navigation 6 or 7 | Supported | Use the v3 blank stack or native-stack adapter APIs. |
-| Expo Router on Expo SDK 55 or earlier | Supported | Wrap the v3 blank stack with `withLayoutContext()`. |
-| Expo Router on Expo SDK 56 or later | Not supported by v3 | Use the [v4 alpha Expo Router integration](https://screen-transitions.esjr.org/v4-experimental/getting-started). |
-
-Expo SDK 55 is the last Expo Router release that uses the React Navigation-backed integration documented for v3. Expo Router forked the navigation packages it builds upon in SDK 56, so the v3 and SDK 56+ navigator internals cannot be mixed. See Expo's [SDK 55 to 56 migration guide](https://docs.expo.dev/router/migrate/sdk-55-to-56/) for the upstream change.
-
 ## Getting Started
 
 Install the package:
@@ -46,8 +34,6 @@ npm install react-native-reanimated react-native-gesture-handler \
 ```
 
 See [the documentation site](https://screen-transitions.esjr.org).
-
-For complete runnable projects, start with the [v3 Expo Router starter](https://github.com/eds2002/react-native-screen-transitions/tree/main/starters/expo-router), which pins the final supported Expo Router environment on Expo SDK 55, or the [v3 React Navigation starter](https://github.com/eds2002/react-native-screen-transitions/tree/main/starters/react-navigation).
 
 ## Support
 

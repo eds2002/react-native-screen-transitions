@@ -1,12 +1,12 @@
-# v3 starters
+# v4 alpha starters
 
-These are small, independent consumer apps for the stable Screen Transitions v3 release. They intentionally use the v3 package entry points and share the same detail, snap-sheet, and remote-media zoom flows.
+These are small, independent consumer apps for Screen Transitions v4. They share the same detail, snap-sheet, and remote-media zoom flows while exercising the two navigation hosts separately.
 
 | Starter | Navigation host | Integration |
 | --- | --- | --- |
-| [`expo-router`](expo-router) | Expo Router on Expo SDK 55 | `createBlankStackNavigator()` wrapped with `withLayoutContext()` |
-| [`react-navigation`](react-navigation) | Upstream React Navigation in an Expo SDK 55 app | `createBlankStackNavigator()` inside `NavigationContainer` |
+| [`expo-router`](expo-router) | Expo Router on Expo SDK 56 | `BlankStack` from `react-native-screen-transitions/expo-router` |
+| [`react-navigation`](react-navigation) | Upstream React Navigation in an Expo SDK 56 app | `createBlankStackNavigator()` from `react-native-screen-transitions/react-navigation` |
 
-The starters and the repository's v3 e2e app use SDK 55, the final Expo Router release backed by external React Navigation packages. Expo Router forks those packages in SDK 56, so SDK 56+ Expo Router projects need the separate v4 alpha integration.
+Both apps follow stock Expo SDK 56 templates. They do not rely on monorepo aliases, custom Metro resolution, a local navigator wrapper, or generated-file edits. You can start from another compatible Expo template, install the same navigation host and Screen Transitions dependencies, and use the example code unchanged.
 
-Each directory has its own dependencies so it exercises the published package as a real application would. It is not part of the repository's Bun workspace.
+Each directory has its own dependencies so it exercises the published alpha package as a real application would. The starters are not part of the repository's Bun workspace.

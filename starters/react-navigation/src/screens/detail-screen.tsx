@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import type { BlankStackScreenProps } from "react-native-screen-transitions/blank-stack";
+import type { BlankStackScreenProps } from "react-native-screen-transitions/react-navigation";
 import { ActionButton } from "../components/action-button";
 import type { RootStackParamList } from "../navigation/types";
 
@@ -17,7 +17,7 @@ export function DetailScreen({ navigation }: DetailScreenProps) {
 				<Text style={styles.eyebrow}>DETAIL TRANSITION</Text>
 				<Text style={styles.title}>Drag down to dismiss.</Text>
 				<Text style={styles.description}>
-					This screen uses the v3 SlideFromBottom preset. Replace it with your
+					This screen uses the v4 SlideFromBottom preset. Replace it with your
 					own interpolator when the product needs a distinct motion language.
 				</Text>
 			</View>

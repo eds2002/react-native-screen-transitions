@@ -2,6 +2,4 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { createDocRouteConfig } from "../components/docs/markdown-doc-page";
 
-export const Route = createFileRoute("/api")(
-	createDocRouteConfig("v3-4", "api"),
-);
+export const Route = createFileRoute("/api")(createDocRouteConfig("api"));

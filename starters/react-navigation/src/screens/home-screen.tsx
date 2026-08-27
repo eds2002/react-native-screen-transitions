@@ -1,7 +1,7 @@
 import { Image, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
-import type { BlankStackScreenProps } from "react-native-screen-transitions/blank-stack";
+import type { BlankStackScreenProps } from "react-native-screen-transitions/react-navigation";
 import { ActionButton } from "../components/action-button";
 import { MEDIA_BOUNDARY_ID, MEDIA_URL } from "../media";
 import type { RootStackParamList } from "../navigation/types";
@@ -12,7 +12,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
 	return (
 		<SafeAreaView style={styles.screen}>
 			<View>
-				<Text style={styles.eyebrow}>V3 · REACT NAVIGATION · SDK 55</Text>
+				<Text style={styles.eyebrow}>V4 ALPHA · REACT NAVIGATION · SDK 56</Text>
 				<Text style={styles.title}>A small, real starting point.</Text>
 				<Text style={styles.description}>
 					This app uses upstream React Navigation directly and keeps the

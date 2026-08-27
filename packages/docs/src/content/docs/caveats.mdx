@@ -1,19 +1,19 @@
 ---
 title: "Caveats & Trade-offs"
 pageTitle: "Caveats & Trade-offs"
-summary: "What you gain, what you give up, and which rough edges still matter in v3."
-description: "What you gain, what you give up, and which rough edges still matter in v3."
+summary: "Runtime trade-offs and integration limits to test before shipping."
+description: "Understand Blank Stack, native-stack adapter, bounds handoff, and platform trade-offs."
 eyebrow: "Guides"
 group: "Guides"
 order: 1
 to: /caveats
 ---
 
-## Native Stack Trade-offs
+## Native Stack with `withScreenTransitions`
 
-Native stack transition support is a compatibility layer.
+`withScreenTransitions` is a compatibility layer for `@react-navigation/native-stack`.
 
-Under the hood, transitioned native-stack screens are switched into `containedTransparentModal` with native animation disabled, and the transition visuals are driven from the library on top of that.
+For screens that enable transitions, the adapter switches native stack to `containedTransparentModal`, disables the native animation, and lets Screen Transitions render the animation over that container.
 
 That works, but it comes with real trade-offs:
 
@@ -21,7 +21,7 @@ That works, but it comes with real trade-offs:
 - dismissal can feel worse than blank stack because native removal and JS state synchronization are coordinated separately
 - platform-specific edge cases are more likely here than on blank stack
 
-Use native stack when you need native-stack integration. Do not choose it because you expect it to be the best place for advanced custom transitions.
+Use `withScreenTransitions` when an existing native-stack flow needs a custom transition. Use Blank Stack when the transition system should own the full presentation model.
 
 ## Blank Stack Trade-offs
 
@@ -46,24 +46,6 @@ Internal release-build testing has shown that simple settled transitions, such a
 That does not mean every benchmark will show blank stack as faster. More callback-sensitive push/pop measurements can differ because transition completion is coordinated differently, even when the visual motion feels just as smooth or smoother in practice.
 
 Choose blank stack because you want the richer transition model, gesture control, and motion flexibility. Do not choose it because you expect every timing benchmark to come out lower.
-
-### Reanimated synchronous UI-prop updates on iOS
-
-Reanimated's experimental `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` static feature flag can make Blank Stack navigation transitions noticeably slower on iOS. In a reported reproduction, enabling the flag added roughly 300 ms to each navigation transition.
-
-If Blank Stack navigation is unexpectedly slow, look for and remove this Reanimated configuration, then rebuild the native iOS app:
-
-```json
-{
-  "reanimated": {
-    "staticFeatureFlags": {
-      "IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS": true
-    }
-  }
-}
-```
-
-Static Reanimated flags are resolved at build time, so changing this configuration requires a native rebuild. This is an experimental Reanimated configuration interaction, not currently treated as a Blank Stack bug. Android has not shown the same behavior in the reported reproduction.
 
 ## Deep Linking
 
@@ -92,44 +74,3 @@ If you do want that behavior, there is an experimental escape hatch:
 ```
 
 `experimental_animateOnInitialMount` is experimental and may change.
-
-## Masking Dependency
-
-`navigationMaskEnabled` still depends on `@react-native-masked-view/masked-view`.
-
-Without that dependency, the app still runs, but navigation masking does not activate.
-
-## Live Boundary Handoff
-
-`Transition.Boundary` handoff is experimental in v3.9.
-
-The feature moves one live payload between matching boundary hosts. It's useful for video players, maps, and other stateful native content, but it also makes platform view lifecycle and compositor behavior observable.
-
-In particular, Android video surfaces have a trade-off:
-
-- `SurfaceView` is efficient, but it may render outside normal React Native clipping, transforms, border radii, or portal stacking.
-- `TextureView` participates in the regular view hierarchy and works with the native reparenting fast path in `react-native-teleport@1.2.0`.
-
-For Expo Video content that must clip or animate with a boundary, prefer:
-
-```tsx
-<VideoView
-  player={player}
-  surfaceType="textureView"
-  style={StyleSheet.absoluteFill}
-/>
-```
-
-Test live handoff on physical devices for every platform you support. Ordinary bounds transitions and `escapeClipping` do not reparent a live payload and are not covered by this experimental warning.
-
-## Compatibility
-
-The current peer-version floor is:
-
-- `@react-navigation/native >= 6.0.0`
-- `@react-navigation/native-stack >= 7.0.0` if you use native stack
-- `react-native-reanimated >= 3.16.0` or `4.x`
-- `react-native-gesture-handler >= 2.16.1`
-- `react-native-screens >= 4.4.0`
-
-If your environment is older than that, debug compatibility before you debug transitions.

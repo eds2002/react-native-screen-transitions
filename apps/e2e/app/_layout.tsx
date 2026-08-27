@@ -7,7 +7,6 @@ import Transition from "react-native-screen-transitions";
 import type { StackType } from "@/components/stack-examples/stack-routing";
 import { StackSelectionContext } from "@/components/stack-examples/stack-selection";
 import { BlankStack } from "@/layouts/blank-stack";
-import { Stack } from "@/layouts/stack";
 import { IOSSlide } from "@/lib/screen-transitions/ios-slide";
 
 LogBox.ignoreAllLogs();
@@ -16,16 +15,11 @@ const stackScreen = (name: string) => `[stackType]/${name}`;
 
 export default function RootLayout() {
 	const [stackType, setStackType] = useState<StackType>("blank-stack");
-	const StackNavigator = stackType === "native-stack" ? Stack : BlankStack;
-	// Native stack support uses transparent modals today. It is useful for one-off custom
-	// animations in an existing native-stack tree, but should move to true native
-	// animations in the next major.
-	const navigatorScreenOptions =
-		stackType === "native-stack" ? { enableTransitions: true } : undefined;
+	const StackNavigator = BlankStack;
 
 	return (
 		<StackSelectionContext.Provider value={{ stackType, setStackType }}>
-			<StackNavigator screenOptions={navigatorScreenOptions}>
+			<StackNavigator>
 				<StackNavigator.Screen name="index" />
 				<StackNavigator.Screen
 					name={stackScreen("slide-vertical")}
@@ -58,10 +52,6 @@ export default function RootLayout() {
 					}}
 				/>
 				<StackNavigator.Screen
-					name={stackScreen("shared-x-image")}
-					options={{ ...IOSSlide() }}
-				/>
-				<StackNavigator.Screen
 					name={stackScreen("detail")}
 					options={{ ...IOSSlide() }}
 				/>
@@ -82,7 +72,7 @@ export default function RootLayout() {
 					options={{
 						gestureEnabled: true,
 						gestureDirection: "vertical",
-						surfaceComponent: SquircleView,
+						contentComponent: SquircleView,
 						screenStyleInterpolator: ({ progress, active }) => {
 							"worklet";
 							return {
@@ -98,10 +88,6 @@ export default function RootLayout() {
 												),
 											},
 										],
-									},
-								},
-								surface: {
-									style: {
 										backgroundColor: "#4A90E2",
 										borderRadius: active.animating ? 48 : 0,
 										overflow: "hidden",

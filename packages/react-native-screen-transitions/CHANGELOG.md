@@ -1,153 +1,6 @@
 # Changelog
 
-## [3.13.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.13.0-beta.1...v3.13.0) (2026-08-27)
-
-### Bug Fixes
-
-* **boundary:** portal target content through handoff host ([315b730](https://github.com/eds2002/react-native-screen-transitions/commit/315b730b4d08d1f706aadcc566c7fe40998b6f1a))
-* **boundary:** retain handoffs across pair changes ([7863659](https://github.com/eds2002/react-native-screen-transitions/commit/7863659949413b3569e34219c2db46204766f941))
-
-## [3.12.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.11.2...v3.12.0) (2026-08-09)
-
-### Features
-
-* add stacked floating overlays ([3e12de0](https://github.com/eds2002/react-native-screen-transitions/commit/3e12de0b6d58324c5aaa0561b2c04d7403d121bc))
-* coordinate sparse overlay transitions ([b5be642](https://github.com/eds2002/react-native-screen-transitions/commit/b5be642b494ad3ec3a233c299d9c5ad02fc99917))
-* **types:** annotate overlay metadata ([9b940f8](https://github.com/eds2002/react-native-screen-transitions/commit/9b940f8669ec2107aa0a4a5874a635c2912e0f24))
-
-### Bug Fixes
-
-* allow consecutive programmatic dismissals ([eb5b5d2](https://github.com/eds2002/react-native-screen-transitions/commit/eb5b5d2a9d6b205c9ecc4c6dc0661590f63c1b79))
-* **overlays:** finalize slot contracts ([c0e649a](https://github.com/eds2002/react-native-screen-transitions/commit/c0e649a12b3671684668c84b89c8a20b79708cc0))
-* **overlays:** preserve route-scoped host state ([9c52a59](https://github.com/eds2002/react-native-screen-transitions/commit/9c52a59717c133fcd405b291fc2b78a8a6139cf7))
-
-### Performance Improvements
-
-* **gestures:** isolate active ownership subscriptions ([a9c4881](https://github.com/eds2002/react-native-screen-transitions/commit/a9c4881d3b69c393c6056adeafeb8f65d7811066))
-* **providers:** narrow store subscriptions ([ba67cf6](https://github.com/eds2002/react-native-screen-transitions/commit/ba67cf69e93ce7b32c438fd6fb9d275de6ae345c))
-
-## [3.11.3](https://github.com/eds2002/react-native-screen-transitions/compare/v3.11.2...v3.11.3) (2026-08-06)
-
-### Bug Fixes
-
-* **bounds:** refresh grouped boundary retargets and stabilize escaped source portals
-* **lifecycle:** unify gesture and programmatic dismissal completion
-
-### Performance Improvements
-
-* **bounds:** isolate boundary measurement lifecycle updates
-
-## [3.11.2](https://github.com/eds2002/react-native-screen-transitions/compare/v3.11.1...v3.11.2) (2026-08-03)
-
-## [3.11.1](https://github.com/eds2002/react-native-screen-transitions/compare/v3.11.0...v3.11.1) (2026-07-30)
-
-### Bug Fixes
-
-* **bounds:** correct escape clipping portals ([fc6e547](https://github.com/eds2002/react-native-screen-transitions/commit/fc6e5471aa745bf933a888b29544124dfd397f38))
-* **bounds:** pair nested boundaries by screen key ([6b80018](https://github.com/eds2002/react-native-screen-transitions/commit/6b80018da34770f5f9fc5283b0b9fd16ecf186ee))
-* **bounds:** retain requested source pair ([6379d10](https://github.com/eds2002/react-native-screen-transitions/commit/6379d1026653858f70a22e6505059e722f704f41))
-* **bounds:** stabilize initial destination linking ([4a91778](https://github.com/eds2002/react-native-screen-transitions/commit/4a917789f62f807207cea46a0a378392833b67bc))
-* **docs:** resolve Netlify workspace paths ([27b8be9](https://github.com/eds2002/react-native-screen-transitions/commit/27b8be90f288beda37aa1bfb70e81f5aa4d6b413))
-* keep outgoing screen styles live ([528a618](https://github.com/eds2002/react-native-screen-transitions/commit/528a618cb1f9587395a409f9fface6a4086c4703))
-* support React Native 0.85 absolute fill ([7d5c23d](https://github.com/eds2002/react-native-screen-transitions/commit/7d5c23dc21fd7c0988162ed6f6dfc72697be201c))
-
-## [3.11.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.10.0...v3.11.0) (2026-07-26)
-
-### ⚠ BREAKING CHANGES
-
-* remove legacy bounds registration
-
-### refactor
-
-* remove legacy bounds registration ([e124c60](https://github.com/eds2002/react-native-screen-transitions/commit/e124c6051107b4c991610ae84f31c21892a06b3f))
-
-### Features
-
-* **docs:** migrate docs site to tanstack start ([c1c3c07](https://github.com/eds2002/react-native-screen-transitions/commit/c1c3c0732b5a4cb313a35c682ad172125371eab5))
-
-### Bug Fixes
-
-* **boundary:** lazily materialize escape clipping hosts ([36be9ac](https://github.com/eds2002/react-native-screen-transitions/commit/36be9ac6d12721db6f0c44a73d27135482bbca2d))
-* **boundary:** stabilize handoff receiver lifecycle ([f1a8107](https://github.com/eds2002/react-native-screen-transitions/commit/f1a81073d1b7920693bf65d3855602614ffc33a9))
-* limit boundary refreshes to participants ([cbd3f6d](https://github.com/eds2002/react-native-screen-transitions/commit/cbd3f6d4b13ab772632cda81d0114cb44656e1f9))
-* refresh non-group boundary sources ([c98ab8f](https://github.com/eds2002/react-native-screen-transitions/commit/c98ab8fa9bfc7d76240f3ff348498e5f6eaee0d2))
-* respect inactive behavior screen options ([049120a](https://github.com/eds2002/react-native-screen-transitions/commit/049120ae0d92233242d94ff883c3e3009882787d))
-* stabilize transition styles and measurements ([fc07f5e](https://github.com/eds2002/react-native-screen-transitions/commit/fc07f5e46cbb498e674f240a0e74d65582d2b4de))
-* synchronize transition lifecycle state ([c7bbfc1](https://github.com/eds2002/react-native-screen-transitions/commit/c7bbfc199a5e2cfab88b326bc845dd9910fcf4d2))
-
-### Performance Improvements
-
-* stabilize screen render subscriptions ([5493446](https://github.com/eds2002/react-native-screen-transitions/commit/54934467faf5d42f6704b720780d454f426033df))
-
-## [3.10.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.9.0...v3.10.0) (2026-07-24)
-
-### Features
-
-* internal system progress ([a254539](https://github.com/eds2002/react-native-screen-transitions/commit/a25453981d4f2eec389a9bfc04a608a565057c68))
-
-### Bug Fixes
-
-* anchor portal clone and masks to the physical left edge in RTL ([e0a090a](https://github.com/eds2002/react-native-screen-transitions/commit/e0a090a36d16217b225cd30b3fb90635f5723f74))
-* **bounds:** avoid refreshes during gestures ([fbf5bb4](https://github.com/eds2002/react-native-screen-transitions/commit/fbf5bb4ce6581eada9c8f8f43a8fa2e9426f040c))
-* **gestures:** resume interrupted pinch transitions ([c25efa6](https://github.com/eds2002/react-native-screen-transitions/commit/c25efa618e6255e2f064403322078e78b2b598f3))
-* preserve destination press ownership ([ebb9b40](https://github.com/eds2002/react-native-screen-transitions/commit/ebb9b40307274c80d40ee3767269fb0297d4e83e))
-* preserve source layout after handoff ([e52f382](https://github.com/eds2002/react-native-screen-transitions/commit/e52f3820f7c857cb32b0c5662e596f9f970824ff))
-* src not teleporting to portal host when escapeClipping is true ([b6cdb91](https://github.com/eds2002/react-native-screen-transitions/commit/b6cdb91eb5cb23b0baee52c321b573aae0a99ef6))
-* synchronize boundary handoff lifecycle ([30e98fe](https://github.com/eds2002/react-native-screen-transitions/commit/30e98fe593705ff575b2cb8a2e987ba3bac1606b))
-* synchronize boundary portal geometry ([297291a](https://github.com/eds2002/react-native-screen-transitions/commit/297291ab79d049f27919c483208f698c7dcd4110))
-* synchronize boundary visual completion ([1fee214](https://github.com/eds2002/react-native-screen-transitions/commit/1fee21463a7498fe25fe312324305f5bf6989ba4))
-* track source scroll during zoom transitions ([647c8ce](https://github.com/eds2002/react-native-screen-transitions/commit/647c8ce7ed4eea76a9344858f6db8d402011d307))
-
-### Performance Improvements
-
-* **boundary:** reduce portal mount work ([333096d](https://github.com/eds2002/react-native-screen-transitions/commit/333096db73b984739e9211e65cd7d78e84ceadfe))
-* **zoom:** improve navigation performance ([2c4a60a](https://github.com/eds2002/react-native-screen-transitions/commit/2c4a60af404aa6f0c9697cb700b719ad66084202))
-
-## [3.9.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.8.0...v3.9.0) (2026-07-21)
-
-v3.9 focuses on more predictable bounds transitions, a native-style navigation zoom, and experimental live-content handoff.
-
-### Features
-
-* **Navigation zoom:** rebuilt `bounds(id).navigation.zoom()` with aspect-ratio-preserving implicit targets and explicit matched-bound targets, native-style opacity and masking, directional drag response, pinch and rotation handling, and source aspect-ratio tracking. Added `Transition.Specs.Zoom` as the tuned open-and-close spring preset.
-* **Boundary API:** unified passive and pressable boundaries under `Transition.Boundary`, retained `Transition.Boundary.Target` for nested measurement, added `Transition.Boundary.Host` for explicit portal placement, and kept `Transition.Boundary.View` and `Transition.Boundary.Trigger` as deprecated aliases.
-* **Live-content handoff:** added experimental `handoff` support for moving one live payload, including video and other native-backed content, between matching boundaries without remounting it.
-* **Clipping:** added `escapeClipping` so boundary content can animate outside local clipping constraints without requiring a matching destination boundary.
-* **Transition readiness:** added reference-counted `blockTransition()` and `unblockTransition()` helpers that hold a pending transition at its initial frame until destination work is ready. These helpers coordinate visual timing; they do not optimize or move rendering work.
-* **Scoped bounds:** added `bounds(id).styles()`, `.values()`, `.link()`, `.navigation.zoom()`, and `.navigation.reveal()`, plus a `motion` resolver for custom arcs, depth, rotation, and overshoot paths.
-* **Layer components:** added `contentComponent` for custom screen-content renderers and render props for `backdropComponent`. `surfaceComponent` remains available but is deprecated in favor of `contentComponent`.
-* **Gestures:** exposed the fixed pinch activation point through `gesture.pinchOriginX` and `gesture.pinchOriginY` for custom pinch-and-rotate interpolation.
-* **Interpolator progress:** exposed combined `transitionProgress` alongside `progress`, without live gesture contribution.
-
-### Bug Fixes
-
-* Fixed `withScreenTransitions` adapter crashes when a per-screen `layout` or group `screenLayout` replaced the adapter's `ScreenAnimationProvider`; custom layouts are now composed inside the transition layout ([#131](https://github.com/eds2002/react-native-screen-transitions/issues/131)).
-* Improved bounds measurement and retargeting when destinations move, resize, transform, or change across nested screens.
-* Stabilized portal ownership, placeholder sizing, scroll offsets, and destination readiness to reduce handoff flicker, blank frames, and layout pops.
-* Preserved resolved endpoint transforms and local boundary transforms throughout generated bounds styles.
-* Waited for destination layout and interpolator readiness before applying next-screen styles, preventing early-frame jumps and stale animated styles.
-
-### Performance Improvements
-
-* Moved stack progress derivation to the stack root to avoid redundant per-screen work.
-
-### Breaking Changes
-
-The bounds interpolator now scopes to one boundary identity before producing output. Code using the v3.8 store-shaped helpers must migrate to the scoped accessor:
-
-* Replace `bounds({ id, group, ...options })` with `bounds({ id, group }).styles(options)`.
-* Replace raw numeric geometry with `.values(options)`, and replace `BoundsLink.compute()` with `.styles(options)` or `.values(options)` as appropriate.
-* Replace `bounds.getLink(id)`, `getMeasured()`, and `getSnapshot()` with `bounds(id).link()` and inspect the active source or destination entry.
-* Replace `interpolateBounds()` and `interpolateStyle()` with `.values()` or `.styles()`. For scalar-property interpolation, read the active link and interpolate its numeric values directly.
-* The old screen-key overloads have no direct replacement. Matching `id` and `group` values now resolve against the active navigation pair.
-
-Legacy zoom opacity, sensitivity, velocity-depth, gesture-progress, debug, and directional drag-tuple options remain type-compatible but are ignored. Use `drag.translation` and `drag.scale` for directional response tuning.
-
-See [New in 3.9](https://screen-transitions.esjr.org/changelog/updating-to-3-9) for the full migration table and examples.
-
-### Optional Teleport Dependency
-
-`handoff` and `escapeClipping` use `react-native-teleport`. Install `react-native-teleport@1.1.10` when using either feature. The supported range is `>=1.1.0 <1.1.11`; the dependency remains optional for apps that do not use these features. `handoff` remains experimental in v3.9, particularly for native-backed views such as Android video surfaces.
+## [4.0.0](https://github.com/eds2002/react-native-screen-transitions/compare/v4.0.0-alpha.10...v4.0.0) (2026-08-27)
 
 ## [3.8.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.8.0-beta.1...v3.8.0) (2026-06-21)
 
@@ -158,6 +11,12 @@ See [New in 3.9](https://screen-transitions.esjr.org/changelog/updating-to-3-9) 
 * mount ScreenOptionsProvider in FloatOverlay ([#125](https://github.com/eds2002/react-native-screen-transitions/issues/125)) ([c2f0124](https://github.com/eds2002/react-native-screen-transitions/commit/c2f0124bd1e586d22f89230dbc137b29742461e1))
 
 ## [Unreleased](https://github.com/eds2002/react-native-screen-transitions/compare/v3.7.1...HEAD)
+
+
+### Breaking Changes
+
+* **blank-stack:** remove the non-functional `independent` navigator prop and `BlankStackFactoryOptions` export. Remove the prop from navigator configuration; isolated embedded flows must create their navigation boundary explicitly outside Blank Stack.
+* **presets:** remove `SharedIGImage`, `SharedAppleMusic`, and `SharedXImage`. Use `bounds(id).navigation.zoom()` for the standard source-to-destination path, or compose a custom interpolator with the scoped Bounds helpers.
 
 
 ### Features

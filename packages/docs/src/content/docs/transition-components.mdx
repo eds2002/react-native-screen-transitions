@@ -1,64 +1,17 @@
 ---
 title: "Transition Components"
 pageTitle: "Transition Components"
-summary: "Transition primitives, boundary components, presets, and specs."
-description: "Transition primitives, boundary components, presets, and specs."
+summary: "Transition-aware React Native primitives and their shared element identity prop."
+description: "Use transition-aware View, Pressable, ScrollView, and FlatList components."
 eyebrow: "Components"
 group: "Components"
-order: 4
+order: 1
 to: /transition-components
 ---
 
-## Package Surface
-
-`react-native-screen-transitions` exposes four main API surfaces:
-
-- navigator creators from subpaths
-- adapter helpers for existing navigators
-- the default `Transition` export from the main package
-- named hooks, helpers, constants, and types from the main package
-
-```tsx
-import Transition, {
-  withScreenTransitions,
-  snapTo,
-  type ScreenStyleInterpolator,
-  type ScreenTransitionConfig,
-} from "react-native-screen-transitions";
-
-import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
-```
-
-Use the blank-stack subpath export to build the recommended navigator. Use `withScreenTransitions()` to adapt existing native-stack navigators. Use `Transition` for transition-aware primitives, boundary components, presets, and specs.
-
-For hooks and factories such as `useScreenAnimation()`, `useScreenGesture()`, `createTransitionAwareComponent()`, and `createBoundaryComponent()`, see [API](/api).
-
-## Navigator Creators
-
-`createBlankStackNavigator()`
-
-```tsx
-const Stack = createBlankStackNavigator();
-
-<Stack.Navigator>
-  <Stack.Screen name="Home" component={HomeScreen} />
-  <Stack.Screen
-    name="Detail"
-    component={DetailScreen}
-    options={{
-      ...Transition.Presets.SlideFromBottom(),
-    }}
-  />
-</Stack.Navigator>
-```
-
-All transition configuration still lives on screen `options`.
-
-Related reading: [Stack Types](/stack-types) and [Adapters](/adapters).
-
 ## Transition-Aware Primitives
 
-The default `Transition` export wraps common React Native primitives so they can receive slot-driven styles and participate in bounds measurement.
+The default `Transition` export wraps common React Native primitives so they can receive slot-driven styles. Scrollable primitives also coordinate navigation gestures and publish scroll metadata.
 
 ### Transition.View
 
@@ -102,179 +55,23 @@ This gives list content the same gesture-aware scroll behavior.
 />
 ```
 
-Use transition-aware scrollables inside sheets and other gesture-driven screens whenever possible. Custom scrollables can opt into the same behavior with `Transition.createTransitionAwareComponent(Component, { isScrollable: true })`.
+Use transition-aware scrollables inside sheets and other gesture-driven screens whenever possible.
 
 ### Common Primitive Props
 
-- `styleId` for element targeting from `screenStyleInterpolator`
-
-## Boundary Components
-
-`Transition.Boundary` is the compound API for bounds-driven transitions.
-
-- `Transition.Boundary`
-- `Transition.Boundary.Target`
-- `Transition.Boundary.Host`
-
-### Transition.Boundary
-
-Use this for both pressable and passive boundary registration.
-
-When `onPress` is present, it renders as a pressable boundary. When `onPress` is omitted, it renders as a passive view boundary.
+- Each primitive keeps the props of its React Native component.
+- `styleId` identifies the element targeted by a matching key from `screenStyleInterpolator`.
 
 ```tsx
-// Passive boundary
-<Transition.Boundary id="hero">
-  <Image source={heroImage} style={styles.hero} />
-</Transition.Boundary>
+screenStyleInterpolator: ({ progress }) => {
+  "worklet";
 
-// Pressable boundary
-<Transition.Boundary
-  id="hero"
-  onPress={() => navigation.navigate("Detail")}
->
-  <Image source={heroImage} style={styles.hero} />
-</Transition.Boundary>
-```
-
-This is the default recommendation for new code.
-
-### Transition.Boundary.Target
-
-Use this when the measured element is nested inside the owner.
-
-```tsx
-<Transition.Boundary id={item.id} onPress={openItem} style={styles.row}>
-  <Transition.Boundary.Target style={styles.artTarget}>
-    <Image source={item.image} style={styles.artwork} />
-  </Transition.Boundary.Target>
-
-  <View style={styles.copy}>
-    <Text>{item.title}</Text>
-  </View>
-</Transition.Boundary>
-```
-
-It does not take its own `id`. It inherits the surrounding boundary owner and changes which descendant gets measured.
-
-### Transition.Boundary.Host
-
-Use this to make handoff or clipping-escape placement explicit inside a scrollable or otherwise constrained coordinate space.
-
-```tsx
-<Transition.ScrollView>
-  <Transition.Boundary.Host />
-
-  <Transition.Boundary id="card" escapeClipping onPress={openCard}>
-    <Image source={image} style={styles.card} />
-  </Transition.Boundary>
-</Transition.ScrollView>
-```
-
-Most flows do not need an explicit host. Add one when `escapeClipping` or `handoff` content should be placed inside a specific local coordinate space.
-
-### Deprecated Aliases
-
-`Transition.Boundary.View` and `Transition.Boundary.Trigger` are still exported for compatibility.
-
-```tsx
-// Deprecated. Use Transition.Boundary without onPress.
-<Transition.Boundary.View id="hero" />
-
-// Deprecated. Use Transition.Boundary with onPress.
-<Transition.Boundary.Trigger id="hero" onPress={openDetail} />
-```
-
-### Boundary Config Props
-
-`Transition.Boundary`, deprecated boundary aliases, and components created with `createBoundaryComponent()` share the same boundary config:
-
-- `id`
-- `group`
-- `anchor`
-- `scaleMode`
-- `target`
-- `method`
-- `enabled`
-- `handoff`
-- `escapeClipping`
-
-They keep the wrapped component props as well. The root `Transition.Boundary` accepts `onPress` for pressable usage.
-
-## Presets and Specs
-
-The default export also includes `Transition.Presets` and `Transition.Specs`.
-
-Preset builders:
-
-- `SlideFromTop()`
-- `SlideFromBottom()`
-- `ZoomIn()`
-- `DraggableCard()`
-- `ElasticCard()`
-- `SharedIGImage()`
-- `SharedAppleMusic()`
-- `SharedXImage()`
-
-Specs:
-
-- `Transition.Specs.DefaultSpec`
-- `Transition.Specs.DefaultSnapSpec`
-- `Transition.Specs.FlingSpec`
-- `Transition.Specs.Zoom` (paired open and close springs for `navigation.zoom()`)
-
-```tsx
-<Stack.Screen
-  name="Detail"
-  component={DetailScreen}
-  options={{
-    transitionSpec: Transition.Specs.Zoom,
-    screenStyleInterpolator: ({ bounds }) => {
-      "worklet";
-      return bounds("hero").navigation.zoom();
+  return {
+    "hero-title": {
+      style: { opacity: progress },
     },
-  }}
-/>
+  };
+};
 ```
 
-## Transition Start Blocking
-
-`blockTransition()` and `unblockTransition()` are named exports that hold a screen's pending lifecycle transition at its initial frame while the destination prepares work.
-
-```tsx
-import {
-  blockTransition,
-  unblockTransition,
-} from "react-native-screen-transitions";
-
-async function prepareForTransition(routeKey: string) {
-  blockTransition(routeKey);
-
-  try {
-    await prepareDestination();
-  } finally {
-    unblockTransition(routeKey);
-  }
-}
-```
-
-Blocking is reference-counted per route. Pair every call with one unblock for the same route. Passing a route key is the clearest option; when it is omitted, the most recently focused screen in navigation history is used.
-
-These functions affect when the animation starts. They do not reduce JavaScript work, move rendering to another thread, or improve actual runtime performance. Use them when delaying the visual transition produces a cleaner result than animating while the destination is still preparing.
-
-## Hooks, Factories, and Helpers
-
-See [API](/api) for `useScreenAnimation()`, `useScreenGesture()`, `useHistory()`, `createTransitionAwareComponent()`, `createBoundaryComponent()`, `snapTo()`, and reserved mask ids.
-
-## Legacy Compatibility
-
-`Transition.MaskedView` is still exported for legacy masked-view flows.
-
-Prefer:
-
-- screen options on one of the stack creators
-- `Transition.Boundary`
-- `navigationMaskEnabled`
-- `styleId` targets and layer slots
-
-Related reading: [Stack Types](/stack-types), [Custom Animations](/custom-animations), [Layers](/surface-slots), and [Bounds Transitions](/shared-elements).
+Related reading: [Boundary Components](/boundary-components), [Custom Animations](/custom-animations), and [Layers](/layers).

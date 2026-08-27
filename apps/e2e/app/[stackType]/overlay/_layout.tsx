@@ -23,7 +23,6 @@ export default function OverlayPlaygroundLayout() {
 					...overlayIOSSlideOptions,
 					gestureEnabled: false,
 					overlay: OverlayA,
-					overlayMode: "float",
 					overlayShown: true,
 				}}
 			/>
@@ -38,7 +37,6 @@ export default function OverlayPlaygroundLayout() {
 				options={{
 					...overlayIOSSlideOptions,
 					overlay: OverlayC,
-					overlayMode: "float",
 					overlayShown: true,
 				}}
 			/>
@@ -53,7 +51,6 @@ export default function OverlayPlaygroundLayout() {
 				options={{
 					...overlayIOSSlideOptions,
 					overlay: OverlayE,
-					overlayMode: "float",
 					overlayShown: true,
 				}}
 			/>

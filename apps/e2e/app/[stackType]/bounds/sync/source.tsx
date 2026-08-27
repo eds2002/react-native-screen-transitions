@@ -79,7 +79,7 @@ export default function BoundsSyncSource() {
 				{source.description}
 			</Text>
 			<View style={styles.arena}>
-				<Transition.Boundary.View
+				<Transition.Boundary
 					id={BOUNDARY_TAG}
 					method={sourceMethod}
 					target={sourceBoundary?.target}
@@ -98,7 +98,7 @@ export default function BoundsSyncSource() {
 					<Text style={[styles.boxLabel, { color: theme.actionButtonText }]}>
 						SRC
 					</Text>
-				</Transition.Boundary.View>
+				</Transition.Boundary>
 
 				{!needsExplicitMode && (
 					<View

@@ -20,7 +20,11 @@ export const MAESTRO_STYLE_RESET_ID = "style-reset";
 export const activeMaestroStyleCaseId = makeMutable("style-id-override");
 
 export function slideOptions(
-	direction: "horizontal" | "horizontal-inverted" | "vertical" | "vertical-inverted",
+	direction:
+		| "horizontal"
+		| "horizontal-inverted"
+		| "vertical"
+		| "vertical-inverted",
 	config: Partial<ScreenTransitionConfig> = {},
 ): ScreenTransitionConfig {
 	const isHorizontal =
@@ -100,15 +104,21 @@ export function sheetOptions({
 	backdropBehavior,
 	customBackdrop = false,
 	gestureSnapLocked,
+	sheetSnapBehavior,
 	sheetScrollGestureBehavior,
 	gestureDirection,
 }: {
-	direction?: "vertical" | "vertical-inverted" | "horizontal" | "horizontal-inverted";
+	direction?:
+		| "vertical"
+		| "vertical-inverted"
+		| "horizontal"
+		| "horizontal-inverted";
 	snapPoints?: SnapPoint[];
 	initialSnapIndex?: number;
 	backdropBehavior?: ScreenTransitionConfig["backdropBehavior"];
 	customBackdrop?: boolean;
 	gestureSnapLocked?: boolean;
+	sheetSnapBehavior?: ScreenTransitionConfig["sheetSnapBehavior"];
 	sheetScrollGestureBehavior?: ScreenTransitionConfig["sheetScrollGestureBehavior"];
 	gestureDirection?: ScreenTransitionConfig["gestureDirection"];
 } = {}): ScreenTransitionConfig {
@@ -126,6 +136,7 @@ export function sheetOptions({
 		backdropBehavior,
 		backdropComponent: customBackdrop ? BlurView : undefined,
 		gestureSnapLocked,
+		sheetSnapBehavior,
 		sheetScrollGestureBehavior,
 		screenStyleInterpolator: ({
 			progress,
@@ -257,16 +268,6 @@ export const styleResetSourceOptions: ScreenTransitionConfig = {
 						},
 					},
 				};
-			case "surface-slot":
-				return {
-					surface: {
-						style: {
-							backgroundColor: "transparent",
-							borderRadius: 16,
-							overflow: "hidden",
-						},
-					},
-				};
 			default:
 				return {};
 		}
@@ -321,16 +322,6 @@ export const styleResetDestinationOptions: ScreenTransitionConfig = {
 						style: {
 							opacity: interpolate(progress, [0, 1], [1, 0.72], "clamp"),
 							transform: [{ scale: 0.94 }],
-						},
-					},
-				};
-			case "surface-slot":
-				return {
-					surface: {
-						style: {
-							backgroundColor: "rgba(15, 23, 42, 0.2)",
-							borderRadius: 36,
-							overflow: "hidden",
 						},
 					},
 				};

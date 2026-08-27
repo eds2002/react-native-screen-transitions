@@ -6,11 +6,9 @@ import {
 	flatDocs,
 	getDocArticleId,
 	getDocsGroups,
-	getDocVersion,
 } from "../../lib/docs";
 import { HeaderThemeToggle } from "../ui/header-theme-toggle";
 import { OnThisPage } from "./on-this-page";
-import { VersionDropdown } from "./version-dropdown";
 
 const githubStarsLabel = "1.4k";
 
@@ -381,8 +379,7 @@ export function DocsShell({ children }: { children: ReactNode }) {
 			select: (state) => state.location.pathname,
 		}) ?? "/";
 	const currentDoc = findDoc(pathname);
-	const currentVersion = getDocVersion(currentDoc.versionId);
-	const groups = getDocsGroups(currentVersion.id);
+	const groups = getDocsGroups();
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 	const [searchOpen, setSearchOpen] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
@@ -399,7 +396,7 @@ export function DocsShell({ children }: { children: ReactNode }) {
 		const terms = normalizedQuery.split(/\s+/).filter(Boolean);
 
 		return flatDocs
-			.filter((doc) => doc.versionId === currentVersion.id && !doc.hidden)
+			.filter((doc) => !doc.hidden)
 			.map((doc) => ({
 				doc,
 				score: getSearchScore(doc, terms, searchTextByModulePath),
@@ -414,7 +411,7 @@ export function DocsShell({ children }: { children: ReactNode }) {
 			})
 			.slice(0, 8)
 			.map((entry) => entry.doc);
-	}, [currentVersion.id, searchQuery, searchTextByModulePath]);
+	}, [searchQuery, searchTextByModulePath]);
 
 	useEffect(() => {
 		if (!searchOpen || Object.keys(searchTextByModulePath).length > 0) {
@@ -494,12 +491,12 @@ export function DocsShell({ children }: { children: ReactNode }) {
 						<Link to="/" className="flex items-center justify-center">
 							<LogoMark />
 						</Link>
-						<div className="min-w-0">
-							<VersionDropdown
-								value={currentVersion.id}
-								currentSlug={currentDoc.slug}
-							/>
-						</div>
+						<Link
+							to="/"
+							className="truncate text-sm font-medium text-neutral-700 dark:text-neutral-300"
+						>
+							Screen Transitions
+						</Link>
 					</div>
 					<div className="flex items-center gap-2 sm:gap-3">
 						<HeaderSearch onClick={() => setSearchOpen(true)} />
@@ -560,7 +557,6 @@ export function DocsShell({ children }: { children: ReactNode }) {
 
 							<div className="mt-12 px-5 pb-10 ">
 								<MobileDocsNavigation
-									key={currentVersion.id}
 									groups={groups}
 									onNavigate={() => setMobileMenuOpen(false)}
 								/>
@@ -573,7 +569,7 @@ export function DocsShell({ children }: { children: ReactNode }) {
 			<div className="mx-auto max-w-400 lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-12 xl:grid-cols-[280px_minmax(0,1fr)_220px]">
 				<aside className="hidden lg:sticky lg:top-21 lg:block lg:h-[calc(100dvh-84px)] lg:self-start lg:overflow-y-auto lg:overscroll-contain scrollbar-none">
 					<div className="px-8">
-						<DocsNavigation key={currentVersion.id} groups={groups} />
+						<DocsNavigation groups={groups} />
 					</div>
 				</aside>
 
@@ -583,9 +579,7 @@ export function DocsShell({ children }: { children: ReactNode }) {
 
 				<aside className="scrollbar-none hidden xl:sticky xl:top-21 xl:block xl:h-[calc(100dvh-84px)] xl:self-start xl:overflow-y-auto xl:overscroll-contain">
 					<div className="px-8 py-10">
-						<OnThisPage
-							articleId={getDocArticleId(currentDoc.versionId, currentDoc.slug)}
-						/>
+						<OnThisPage articleId={getDocArticleId(currentDoc.slug)} />
 					</div>
 				</aside>
 			</div>

@@ -53,7 +53,7 @@ export default function OpeningTransformBoundsIndex() {
 						</Text>
 					</View>
 
-					<Transition.Boundary.Trigger
+					<Transition.Boundary
 						id={OPENING_TRANSFORM_BOUNDARY_ID}
 						testID="opening-transform-open"
 						style={[
@@ -79,7 +79,7 @@ export default function OpeningTransformBoundsIndex() {
 						>
 							Shared element source
 						</Text>
-					</Transition.Boundary.Trigger>
+					</Transition.Boundary>
 				</View>
 			</View>
 		</SafeAreaView>

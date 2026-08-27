@@ -10,7 +10,7 @@ import remarkGfm from "remark-gfm";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { defineConfig, type Plugin } from "vite";
 
-import { remarkCodeBlockProps } from "./src/lib/remark-code-block-props";
+import { remarkCodeBlockProps } from "./src/lib/remark-code-block-props.js";
 
 const mdxPlugin = mdx({
 	remarkPlugins: [
@@ -89,12 +89,6 @@ export default defineConfig({
 			include: /\.(mdx|js|jsx|ts|tsx)$/,
 		}),
 		tailwindcss(),
-		netlify({
-			dev: {
-				// The production SSR handler is generated in this directory during a
-				// build. Do not let a previous build intercept Vite's dev server.
-				functions: { enabled: false },
-			},
-		}),
+		netlify(),
 	],
 });

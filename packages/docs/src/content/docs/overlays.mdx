@@ -3,9 +3,9 @@ title: "Overlays"
 pageTitle: "Overlays"
 summary: "Use screen overlays as persistent, stack-relative UI with their own sparse transition order."
 description: "Use screen overlays as persistent, stack-relative UI with their own sparse transition order."
-eyebrow: "Components"
-group: "Components"
-order: 1
+eyebrow: "Core Concepts"
+group: "Core Concepts"
+order: 11
 to: /overlays
 ---
 
@@ -44,7 +44,21 @@ A[] -> C[] -> E[]
 
 Pushing `B` leaves `A` floating in place. Pushing `C` mounts `C` above `A`, and pushing `E` mounts `E` above `C`. Screens without overlays do not create gaps in the overlay transition order.
 
-An overlay mounts once and keeps its component state until its owner leaves the navigation stack or `overlayShown` becomes `false`. The top overlay accepts touches. The overlay directly below it can remain visible for the transition, but it is inert; older overlays stay mounted and inactive.
+An overlay mounts once and keeps its component state until its owner leaves the navigation stack or `overlayShown` becomes `false`. Every retained overlay remains rendered in route order.
+
+The library owns overlay discovery, ordering, transition drivers, stack context, and deterministic layer order. Your overlay interpolator owns visibility, pointer events, modal behavior, coexistence, and transition styling. Hosts default to `pointerEvents="box-none"`, so the host itself passes touches through while interactive children continue to work.
+
+Use interpolated props when an overlay should stop receiving touches:
+
+```tsx
+overlay: {
+  props: {
+    pointerEvents: "none",
+  },
+}
+```
+
+Use `overlayShown: false` when the overlay should not be rendered at all.
 
 ## Basic Example
 
@@ -64,7 +78,7 @@ An overlay mounts once and keeps its component state until its owner leaves the 
 </Stack.Navigator>
 ```
 
-Here, `OverlayA` remains above `B`. When `C` is pushed, `OverlayC` becomes active above `OverlayA`.
+Here, `OverlayA` remains above `B`. When `C` is pushed, `OverlayC` is ordered above `OverlayA`; the interpolator decides how the two overlays coexist visually and interactively.
 
 ## Animate the Overlay Stack
 
@@ -122,6 +136,8 @@ Do not use `overlay` as a custom `styleId`. It is a non-inheriting layer slot, l
 
 An overlay can outlive the moment when its owner was focused, so its props separate stable owner information from changing navigator information.
 
+<PropertyTable>
+
 | Prop | Purpose |
 | --- | --- |
 | `route` | Route that owns the overlay |
@@ -133,6 +149,8 @@ An overlay can outlive the moment when its owner was focused, so its props separ
 | `options` | Transition options from the focused screen |
 | `navigation` | Navigation object for the overlay owner's navigator |
 | `progress` | Stack progress relative to the overlay owner |
+
+</PropertyTable>
 
 An undecided interactive dismissal keeps the current route focused. Once the dismissal commits, `focusedRoute`, `focusedIndex`, `meta`, and `options` switch to the screen underneath while the closing screen finishes animating. A cancelled gesture leaves them unchanged.
 

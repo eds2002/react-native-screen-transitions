@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import type { InactiveBehavior } from "react-native-screen-transitions/blank-stack";
+import type { InactiveBehavior } from "react-native-screen-transitions";
 import {
 	buildStackPath,
 	useResolvedStackType,

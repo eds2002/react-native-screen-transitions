@@ -5,6 +5,7 @@ summary: "v3.10 makes Boundary handoff, escape clipping, navigation zoom, and ge
 description: "v3.10 makes Boundary handoff, escape clipping, navigation zoom, and gesture-driven transitions more reliable and much lighter to mount."
 eyebrow: "Changelogs"
 group: "Changelogs"
+version: "v3"
 hidden: true
 changelogDate: "July 2026"
 order: 1
@@ -30,8 +31,6 @@ The public setup is unchanged: every matching boundary in a handoff chain still 
 When a boundary moves from A to B, B becomes the active receiving location for the live payload. If B closes, the payload returns to its measured source location at the end of B's visual close rather than at an arbitrary React lifecycle point.
 
 This improves rapid A → B → A → B flows, preserves source placeholder sizing, and avoids a class of blank frames and premature returns.
-
-`handoff` remains experimental, particularly for native-backed Android views. The existing [live handoff caveats](/caveats#live-boundary-handoff) still apply to video surfaces and other platform-composited content.
 
 ## Smoother escape clipping
 

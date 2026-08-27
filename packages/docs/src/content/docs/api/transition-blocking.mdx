@@ -1,0 +1,33 @@
+---
+title: "Transition Blocking"
+pageTitle: "Transition Blocking"
+summary: "Hold a pending lifecycle transition until its destination is ready."
+description: "Use blockTransition and unblockTransition to control when a pending transition starts."
+eyebrow: "API"
+group: "API"
+order: 8
+to: /api/transition-blocking
+---
+
+`blockTransition()` holds a screen's pending lifecycle transition at its initial frame. `unblockTransition()` releases one block.
+
+```tsx
+import {
+  blockTransition,
+  unblockTransition,
+} from "react-native-screen-transitions";
+
+async function prepareForTransition(routeKey: string) {
+  blockTransition(routeKey);
+
+  try {
+    await prepareDestination();
+  } finally {
+    unblockTransition(routeKey);
+  }
+}
+```
+
+Calls are reference-counted per route. Pair every block with one unblock for the same route. When `routeKey` is omitted, both functions resolve the most recently focused screen in navigation history.
+
+Blocking changes when the animation starts. It does not reduce JavaScript work or move rendering to another thread.

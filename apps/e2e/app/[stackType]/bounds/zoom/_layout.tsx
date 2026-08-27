@@ -28,7 +28,7 @@ const navigationZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolato
 		const navigationStyles = bounds({
 			id,
 			group: ZOOM_GROUP,
-		}).navigation.zoom();
+		}).navigation.zoom({ target: "bound" });
 
 		return {
 			...navigationStyles,
@@ -56,7 +56,6 @@ export default function NavigationZoomGroupTransitionsLayout() {
 					gestureEnabled: true,
 					gestureDirection: ["bidirectional", "pinch-in"],
 					gestureReleaseVelocityScale: 1.6,
-					gestureProgressMode: "freeform",
 					screenStyleInterpolator: navigationZoomInterpolator,
 					transitionSpec: Transition.Specs.Zoom,
 				}}

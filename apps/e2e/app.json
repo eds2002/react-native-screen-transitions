@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "scheme": "e2e",
     "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.eds2002.e2e",
@@ -15,6 +16,7 @@
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE"
       },
+      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.eds2002.e2e"
     },
@@ -24,9 +26,7 @@
     "plugins": [
       "expo-router",
       "expo-video",
-      "expo-web-browser",
-      "expo-font",
-      "expo-image"
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

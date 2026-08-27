@@ -214,7 +214,7 @@ export default function StyleIdBoundsIndex() {
 					{BOARDS.map((item) => {
 						const tag = `shared-image-${item.id}`;
 						return (
-							<Transition.Boundary.Trigger
+							<Transition.Boundary
 								key={tag}
 								testID={tag}
 								style={[styles.gridCell, { width: gridCellWidth }]}
@@ -248,7 +248,7 @@ export default function StyleIdBoundsIndex() {
 										{item.subtitle}
 									</Text>
 								</View>
-							</Transition.Boundary.Trigger>
+							</Transition.Boundary>
 						);
 					})}
 				</View>
@@ -266,7 +266,7 @@ export default function StyleIdBoundsIndex() {
 							const tag = `shared-image-${item.id}`;
 							return (
 								<View key={tag} style={styles.pickCell}>
-									<Transition.Boundary.Trigger
+									<Transition.Boundary
 										testID={tag}
 										id={tag}
 										style={styles.pickBoundary}
@@ -286,7 +286,7 @@ export default function StyleIdBoundsIndex() {
 												contentFit="cover"
 											/>
 										</Transition.Boundary.Target>
-									</Transition.Boundary.Trigger>
+									</Transition.Boundary>
 									<View style={styles.pickMeta}>
 										<Text style={[styles.pickItemTitle, { color: theme.text }]}>
 											{item.title}
@@ -317,7 +317,7 @@ export default function StyleIdBoundsIndex() {
 					{TEMPLATES.map((item) => {
 						const tag = `shared-image-${item.id}`;
 						return (
-							<Transition.Boundary.Trigger
+							<Transition.Boundary
 								key={tag}
 								testID={tag}
 								id={tag}
@@ -352,7 +352,7 @@ export default function StyleIdBoundsIndex() {
 									size={20}
 									color={theme.textTertiary}
 								/>
-							</Transition.Boundary.Trigger>
+							</Transition.Boundary>
 						);
 					})}
 				</View>

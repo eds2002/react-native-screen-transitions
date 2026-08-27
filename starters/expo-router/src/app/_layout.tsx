@@ -2,8 +2,8 @@ import { StatusBar } from "expo-status-bar";
 import Transition, {
 	type ScreenTransitionConfig,
 } from "react-native-screen-transitions";
+import { BlankStack } from "react-native-screen-transitions/expo-router";
 import { MEDIA_BOUNDARY_ID } from "../media";
-import { BlankStack } from "../navigation/blank-stack";
 
 const detailOptions = Transition.Presets.SlideFromBottom();
 const sheetOptions = Transition.Presets.SlideFromBottom({

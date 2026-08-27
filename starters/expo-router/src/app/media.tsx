@@ -28,7 +28,7 @@ export default function MediaScreen() {
 				<Text style={styles.title}>One image, two measured bounds.</Text>
 				<Text style={styles.description}>
 					The source and destination share an ID. The route interpolator calls
-					 bounds(id).navigation.zoom() to connect them.
+					bounds(id).navigation.zoom() to connect them.
 				</Text>
 			</View>
 

@@ -1,17 +1,20 @@
-import { StackActions, useNavigation } from "@react-navigation/native";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
-import { ScreenHeader } from "@/components/screen-header";
-import { useTheme } from "@/theme";
 import {
 	parseStackDepth,
 	STACKING_BUTTON_BOUNDARY_ID,
 	STACKING_CARD_BOUNDARY_ID,
 	type StackingBoundaryId,
-} from "./constants";
-import { StackingCardContent } from "./stacking-card-content";
+} from "@/components/bounds-stacking/constants";
+import { StackingCardContent } from "@/components/bounds-stacking/stacking-card-content";
+import { ScreenHeader } from "@/components/screen-header";
+import {
+	buildStackPath,
+	useResolvedStackType,
+} from "@/components/stack-examples/stack-routing";
+import { useTheme } from "@/theme";
 
 export default function StackingBoundsDetail() {
 	const { depth: depthParam, id: idParam } = useLocalSearchParams<{
@@ -22,16 +25,17 @@ export default function StackingBoundsDetail() {
 	const routeId = Array.isArray(idParam)
 		? idParam[0]
 		: (idParam ?? STACKING_CARD_BOUNDARY_ID);
-	const navigation = useNavigation();
+	const stackType = useResolvedStackType();
 	const theme = useTheme();
 
 	const pushIndex = (id: StackingBoundaryId) => {
-		navigation.dispatch(
-			StackActions.push("index", {
+		router.push({
+			pathname: buildStackPath(stackType, "bounds/stacking"),
+			params: {
 				depth: String(depth + 1),
 				id,
-			}),
-		);
+			},
+		} as never);
 	};
 
 	return (
@@ -52,13 +56,13 @@ export default function StackingBoundsDetail() {
 					testID="stacking-detail-boundary"
 					onPress={() => pushIndex(STACKING_CARD_BOUNDARY_ID)}
 				>
-					<Transition.Boundary.View
+					<Transition.Boundary
 						id={STACKING_CARD_BOUNDARY_ID}
 						escapeClipping
 						style={styles.hero}
 					>
 						<StackingCardContent />
-					</Transition.Boundary.View>
+					</Transition.Boundary>
 				</Pressable>
 
 				<View style={styles.copy}>
@@ -75,7 +79,7 @@ export default function StackingBoundsDetail() {
 					testID="stacking-push-index"
 					onPress={() => pushIndex(STACKING_BUTTON_BOUNDARY_ID)}
 				>
-					<Transition.Boundary.View
+					<Transition.Boundary
 						id={STACKING_BUTTON_BOUNDARY_ID}
 						escapeClipping
 						style={[styles.button, { backgroundColor: theme.actionButton }]}
@@ -90,7 +94,7 @@ export default function StackingBoundsDetail() {
 						>
 							depth {depth + 1} →
 						</Text>
-					</Transition.Boundary.View>
+					</Transition.Boundary>
 				</Pressable>
 
 				<Text style={[styles.hint, { color: theme.textTertiary }]}>

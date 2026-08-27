@@ -43,7 +43,10 @@ export default function MaestroLayout() {
 				name="swipe-horizontal-inverted"
 				options={slideOptions("horizontal-inverted")}
 			/>
-			<BlankStack.Screen name="swipe-vertical" options={slideOptions("vertical")} />
+			<BlankStack.Screen
+				name="swipe-vertical"
+				options={slideOptions("vertical")}
+			/>
 			<BlankStack.Screen
 				name="swipe-vertical-inverted"
 				options={slideOptions("vertical-inverted")}
@@ -68,15 +71,18 @@ export default function MaestroLayout() {
 			/>
 			<BlankStack.Screen
 				name="gesture-edge"
-				options={slideOptions("horizontal", { gestureActivationArea: "edge" })}
+				options={slideOptions("horizontal", {
+					gestureDirection: { gesture: "horizontal", area: "edge" },
+				})}
 			/>
 
 			<BlankStack.Screen name="snap-points" options={hostOptions} />
 			<BlankStack.Screen
 				name="snap-points-sheet"
 				options={sheetOptions({
-					snapPoints: [0.35, 0.65, 1],
+					snapPoints: [0.4, 0.9, 1],
 					initialSnapIndex: 1,
+					sheetSnapBehavior: "step",
 				})}
 			/>
 

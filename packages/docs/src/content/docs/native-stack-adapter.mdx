@@ -1,0 +1,40 @@
+---
+title: "Native Stack Adapter"
+pageTitle: "Native Stack Adapter"
+summary: "Add Screen Transitions to an existing native-stack navigator."
+description: "Use withScreenTransitions with the native stack supplied by React Navigation or Expo Router."
+eyebrow: "Adapters"
+group: "Adapters"
+order: 1
+to: /native-stack-adapter
+---
+
+`withScreenTransitions` adapts the native-stack navigator supplied by the host integration.
+
+## Adapt the navigator
+
+Pass the native-stack navigator to `withScreenTransitions`:
+
+```tsx
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import Transition, { withScreenTransitions } from "react-native-screen-transitions";
+
+const NativeStack = createNativeStackNavigator();
+const Stack = withScreenTransitions(NativeStack);
+```
+
+Enable Screen Transitions on each participating screen:
+
+```tsx
+<Stack.Screen
+  name="Detail"
+  component={DetailScreen}
+  options={{
+    enableTransitions: true,
+    gestureEnabled: true,
+    ...Transition.Presets.SlideFromBottom(),
+  }}
+/>
+```
+
+Use this adapter when a flow must keep native-stack headers, options, or navigator behavior. For new flows, [Blank Stack](/react-navigation) gives Screen Transitions full control over the transition lifecycle.

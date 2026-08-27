@@ -16,9 +16,9 @@ export const TEST_FLOWS = [
 	},
 	{
 		id: "custom-background",
-		title: "Custom Surface",
+		title: "Custom Content",
 		description:
-			"Fast squircle surface component with animated corner smoothing",
+			"Fast squircle content component with animated corner smoothing",
 	},
 	{
 		id: "bottom-sheet",
@@ -70,12 +70,6 @@ export const PRESET_FLOWS = [
 		id: "elastic-card",
 		title: "Elastic Card",
 		description: "Elastic drag with overlay darkening",
-	},
-	{
-		id: "shared-x-image",
-		title: "Shared X Image",
-		description:
-			"Deprecated SharedXImage preset for feed card -> fullscreen media",
 	},
 ] satisfies {
 	id: string;

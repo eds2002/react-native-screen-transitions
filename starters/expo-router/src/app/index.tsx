@@ -11,11 +11,11 @@ export default function HomeScreen() {
 	return (
 		<SafeAreaView style={styles.screen}>
 			<View>
-				<Text style={styles.eyebrow}>V3 · EXPO ROUTER · SDK 55</Text>
+				<Text style={styles.eyebrow}>V4 ALPHA · EXPO ROUTER · SDK 56</Text>
 				<Text style={styles.title}>A small, real starting point.</Text>
 				<Text style={styles.description}>
 					The navigator wiring is isolated from the screens, so you can replace
-					this UI without disturbing the v3 integration.
+					this UI without disturbing the v4 adapter.
 				</Text>
 			</View>
 

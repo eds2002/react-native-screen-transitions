@@ -12,9 +12,6 @@ export default function BoundsLayout() {
 	return (
 		<StackNavigator screenOptions={navigatorScreenOptions}>
 			<StackNavigator.Screen name="index" />
-			<StackNavigator.Screen name="example-1" options={{ ...IOSSlide() }} />
-			<StackNavigator.Screen name="example-2" options={{ ...IOSSlide() }} />
-			<StackNavigator.Screen name="example-3" options={{ ...IOSSlide() }} />
 			<StackNavigator.Screen name="style-id" options={{ ...IOSSlide() }} />
 			<StackNavigator.Screen name="zoom" options={{ ...IOSSlide() }} />
 			<StackNavigator.Screen name="sync" options={{ ...IOSSlide() }} />

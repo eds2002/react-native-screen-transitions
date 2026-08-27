@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import type {
 	ListRenderItemInfo,
 	NativeScrollEvent,
@@ -115,13 +114,13 @@ function DetailPage({
 				</Text>
 
 				<View style={styles.swatchSection}>
-					<View
+					<Transition.Boundary
 						group={ZOOM_GROUP}
 						id={item.id}
 						style={[styles.swatch, { backgroundColor: item.color }]}
 					>
 						<Text style={[styles.swatchHex]}>{item.color.toUpperCase()}</Text>
-					</View>
+					</Transition.Boundary>
 				</View>
 
 				<View style={styles.propertiesGrid}>

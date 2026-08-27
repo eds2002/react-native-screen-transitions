@@ -1,5 +1,4 @@
-import { useRoute } from "@react-navigation/native";
-import { router } from "expo-router";
+import { router, useRoute } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
 	Pressable,
@@ -15,7 +14,7 @@ import { useTheme } from "@/theme";
 import {
 	BoundStore,
 	type MeasuredEntry,
-} from "../../../../../../../packages/react-native-screen-transitions/src/shared/stores/bounds";
+} from "../../../../../../../packages/react-native-screen-transitions/src/stores/bounds";
 import { OPENING_TRANSFORM_BOUNDARY_ID } from "./constants";
 
 type WindowMeasurement = {
@@ -153,7 +152,7 @@ export default function OpeningTransformBoundsDestination() {
 						collapsable={false}
 						style={styles.boundaryWrapper}
 					>
-						<Transition.Boundary.View
+						<Transition.Boundary
 							id={OPENING_TRANSFORM_BOUNDARY_ID}
 							style={[
 								styles.destinationCard,
@@ -163,7 +162,7 @@ export default function OpeningTransformBoundsDestination() {
 							<Text style={[styles.destinationLabel, { color: theme.text }]}>
 								Destination
 							</Text>
-						</Transition.Boundary.View>
+						</Transition.Boundary>
 					</View>
 				</View>
 

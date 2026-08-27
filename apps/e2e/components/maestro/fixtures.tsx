@@ -1,4 +1,4 @@
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation } from "expo-router";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -267,7 +267,10 @@ export function PointerEventsDetailFixture() {
 			title="Pointer Events B"
 			subtitle="This control should disappear after dismissal."
 		>
-			<ProbeText id="maestro-pointer-top-count" value={`top-count:${topCount}`} />
+			<ProbeText
+				id="maestro-pointer-top-count"
+				value={`top-count:${topCount}`}
+			/>
 			<ButtonGrid>
 				<ActionButton
 					id="maestro-pointer-stale-target"
@@ -464,7 +467,7 @@ export function SnapPointsSheetFixture() {
 		<SheetFrame
 			testID="maestro-snap-sheet"
 			title="Snap Sheet"
-			subtitle="Initial index is 1 in [0.35, 0.65, 1]."
+			subtitle="Step mode starts at index 1 in [0.4, 0.9, 1]."
 		>
 			<SnapIndexProbe testID="maestro-snap-index" />
 			<View style={styles.card}>
@@ -993,11 +996,6 @@ const styleResetCases = [
 		description: "A content sits under B content.",
 	},
 	{
-		id: "surface-slot",
-		title: "Surface slot",
-		description: "A surface sits under B surface.",
-	},
-	{
 		id: "z-index-reveal",
 		title: "zIndex reveal",
 		description: "B moves orange below the red -1 layer.",
@@ -1101,7 +1099,7 @@ export function BoundsFixture() {
 						testID={`maestro-bound-open-${item}`}
 						onPress={() => openItem(item)}
 					>
-						<Transition.Boundary.View
+						<Transition.Boundary
 							id={`maestro-bound-${item}`}
 							style={[
 								styles.boundCard,
@@ -1110,7 +1108,7 @@ export function BoundsFixture() {
 							]}
 						>
 							<Text style={styles.boundText}>source {item}</Text>
-						</Transition.Boundary.View>
+						</Transition.Boundary>
 					</Pressable>
 				))}
 			</View>
@@ -1134,12 +1132,9 @@ export function BoundsDetailFixture() {
 			title="Bounds Destination"
 			subtitle={`Destination for item ${item}.`}
 		>
-			<Transition.Boundary.View
+			<Transition.Boundary
 				id={`maestro-bound-${item}`}
-				style={[
-					styles.boundHero,
-					item === "b" && styles.boundCardAlt,
-				]}
+				style={[styles.boundHero, item === "b" && styles.boundCardAlt]}
 			>
 				<Text
 					testID={`maestro-bound-destination-${item}`}
@@ -1147,7 +1142,7 @@ export function BoundsDetailFixture() {
 				>
 					destination {item}
 				</Text>
-			</Transition.Boundary.View>
+			</Transition.Boundary>
 			<ActionButton
 				id="maestro-bounds-back"
 				label="Back to source"

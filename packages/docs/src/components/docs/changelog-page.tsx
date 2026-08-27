@@ -1,21 +1,62 @@
-import { Link } from "@tanstack/react-router";
-
 import {
 	createDocHead,
-	type DocVersionId,
+	type DocsVersion,
 	getChangelogDocs,
 	getDocArticleId,
-	getDocByVersionAndSlug,
+	getDocBySlug,
 } from "../../lib/docs";
 import { PageIntro } from "../ui/page-intro";
 import { PageLinks } from "../ui/page-links";
 import { DocHeading } from "./doc-heading";
-import { markdownArticleClassName, mdxComponents } from "./markdown-doc-page";
 
-function ChangelogPage({ versionId }: { versionId: DocVersionId }) {
-	const doc = getDocByVersionAndSlug(versionId, "changelog");
-	const [latest, ...olderUpdates] = getChangelogDocs(versionId);
-	const LatestContent = latest?.Content;
+function ChangelogSection({
+	description,
+	title,
+	version,
+}: {
+	description: string;
+	title: string;
+	version: DocsVersion;
+}) {
+	const updates = getChangelogDocs(version);
+
+	return (
+		<section className="mt-14 border-t border-black/10 pt-10 first:mt-0 first:border-t-0 first:pt-0 dark:border-white/14">
+			<DocHeading
+				as="h2"
+				id={version}
+				className="scroll-mt-28 text-2xl font-medium text-neutral-950 dark:text-neutral-50"
+			>
+				{title}
+			</DocHeading>
+			<p className="mt-3 max-w-[46rem] text-neutral-600 dark:text-neutral-400">
+				{description}
+			</p>
+
+			{updates.length > 0 ? (
+				<div className="mt-6">
+					<PageLinks
+						indicator="eyebrow"
+						items={updates.map((update) => ({
+							copy: update.summary,
+							direction: "previous" as const,
+							eyebrow: update.changelogDate,
+							title: update.pageTitle,
+							to: update.to,
+						}))}
+					/>
+				</div>
+			) : (
+				<p className="mt-6 max-w-[46rem] text-neutral-600 dark:text-neutral-400">
+					No updates have been published for this release line yet.
+				</p>
+			)}
+		</section>
+	);
+}
+
+function ChangelogPage() {
+	const doc = getDocBySlug("changelog");
 
 	return (
 		<>
@@ -25,61 +66,29 @@ function ChangelogPage({ versionId }: { versionId: DocVersionId }) {
 				lede={doc.description}
 			/>
 
-			<article
-				id={getDocArticleId(versionId, doc.slug)}
-				className={markdownArticleClassName}
-			>
-				{latest && LatestContent ? (
-					<>
-						<DocHeading
-							as="h2"
-							id={latest.slug}
-							className="scroll-mt-28 text-2xl font-medium text-neutral-950 dark:text-neutral-50"
-						>
-							<Link to={latest.to}>{latest.pageTitle}</Link>
-						</DocHeading>
-						<LatestContent components={mdxComponents} />
-					</>
-				) : (
-					<p className="max-w-[46rem] text-neutral-600 dark:text-neutral-400">
-						No changelog entries have been published yet.
-					</p>
-				)}
-
-				{olderUpdates.length > 0 ? (
-					<section className="mt-14 border-t border-black/10 pt-10 dark:border-white/14">
-						<DocHeading
-							as="h2"
-							className="scroll-mt-28 text-2xl font-medium text-neutral-950 dark:text-neutral-50"
-						>
-							More Updates
-						</DocHeading>
-						<div className="mt-6">
-							<PageLinks
-								indicator="eyebrow"
-								items={olderUpdates.map((update) => ({
-									copy: update.summary,
-									direction: "previous" as const,
-									eyebrow: update.changelogDate,
-									title: update.pageTitle,
-									to: update.to,
-								}))}
-							/>
-						</div>
-					</section>
-				) : null}
+			<article id={getDocArticleId(doc.slug)} className="mt-10 min-w-0">
+				<ChangelogSection
+					version="v4"
+					title="Version 4"
+					description="The current release line, including new capabilities and migration notes."
+				/>
+				<ChangelogSection
+					version="v3"
+					title="Version 3"
+					description="Maintained for fixes. Version 3 receives patches, but no new features."
+				/>
 			</article>
 		</>
 	);
 }
 
-export function createChangelogRouteConfig(versionId: DocVersionId) {
-	const doc = getDocByVersionAndSlug(versionId, "changelog");
+export function createChangelogRouteConfig() {
+	const doc = getDocBySlug("changelog");
 
 	return {
 		head: () => createDocHead(doc),
 		component: function ChangelogRouteComponent() {
-			return <ChangelogPage versionId={versionId} />;
+			return <ChangelogPage />;
 		},
 	};
 }

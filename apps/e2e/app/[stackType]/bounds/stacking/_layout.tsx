@@ -31,7 +31,7 @@ export default function StackingBoundsLayout() {
 		stackType === "native-stack" ? { enableTransitions: true } : undefined;
 
 	return (
-		<StackNavigator screenOptions={navigatorScreenOptions}>
+		<StackNavigator screenOptions={navigatorScreenOptions as never}>
 			<StackNavigator.Screen
 				name="index"
 				options={({ route }) =>
@@ -40,7 +40,6 @@ export default function StackingBoundsLayout() {
 								backdropBehavior: "dismiss",
 								gestureDirection: ["bidirectional", "pinch-in"],
 								gestureEnabled: true,
-								gestureProgressMode: "freeform",
 								navigationMaskEnabled: true,
 								screenStyleInterpolator: stackingInterpolator,
 								transitionSpec: Transition.Specs.Zoom,
@@ -54,7 +53,6 @@ export default function StackingBoundsLayout() {
 					backdropBehavior: "dismiss",
 					gestureDirection: ["bidirectional", "pinch-in"],
 					gestureEnabled: true,
-					gestureProgressMode: "freeform",
 					navigationMaskEnabled: true,
 					screenStyleInterpolator: stackingInterpolator,
 					transitionSpec: Transition.Specs.Zoom,

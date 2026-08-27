@@ -1,11 +1,14 @@
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useVideoPlayer, VideoView } from "expo-video";
-import { type ComponentType, useCallback } from "react";
+import { type ComponentType, useCallback, useState } from "react";
 import {
 	type FlatListProps,
 	type ListRenderItemInfo,
+	Pressable,
 	StyleSheet,
+	Text,
+	View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
@@ -15,9 +18,10 @@ import {
 } from "@/components/stack-examples/stack-routing";
 import {
 	MATCHED_SCREEN_ASPECT_RATIO,
-	MATCHED_SCREEN_BOUNDARY_GROUP,
 	MATCHED_SCREEN_DETAIL_WIDTH,
+	MATCHED_SCREEN_HANDOFF_MODES,
 	MATCHED_SCREEN_VIDEOS,
+	type MatchedScreenHandoffMode,
 	type MatchedScreenVideo,
 	type MatchedScreenVideoId,
 } from "./constants";
@@ -42,8 +46,6 @@ function VideoCard({ example, onPress }: VideoCardProps) {
 		<Transition.Boundary
 			accessibilityLabel={`Open ${example.id} video example`}
 			accessibilityRole="button"
-			escapeClipping
-			group={MATCHED_SCREEN_BOUNDARY_GROUP}
 			handoff
 			id={example.id}
 			onPress={onPress}
@@ -70,6 +72,8 @@ function VideoCard({ example, onPress }: VideoCardProps) {
 
 export default function MatchedScreenIndex() {
 	const stackType = useResolvedStackType();
+	const [handoffMode, setHandoffMode] =
+		useState<MatchedScreenHandoffMode>("auto");
 
 	const openVideo = useCallback(
 		(id: MatchedScreenVideoId) => {
@@ -78,10 +82,10 @@ export default function MatchedScreenIndex() {
 					stackType,
 					"bounds/matched-screen/player",
 				) as never,
-				params: { id },
+				params: { handoffMode, id },
 			});
 		},
-		[stackType],
+		[handoffMode, stackType],
 	);
 
 	const renderItem = useCallback(
@@ -91,13 +95,59 @@ export default function MatchedScreenIndex() {
 		[openVideo],
 	);
 
+	const listHeader = (
+		<View style={styles.header}>
+			<Text style={styles.title}>Overlapping handoff flows</Text>
+			<Text style={styles.instructions}>
+				Open A, dismiss it, then open B before A finishes closing. Repeat with
+				the same card to cover same-ID replacement.
+			</Text>
+			<View style={styles.modePicker}>
+				{MATCHED_SCREEN_HANDOFF_MODES.map((mode) => {
+					const selected = mode === handoffMode;
+
+					return (
+						<Pressable
+							accessibilityRole="button"
+							accessibilityState={{ selected }}
+							key={mode}
+							onPress={() => setHandoffMode(mode)}
+							style={({ pressed }) => [
+								styles.modeButton,
+								selected && styles.modeButtonSelected,
+								pressed && styles.modeButtonPressed,
+							]}
+							testID={`matched-screen-mode-${mode}`}
+						>
+							<Text
+								style={[
+									styles.modeButtonText,
+									selected && styles.modeButtonTextSelected,
+								]}
+							>
+								{mode === "auto" ? "Auto" : "Explicit target"}
+							</Text>
+						</Pressable>
+					);
+				})}
+			</View>
+			<Text style={styles.modeDescription} testID="matched-screen-mode-label">
+				{handoffMode === "auto"
+					? "Default ownership — no handoffTarget is returned."
+					: "Explicit ownership — destination until close crosses 50%, then source."}
+			</Text>
+		</View>
+	);
+
 	return (
 		<SafeAreaView style={styles.home} edges={["top"]}>
 			<StatusBar style="dark" />
 			<MatchedScreenFlatList
 				contentContainerStyle={styles.listContent}
 				data={MATCHED_SCREEN_VIDEOS}
+				extraData={handoffMode}
 				keyExtractor={(item) => item.id}
+				ListHeaderComponent={listHeader}
 				renderItem={renderItem}
 				removeClippedSubviews={false}
 				showsVerticalScrollIndicator={false}
@@ -121,7 +171,59 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		gap: 0,
 		paddingHorizontal: 16,
-		paddingVertical: 32,
+		paddingBottom: 32,
+	},
+	header: {
+		gap: 12,
+		maxWidth: MATCHED_SCREEN_DETAIL_WIDTH,
+		paddingBottom: 24,
+		paddingTop: 24,
+		width: "100%",
+	},
+	title: {
+		color: "#17201A",
+		fontSize: 22,
+		fontWeight: "700",
+	},
+	instructions: {
+		color: "#69716B",
+		fontSize: 14,
+		lineHeight: 20,
+	},
+	modePicker: {
+		backgroundColor: "#EEF1EF",
+		borderCurve: "continuous",
+		borderRadius: 12,
+		flexDirection: "row",
+		padding: 3,
+	},
+	modeButton: {
+		alignItems: "center",
+		borderCurve: "continuous",
+		borderRadius: 9,
+		flex: 1,
+		justifyContent: "center",
+		minHeight: 38,
+		paddingHorizontal: 10,
+	},
+	modeButtonSelected: {
+		backgroundColor: "#17201A",
+	},
+	modeButtonPressed: {
+		opacity: 0.72,
+	},
+	modeButtonText: {
+		color: "#69716B",
+		fontSize: 13,
+		fontWeight: "700",
+	},
+	modeButtonTextSelected: {
+		color: "#FFFFFF",
+	},
+	modeDescription: {
+		color: "#7D857F",
+		fontSize: 12,
+		lineHeight: 17,
 	},
 	card: {
 		aspectRatio: MATCHED_SCREEN_ASPECT_RATIO,

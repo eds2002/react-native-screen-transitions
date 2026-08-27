@@ -1,107 +1,37 @@
 ---
-title: "Expo Router"
+title: "Expo Router (Alpha)"
 pageTitle: "Expo Router"
-summary: "Create a v3 blank stack layout for Expo Router with createBlankStackNavigator and withLayoutContext."
-description: "Create a v3 blank stack layout for Expo Router with createBlankStackNavigator and withLayoutContext."
-eyebrow: "Guides"
-group: "Guides"
+summary: "Use the Alpha Blank Stack integration in an Expo Router layout."
+description: "Set up the Alpha Expo Router integration with the Blank Stack Standard Navigator."
+eyebrow: "Integrations · Alpha"
+group: "Integrations"
+availability: "Alpha"
 order: 2
 to: /expo-router
 ---
 
-## Overview
-
-The stable v3 Expo Router integration supports Expo SDK 55 and earlier. It wraps `createBlankStackNavigator()` with Expo Router's `withLayoutContext()`, using the React Navigation-backed navigator internals available in those SDKs.
-
 <Note>
-  Expo SDK 55 is the final SDK supported by this v3 integration. Expo Router forked the navigation packages it builds upon in SDK 56. For Expo SDK 56 or later, use the separate [v4 alpha Expo Router integration](/v4-experimental/getting-started).
+  The Expo Router integration is Alpha. It uses Expo Router's Standard Navigator integration and currently requires Expo Router 56.2.10 or later.
 </Note>
 
-The SDK 56 boundary applies to Expo Router, not to Expo projects generally. An Expo app using React Navigation directly can continue to use v3. See Expo's [SDK 55 to 56 migration guide](https://docs.expo.dev/router/migrate/sdk-55-to-56/) for details about the upstream import and runtime changes.
+## Add Blank Stack to a layout
 
-If you want a complete reference app before integrating this into an existing project, use the [v3 Expo Router starter](https://github.com/eds2002/react-native-screen-transitions/tree/main/starters/expo-router). It pins Expo SDK 55, the final Expo Router environment supported by the v3 integration and the version used by the v3 e2e app.
-
-## Blank Stack Layout
-
-This is the v3 integration pattern used by the e2e app and starter:
+Import `BlankStack` from the Expo Router entry point:
 
 ```tsx
-// layouts/blank-stack.tsx
-import "react-native-reanimated";
-import type {
-  ParamListBase,
-  StackNavigationState,
-} from "@react-navigation/native";
-import { withLayoutContext } from "expo-router";
-import type { ComponentProps } from "react";
-import {
-  type BlankStackNavigationEventMap,
-  type BlankStackNavigationOptions,
-  createBlankStackNavigator,
-} from "react-native-screen-transitions/blank-stack";
-
-const { Navigator } = createBlankStackNavigator();
-
-function BlankStackNavigator(props: ComponentProps<typeof Navigator>) {
-  return <Navigator {...props} />;
-}
-
-export const BlankStack = withLayoutContext<
-  BlankStackNavigationOptions,
-  typeof BlankStackNavigator,
-  StackNavigationState<ParamListBase>,
-  BlankStackNavigationEventMap
->(BlankStackNavigator);
-```
-
-The local wrapper provides a stable TypeScript boundary for `withLayoutContext()` while forwarding navigator props unchanged. Native screens remain enabled by default.
-
-## Using It In Route Layouts
-
-```tsx
-// app/gestures/_layout.tsx
+// app/_layout.tsx
 import Transition from "react-native-screen-transitions";
-import { BlankStack } from "@/layouts/blank-stack";
+import { BlankStack } from "react-native-screen-transitions/expo-router";
 
-export default function GesturesLayout() {
+export default function RootLayout() {
   return (
     <BlankStack>
       <BlankStack.Screen name="index" />
       <BlankStack.Screen
-        name="sheet"
-        options={{
-          ...Transition.Presets.SlideFromBottom(),
-        }}
+        name="detail"
+        options={Transition.Presets.SlideFromBottom()}
       />
     </BlankStack>
   );
 }
 ```
-
-`router.push()`, `router.replace()`, and `router.back()` still work normally. The transition behavior comes from the options you put on `BlankStack.Screen`.
-
-## Bounds And Router Navigation
-
-```tsx
-import { router } from "expo-router";
-import Transition from "react-native-screen-transitions";
-
-<Transition.Boundary
-  id="hero"
-  onPress={() => router.push("/detail")}
->
-  <Card />
-</Transition.Boundary>
-```
-
-The destination can use a matching passive `Transition.Boundary`, `Transition.Boundary.Target`, `navigationMaskEnabled`, and `screenStyleInterpolator` the same way it would outside Expo Router.
-
-## Embedded Flows
-
-```tsx
-<BlankStack independent nativeScreens={false}>
-  <BlankStack.Screen name="index" />
-</BlankStack>
-```
-
-Use `independent` only when you want an isolated navigation tree, not for normal route layouts.

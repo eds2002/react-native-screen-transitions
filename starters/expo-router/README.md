@@ -1,6 +1,6 @@
-# Screen Transitions v3 + Expo Router starter
+# Screen Transitions v4 + Expo Router starter
 
-A minimal Expo SDK 55 app showing the stable v3 Expo Router integration. It deliberately uses the pre-fork `createBlankStackNavigator()` and `withLayoutContext()` shape documented by Screen Transitions v3.
+A minimal Expo SDK 56 app showing the v4 Expo Router integration. `BlankStack` comes directly from the package's Expo Router entry point; there is no local `withLayoutContext()` wrapper.
 
 ## Run it
 
@@ -11,10 +11,17 @@ bun start
 
 You can use npm, yarn, or pnpm instead. The app contains a normal detail transition, a two-detent snap sheet, and a paired-boundary zoom using a remote image.
 
-## Why SDK 55?
+## Start from your own Expo app
 
-Expo SDK 55 is the final Expo Router generation backed by external React Navigation packages, so this starter exercises the newest environment supported by the v3 integration. Expo Router forks those packages in SDK 56.
+Start with any Expo Router template on a compatible SDK, then install the v4 alpha and its Expo-selected native peers:
 
-Do not upgrade this starter to Expo SDK 56 and keep the same navigator wrapper. SDK 56+ Expo Router apps need the separate Screen Transitions v4 alpha integration.
+```bash
+npx expo install react-native-screen-transitions@alpha \
+  react-native-reanimated react-native-worklets \
+  react-native-gesture-handler react-native-screens \
+  react-native-safe-area-context
+```
 
-The v3 integration is isolated in [`src/navigation/blank-stack.tsx`](src/navigation/blank-stack.tsx). Route declarations and the zoom interpolator live in [`src/app/_layout.tsx`](src/app/_layout.tsx), with matching media boundaries in [`src/app/index.tsx`](src/app/index.tsx) and [`src/app/media.tsx`](src/app/media.tsx).
+Import `BlankStack` from `react-native-screen-transitions/expo-router` in the layout where you want transitions. No custom Metro config, type-resolution override, root-view wrapper, or generated-file edit is required.
+
+Route declarations and the zoom interpolator live in [`src/app/_layout.tsx`](src/app/_layout.tsx), with matching media boundaries in [`src/app/index.tsx`](src/app/index.tsx) and [`src/app/media.tsx`](src/app/media.tsx).

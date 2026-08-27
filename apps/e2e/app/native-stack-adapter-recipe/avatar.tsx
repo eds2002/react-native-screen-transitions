@@ -9,7 +9,7 @@ export default function NativeStackAdapterRecipeAvatar() {
 	return (
 		<SafeAreaView style={styles.container}>
 			<View style={styles.content}>
-				<Transition.Boundary.View
+				<Transition.Boundary
 					id={PROFILE_IMAGE_BOUNDARY_ID}
 					style={styles.imageFrame}
 				>
@@ -18,7 +18,7 @@ export default function NativeStackAdapterRecipeAvatar() {
 						style={styles.image}
 						contentFit="cover"
 					/>
-				</Transition.Boundary.View>
+				</Transition.Boundary>
 
 				<Pressable
 					testID="native-stack-adapter-recipe-avatar-close"

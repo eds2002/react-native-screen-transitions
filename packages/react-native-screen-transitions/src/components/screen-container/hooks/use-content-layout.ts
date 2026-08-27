@@ -1,0 +1,82 @@
+import { useCallback } from "react";
+import { type LayoutChangeEvent, useWindowDimensions } from "react-native";
+import { scheduleOnUI } from "react-native-worklets";
+import { useDescriptorsStore } from "../../../providers/screen/descriptors";
+import { AnimationStore } from "../../../stores/animation.store";
+import {
+	LifecycleTransitionRequestKind,
+	SystemStore,
+} from "../../../stores/system.store";
+
+export function useContentLayout() {
+	const routeKey = useDescriptorsStore(
+		(store) => store.derivations.currentScreenKey,
+	);
+	const isFirstKey = useDescriptorsStore(
+		(store) => store.derivations.isFirstKey,
+	);
+	const experimental_animateOnInitialMount = useDescriptorsStore(
+		(store) => store.options.experimental_animateOnInitialMount,
+	);
+	const { height: screenHeight } = useWindowDimensions();
+	const animations = AnimationStore.getBag(routeKey);
+	const system = SystemStore.getBag(routeKey);
+
+	const { targetProgress, resolvedAutoSnapPoint, measuredContentLayout } =
+		system;
+	const { requestLifecycleTransition } = system.actions;
+
+	return useCallback(
+		(event: LayoutChangeEvent) => {
+			const { width, height } = event.nativeEvent.layout;
+			if (width <= 0 || height <= 0) return;
+
+			const fraction = Math.min(height / screenHeight, 1);
+
+			scheduleOnUI(
+				(nextWidth: number, nextHeight: number, nextFraction: number) => {
+					"worklet";
+					measuredContentLayout.set({
+						width: nextWidth,
+						height: nextHeight,
+					});
+
+					const isFirstMeasurement = resolvedAutoSnapPoint.get() <= 0;
+					resolvedAutoSnapPoint.set(nextFraction);
+
+					if (
+						!isFirstMeasurement ||
+						animations.transitionProgress.get() !== 0 ||
+						animations.progressAnimating.get() !== 0
+					) {
+						return;
+					}
+
+					if (isFirstKey && !experimental_animateOnInitialMount) {
+						targetProgress.set(nextFraction);
+						animations.transitionProgress.set(nextFraction);
+						return;
+					}
+
+					requestLifecycleTransition(
+						LifecycleTransitionRequestKind.Open,
+						nextFraction,
+					);
+				},
+				width,
+				height,
+				fraction,
+			);
+		},
+		[
+			animations,
+			targetProgress,
+			resolvedAutoSnapPoint,
+			measuredContentLayout,
+			isFirstKey,
+			screenHeight,
+			experimental_animateOnInitialMount,
+			requestLifecycleTransition,
+		],
+	);
+}

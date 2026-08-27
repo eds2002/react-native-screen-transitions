@@ -1,0 +1,186 @@
+import { memo, useMemo, useRef } from "react";
+import { StyleSheet, View } from "react-native";
+import Animated, { useDerivedValue } from "react-native-reanimated";
+import { snapDescriptorToIndex } from "../../../animation/snap-to";
+import { useOptionalScreenAnimationStore } from "../../../providers/screen/animation";
+import {
+	type ScreenAnimationContextValue,
+	ScreenAnimationStoreProvider,
+} from "../../../providers/screen/animation/animation.provider";
+import {
+	type ScreenSlotContextValue,
+	ScreenSlotStoreProvider,
+	useOptionalScreenSlotStore,
+} from "../../../providers/screen/styles/slot.provider";
+import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
+import type { OverlayProps } from "../../../types/overlay.types";
+import type { FloatOverlayEntry } from "../helpers/get-active-overlay";
+import {
+	type ReadyOverlayResources,
+	retainReadyOverlayResources,
+} from "../helpers/retain-ready-overlay-resources";
+import { useOverlaySlot } from "../hooks/use-overlay-slot";
+
+type OverlayHostProps = {
+	scene: FloatOverlayEntry["scene"];
+	driverScene: FloatOverlayEntry["scene"];
+	previousOverlayScene?: FloatOverlayEntry["scene"];
+	layerIndex: number;
+};
+
+export const OverlayHost = memo(function OverlayHost({
+	scene,
+	driverScene,
+	previousOverlayScene,
+	layerIndex,
+}: OverlayHostProps) {
+	const overlayAnimationStore = useOptionalScreenAnimationStore(
+		scene.route.key,
+	);
+	const driverAnimationStore = useOptionalScreenAnimationStore(
+		driverScene.route.key,
+	);
+	const previousOverlayAnimationStore = useOptionalScreenAnimationStore(
+		previousOverlayScene?.route.key ?? scene.route.key,
+	);
+	const overlaySlots = useOptionalScreenSlotStore(scene.route.key);
+	const driverSlots = useOptionalScreenSlotStore(driverScene.route.key);
+	const overlayComponentRef = useRef(scene.descriptor.options.overlay);
+	const OverlayComponent = overlayComponentRef.current;
+	const readyResourcesRef = useRef<ReadyOverlayResources | null>(null);
+	readyResourcesRef.current = retainReadyOverlayResources(
+		readyResourcesRef.current,
+		overlayAnimationStore,
+		overlaySlots,
+		driverScene,
+		driverAnimationStore,
+		driverSlots,
+	);
+	const readyResources = readyResourcesRef.current;
+
+	if (!OverlayComponent || !readyResources) {
+		return null;
+	}
+
+	return (
+		<ReadyOverlayHost
+			scene={scene}
+			driverScene={readyResources.driverScene}
+			layerIndex={layerIndex}
+			overlayAnimationStore={readyResources.overlayAnimationStore}
+			overlaySlots={readyResources.overlaySlots}
+			driverAnimationStore={readyResources.driverAnimationStore}
+			previousOverlayAnimationStore={
+				previousOverlayScene ? previousOverlayAnimationStore : undefined
+			}
+			driverSlots={readyResources.driverSlots}
+			OverlayComponent={OverlayComponent}
+		/>
+	);
+});
+
+type ReadyOverlayHostProps = OverlayHostProps & {
+	overlayAnimationStore: ScreenAnimationContextValue;
+	overlaySlots: ScreenSlotContextValue;
+	driverAnimationStore: ScreenAnimationContextValue;
+	previousOverlayAnimationStore?: ScreenAnimationContextValue | null;
+	driverSlots: ScreenSlotContextValue;
+	OverlayComponent: NonNullable<
+		FloatOverlayEntry["scene"]["descriptor"]["options"]["overlay"]
+	>;
+};
+
+function ReadyOverlayHost({
+	scene,
+	driverScene,
+	layerIndex,
+	overlayAnimationStore,
+	overlaySlots,
+	driverAnimationStore,
+	previousOverlayAnimationStore,
+	driverSlots,
+	OverlayComponent,
+}: ReadyOverlayHostProps) {
+	const { scenes, focusedIndex, routeKeys, routes } = useBlankStackStore();
+	const focusedScene = scenes[focusedIndex] ?? scenes[scenes.length - 1];
+	const focusedDescriptor = focusedScene?.descriptor;
+	const { animatedProps, animatedStyle } = useOverlaySlot({
+		overlayAnimationStore,
+		overlayInterpolator: scene.descriptor.options.screenStyleInterpolator,
+		driverAnimationStore,
+		previousOverlayAnimationStore: previousOverlayAnimationStore ?? undefined,
+		driverInterpolator: driverScene.descriptor.options.screenStyleInterpolator,
+		interpolatorReady: driverSlots.interpolatorReady,
+		isIncoming: scene.route.key === driverScene.route.key,
+	});
+	const relativeProgress = useDerivedValue(() => {
+		"worklet";
+		overlayAnimationStore.screenInterpolatorPropsRevision.get();
+		return overlayAnimationStore.screenInterpolatorProps.get().stackProgress;
+	});
+
+	const overlayProps: OverlayProps = useMemo(
+		() => ({
+			route: scene.route,
+			index: routeKeys.indexOf(scene.route.key),
+			options: focusedDescriptor?.options ?? {},
+			routes,
+			focusedRoute: focusedScene?.route ?? scene.route,
+			focusedIndex,
+			meta: focusedDescriptor?.options?.meta,
+			navigation: scene.descriptor.navigation,
+			snapTo: (index: number) => {
+				snapDescriptorToIndex(scene.descriptor, index);
+			},
+			progress: relativeProgress,
+		}),
+		[
+			scene,
+			focusedDescriptor?.options,
+			focusedIndex,
+			focusedScene?.route,
+			relativeProgress,
+			routeKeys,
+			routes,
+		],
+	);
+	return (
+		<Animated.View
+			animatedProps={animatedProps}
+			pointerEvents="box-none"
+			style={[
+				styles.container,
+				styles.floating,
+				StyleSheet.absoluteFill,
+				{ zIndex: 1000 + layerIndex },
+				animatedStyle,
+			]}
+		>
+			<ScreenAnimationStoreProvider
+				registerGlobally={false}
+				value={overlayAnimationStore}
+			>
+				<ScreenSlotStoreProvider registerGlobally={false} value={overlaySlots}>
+					<View
+						pointerEvents="box-none"
+						style={[StyleSheet.absoluteFill, styles.overlay]}
+					>
+						<OverlayComponent {...overlayProps} />
+					</View>
+				</ScreenSlotStoreProvider>
+			</ScreenAnimationStoreProvider>
+		</Animated.View>
+	);
+}
+
+const styles = StyleSheet.create({
+	overlay: {
+		zIndex: 1,
+	},
+	container: {
+		flex: 1,
+	},
+	floating: {
+		zIndex: 1000,
+	},
+});

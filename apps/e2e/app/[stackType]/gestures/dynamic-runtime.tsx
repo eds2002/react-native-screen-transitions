@@ -1,5 +1,4 @@
-import { useNavigation } from "@react-navigation/native";
-import { router } from "expo-router";
+import { router, useNavigation } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";

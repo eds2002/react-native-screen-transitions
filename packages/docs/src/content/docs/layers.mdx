@@ -1,0 +1,335 @@
+---
+title: "Layers"
+pageTitle: "Layers"
+summary: "Understand reserved transition layers, including overlays, screen content, surfaces, backdrops, and navigation masks."
+description: "Understand reserved transition layers, including overlays, screen content, surfaces, backdrops, and navigation masks."
+eyebrow: "Core Concepts"
+group: "Core Concepts"
+order: 9
+to: /layers
+---
+
+## Mental Model
+
+`screenStyleInterpolator` returns a keyed style map. Some keys target screen-container layers. Everything else targets transition-aware elements inside the screen tree.
+
+The layer keys are:
+
+- `overlay`
+- `backdrop`
+- `content`
+- `surface`
+- `NAVIGATION_MASK_CONTAINER_STYLE_ID`
+- `NAVIGATION_MASK_ELEMENT_STYLE_ID`
+
+Any other key is treated as an element target and matched against a `styleId` on a transition-aware component such as `Transition.View` or `Transition.Pressable`.
+
+## Layer Map
+
+```tsx
+import {
+  NAVIGATION_MASK_CONTAINER_STYLE_ID,
+  NAVIGATION_MASK_ELEMENT_STYLE_ID,
+} from "react-native-screen-transitions";
+
+return {
+  overlay: { style: { ... }, props: { ... } },
+  backdrop: { style: { ... }, props: { ... } },
+  content: { style: { ... }, props: { ... } },
+  surface: { style: { ... }, props: { ... } },
+  [NAVIGATION_MASK_CONTAINER_STYLE_ID]: { style: { ... } },
+  [NAVIGATION_MASK_ELEMENT_STYLE_ID]: { style: { ... } },
+  ["hero-card"]: { style: { ... }, props: { ... } },
+};
+```
+
+Each slot also supports shorthand style-only output:
+
+```tsx
+return {
+  overlay: { transform: [{ translateY: 12 }] },
+  backdrop: { opacity: 0.4 },
+  content: { transform: [{ translateY: 12 }] },
+  surface: { filter: [{ blur: 18 }] },
+  "hero-card": { scale: 0.98 },
+};
+```
+
+## Render Order
+
+Most layers render inside `screen-container` in this order:
+
+1. `backdrop`
+2. `content`
+3. optional navigation mask wrapper when `navigationMaskEnabled` is enabled
+4. `surface`
+5. screen children and any matching `styleId` targets
+6. shared-element fallback content outside the surface
+
+`overlay` is resolved separately by the floating overlay host above the navigator's screen containers. It drives the adjacent pair in the overlay stack rather than the normal screen stack.
+
+That gives you two levels of control:
+
+- screen-level layers for the overall container structure
+- the floating overlay layer for persistent stack-relative UI
+- element-level targets for individual transition-aware components inside the screen
+
+## overlay
+
+`overlay` controls the floating overlay transition for the destination screen.
+
+```tsx
+overlay: {
+  style: {
+    transform: [
+      {
+        translateX: interpolate(progress, [0, 1, 2], [width, 0, -width]),
+      },
+    ],
+  },
+}
+```
+
+Overlay adjacency is sparse. Given `A[] -> B -> C[]`, the `overlay` slot returned by `C` animates `A` and `C` as the adjacent pair. A plain screen may also return this slot to animate the latest overlay without owning one itself.
+
+All retained overlays remain rendered in route order. Use the slot's `style` and `props`, including `pointerEvents`, to control their presentation and interaction. The library does not infer an inactive overlay state.
+
+`overlay` does not inherit into nested transition scopes and must not be reused as a custom `styleId`. See [Overlays](/overlays) for the complete ownership and lifecycle contract.
+
+## backdrop
+
+`backdrop` controls the full-screen layer behind the active screen content.
+
+```tsx
+backdrop: {
+  style: {
+    opacity: interpolate(progress, [0, 1, 2], [0, 0.4, 0]),
+  },
+}
+```
+
+### Backdrop interaction
+
+`backdropBehavior` controls how the backdrop layer handles touches:
+
+<PropertyTable>
+
+| Value | Behavior |
+| --- | --- |
+| `"block"` | Catch touches without changing navigation |
+| `"passthrough"` | Pass touches through to the content behind the screen |
+| `"dismiss"` | Dismiss the screen when the backdrop is tapped |
+| `"collapse"` | Move to the next lower snap point, then dismiss when already at the minimum |
+
+</PropertyTable>
+
+The default is `"block"`.
+
+```tsx
+options={{
+  backdropBehavior: "dismiss",
+}}
+```
+
+### Custom backdrop components
+
+If you provide `backdropComponent`, pass either a component type or a render-style function component.
+
+```tsx
+options={{
+  backdropBehavior: "dismiss",
+  backdropComponent: BlurView,
+}}
+```
+
+Function components receive the layer values directly:
+
+```tsx
+options={{
+  backdropBehavior: "dismiss",
+  backdropComponent: ({ styles, props, pointerEvents }) => (
+    <Animated.View
+      style={styles}
+      animatedProps={props}
+      pointerEvents={pointerEvents}
+    />
+  ),
+}}
+```
+
+The render props are:
+
+- `styles`: the base backdrop style plus animated styles from the `backdrop` slot
+- `props`: animated props from the `backdrop` slot
+- `pointerEvents`: the backdrop pointer-event state
+
+Use backdrop for dimming, blur intensity, tint, or any visual treatment outside the screen itself. The backdrop renderer and its tap behavior are configured independently.
+
+## content
+
+`content` targets the root animated container for the screen itself.
+
+```tsx
+content: {
+  style: {
+    transform: [{ translateY: interpolate(progress, [0, 1], [40, 0]) }],
+  },
+}
+```
+
+This is the slot that usually carries the main screen motion: translate, scale, opacity, rotation, and overall clipping styles.
+
+Use `contentComponent` when the content layer itself needs a custom shell component.
+
+```tsx
+options={{
+  contentComponent: ({ styles, props, pointerEvents, children }) => (
+    <Animated.View
+      style={styles}
+      animatedProps={props}
+      pointerEvents={pointerEvents}
+    >
+      {children}
+    </Animated.View>
+  ),
+}}
+```
+
+The render props are:
+
+- `styles`: the base content style plus animated styles from the `content` slot
+- `props`: animated props from the `content` slot
+- `pointerEvents`: the content pointer-event state
+- `children`: the screen subtree
+
+Use `contentComponent` for custom tray shells, rounded containers, glass panels, or other screen-level wrappers that should own the screen subtree.
+
+## surface
+
+`surface` targets the visual shell nested inside the content layer. It wraps the screen subtree, but not the shared-element fallback host.
+
+The surface layer is created when `surfaceComponent` is configured; otherwise no additional wrapper is mounted.
+
+```tsx
+surface: {
+  style: {
+    borderRadius: 32,
+    filter: [{ blur: interpolate(progress, [0, 1], [18, 0.01]) }],
+  },
+}
+```
+
+Use `surfaceComponent` when that inner visual shell needs a custom renderer:
+
+```tsx
+options={{
+  surfaceComponent: ({ styles, props, pointerEvents, children }) => (
+    <Animated.View
+      style={styles}
+      animatedProps={props}
+      pointerEvents={pointerEvents}
+    >
+      {children}
+    </Animated.View>
+  ),
+}}
+```
+
+Use `content` for screen motion and navigation geometry. Use `surface` for visual treatments such as filters, clipping, backgrounds, and corner treatments that should not wrap shared-element fallback content.
+
+## Element Targets
+
+Any non-layer key is routed to transition-aware elements inside the screen tree.
+
+```tsx
+<Transition.View styleId="hero-card">
+  <Card />
+</Transition.View>
+
+return {
+  "hero-card": {
+    style: {
+      opacity: interpolate(progress, [0, 1], [0, 1]),
+      transform: [{ scale: interpolate(progress, [0, 1], [0.94, 1]) }],
+    },
+  },
+};
+```
+
+These keys apply only to transition-aware components created by the library such as `Transition.View`, `Transition.Pressable`, `Transition.ScrollView`, and `Transition.FlatList`.
+
+## Navigation Mask Layers
+
+When `navigationMaskEnabled` is enabled and `@react-native-masked-view/masked-view` is installed, the content layer is wrapped in a masked container.
+
+Two exported reserved ids control that wrapper:
+
+- `NAVIGATION_MASK_CONTAINER_STYLE_ID`
+- `NAVIGATION_MASK_ELEMENT_STYLE_ID`
+
+Use them directly in the interpolator:
+
+```tsx
+import {
+  NAVIGATION_MASK_CONTAINER_STYLE_ID,
+  NAVIGATION_MASK_ELEMENT_STYLE_ID,
+} from "react-native-screen-transitions";
+
+<Stack.Screen
+  name="Sheet"
+  component={SheetScreen}
+  options={{
+    navigationMaskEnabled: true,
+    screenStyleInterpolator: ({ current, progress }) => {
+      "worklet";
+
+      const { height } = current.layouts.screen;
+      const sheetHeight = interpolate(progress, [0, 1], [height * 0.6, height]);
+
+      return {
+        [NAVIGATION_MASK_CONTAINER_STYLE_ID]: {
+          style: {
+            transform: [{ translateY: height - sheetHeight }],
+          },
+        },
+        [NAVIGATION_MASK_ELEMENT_STYLE_ID]: {
+          style: {
+            width: "100%",
+            height: sheetHeight,
+            borderRadius: interpolate(progress, [0, 1], [32, 0]),
+            backgroundColor: "white",
+          },
+        },
+      };
+    },
+  }}
+/>
+```
+
+`NAVIGATION_MASK_CONTAINER_STYLE_ID` styles the masked content container. `NAVIGATION_MASK_ELEMENT_STYLE_ID` styles the mask element itself.
+
+Treat both ids as reserved layer keys. Do not reuse them as custom `styleId` values.
+
+## Props vs Style
+
+Every slot supports both animated styles and animated props:
+
+```tsx
+return {
+  backdrop: {
+    style: { opacity: 1 },
+    props: { intensity: 80 },
+  },
+  content: {
+    style: { borderRadius: 24 },
+    props: { cornerRadius: 24 },
+  },
+};
+```
+
+Use style for visual layout and transforms. Use props only when the wrapped layer or target component exposes animatable props such as blur intensity.
+
+## Related Reading
+
+- [Custom Animations](/custom-animations)
+- [Bounds Transitions](/shared-elements)

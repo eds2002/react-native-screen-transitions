@@ -39,8 +39,6 @@ When `onPress` is present, the boundary behaves like a pressable source. When `o
 </Transition.Boundary>
 ```
 
-`Transition.Boundary.View` and `Transition.Boundary.Trigger` still exist as deprecated aliases, but new code should use `Transition.Boundary`.
-
 For the high-level `bounds(id).navigation.zoom()` helper, the destination boundary is optional unless the zoom should target a specific destination element. See [Zoom](/navigation-zoom).
 
 ## Nested Measurement with Boundary.Target
@@ -71,24 +69,13 @@ This keeps the row as the interaction owner while limiting measurement to the ne
 
 Inside `screenStyleInterpolator`, call `bounds(id)` to scope the accessor to one boundary identity.
 
-<Note>
-  This accessor replaces the store-shaped bounds helpers from v3.8. The removal is source-breaking for callers of `getMeasured`, `getSnapshot`, `getLink`, `interpolateStyle`, `interpolateBounds`, or `BoundsLink.compute`. See [New in 3.9](/changelog/updating-to-3-9) for the full migration table.
-</Note>
-
 ```tsx
-screenStyleInterpolator: ({ bounds, progress, focused }) => {
+screenStyleInterpolator: ({ bounds }) => {
   "worklet";
 
   return {
     hero: {
-      style: {
-        ...bounds("hero").styles({
-          method: "transform",
-        }),
-        opacity: focused
-          ? interpolate(progress, [0, 1], [0, 1], "clamp")
-          : interpolate(progress, [1, 2], [1, 0], "clamp"),
-      },
+      style: bounds("hero").styles(),
     },
   };
 };
@@ -114,6 +101,8 @@ const link = card.link();
 
 Pass identity to `bounds()`, then pass compute options to `styles()` or `values()`.
 
+<PropertyTable>
+
 | Option | Values | Notes |
 | --- | --- | --- |
 | `method` | `"transform" \| "size" \| "content"` | Matching strategy |
@@ -123,8 +112,9 @@ Pass identity to `bounds()`, then pass compute options to `styles()` or `values(
 | `offset` | `{ x?: number; y?: number }` | Add live x/y offsets from gestures, scroll, or animation state |
 | `progress` | `number` | Custom progress driver for the bounds interpolation |
 | `motion` | `BoundsMotion` | Replace the generated transform path without reimplementing measurement |
-| `gestures` | `{ x?: number; y?: number }` | Deprecated alias for `offset` |
 | `space` | `"relative" \| "absolute"` | `absolute` is mainly for navigation helpers and custom renderers |
+
+</PropertyTable>
 
 ## Numeric Bounds with values()
 
@@ -132,8 +122,8 @@ Use `styles()` when you want the library to return the final animated style obje
 
 Use `values()` when you want the same measured geometry but need to compose the final style yourself.
 
-```tsx
-screenStyleInterpolator: ({ bounds, current }) => {
+<CodeBlock
+  code={`screenStyleInterpolator: ({ bounds, current }) => {
   "worklet";
 
   const hero = bounds("hero").values({
@@ -154,8 +144,16 @@ screenStyleInterpolator: ({ bounds, current }) => {
       },
     },
   };
-};
-```
+};`}
+  highlightedLines={[7]}
+  language="tsx"
+  showLineNumbers
+  title="TSX"
+/>
+
+<Note>
+  Bounds use gesture-driven progress by default. When you add freeform gesture movement separately, that progress can pull the geometry back toward the transition path and create a magnetic feel. Pass `transitionProgress` to keep the bounds geometry on its committed path while your gesture values control the extra movement.
+</Note>
 
 ## Zoom and Reveal
 
@@ -208,10 +206,6 @@ The group keeps track of the active member id so the transition stays aligned as
 
 Use `handoff` when the same live payload should move between matching boundaries instead of remounting on each screen.
 
-<Note>
-  Live payload handoff is experimental in v3.9. It works well for focused flows, but native-backed content and rapid navigation can still expose platform-specific lifecycle or compositing edge cases.
-</Note>
-
 ```tsx
 // Source
 <Transition.Boundary id="video" handoff onPress={openPlayer}>
@@ -243,14 +237,10 @@ Use `escapeClipping` when a boundary needs to render outside local clipping or l
 `handoff` and `escapeClipping` use `react-native-teleport` under the hood. Install the supported version when using either prop:
 
 ```sh
-bun add react-native-teleport@1.2.0
+npm install react-native-teleport@1.2.0
 ```
 
-Version `1.2.0` uses the native reparenting fast path for live payloads, including handed-off video.
-
-Test handed-off video on physical Android devices. A `SurfaceView` may not obey portal clipping or transforms, while a `TextureView` participates in normal view composition. For Expo Video, `surfaceType="textureView"` is usually the correct choice when clipping and transforms matter.
-
-See [Caveats & Trade-offs](/caveats) for the current handoff support boundary.
+Version 1.2.0 or later provides the native reparenting path used by live boundary handoff.
 
 ## Bounds with Offsets
 
@@ -273,8 +263,6 @@ screenStyleInterpolator: ({ bounds, active }) => {
   };
 };
 ```
-
-The older `gestures` option still works as a deprecated alias. Use `offset` for new code because the values can come from gestures, scroll, animation state, or any other x/y source.
 
 ## Bounds with a Custom Progress Driver
 

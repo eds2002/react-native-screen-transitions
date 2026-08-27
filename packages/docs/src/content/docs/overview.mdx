@@ -1,8 +1,8 @@
 ---
 title: "Introduction"
 pageTitle: "Introduction"
-summary: "Build custom screen transitions, snap sheets, overlays, and bounds-driven navigation motion with the v3 API."
-description: "Build custom screen transitions, snap sheets, overlays, and bounds-driven navigation motion with the v3 API."
+summary: "Build custom screen transitions, snap sheets, overlays, and bounds-driven navigation motion."
+description: "Build custom screen transitions, snap sheets, overlays, and bounds-driven navigation motion."
 eyebrow: "Get Started"
 group: "Get Started"
 order: 1
@@ -12,7 +12,7 @@ imageAlt: "A still from the example app used as a motion reference."
 imageCaption: "A frame from the example app, used as lightweight motion context."
 ---
 
-`react-native-screen-transitions` is a React Navigation transition toolkit for apps that need more control than the platform defaults.
+`react-native-screen-transitions` is a transition toolkit for apps that need more control than the platform defaults.
 
 Use it when you want to build:
 
@@ -43,27 +43,11 @@ React Native can support smooth, 60 fps transition work across Android and iOS. 
 
 Screen Transitions is a customizable package for building transitions that used to feel out of reach in React Native.
 
-## Navigation Compatibility
-
-These are the supported navigation paths for the stable v3 release:
-
-| Navigation setup | v3 status | Integration |
-| --- | --- | --- |
-| React Navigation 6 or 7 | Supported | Use `react-native-screen-transitions/blank-stack` or the native-stack adapter. |
-| Expo Router on Expo SDK 55 or earlier | Supported | Wrap the v3 blank stack with `withLayoutContext()`. |
-| Expo Router on Expo SDK 56 or later | Not supported by v3 | Use the [v4 alpha Expo Router integration](/v4-experimental/getting-started). |
-
-<Note>
-  Expo SDK 55 is the last Expo Router release that uses the React Navigation-backed integration documented for v3. Expo Router forked the navigation packages it builds upon in SDK 56. See Expo's [SDK 55 to 56 migration guide](https://docs.expo.dev/router/migrate/sdk-55-to-56/) for the upstream change.
-</Note>
-
-Using React Navigation directly is still supported, including inside an Expo app. The SDK 56 boundary applies specifically to Expo Router.
-
 ## Choose A Stack
 
 ### Blank Stack
 
-`createBlankStackNavigator()` is the default recommendation.
+Blank Stack is the default recommendation. It uses the same transition runtime with React Navigation and Expo Router through host-specific entry points.
 
 It is the best fit for:
 
@@ -71,7 +55,7 @@ It is the best fit for:
 - snap sheets
 - overlays
 - bounds transitions
-- embedded and independent flows
+- embedded flows
 
 ### Native Stack
 

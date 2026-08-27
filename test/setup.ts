@@ -55,6 +55,9 @@ globalThis.resetMutableRegistry = () => {
 
 mock.module("react-native", () => ({
 	View: "View",
+	NativeComponentRegistry: {
+		get: (name: string) => name,
+	},
 	Platform: {
 		OS: "ios",
 		select: <T>(obj: { ios?: T; android?: T; default?: T }) =>
@@ -65,10 +68,19 @@ mock.module("react-native", () => ({
 		absoluteFill: {},
 		absoluteFillObject: {},
 		create: <T>(styles: T) => styles,
-		flatten: <T>(style: T) => style,
 	},
 }));
 mock.module("react-native-gesture-handler", () => ({}));
+mock.module("react-native-worklets", () => ({
+	scheduleOnRN: <T extends (...args: any[]) => any>(
+		callback: T,
+		...args: Parameters<T>
+	) => callback(...args),
+	scheduleOnUI: <T extends (...args: any[]) => any>(
+		callback: T,
+		...args: Parameters<T>
+	) => callback(...args),
+}));
 mock.module("react-native-reanimated", () => ({
 	makeMutable: createTestMutable,
 	createAnimatedComponent,

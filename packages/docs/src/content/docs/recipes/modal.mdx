@@ -17,28 +17,28 @@ This recipe builds a nested modal flow that can turn drag-to-dismiss on and off 
 
 Use this pattern when a modal represents a flow the user should intentionally finish or exit, such as onboarding, account setup, checkout, or any multi-step setup. The modal can still acknowledge a pull gesture, but the resisted motion communicates that the flow is not casually dismissible.
 
-## Route Shape
+## Navigator Shape
 
 ```text
-app/
-  example/
-    _layout.tsx
-    index.tsx
-    modal/
-      _layout.tsx
-      index.tsx
-      b.tsx
+AppStack
+  Home
+  Modal
+    ModalStack
+      ModalHome
+      ModalDisabled
 ```
 
 The parent stack owns the modal presentation. The nested `modal` stack owns the screens inside that modal. Each nested screen can update the parent modal's `gestureEnabled` option when it receives focus.
 
-## Parent Layout
+## Parent Stack
 
-```tsx title="app/example/_layout.tsx" focus="gestureEnabled,gestureTracking,current.options.gestureEnabled,gestureSensitivity,gestureReleaseVelocityScale"
+```tsx title="navigation/app-stack.tsx" focus="gestureEnabled,gestureTracking,current.options.gestureEnabled,gestureSensitivity,gestureReleaseVelocityScale"
 import { interpolate } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";
 import Transition from "react-native-screen-transitions";
-import { BlankStack } from "@/layouts/blank-stack";
+import { createBlankStackNavigator } from "react-native-screen-transitions/react-navigation";
+
+const Stack = createBlankStackNavigator();
 
 const modalOptions: ScreenTransitionConfig = {
   gestureEnabled: true,
@@ -95,12 +95,16 @@ const modalOptions: ScreenTransitionConfig = {
   },
 };
 
-export default function ExampleLayout() {
+export function AppStack() {
   return (
-    <BlankStack>
-      <BlankStack.Screen name="index" />
-      <BlankStack.Screen name="modal" options={modalOptions} />
-    </BlankStack>
+    <Stack.Navigator>
+      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen
+        name="Modal"
+        component={ModalFlow}
+        options={modalOptions}
+      />
+    </Stack.Navigator>
   );
 }
 ```
@@ -119,13 +123,14 @@ The `maxHeight` and `marginTop` values make the modal a real bottom-aligned card
 
 ## Launcher Screen
 
-```tsx title="app/example/index.tsx"
-import { router } from "expo-router";
+```tsx title="screens/home-screen.tsx"
+import { useNavigation } from "@react-navigation/native";
 import { Button, View } from "react-native";
 import { useTheme } from "@/theme";
 
-export default function ExampleIndex() {
+export function HomeScreen() {
   const theme = useTheme();
+  const navigation = useNavigation();
 
   return (
     <View
@@ -136,7 +141,7 @@ export default function ExampleIndex() {
         backgroundColor: theme.bg,
       }}
     >
-      <Button title="Open Modal" onPress={() => router.push("/example/modal")} />
+      <Button title="Open Modal" onPress={() => navigation.navigate("Modal")} />
     </View>
   );
 }
@@ -144,16 +149,18 @@ export default function ExampleIndex() {
 
 ## Nested Modal Stack
 
-```tsx title="app/example/modal/_layout.tsx"
+```tsx title="navigation/modal-stack.tsx"
 import { View } from "react-native";
-import { BlankStack } from "@/layouts/blank-stack";
+import { createBlankStackNavigator } from "react-native-screen-transitions/react-navigation";
 import {
   IOS_SLIDE_BORDER_RADIUS,
   IOSSlide,
 } from "@/lib/screen-transitions/ios-slide";
 import { useTheme } from "@/theme";
 
-export default function ModalLayout() {
+const ModalStack = createBlankStackNavigator();
+
+export function ModalFlow() {
   const theme = useTheme();
 
   return (
@@ -166,10 +173,14 @@ export default function ModalLayout() {
         overflow: "hidden",
       }}
     >
-      <BlankStack>
-        <BlankStack.Screen name="index" />
-        <BlankStack.Screen name="b" options={{ ...IOSSlide() }} />
-      </BlankStack>
+      <ModalStack.Navigator>
+        <ModalStack.Screen name="ModalHome" component={ModalHomeScreen} />
+        <ModalStack.Screen
+          name="ModalDisabled"
+          component={ModalDisabledScreen}
+          options={IOSSlide()}
+        />
+      </ModalStack.Navigator>
     </View>
   );
 }
@@ -177,21 +188,21 @@ export default function ModalLayout() {
 
 The nested stack is wrapped in the rounded modal surface. The `b` screen uses the regular iOS slide helper so navigation inside the modal stays separate from the parent modal presentation.
 
-## Dismissable Screen
+## Dismissible Screen
 
-```tsx title="app/example/modal/index.tsx" focus="navigation.getParent().setOptions,gestureEnabled: true"
-import { router, useFocusEffect, useNavigation } from "expo-router";
+```tsx title="screens/modal-home-screen.tsx" focus="navigation.getParent()?.setOptions,gestureEnabled: true"
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useCallback } from "react";
 import { Button, Text, View } from "react-native";
 import { useTheme } from "@/theme";
 
-export default function ModalIndex() {
+export function ModalHomeScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
 
   useFocusEffect(
     useCallback(() => {
-      navigation.getParent().setOptions({
+      navigation.getParent()?.setOptions({
         gestureEnabled: true,
       });
     }, [navigation])
@@ -205,9 +216,12 @@ export default function ModalIndex() {
         justifyContent: "center",
       }}
     >
-      <Button title="Go to B" onPress={() => navigation.navigate("b")} />
+      <Button
+        title="Continue"
+        onPress={() => navigation.navigate("ModalDisabled")}
+      />
       <Text style={{ fontSize: 11, opacity: 0.5, color: theme.text }}>
-        This screen is currently dismissable.
+        This screen is currently dismissible.
       </Text>
     </View>
   );
@@ -218,13 +232,13 @@ When the first modal screen is focused, it enables dismissal on the parent modal
 
 ## Disabled Screen
 
-```tsx title="app/example/modal/b.tsx" focus="navigation.getParent()?.setOptions,gestureEnabled: false"
-import { router, useFocusEffect, useNavigation } from "expo-router";
+```tsx title="screens/modal-disabled-screen.tsx" focus="navigation.getParent()?.setOptions,gestureEnabled: false"
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useCallback } from "react";
 import { Button, Text, View } from "react-native";
 import { useTheme } from "@/theme";
 
-export default function ModalIndex() {
+export function ModalDisabledScreen() {
   const theme = useTheme();
   const navigation = useNavigation();
 
@@ -245,16 +259,16 @@ export default function ModalIndex() {
         backgroundColor: theme.bg,
       }}
     >
-      <Button title="Go back" onPress={router.back} />
+      <Button title="Go back" onPress={() => navigation.goBack()} />
       <Text style={{ fontSize: 11, opacity: 0.5, color: theme.text }}>
-        This screen is currently not dismissable
+        This screen is currently not dismissible.
       </Text>
     </View>
   );
 }
 ```
 
-When `b` is focused, it disables dismissal on the parent modal route. Because the parent route has `gestureTracking: "always"`, the modal can still track the pull and apply the disabled resistance from the parent interpolator.
+When `ModalDisabled` is focused, it disables dismissal on the parent modal route. Because the parent route has `gestureTracking: "always"`, the modal can still track the pull and apply the disabled resistance from the parent interpolator.
 
 ## Closing Thoughts
 
@@ -268,4 +282,4 @@ The result is a modal that can be dismissable when it should leave, resistant wh
 
 - [Gestures](/gestures)
 - [Custom Animations](/custom-animations)
-- [Expo Router](/expo-router)
+- [React Navigation](/react-navigation)

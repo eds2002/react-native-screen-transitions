@@ -3,7 +3,7 @@ import { StatusBar } from "expo-status-bar";
 import Transition, {
 	type ScreenTransitionConfig,
 } from "react-native-screen-transitions";
-import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
+import { createBlankStackNavigator } from "react-native-screen-transitions/react-navigation";
 import { MEDIA_BOUNDARY_ID } from "./src/media";
 import type { RootStackParamList } from "./src/navigation/types";
 import { DetailScreen } from "./src/screens/detail-screen";

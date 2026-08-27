@@ -16,7 +16,7 @@ export default function DetailScreen() {
 				<Text style={styles.eyebrow}>DETAIL TRANSITION</Text>
 				<Text style={styles.title}>Drag down to dismiss.</Text>
 				<Text style={styles.description}>
-					This screen uses the v3 SlideFromBottom preset. Replace it with your
+					This screen uses the v4 SlideFromBottom preset. Replace it with your
 					own interpolator when the product needs a distinct motion language.
 				</Text>
 			</View>

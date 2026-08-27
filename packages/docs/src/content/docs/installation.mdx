@@ -1,128 +1,50 @@
 ---
 title: "Installation"
 pageTitle: "Installation"
-summary: "Install the package, its peer dependencies, and the optional masking dependency when needed."
-description: "Install the package, its peer dependencies, and the optional masking dependency when needed."
+summary: "Install Screen Transitions and its peer dependencies."
+description: "Install Screen Transitions with its required React Native, animation, gesture, and navigation peers."
 eyebrow: "Get Started"
 group: "Get Started"
 order: 2
 to: /installation
 ---
 
-## Choose Your Navigation Setup
+## Requirements
 
-This page installs the stable v3 release.
+The current release requires:
 
-| Navigation setup | v3 status | Next step |
-| --- | --- | --- |
-| React Navigation 6 or 7 | Supported | Follow this page, then [Quick Start](/quick-start). |
-| Expo Router on Expo SDK 55 or earlier | Supported | Follow this page, then [Expo Router](/expo-router). |
-| Expo Router on Expo SDK 56 or later | Not supported by v3 | Use the [v4 alpha installation](/v4-experimental/installation). |
+- React 19.2 or later
+- Reanimated 4
+- Worklets 0.8 or later
+- React Navigation 7.3 or later
+- Gesture Handler 2.16.1 or later
 
-<Note>
-  Expo SDK 55 is the final SDK supported by the v3 Expo Router integration. Expo Router changed navigation internals in SDK 56; do not combine an SDK 56+ Expo Router app with the v3 setup below.
-</Note>
+Expo Router support currently requires Expo Router 56.2.10 or later and is marked Alpha. See [Expo Router](/expo-router) before using it in production.
 
-## 1. Install The Package
+## Install the package
 
 <CodeBlock
   variant="terminal"
   defaultTab="npm"
   syncKey="package-manager"
   tabs={[
-    {
-      label: "npm",
-      value: "npm",
-      code: `npm install react-native-screen-transitions`,
-    },
-    {
-      label: "yarn",
-      value: "yarn",
-      code: `yarn add react-native-screen-transitions`,
-    },
-    {
-      label: "pnpm",
-      value: "pnpm",
-      code: `pnpm add react-native-screen-transitions`,
-    },
-    {
-      label: "bun",
-      value: "bun",
-      code: `bun add react-native-screen-transitions`,
-    },
+    { label: "npm", value: "npm", code: `npm install react-native-screen-transitions` },
+    { label: "yarn", value: "yarn", code: `yarn add react-native-screen-transitions` },
+    { label: "pnpm", value: "pnpm", code: `pnpm add react-native-screen-transitions` },
+    { label: "bun", value: "bun", code: `bun add react-native-screen-transitions` },
   ]}
 />
 
-## 2. Install The Peer Dependencies
+## Install peer dependencies
 
-The package expects these peer dependencies:
-
-<CodeBlock
-  variant="terminal"
-  defaultTab="npm"
-  syncKey="package-manager"
-  tabs={[
-    {
-      label: "npm",
-      value: "npm",
-      code: `npm install react-native-reanimated react-native-gesture-handler \
-  @react-navigation/native @react-navigation/native-stack \
-  @react-navigation/elements react-native-screens \
-  react-native-safe-area-context`,
-    },
-    {
-      label: "yarn",
-      value: "yarn",
-      code: `yarn add react-native-reanimated react-native-gesture-handler \
-  @react-navigation/native @react-navigation/native-stack \
-  @react-navigation/elements react-native-screens \
-  react-native-safe-area-context`,
-    },
-    {
-      label: "pnpm",
-      value: "pnpm",
-      code: `pnpm add react-native-reanimated react-native-gesture-handler \
-  @react-navigation/native @react-navigation/native-stack \
-  @react-navigation/elements react-native-screens \
-  react-native-safe-area-context`,
-    },
-    {
-      label: "bun",
-      value: "bun",
-      code: `bun add react-native-reanimated react-native-gesture-handler \
-  @react-navigation/native @react-navigation/native-stack \
-  @react-navigation/elements react-native-screens \
-  react-native-safe-area-context`,
-    },
-  ]}
-/>
-
-If you use Expo, prefer `expo install`:
+For Expo projects:
 
 ```bash
-npx expo install react-native-reanimated react-native-gesture-handler \
-  @react-navigation/native @react-navigation/native-stack \
-  @react-navigation/elements react-native-screens \
-  react-native-safe-area-context
+npx expo install @react-navigation/native react-native-gesture-handler \
+  react-native-reanimated react-native-safe-area-context react-native-worklets
 ```
 
-The important version floors are:
-
-- `@react-navigation/native >= 6.0.0`
-- `@react-navigation/native-stack >= 7.0.0`
-- `react-native-reanimated >= 3.16.0 or 4.x`
-- `react-native-gesture-handler >= 2.16.1`
-- `react-native-screens >= 4.4.0`
-
-For project-level setup such as the Reanimated import, Babel plugin ordering, Gesture Handler wiring, and any native React Navigation requirements, follow the official installation guides for the underlying packages in your app.
-
-## 3. Optional Masking Dependency
-
-Install `@react-native-masked-view/masked-view` if you use:
-
-- `navigationMaskEnabled`
-- library-managed navigation zoom masking
-- the legacy `Transition.MaskedView`
+For bare React Native projects:
 
 <CodeBlock
   variant="terminal"
@@ -132,67 +54,44 @@ Install `@react-native-masked-view/masked-view` if you use:
     {
       label: "npm",
       value: "npm",
-      code: `npm install @react-native-masked-view/masked-view`,
+      code: `npm install @react-navigation/native react-native-gesture-handler \
+  react-native-reanimated react-native-safe-area-context react-native-worklets`,
     },
     {
       label: "yarn",
       value: "yarn",
-      code: `yarn add @react-native-masked-view/masked-view`,
+      code: `yarn add @react-navigation/native react-native-gesture-handler \
+  react-native-reanimated react-native-safe-area-context react-native-worklets`,
     },
     {
       label: "pnpm",
       value: "pnpm",
-      code: `pnpm add @react-native-masked-view/masked-view`,
+      code: `pnpm add @react-navigation/native react-native-gesture-handler \
+  react-native-reanimated react-native-safe-area-context react-native-worklets`,
     },
     {
       label: "bun",
       value: "bun",
-      code: `bun add @react-native-masked-view/masked-view`,
+      code: `bun add @react-navigation/native react-native-gesture-handler \
+  react-native-reanimated react-native-safe-area-context react-native-worklets`,
     },
   ]}
 />
 
-## 4. Native Project Step
+Follow the Reanimated and Gesture Handler setup instructions for your React Native version. Bare iOS projects must also install pods after changing native dependencies. Expo Router apps already install Expo Router as part of their app setup.
 
-For bare React Native projects, install iOS pods after changing dependencies:
+Continue with [React Navigation](/react-navigation) or the Alpha [Expo Router integration](/expo-router).
+
+## Optional packages
+
+Install `@react-native-masked-view/masked-view` when using navigation masks or library-managed zoom masking:
 
 ```bash
-cd ios && pod install
+npm install @react-native-masked-view/masked-view
 ```
 
-## 5. Verify The Setup
+Boundary teleportation uses `react-native-teleport`:
 
-If this renders and navigates without Reanimated or Gesture Handler errors, the base setup is correct:
-
-```tsx
-import Transition from "react-native-screen-transitions";
-import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
-
-const Stack = createBlankStackNavigator();
-
-export function RootNavigator() {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen name="Home" component={HomeScreen} />
-      <Stack.Screen
-        name="Detail"
-        component={DetailScreen}
-        options={{
-          ...Transition.Presets.SlideFromBottom(),
-        }}
-      />
-    </Stack.Navigator>
-  );
-}
+```bash
+npm install react-native-teleport@1.2.0
 ```
-
-Then continue to [Quick Start](/quick-start).
-
-## Start From A Complete App
-
-If you are creating a new project, these starters keep the two supported v3 navigation setups separate:
-
-- [v3 Expo Router starter](https://github.com/eds2002/react-native-screen-transitions/tree/main/starters/expo-router) — an Expo SDK 55 app exercising the final Router environment supported by the v3 `withLayoutContext()` integration.
-- [v3 React Navigation starter](https://github.com/eds2002/react-native-screen-transitions/tree/main/starters/react-navigation) — upstream React Navigation with the v3 blank stack.
-
-Both starters show the same detail transition, snap-point sheet, and paired-boundary remote-media zoom, so the only meaningful difference is the navigation host.
