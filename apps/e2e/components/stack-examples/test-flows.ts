@@ -71,12 +71,6 @@ export const PRESET_FLOWS = [
 		title: "Elastic Card",
 		description: "Elastic drag with overlay darkening",
 	},
-	{
-		id: "shared-x-image",
-		title: "Shared X Image",
-		description:
-			"Deprecated SharedXImage preset for feed card -> fullscreen media",
-	},
 ] satisfies {
 	id: string;
 	title: string;

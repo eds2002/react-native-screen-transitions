@@ -52,10 +52,6 @@ export default function RootLayout() {
 					}}
 				/>
 				<StackNavigator.Screen
-					name={stackScreen("shared-x-image")}
-					options={{ ...IOSSlide() }}
-				/>
-				<StackNavigator.Screen
 					name={stackScreen("detail")}
 					options={{ ...IOSSlide() }}
 				/>
