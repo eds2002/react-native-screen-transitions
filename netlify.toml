@@ -3,5 +3,8 @@
 	command = "bun run --cwd packages/docs build"
 	publish = "packages/docs/dist/client"
 
+[build.environment]
+	BUN_FLAGS = "--force --frozen-lockfile"
+
 [functions]
 	included_files = ["node_modules/geist/dist/fonts/geist-sans/Geist-Variable.ttf"]
