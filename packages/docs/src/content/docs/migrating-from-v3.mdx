@@ -105,6 +105,22 @@ Version 4 distinguishes `contentComponent` from `surfaceComponent`. Use `content
 
 Version 4 also removes ignored bounds and zoom compatibility options, including `bounds().math()`, `raw`, `gestures`, legacy zoom opacity ranges, and old drag sensitivity fields. Use `bounds(id).values()`, `offset`, and the current `drag` configuration instead.
 
+## Replace removed shared presets
+
+Version 4 removes `Transition.Presets.SharedIGImage()`, `Transition.Presets.SharedAppleMusic()`, and `Transition.Presets.SharedXImage()`. These presets combined product-specific gesture, masking, backdrop, and bounds decisions into fixed recipes that were difficult to extend.
+
+For an opinionated source-to-destination transition, use the supported zoom recipe:
+
+```tsx
+screenStyleInterpolator: ({ bounds }) => {
+  "worklet";
+
+  return bounds(id).navigation.zoom();
+};
+```
+
+When the transition needs its own gesture response, layer choreography, or visual treatment, build it in `screenStyleInterpolator` with `bounds(id).styles()` or `bounds(id).values()`. See [Bounds Transitions](/shared-elements) for the lower-level geometry helpers and [Zoom](/navigation-zoom) for the built-in recipe.
+
 ## Check inactive screen behavior
 
 The four `inactiveBehavior` values remain `hide`, `pause`, `unmount`, and `keep`. Their implementation changed from React Native Screens and React Freeze to React 19.2 Activity.

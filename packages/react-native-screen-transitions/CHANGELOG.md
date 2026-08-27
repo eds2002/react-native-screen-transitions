@@ -14,6 +14,7 @@
 ### Breaking Changes
 
 * **blank-stack:** remove the non-functional `independent` navigator prop and `BlankStackFactoryOptions` export. Remove the prop from navigator configuration; isolated embedded flows must create their navigation boundary explicitly outside Blank Stack.
+* **presets:** remove `SharedIGImage`, `SharedAppleMusic`, and `SharedXImage`. Use `bounds(id).navigation.zoom()` for the standard source-to-destination path, or compose a custom interpolator with the scoped Bounds helpers.
 
 
 ### Features
