@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 
 export type DocSlug = string;
+export type DocsVersion = "v3" | "v4";
 
 type DocFrontmatter = {
 	availability?: string;
@@ -14,6 +15,7 @@ type DocFrontmatter = {
 	summary: string;
 	title: string;
 	to: string;
+	version?: DocsVersion;
 };
 
 type DocModule = {
@@ -36,6 +38,7 @@ export type Doc = {
 	summary: string;
 	title: string;
 	to: string;
+	version: DocsVersion;
 };
 
 const siteUrl = new URL("https://screen-transitions.esjr.org");
@@ -70,6 +73,14 @@ function normalizePathname(pathname: string) {
 
 function fallbackDocPath(slug: DocSlug) {
 	return slug === "overview" ? "/" : `/${slug}`;
+}
+
+function resolveDocsVersion(value: unknown): DocsVersion {
+	if (value === "v3" || value === "v4") {
+		return value;
+	}
+
+	return "v4";
 }
 
 function resolveSlug(modulePath: string) {
@@ -126,6 +137,7 @@ function createDoc(modulePath: string, module: DocModule): Doc {
 		summary: asString(frontmatter.summary),
 		title: asString(frontmatter.title, asString(frontmatter.pageTitle)),
 		to: localPath === "/" ? "/" : normalizePathname(localPath),
+		version: resolveDocsVersion(frontmatter.version),
 	};
 }
 
@@ -159,8 +171,10 @@ function isChangelogDoc(doc: Doc) {
 	return doc.group === "Changelogs";
 }
 
-export function getChangelogDocs() {
-	return flatDocs.filter(isChangelogDoc);
+export function getChangelogDocs(version?: DocsVersion) {
+	return flatDocs.filter(
+		(doc) => isChangelogDoc(doc) && (!version || doc.version === version),
+	);
 }
 
 export function getChangelogDocBySlug(slug: DocSlug) {
@@ -245,8 +259,10 @@ export function createDocUrl(pathname: string) {
 }
 
 export function createDocHead(doc: Doc) {
+	const siteName =
+		doc.version === "v3" ? "Screen Transitions v3" : "Screen Transitions";
 	const title =
-		doc.to === "/" ? "Screen Transitions" : `${doc.pageTitle} | Screen Transitions`;
+		doc.to === "/" ? siteName : `${doc.pageTitle} | ${siteName}`;
 	const socialImage = createSocialImageUrl(doc.to);
 	const canonicalUrl = createDocUrl(doc.to);
 	const imageAlt =

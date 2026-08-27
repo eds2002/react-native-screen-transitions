@@ -1,0 +1,83 @@
+---
+title: "New in 4.0"
+pageTitle: "New in 4.0"
+summary: "v4 adds step-based sheet gestures, explicit handoff ownership, stronger global bounds coordination, and a smaller public API."
+description: "v4 adds step-based sheet gestures, explicit handoff ownership, stronger global bounds coordination, and a smaller public API."
+eyebrow: "Changelogs"
+group: "Changelogs"
+version: "v4"
+hidden: true
+changelogDate: "August 2026"
+order: -1
+to: /changelog/updating-to-4-0
+---
+
+Version 4 keeps the transition model from the final v3 releases while making the navigation boundary smaller and more explicit. Existing interpolators, presets, gestures, overlays, snap points, and bounds transitions keep the same overall shape. The migration work is concentrated in dependencies, navigator entry points, and APIs that were already deprecated in v3.
+
+## Step-based sheet gestures
+
+Snap sheets now support `sheetSnapBehavior: "step"`. In step mode, one gesture moves to at most the next higher or lower detent, and every interval receives a full normalized drag range. Release velocity can decide whether that adjacent step commits, but it cannot skip across multiple detents.
+
+```tsx
+<Stack.Screen
+  name="Sheet"
+  component={SheetScreen}
+  options={{
+    gestureEnabled: true,
+    gestureDirection: "vertical",
+    snapPoints: [0.4, 0.9, 1],
+    sheetSnapBehavior: "step",
+  }}
+/>
+```
+
+The default remains `"continuous"`, where physical movement maps to global screen progress and one drag may cross multiple detents. See [Snap Points](/snap-points) for auto sizing, scroll handoff, snap locking, and `snapTo()`.
+
+## Explicit handoff ownership
+
+Bounds handoff still chooses its owner automatically by default. Version 4 also lets a boundary slot return `handoffTarget: "source" | "destination" | "auto"` from `screenStyleInterpolator` when the animation needs to decide the exact frame that live content changes hands.
+
+```tsx
+screenStyleInterpolator: ({ active, bounds }) => {
+  "worklet";
+
+  const styles = bounds("hero").navigation.zoom();
+
+  return {
+    ...styles,
+    hero: {
+      ...styles.hero,
+      props: {
+        handoffTarget:
+          active.closing && active.progress <= 0.5
+            ? "source"
+            : "destination",
+      },
+    },
+  };
+};
+```
+
+Use the explicit target only when the visual choreography needs it. `"auto"` remains the normal choice. See [Boundary Components](/boundary-components) and [Bounds Transitions](/shared-elements).
+
+## More global bounds coordination
+
+The global bounds work from the final v3 releases carries into v4 and is tightened around cross-container handoffs. Matching boundaries can coordinate across nested navigators and retained route trees without depending on the provider that happened to mount each boundary.
+
+Pair ownership is retained while a destination becomes ready, closing handoffs survive active-pair changes, grouped sources normalize against the current item, and endpoints refresh before forward and backward transitions. This reduces stale measurements, incorrect retargeting, clipping, and flicker during rapid push and pop sequences.
+
+No migration is required for existing `id`, `group`, `handoff`, `escapeClipping`, `.styles()`, `.values()`, zoom, or reveal usage.
+
+## Breaking changes
+
+Version 4 deliberately removes the compatibility surface that accumulated during v3:
+
+- React 19.2, Reanimated 4, Worklets 0.8, and React Navigation 7.3 are now the minimum supported runtime versions.
+- React Navigation imports Blank Stack from `react-native-screen-transitions/react-navigation` instead of `/blank-stack`. Expo Router has a separate `/expo-router` entry point and remains an Alpha integration.
+- The bundled component stack and bundled native-stack creator are removed. Use Blank Stack, or wrap `@react-navigation/native-stack` with `withScreenTransitions`.
+- `nativeScreens`, `enableNativeScreens`, `independent`, and `BlankStackFactoryOptions` are removed from Blank Stack.
+- Deprecated gesture, snap, bounds, zoom, and `useScreenAnimation` target aliases are removed.
+- `SharedIGImage`, `SharedAppleMusic`, and `SharedXImage` are removed. Prefer `bounds(id).navigation.zoom()` or build the transition with `bounds(id).styles()` and `bounds(id).values()`.
+- `contentComponent` now owns the outer screen-motion layer, while `surfaceComponent` owns the nested visual surface.
+
+Read [Upgrading from v3](/migrating-from-v3) for the exact replacements and [Installation](/installation) for the current peer requirements.
