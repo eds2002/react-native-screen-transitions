@@ -1,4 +1,4 @@
-import { type ComponentType, createElement, type ReactNode } from "react";
+import type { ComponentType, ReactNode } from "react";
 
 /**
  * `react-native-teleport` is an optional peer dependency. The require sits in a
@@ -9,33 +9,12 @@ import { type ComponentType, createElement, type ReactNode } from "react";
  * inline rendering; everything else keeps working.
  */
 let mod: any = null;
-let managerMod: any = null;
-let providerViewMod: any = null;
 try {
 	mod = require("react-native-teleport");
-	managerMod = require("react-native-teleport/lib/module/contexts/PortalManager");
-	providerViewMod = require("react-native-teleport/lib/module/views/PortalProvider");
 } catch {}
 
-const NativePortalProviderView: ComponentType<{ children: ReactNode }> | null =
-	providerViewMod?.default ?? null;
-const PortalManagerProvider: ComponentType<{ children: ReactNode }> | null =
-	managerMod?.PortalManagerProvider ?? null;
-
 const SafeNativePortalProvider: ComponentType<{ children: ReactNode }> | null =
-	PortalManagerProvider
-		? ({ children }: { children: ReactNode }) => {
-				const managedChildren = createElement(
-					PortalManagerProvider,
-					null,
-					children,
-				);
-
-				return NativePortalProviderView
-					? createElement(NativePortalProviderView, null, managedChildren)
-					: managedChildren;
-			}
-		: null;
+	mod?.PortalProvider ?? null;
 
 export const isTeleportAvailable =
 	mod !== null && SafeNativePortalProvider !== null;
