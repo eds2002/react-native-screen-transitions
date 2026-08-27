@@ -78,6 +78,7 @@ describe("createBlankStackController", () => {
 				navigation,
 			),
 		);
+		const previousDescriptor = controller.getSnapshot().state.descriptors.c;
 
 		controller.update(
 			createProps([routeA, routeB], { a: descriptorA, b: descriptorB }, navigation),
@@ -90,7 +91,7 @@ describe("createBlankStackController", () => {
 			"c",
 		]);
 		expect(snapshot.state.descriptors.c?.route).toBe(descriptorC.route);
-		expect(snapshot.state.descriptors.c).toBe(descriptorC);
+		expect(snapshot.state.descriptors.c).toBe(previousDescriptor);
 		expect(snapshot.state.closingRouteKeys.has("c")).toBe(true);
 		expect(snapshot.state.scenes[0]?.previousDescriptor).toBeUndefined();
 		expect(snapshot.state.scenes[0]?.nextDescriptor?.route).toBe(
