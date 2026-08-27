@@ -26,8 +26,6 @@ Version 3 remains available for apps that need React before 19.2, Reanimated 3, 
 
 The current release requires React 19.2, Reanimated 4, Worklets 0.8, and React Navigation 7.3 or later. Expo Router requires 56.2.10 or later and remains an Alpha integration.
 
-Follow [Installation](/installation), then rebuild the native app. React and `react-native-renderer` must resolve to the exact same version.
-
 ## Replace navigator imports
 
 For React Navigation, replace the Version 3 Blank Stack entry point:
@@ -79,13 +77,13 @@ The bundled component stack and bundled native-stack creator have been removed. 
 
 ## Remove Version 3 navigator props
 
-The current Blank Stack is a Standard Navigator and no longer exposes the Version 3 `nativeScreens` or `enableNativeScreens` presentation switches. Remove those props. If an embedded flow needs isolation, follow the nesting rules of the navigation host rather than relying on the old component-stack path.
+The current Blank Stack is a Standard Navigator and no longer exposes the Version 3 `nativeScreens` or `enableNativeScreens` presentation switches. Remove those props. Blank Stack now participates directly in the React Navigation tree that renders it.
 
 ### Breaking: `independent` was removed
 
-Blank Stack no longer accepts the `independent` navigator prop or exports `BlankStackFactoryOptions`. By the end of Version 3, the prop no longer created an isolated navigation tree, so leaving it in place suggested behavior that did not exist.
+Blank Stack no longer accepts the `independent` navigator prop or exports `BlankStackFactoryOptions`. By the final Version 3 releases, `independent` no longer created the isolated container its name promised. Version 4 removes the prop instead of preserving configuration with no effect.
 
-Remove `independent` from the navigator configuration. If an embedded flow genuinely needs a separate navigation tree, create that boundary explicitly with the navigation host's own isolation APIs outside Blank Stack.
+For normal nested navigation, remove `independent` without replacing it. If the flow intentionally needs a separate navigation tree, wrap its own `NavigationContainer` in React Navigation's `NavigationIndependentTree`. React Navigation documents this as an advanced setup: the nested tree is disconnected from its parent, and navigation cannot cross between them. See [Independent navigation containers](https://reactnavigation.org/docs/navigation-container/#independent-navigation-containers).
 
 ## Remove deprecated transition aliases
 

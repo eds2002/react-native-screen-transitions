@@ -9,15 +9,11 @@ order: 1
 to: /caveats
 ---
 
-## Blank Stack vs Native Stack
+## Native Stack with `withScreenTransitions`
 
-The main trade-off in this library is not features versus no features. It is blank stack versus native stack.
+`withScreenTransitions` is a compatibility layer for `@react-navigation/native-stack`.
 
-## Native Stack Trade-offs
-
-Native stack transition support is a compatibility layer.
-
-Under the hood, transitioned native-stack screens are switched into `containedTransparentModal` with native animation disabled, and the transition visuals are driven from the library on top of that.
+For screens that enable transitions, the adapter switches native stack to `containedTransparentModal`, disables the native animation, and lets Screen Transitions render the animation over that container.
 
 That works, but it comes with real trade-offs:
 
@@ -25,7 +21,7 @@ That works, but it comes with real trade-offs:
 - dismissal can feel worse than blank stack because native removal and JS state synchronization are coordinated separately
 - platform-specific edge cases are more likely here than on blank stack
 
-Use native stack when you need native-stack integration. Do not choose it because you expect it to be the best place for advanced custom transitions.
+Use `withScreenTransitions` when an existing native-stack flow needs a custom transition. Use Blank Stack when the transition system should own the full presentation model.
 
 ## Blank Stack Trade-offs
 
@@ -58,10 +54,6 @@ Deep linking is supported.
 These navigators still sit on top of React Navigation, so normal deep-linking flows are very much possible. The caveat is that the more complex the transition choreography becomes, the more opportunities there are for a deep link to land in a visually bad or unexpected transition state.
 
 If you hit a deep-link-specific bug with a complex animation flow, open an issue on GitHub with a reproduction.
-
-## Inactive Screens
-
-Blank Stack uses React 19.2 Activity to pause covered screens while preserving paint needed by an active transition. This removes most inactive React work, but it does not make retained component state free. Use `unmount` for routes that should release their subtree, and test stateful native views in every retention mode.
 
 ## First Screen Does Not Animate by Default
 

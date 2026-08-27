@@ -158,21 +158,6 @@ return bounds(id).navigation.zoom({
 
 The nested `drag` values adjust intensity without replacing zoom's built-in curves. `0` disables that response on the axis, `1` keeps the default response, and values above `1` exaggerate it.
 
-The following earlier beta options still compile for migration safety, but zoom ignores them:
-
-- `debug`
-- `focusedElementOpacity`
-- `unfocusedElementOpacity`
-- `maxSensitivity`
-- `velocityDepth`
-- `gestureProgressMode`
-- `horizontalDragScale`
-- `verticalDragScale`
-- `horizontalDragTranslation`
-- `verticalDragTranslation`
-
-Move axis response tuning to `drag`. Zoom now owns opacity timing, gesture sensitivity, and velocity-depth behavior as part of its native preset.
-
 ## Interactive Dismissal
 
 Zoom responds to every enabled pan direction and to `pinch-in`.
