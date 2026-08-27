@@ -1,7 +1,9 @@
 import { describe, expect, it } from "bun:test";
 import {
+	hasNestedHandoffTopology,
 	resolveActiveHandoffReceiver,
 	resolveHandoffAttachmentCandidate,
+	resolveNestedHandoffAttachmentCandidate,
 	resolvePreviousHandoffReceiver,
 } from "../../components/boundary/portal/components/boundary-content-portal/helpers/active-handoff-receiver";
 
@@ -11,6 +13,55 @@ const scene = (key: string, activity = "active") => ({
 });
 
 describe("active handoff receiver", () => {
+	it("classifies nesting from route structure rather than active receiver churn", () => {
+		expect(
+			hasNestedHandoffTopology({
+				inheritedSourcePair: false,
+				pairDestinationScreenKey: "player",
+				transitionDestinationScreenKey: "player",
+			}),
+		).toBe(false);
+		expect(
+			hasNestedHandoffTopology({
+				inheritedSourcePair: false,
+				pairDestinationScreenKey: "destination-leaf",
+				transitionDestinationScreenKey: "destination-root",
+			}),
+		).toBe(true);
+		expect(
+			hasNestedHandoffTopology({
+				inheritedSourcePair: true,
+				pairDestinationScreenKey: "destination",
+				transitionDestinationScreenKey: "destination",
+			}),
+		).toBe(true);
+	});
+
+	it("keeps a nested source attached until its ancestor destination is ready", () => {
+		const base = {
+			attachedReceiverScreenKey: "source-leaf",
+			currentScreenKey: "source-leaf",
+			hasActiveCloseFinished: false,
+			interpolatorReady: false,
+			pairDestinationScreenKey: "destination-leaf",
+		};
+
+		expect(resolveNestedHandoffAttachmentCandidate(base)).toBe("source-leaf");
+		expect(
+			resolveNestedHandoffAttachmentCandidate({
+				...base,
+				interpolatorReady: true,
+			}),
+		).toBe("destination-leaf");
+		expect(
+			resolveNestedHandoffAttachmentCandidate({
+				...base,
+				attachedReceiverScreenKey: "destination-leaf",
+				hasActiveCloseFinished: true,
+			}),
+		).toBe("source-leaf");
+	});
+
 	it("follows the focused route through A to B to C", () => {
 		expect(
 			resolveActiveHandoffReceiver({
@@ -130,6 +181,63 @@ describe("active handoff receiver", () => {
 		).toBe("player-b");
 	});
 
+	it("keeps a closing payload absent from the fresh pair until close finishes", () => {
+		const params = {
+			activeReceiverClosing: true,
+			activeReceiverScreenKey: "waterfall-media",
+			attachedReceiverScreenKey: "waterfall-media",
+			interpolatorReady: false,
+			pairChangedDuringClose: true,
+			pairDestinationScreenKey: null,
+			pairHasBoundaryLink: false,
+			previousReceiverScreenKey: "world",
+		};
+
+		expect(
+			resolveHandoffAttachmentCandidate({
+				...params,
+				hasActiveCloseFinished: false,
+			}),
+		).toBe("waterfall-media");
+		expect(
+			resolveHandoffAttachmentCandidate({
+				...params,
+				hasActiveCloseFinished: true,
+			}),
+		).toBe("world");
+	});
+
+	it("keeps a same-id closing payload while its fresh pair is incomplete", () => {
+		expect(
+			resolveHandoffAttachmentCandidate({
+				activeReceiverClosing: true,
+				activeReceiverScreenKey: "media-a",
+				attachedReceiverScreenKey: "media-a",
+				hasActiveCloseFinished: false,
+				interpolatorReady: false,
+				pairChangedDuringClose: true,
+				pairDestinationScreenKey: null,
+				pairHasBoundaryLink: true,
+				previousReceiverScreenKey: "world",
+			}),
+		).toBe("media-a");
+	});
+
+	it("does not give a fresh payload to an unlinked closing receiver", () => {
+		expect(
+			resolveHandoffAttachmentCandidate({
+				activeReceiverClosing: true,
+				activeReceiverScreenKey: "media-a",
+				attachedReceiverScreenKey: "media-b",
+				hasActiveCloseFinished: false,
+				interpolatorReady: false,
+				pairDestinationScreenKey: null,
+				pairHasBoundaryLink: false,
+				previousReceiverScreenKey: "world",
+			}),
+		).toBe("media-b");
+	});
+
 	it("ignores a stale shallow pair while a deeper receiver closes", () => {
 		expect(
 			resolveHandoffAttachmentCandidate({
@@ -241,4 +349,5 @@ describe("active handoff receiver", () => {
 			}),
 		).toBe("player-b");
 	});
+
 });

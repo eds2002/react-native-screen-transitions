@@ -1,5 +1,6 @@
 export {
 	ScreenAnimationProvider,
+	useOptionalScreenAnimationStore,
 	useScreenAnimationStore,
 } from "./animation.provider";
 export {

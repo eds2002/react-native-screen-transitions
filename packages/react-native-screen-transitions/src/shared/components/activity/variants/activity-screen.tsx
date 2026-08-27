@@ -1,6 +1,6 @@
 import type * as React from "react";
 import { memo } from "react";
-import { StyleSheet, View, type ViewProps } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useDerivedValue } from "react-native-reanimated";
 import { Screen } from "react-native-screens";
 import { IS_WEB } from "../../../constants";
@@ -8,71 +8,40 @@ import { useStack } from "../../../hooks/navigation/use-stack";
 import { useSharedValueState } from "../../../hooks/reanimated/use-shared-value-state";
 import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
 import { AnimationStore } from "../../../stores/animation.store";
-import type { StackSceneActivity } from "../../../types/stack.types";
-import { DEFAULT_INACTIVE_BEHAVIOR, type InactiveBehavior } from "../helpers";
-
-type ActivityState = 0 | 1 | 2;
-const ActivityStateByActivity = {
-	active: 2,
-	inert: 1,
-	inactive: 0,
-	closing: 1,
-} satisfies Record<StackSceneActivity, ActivityState>;
-
-const PointerEventsByActivity = {
-	active: "auto",
-	inert: "auto",
-	inactive: "none",
-	closing: "none",
-} satisfies Record<StackSceneActivity, ViewProps["pointerEvents"]>;
+import {
+	DEFAULT_INACTIVE_BEHAVIOR,
+	HIDDEN_ACTIVITY_SCREEN_STYLE,
+	type InactiveBehavior,
+	resolveActivityScreenPresentation,
+} from "../helpers";
 
 interface ActivityScreenProps {
-	activity?: StackSceneActivity;
 	children: React.ReactNode;
 	inactiveBehavior?: InactiveBehavior;
 	paintDriverRouteKey?: string;
 	hasNestedState?: boolean;
-	routeKey?: string;
+	routeKey: string;
 }
 
 export const ActivityScreen = memo(function ActivityScreen({
-	activity,
 	children,
 	inactiveBehavior,
 	paintDriverRouteKey,
 	hasNestedState,
 	routeKey,
 }: ActivityScreenProps) {
-	const stackActivity = useBlankStackStore((store) =>
-		routeKey ? store?.scenesByKey[routeKey]?.activity : undefined,
+	const scene = useBlankStackStore((store) => store.scenesByKey[routeKey]);
+	const stackPaintDriverRouteKey = useBlankStackStore((store) =>
+		store.paintDriverRouteKeyByRouteKey.get(routeKey),
 	);
-	const stackInactiveBehavior = useBlankStackStore((store) =>
-		routeKey
-			? (
-					store?.scenesByKey[routeKey]?.descriptor.options as
-						| { inactiveBehavior?: InactiveBehavior }
-						| undefined
-				)?.inactiveBehavior
-			: undefined,
-	);
-	const stackRoute = useBlankStackStore((store) =>
-		routeKey ? store?.scenesByKey[routeKey]?.route : undefined,
-	);
-	const stackPaintDriverRouteKey = useBlankStackStore((store) => {
-		if (!routeKey || !store) {
-			return undefined;
-		}
-
-		const routeIndex = store.routeKeys.indexOf(routeKey);
-		return store.routeKeys[routeIndex + 2];
-	});
-	const resolvedActivity = activity ?? stackActivity ?? "active";
+	const stackInactiveBehavior = (
+		scene.descriptor.options as { inactiveBehavior?: InactiveBehavior }
+	).inactiveBehavior;
 	const resolvedInactiveBehavior =
 		inactiveBehavior ?? stackInactiveBehavior ?? DEFAULT_INACTIVE_BEHAVIOR;
 	const resolvedPaintDriverRouteKey =
 		paintDriverRouteKey ?? stackPaintDriverRouteKey;
-	const resolvedHasNestedState =
-		hasNestedState ?? (stackRoute ? "state" in stackRoute : false);
+	const resolvedHasNestedState = hasNestedState ?? "state" in scene.route;
 	const nativeScreenDisabled = useStack((s) => s.flags.DISABLE_NATIVE_SCREENS);
 	const paintDriverAnimations = resolvedPaintDriverRouteKey
 		? AnimationStore.getBag(resolvedPaintDriverRouteKey)
@@ -92,46 +61,22 @@ export const ActivityScreen = memo(function ActivityScreen({
 			return false;
 		}
 
-		return paintDriverAnimations.transitionProgress.get() >= 1;
+		return paintDriverAnimations.visualProgress.get() >= 1;
 	});
 
 	const isPaintDriverSettledOnJS = useSharedValueState(isPaintDriverSettled);
 
-	let activityState: ActivityState = ActivityStateByActivity[resolvedActivity];
-	let shouldFreeze = false;
-	let visible = resolvedActivity !== "inactive";
-
-	const shouldWaitForPaintDriver = !isPaintDriverSettledOnJS;
-
-	if (resolvedActivity === "inactive") {
-		if (resolvedInactiveBehavior === "keep") {
-			activityState = 1;
-			visible = true;
-		} else if (shouldWaitForPaintDriver) {
-			// Delay hiding until the paint driver has settled to avoid
-			// a blank frame during the transition.
-			activityState = 1;
-			visible = true;
-		} else if (resolvedInactiveBehavior === "pause") {
-			activityState = 1;
-			shouldFreeze = true;
-			visible = true;
-		} else {
-			// `hide` freezes and hides native presentation. Non-nested
-			// `unmount` removes the React subtree through the JS guard below.
-			activityState = 0;
-			shouldFreeze = true;
-			visible = false;
-		}
-	}
+	const { visible, ...screenPresentation } = resolveActivityScreenPresentation({
+		activity: scene.activity,
+		inactiveBehavior: resolvedInactiveBehavior,
+		waitForPaintDriver: !isPaintDriverSettledOnJS,
+	});
 
 	const shouldUnmount =
 		resolvedInactiveBehavior === "unmount" &&
-		resolvedActivity === "inactive" &&
+		scene.activity === "inactive" &&
 		!resolvedHasNestedState &&
 		isPaintDriverSettledOnJS;
-
-	const pointerEvents = PointerEventsByActivity[resolvedActivity];
 
 	if (shouldUnmount) {
 		return null;
@@ -141,33 +86,23 @@ export const ActivityScreen = memo(function ActivityScreen({
 
 	if (IS_WEB || nativeScreenDisabled) {
 		return (
-			<View style={style} pointerEvents={pointerEvents} collapsable={false}>
+			<View
+				style={style}
+				pointerEvents={screenPresentation.pointerEvents}
+				collapsable={false}
+			>
 				{children}
 			</View>
 		);
 	}
 
 	return (
-		<Screen
-			style={style}
-			activityState={activityState}
-			shouldFreeze={shouldFreeze}
-			pointerEvents={pointerEvents}
-			collapsable={false}
-		>
+		<Screen {...screenPresentation} style={style} collapsable={false}>
 			{children}
 		</Screen>
 	);
 });
 
-const HIDDEN_SCREEN_OFFSET = 10_000;
 const styles = StyleSheet.create({
-	hidden: {
-		// NOTE:
-		// When setting a screen to display:"none", the gesture detector will not recognize anymore. Since I believe
-		// rngh is attaching itself to its nearest native view, this of course would kill the detector.
-		// To avoid this, we use a transform to move the screen off-screen instead of display: "none". This isn't my favorite approach,
-		// but i'm hoping react 19's activity could mitigate this better and avoid dependence on rns.
-		transform: [{ translateY: HIDDEN_SCREEN_OFFSET }],
-	},
+	hidden: HIDDEN_ACTIVITY_SCREEN_STYLE,
 });

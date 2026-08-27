@@ -3,10 +3,9 @@ import type { View } from "react-native";
 import { useWindowDimensions } from "react-native";
 import type { AnimatedRef, StyleProps } from "react-native-reanimated";
 import { applyMeasuredBoundsWrites } from "../../../providers/helpers/measured-bounds-writes";
-import { useScreenSlots } from "../../../providers/screen/styles";
+import { useScreenSlotStore } from "../../../providers/screen/styles";
 import type { BoundTag } from "../../../stores/bounds/types";
 import { ScrollStore } from "../../../stores/scroll.store";
-import { SystemStore } from "../../../stores/system.store";
 import { getVisibilityBlockOffset } from "../../../utils/visibility-block-offset";
 import type { BoundaryLocalMeasurementValue, MeasureBoundary } from "../types";
 import {
@@ -42,23 +41,20 @@ export const useMeasurer = ({
 
 	const scrollState = ScrollStore.getValue(currentScreenKey, "coordination");
 	const scrollMetadata = ScrollStore.getValue(currentScreenKey, "metadata");
-	const pendingLifecycleStartBlockCount = SystemStore.getValue(
-		currentScreenKey,
-		"pendingLifecycleStartBlockCount",
-	);
-	const { visibilityBlocked } = useScreenSlots();
+	const screenSlotStore = useScreenSlotStore();
+	const { visibilityBlocked } = screenSlotStore;
 
 	return useCallback(
 		(target) => {
 			"worklet";
-			if (!enabled) return;
+			if (!enabled) return false;
 
 			const measured = measureWithOverscrollAwareness(
 				measuredAnimatedRef,
 				scrollState.get(),
 			);
 
-			if (!measured) return;
+			if (!measured) return false;
 
 			const correctedMeasured = correctMeasuredBoundsForVisibilityGate({
 				measured,
@@ -75,26 +71,15 @@ export const useMeasurer = ({
 				});
 			}
 
-			/**
-			 * - Destination Pass -
-			 * Be strict while lifecycle start is blocked for destination capture.
-			 * This is the initial attach window: the transition has not started yet,
-			 * and malformed off-screen destination measurements should keep the
-			 * lifecycle blocked until a valid retry lands.
-			 */
-			const shouldGuardDestinationViewport =
-				pendingLifecycleStartBlockCount.get() > 0 || !!boundTag.group;
-
 			const viewportAllowsDestinationWrite =
 				target.type !== "destination" ||
-				!shouldGuardDestinationViewport ||
 				isMeasurementInViewport(
 					correctedMeasured,
 					viewportWidth,
 					viewportHeight,
 				);
 
-			if (!viewportAllowsDestinationWrite) return;
+			if (!viewportAllowsDestinationWrite) return false;
 
 			const measuredWithScroll = attachScrollSnapshotToMeasuredBounds(
 				correctedMeasured,
@@ -112,6 +97,8 @@ export const useMeasurer = ({
 				handoff,
 				escapeClipping,
 			});
+
+			return true;
 		},
 		[
 			enabled,
@@ -126,7 +113,6 @@ export const useMeasurer = ({
 			viewportHeight,
 			scrollState,
 			scrollMetadata,
-			pendingLifecycleStartBlockCount,
 			visibilityBlocked,
 		],
 	);

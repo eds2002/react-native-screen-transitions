@@ -3,13 +3,8 @@ import type {
 	ScreenInterpolationProps,
 	ScreenTransitionTarget,
 } from "../../../../../types/animation.types";
-import { createBoundsAccessor } from "../../../../../utils/bounds";
 import type { ScreenAnimationContextValue } from "../../animation.provider";
-import type {
-	ScreenAnimationDescendantSources,
-	ScreenAnimationSource,
-	ScreenAnimationTransitionSource,
-} from "../../types";
+import type { ScreenAnimationTransitionSource } from "../../types";
 
 type TransitionSourceIndex = number;
 
@@ -17,10 +12,7 @@ export type TransitionAccessorSource = ScreenAnimationTransitionSource;
 
 type TransitionAccessorStore = Pick<
 	ScreenAnimationContextValue,
-	| "screenInterpolatorProps"
-	| "screenInterpolatorPropsRevision"
-	| "ancestorScreenAnimationSources"
-	| "descendantScreenAnimationSources"
+	"transitionSources" | "transitionOriginIndex"
 >;
 
 const resolveTargetIndex = (
@@ -48,28 +40,8 @@ const resolveTargetIndex = (
 export const createTransitionAccessor = (
 	sources: readonly TransitionAccessorSource[],
 	originIndex = 0,
-	descendantSources?: ScreenAnimationDescendantSources,
 ) => {
 	"worklet";
-
-	const getSources = (): readonly TransitionAccessorSource[] => {
-		"worklet";
-		if (!descendantSources) {
-			return sources;
-		}
-
-		const descendants = descendantSources.get();
-		if (descendants.length === 0) {
-			return sources;
-		}
-
-		const currentSources = sources.slice();
-		for (let index = 0; index < descendants.length; index++) {
-			currentSources.push(descendants[index].source);
-		}
-
-		return currentSources;
-	};
 
 	const buildScope = (
 		sourceIndex: TransitionSourceIndex,
@@ -104,64 +76,21 @@ export const createTransitionAccessor = (
 
 	return (target?: ScreenTransitionTarget): ScreenInterpolationProps | null => {
 		"worklet";
-		const currentSources = getSources();
-		const targetIndex = resolveTargetIndex(
-			target,
-			originIndex,
-			currentSources.length,
-		);
+		const targetIndex = resolveTargetIndex(target, originIndex, sources.length);
 		if (targetIndex === -1) {
 			return null;
 		}
 
-		return buildScope(targetIndex, currentSources);
+		return buildScope(targetIndex, sources);
 	};
 };
 
-const buildSourceBoundsAccessor = (source: ScreenAnimationSource) => {
-	"worklet";
-	return createBoundsAccessor(() => {
-		"worklet";
-		return source.screenInterpolatorProps.get();
-	});
-};
-
 export const useBuildTransitionAccessor = ({
-	screenInterpolatorProps,
-	screenInterpolatorPropsRevision,
-	ancestorScreenAnimationSources,
-	descendantScreenAnimationSources,
+	transitionSources,
+	transitionOriginIndex,
 }: TransitionAccessorStore) => {
-	return useMemo(() => {
-		const selfSource = {
-			screenInterpolatorProps,
-			screenInterpolatorPropsRevision,
-		};
-
-		const transitionSources: TransitionAccessorSource[] =
-			ancestorScreenAnimationSources.map((source) => ({
-				...source,
-				boundsAccessor: buildSourceBoundsAccessor(source),
-			}));
-
-		const selfTransitionSource = {
-			...selfSource,
-			boundsAccessor: buildSourceBoundsAccessor(selfSource),
-		};
-
-		transitionSources.reverse();
-		const originIndex = transitionSources.length;
-		transitionSources.push(selfTransitionSource);
-
-		return createTransitionAccessor(
-			transitionSources,
-			originIndex,
-			descendantScreenAnimationSources,
-		);
-	}, [
-		screenInterpolatorProps,
-		screenInterpolatorPropsRevision,
-		ancestorScreenAnimationSources,
-		descendantScreenAnimationSources,
-	]);
+	return useMemo(
+		() => createTransitionAccessor(transitionSources, transitionOriginIndex),
+		[transitionSources, transitionOriginIndex],
+	);
 };

@@ -42,11 +42,14 @@ type BlankStackStoreProviderProps = {
 	value: BlankStackStoreValue<BaseStackDescriptor>;
 };
 
-const { BlankStackProvider: BlankStackStoreProvider, useBlankStackStore } =
-	createProvider("BlankStack", { guarded: false })<
-		BlankStackStoreProviderProps,
-		BlankStackStoreValue<BaseStackDescriptor>
-	>(({ children, value }) => ({ children, value }));
+const {
+	BlankStackProvider: BlankStackStoreProvider,
+	useBlankStackStore,
+	useOptionalBlankStackStore,
+} = createProvider("BlankStack")<
+	BlankStackStoreProviderProps,
+	BlankStackStoreValue<BaseStackDescriptor>
+>(({ children, value }) => ({ children, value }));
 
 function BlankStackProvider({
 	state: stackState,
@@ -68,6 +71,15 @@ function BlankStackProvider({
 		() => createScenesByKey(state.scenes),
 		[state.scenes],
 	);
+	const paintDriverRouteKeyByRouteKey = useMemo(() => {
+		const paintDrivers = new Map<string, string>();
+
+		for (let index = 0; index + 2 < state.routeKeys.length; index++) {
+			paintDrivers.set(state.routeKeys[index], state.routeKeys[index + 2]);
+		}
+
+		return paintDrivers;
+	}, [state.routeKeys]);
 
 	const stackValue = useMemo<StackContextValue>(
 		() => ({
@@ -95,6 +107,7 @@ function BlankStackProvider({
 		routes: state.routes,
 		scenes: state.scenes,
 		scenesByKey,
+		paintDriverRouteKeyByRouteKey,
 		focusedIndex,
 		requestDismiss,
 		shouldShowFloatOverlay: state.shouldShowFloatOverlay,
@@ -111,4 +124,4 @@ function BlankStackProvider({
 }
 
 export type { BlankStackProviderProps, BlankStackStoreValue };
-export { BlankStackProvider, useBlankStackStore };
+export { BlankStackProvider, useBlankStackStore, useOptionalBlankStackStore };

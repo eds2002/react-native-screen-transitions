@@ -1,44 +1,63 @@
 import { describe, expect, it } from "bun:test";
 import type { SharedValue } from "react-native-reanimated";
-import {
-	resolveStackProgress,
-	syncStackProgressValues,
-} from "../providers/screen/animation/helpers/stack-progress";
+import { readStackProgress } from "../providers/screen/animation/helpers/stack-progress";
 
-const shared = (initial: number) => {
-	let current = initial;
+const tracked = (value: number) => {
+	let reads = 0;
 
 	return {
-		get: () => current,
-		set: (value: number) => {
-			current = value;
-		},
-		get value() {
-			return current;
-		},
-		set value(value: number) {
-			current = value;
-		},
-	} as SharedValue<number>;
+		progress: {
+			get: () => {
+				reads += 1;
+				return value;
+			},
+		} as SharedValue<number>,
+		getReads: () => reads,
+	};
 };
 
 describe("stack progress", () => {
-	it("syncs accumulated progress from each route to the top", () => {
-		const visualProgressValues = [shared(1), shared(0.75), shared(0.5)];
-		const stackProgressValues = [shared(0), shared(0), shared(0)];
+	it("accumulates only the requested route suffix", () => {
+		const first = tracked(1);
+		const second = tracked(0.75);
+		const top = tracked(0.5);
+		const entries = [
+			{ routeKey: "A", visualProgress: first.progress },
+			{ routeKey: "B", visualProgress: second.progress },
+			{ routeKey: "C", visualProgress: top.progress },
+		];
 
-		syncStackProgressValues(visualProgressValues, stackProgressValues);
-
-		expect(stackProgressValues[0]?.get()).toBe(2.25);
-		expect(stackProgressValues[1]?.get()).toBe(1.25);
-		expect(stackProgressValues[2]?.get()).toBe(0.5);
+		expect(readStackProgress(entries, "B", 0)).toBe(1.25);
+		expect(first.getReads()).toBe(0);
+		expect(second.getReads()).toBe(1);
+		expect(top.getReads()).toBe(1);
 	});
 
-	it("resolves freshly hydrated current and next progress over the root value", () => {
-		expect(resolveStackProgress(shared(2), 0, 0.75, 1, 0.5, 1)).toBe(1.25);
+	it("reads only the top route for a top-screen consumer", () => {
+		const first = tracked(1);
+		const second = tracked(1);
+		const top = tracked(0.4);
+		const entries = [
+			{ routeKey: "A", visualProgress: first.progress },
+			{ routeKey: "B", visualProgress: second.progress },
+			{ routeKey: "C", visualProgress: top.progress },
+		];
+
+		expect(readStackProgress(entries, "C", 0)).toBe(0.4);
+		expect(first.getReads()).toBe(0);
+		expect(second.getReads()).toBe(0);
+		expect(top.getReads()).toBe(1);
 	});
 
-	it("falls back to frame progress when no stack value is available", () => {
-		expect(resolveStackProgress(undefined, 0.5, 0, undefined, undefined, undefined)).toBe(0.5);
+	it("falls back to local frame progress after structural removal", () => {
+		const top = tracked(0.5);
+
+		expect(
+			readStackProgress(
+				[{ routeKey: "B", visualProgress: top.progress }],
+				"A",
+				0.75,
+			),
+		).toBe(0.75);
 	});
 });

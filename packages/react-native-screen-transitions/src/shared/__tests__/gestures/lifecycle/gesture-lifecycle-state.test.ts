@@ -123,7 +123,6 @@ const createGestureStore = (): GestureStoreMap => {
 const createAnimations = (): AnimationStoreMap => ({
 	transitionProgress: shared(1),
 	visualProgress: shared(1),
-	stackProgress: shared(1),
 	willAnimate: shared(0),
 	progressAnimating: shared(0),
 	progressSettled: shared(1),
@@ -196,7 +195,6 @@ const exposeToInterpolator = ({
 	const state: BuiltState = {
 		transitionProgress: animations.transitionProgress,
 		visualProgress: animations.visualProgress,
-		stackProgress: animations.stackProgress,
 		willAnimate: animations.willAnimate,
 		closing: animations.closing,
 		progressAnimating: animations.progressAnimating,
@@ -411,7 +409,6 @@ describe("gesture lifecycle state", () => {
 		const state = createRuntime();
 		state.animations.transitionProgress.set(0);
 		state.animations.visualProgress.set(0);
-		state.animations.stackProgress.set(0);
 		state.animations.entering.set(1);
 		state.animations.progressSettled.set(0);
 
@@ -442,7 +439,6 @@ describe("gesture lifecycle state", () => {
 		const state = createRuntime();
 		state.animations.transitionProgress.set(0.25);
 		state.animations.visualProgress.set(0.25);
-		state.animations.stackProgress.set(0.25);
 		state.runtime.stores.system.targetProgress.set(0.25);
 
 		animateToProgress({
@@ -466,7 +462,6 @@ describe("gesture lifecycle state", () => {
 		const state = createRuntime();
 		state.animations.transitionProgress.set(1);
 		state.animations.visualProgress.set(1);
-		state.animations.stackProgress.set(1);
 		state.runtime.stores.system.targetProgress.set(1);
 
 		animateToProgress({

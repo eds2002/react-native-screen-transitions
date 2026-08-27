@@ -43,7 +43,10 @@ With `react-native-screens`, blank stack sets `activityState={0}`, `shouldFreeze
 Use `hide` when back navigation should stay warm, but inactive views do not need to remain visible or keep rendering. It can reduce inactive React render pressure and native presentation work. It does not release JS memory, because the component tree is still mounted.
 
 <Note>
-  `hide` moves the inactive screen off-screen instead of using `display: "none"`. React Native Gesture Handler can fail to reattach the gesture detector after a screen is removed from the native view hierarchy. The off-screen transform is the current trade-off for keeping hidden screens warm without breaking gestures when they become active again.
+  `hide` uses `display: "none"`. Gesture reattachment after a hidden screen
+  becomes active again has been verified with React Native Gesture Handler
+  2.31.1. If a restored screen is visible but its gestures do not respond,
+  update Gesture Handler to that known-good version.
 </Note>
 
 ## `pause`

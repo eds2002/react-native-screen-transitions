@@ -6,7 +6,7 @@ import {
 	NO_STYLES,
 } from "../../../../constants";
 import { createScreenPairKey } from "../../../../stores/bounds/helpers/link-pairs.helpers";
-import { requestSourceMeasure } from "../../../../stores/bounds/internals/links";
+import { requestBoundaryMeasurements } from "../../../../stores/bounds/internals/coordinator";
 import { resolveTransitionPair } from "../../../../stores/bounds/internals/resolver";
 import type { ResolvedTransitionPair } from "../../../../stores/bounds/types";
 import type { ScreenTransitionState } from "../../../../types/animation.types";
@@ -39,6 +39,7 @@ const resolveStartEnd = (params: {
 	dimensions: Layout;
 	computeOptions: BoundsOptions;
 	resolvedPair?: ResolvedTransitionPair;
+	refresh: boolean;
 }) => {
 	"worklet";
 
@@ -59,6 +60,15 @@ const resolveStartEnd = (params: {
 				? createScreenPairKey(currentScreenKey, nextScreenKey)
 				: null;
 
+	if (sourceMeasurePairKey) {
+		requestBoundaryMeasurements({
+			pairKey: sourceMeasurePairKey,
+			tag: String(params.id),
+			destination: !hasTargetOverride,
+			refresh: params.refresh,
+		});
+	}
+
 	const resolvedPair =
 		params.resolvedPair ??
 		resolveTransitionPair(String(params.id), {
@@ -72,10 +82,6 @@ const resolveStartEnd = (params: {
 	const destinationBounds = resolvedPair.destinationBounds;
 
 	if (!sourceBounds) {
-		if (hasTargetOverride && sourceMeasurePairKey) {
-			requestSourceMeasure(sourceMeasurePairKey, String(params.id));
-		}
-
 		return {
 			start: null,
 			end: null,
@@ -157,6 +163,7 @@ export const computeBoundStyles = (
 		computeOptions,
 		dimensions,
 		resolvedPair,
+		refresh: !!interpolationProps?.active?.willAnimate,
 	});
 
 	if (!start || !end) {

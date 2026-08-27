@@ -7,6 +7,24 @@ import { ListScreen } from "@/components/ui";
 
 const BOUNDS_EXAMPLES = [
 	{
+		id: "example-1/nested/nested/nested/source",
+		title: "Deeply nested source → parent destination",
+		description:
+			"Runtime group, bound target, and clipping controls across three nested stacks",
+	},
+	{
+		id: "example-2/source",
+		title: "Parent source → deeply nested destination",
+		description:
+			"Runtime group, bound target, and clipping controls into three nested stacks",
+	},
+	{
+		id: "example-3/nested-1/source",
+		title: "Nested source → neighboring nested destination",
+		description:
+			"Runtime group, bound target, and clipping controls across sibling nested stacks",
+	},
+	{
 		id: "style-id",
 		title: ".reveal()",
 		description:
@@ -34,6 +52,12 @@ const BOUNDS_EXAMPLES = [
 		id: "handoff-multiflow",
 		title: "Handoff multiflow",
 		description: "One payload handed across a multi-screen push and pop flow",
+	},
+	{
+		id: "stacking",
+		title: "Repeated route stacking",
+		description:
+			"Alternating route pushes with independently selectable card and button sources",
 	},
 ];
 

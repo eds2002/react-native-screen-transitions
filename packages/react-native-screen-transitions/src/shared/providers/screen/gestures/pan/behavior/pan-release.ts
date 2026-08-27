@@ -1,4 +1,5 @@
 import { clamp } from "react-native-reanimated";
+import { EPSILON } from "../../../../../constants";
 import {
 	getPanSnapAxisConfigForDirection,
 	isResolvedPanGestureDirection,
@@ -111,6 +112,7 @@ const buildInactivePanSnapRelease = (
 	return {
 		target: stores.animations.transitionProgress.get(),
 		shouldDismiss: false,
+		isCancelled: true,
 		initialVelocity: 0,
 		transitionSpec: policy.transitionSpec,
 		resetSpec: policy.transitionSpec?.open,
@@ -146,6 +148,7 @@ export const resolvePanRelease = (
 	return {
 		target: shouldDismiss ? 0 : 1,
 		shouldDismiss,
+		isCancelled: !shouldDismiss,
 		initialVelocity: getPanReleaseProgressVelocity({
 			animations,
 			shouldDismiss,
@@ -205,9 +208,16 @@ export const resolveSnapPanRelease = (
 	const shouldDismiss = participation.canDismiss && result.shouldDismiss;
 	const target = shouldDismiss ? 0 : result.targetProgress;
 
+	// Compare against the gesture's starting snap so only true snap-backs lose velocity.
+	const initialTarget = policy.gestureSnapLocked
+		? (runtime.stores.gestures.internal.lockedSnapPoint.get() ??
+			runtime.stores.system.targetProgress.get())
+		: runtime.stores.system.targetProgress.get();
+
 	return {
 		target,
 		shouldDismiss,
+		isCancelled: !shouldDismiss && Math.abs(target - initialTarget) <= EPSILON,
 		initialVelocity: getProgressVelocityTowardTarget({
 			handoffVelocity: getPanReleaseHandoffVelocity(
 				axisVelocity,
@@ -238,7 +248,7 @@ export const buildPanReleasePlan = (
 	"worklet";
 	const { policy } = runtime;
 	const releaseVelocityScale = Math.max(0, policy.gestureReleaseVelocityScale);
-	const resetVelocityScale = releaseVelocityScale;
+	const resetVelocityScale = release.isCancelled ? 0 : releaseVelocityScale;
 	const resetVelocityX =
 		resetVelocityScale === 0 ? 0 : rawEvent.velocityX * resetVelocityScale;
 	const resetVelocityY =
@@ -264,7 +274,7 @@ export const buildPanReleasePlan = (
 	return {
 		target: release.target,
 		shouldDismiss: release.shouldDismiss,
-		progressVelocity: release.initialVelocity,
+		progressVelocity: release.isCancelled ? 0 : release.initialVelocity,
 		resetVelocityX,
 		resetVelocityY,
 		resetVelocityNormX: resetVelocityX / Math.max(1, dimensions.width),

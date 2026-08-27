@@ -60,7 +60,7 @@ export type MeasureTarget =
 			pairKey: ScreenPairKey;
 	  };
 
-export type MeasureBoundary = (target: MeasureTarget) => void;
+export type MeasureBoundary = (target: MeasureTarget) => boolean;
 
 export type BoundaryLocalMeasurement = {
 	bounds: MeasuredDimensions;

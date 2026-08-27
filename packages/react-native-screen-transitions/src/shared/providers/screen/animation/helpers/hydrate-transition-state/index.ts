@@ -210,13 +210,28 @@ export const hydrateTransitionState = (
 	const resolvedAutoSnap =
 		s.hasAutoSnapPoint && autoSnapPoint > 0 ? autoSnapPoint : null;
 
+	const targetProgress = s.targetProgress.get();
+	const lockedSnapPoint = s.gesture.internal.lockedSnapPoint.get();
+
+	const isSettlingToLockedSnapPoint =
+		out.gesture.settling && targetProgress === lockedSnapPoint;
+
+	const isLockedGestureLifecycle =
+		options.gestureSnapLocked &&
+		lockedSnapPoint !== null &&
+		(out.gesture.dragging ||
+			isSettlingToLockedSnapPoint ||
+			out.gesture.dismissing);
+
+	const animatedSnapProgress = isLockedGestureLifecycle
+		? lockedSnapPoint
+		: out.progress;
+
 	out.animatedSnapIndex = computeAnimatedSnapIndex(
-		out.progress,
+		animatedSnapProgress,
 		s.sortedNumericSnapPoints,
 		resolvedAutoSnap,
 	);
-
-	const targetProgress = s.targetProgress.get();
 
 	out.snapIndex = computeTargetSnapIndex(
 		targetProgress,

@@ -4,11 +4,13 @@ import {
 	type SharedValue,
 	useAnimatedReaction,
 } from "react-native-reanimated";
-import { getPairKeyForSource } from "../../../../../../stores/bounds/internals/links";
+import { pairs } from "../../../../../../stores/bounds/internals/state";
 import type { ScreenPairKey } from "../../../../../../stores/bounds/types";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../../../../types/animation.types";
 import type { BoundaryLocalMeasurementValue } from "../../../../types";
 import { createBoundaryPortalHostName } from "../../../utils/naming";
+import { isTeleportEnabled } from "../../../utils/teleport-control";
+import { resolveActiveBoundaryPortalPairKey } from "../helpers/local-measurement";
 import {
 	mountPortalBoundaryHost,
 	unmountPortalBoundaryHostByName,
@@ -16,17 +18,15 @@ import {
 
 type UseActivePortalBoundaryHostParams = {
 	boundaryId: string;
-	currentScreenKey: string;
 	escapeHostKey?: string;
 	localMeasurement: BoundaryLocalMeasurementValue;
 	portalHostName: SharedValue<string | null>;
-	portalHostReady: SharedValue<boolean>;
+	portalHostReady: SharedValue<string | null>;
 	slotsMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
 };
 
 export const useActivePortalBoundaryHost = ({
 	boundaryId,
-	currentScreenKey,
 	escapeHostKey,
 	localMeasurement,
 	portalHostName,
@@ -44,18 +44,27 @@ export const useActivePortalBoundaryHost = ({
 	useAnimatedReaction(
 		() => {
 			"worklet";
-			const pairKey = getPairKeyForSource(boundaryId, currentScreenKey);
-			const measurement = localMeasurement.get();
-			if (!pairKey || measurement?.pairKey !== pairKey) {
-				return null;
-			}
-
-			return pairKey;
+			return resolveActiveBoundaryPortalPairKey(
+				localMeasurement.get(),
+				slotsMap.get()[boundaryId],
+				boundaryId,
+				pairs.get(),
+			);
 		},
 		(pairKey, previousPairKey) => {
 			"worklet";
 			if (pairKey === previousPairKey) {
 				return;
+			}
+
+			const slot = slotsMap.get()[boundaryId];
+			if (
+				pairKey === null &&
+				localMeasurement.get() !== null &&
+				slot &&
+				!isTeleportEnabled(slot.props?.teleport)
+			) {
+				localMeasurement.set(null);
 			}
 
 			runOnJS(updateActivePairKey)(pairKey);
@@ -65,7 +74,7 @@ export const useActivePortalBoundaryHost = ({
 	useLayoutEffect(() => {
 		if (!activePairKey || !escapeHostKey) {
 			portalHostName.set(null);
-			portalHostReady.set(false);
+			portalHostReady.set(null);
 			return;
 		}
 
@@ -88,7 +97,7 @@ export const useActivePortalBoundaryHost = ({
 
 		return () => {
 			portalHostName.set(null);
-			portalHostReady.set(false);
+			portalHostReady.set(null);
 			unmountPortalBoundaryHostByName(nextPortalHostName);
 		};
 	}, [

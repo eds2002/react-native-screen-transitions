@@ -13,6 +13,23 @@ type ResolveActiveHandoffReceiverParams = {
 	scenes: ReceiverScene[];
 };
 
+export const hasNestedHandoffTopology = ({
+	inheritedSourcePair,
+	pairDestinationScreenKey,
+	transitionDestinationScreenKey,
+}: {
+	inheritedSourcePair: boolean;
+	pairDestinationScreenKey: string | null;
+	transitionDestinationScreenKey?: string;
+}) => {
+	"worklet";
+	return (
+		inheritedSourcePair ||
+		(!!pairDestinationScreenKey &&
+			pairDestinationScreenKey !== transitionDestinationScreenKey)
+	);
+};
+
 export const resolveActiveHandoffReceiver = ({
 	focusedIndex,
 	routes,
@@ -57,6 +74,7 @@ export const resolveHandoffAttachmentCandidate = ({
 	interpolatorReady,
 	pairChangedDuringClose = false,
 	pairDestinationScreenKey,
+	pairHasBoundaryLink,
 	previousReceiverScreenKey,
 }: {
 	activeReceiverClosing: boolean;
@@ -66,9 +84,20 @@ export const resolveHandoffAttachmentCandidate = ({
 	interpolatorReady: boolean;
 	pairChangedDuringClose?: boolean;
 	pairDestinationScreenKey: string | null;
+	pairHasBoundaryLink?: boolean;
 	previousReceiverScreenKey: string | null;
 }) => {
 	"worklet";
+	const currentPairHasBoundaryLink =
+		pairHasBoundaryLink ?? pairDestinationScreenKey !== null;
+
+	if (
+		activeReceiverClosing &&
+		attachedReceiverScreenKey !== activeReceiverScreenKey &&
+		!currentPairHasBoundaryLink
+	) {
+		return attachedReceiverScreenKey;
+	}
 
 	if (
 		activeReceiverClosing &&
@@ -77,6 +106,16 @@ export const resolveHandoffAttachmentCandidate = ({
 		pairChangedDuringClose
 	) {
 		return pairDestinationScreenKey;
+	}
+
+	if (
+		activeReceiverClosing &&
+		pairChangedDuringClose &&
+		!currentPairHasBoundaryLink
+	) {
+		return hasActiveCloseFinished
+			? previousReceiverScreenKey
+			: attachedReceiverScreenKey;
 	}
 
 	if (
@@ -100,4 +139,27 @@ export const resolveHandoffAttachmentCandidate = ({
 	}
 
 	return activeReceiverScreenKey;
+};
+
+export const resolveNestedHandoffAttachmentCandidate = ({
+	attachedReceiverScreenKey,
+	currentScreenKey,
+	hasActiveCloseFinished,
+	interpolatorReady,
+	pairDestinationScreenKey,
+}: {
+	attachedReceiverScreenKey: string;
+	currentScreenKey: string;
+	hasActiveCloseFinished: boolean;
+	interpolatorReady: boolean;
+	pairDestinationScreenKey: string | null;
+}) => {
+	"worklet";
+
+	if (hasActiveCloseFinished) return currentScreenKey;
+	if (interpolatorReady && pairDestinationScreenKey) {
+		return pairDestinationScreenKey;
+	}
+
+	return attachedReceiverScreenKey;
 };

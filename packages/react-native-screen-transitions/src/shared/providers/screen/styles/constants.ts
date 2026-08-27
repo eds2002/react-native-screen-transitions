@@ -62,6 +62,7 @@ export const STYLE_RESET_VALUES: Record<string, unknown> = {
 export const PROP_RESET_VALUES: Record<string, unknown> = {
 	hostName: PORTAL_HOST_NAME_RESET_VALUE,
 	pointerEvents: "auto",
+	teleport: false,
 };
 
 const RESERVED_STYLE_SLOT_IDS = {

@@ -9,5 +9,6 @@ export {
 export {
 	type ScreenSlotName,
 	ScreenSlotProvider,
-	useScreenSlots,
+	useOptionalScreenSlotStore,
+	useScreenSlotStore,
 } from "./slot.provider";

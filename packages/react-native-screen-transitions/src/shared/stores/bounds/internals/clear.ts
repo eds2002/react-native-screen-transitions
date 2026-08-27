@@ -1,7 +1,12 @@
 import { hasAnyKeys } from "../helpers/keys";
 import { isScreenPairKeyForScreen } from "../helpers/link-pairs.helpers";
 import type { LinkPairsState, ScreenKey } from "../types";
-import { type BoundaryEntriesState, boundaryRegistry, pairs } from "./state";
+import {
+	type BoundaryEntriesState,
+	boundaryRegistry,
+	boundsScreens,
+	pairs,
+} from "./state";
 
 function clear(screenKey: ScreenKey) {
 	"worklet";
@@ -28,6 +33,12 @@ function clear(screenKey: ScreenKey) {
 			}
 		}
 
+		return state;
+	});
+
+	boundsScreens.modify((state) => {
+		"worklet";
+		delete state[screenKey];
 		return state;
 	});
 }

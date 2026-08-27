@@ -97,6 +97,7 @@ export const usePanBehavior = (
 				? {
 						target: latestRuntime.stores.animations.transitionProgress.get(),
 						shouldDismiss: false,
+						isCancelled: true,
 						initialVelocity: 0,
 						transitionSpec: undefined,
 						resetSpec: latestRuntime.policy.transitionSpec?.open,

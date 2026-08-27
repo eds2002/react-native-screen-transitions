@@ -4,27 +4,28 @@ import type { TransitionAccessorSource } from "../providers/screen/animation/hel
 import type { ScreenInterpolatorFrame } from "../providers/screen/animation/helpers/pipeline";
 import { readScreenAnimationRevisions } from "../providers/screen/animation/helpers/read-screen-animation-revisions";
 import type {
-	ScreenAnimationDescendantSources,
-	ScreenAnimationSource,
+	ScreenAnimationTransitionSource,
 	ScreenInterpolatorPropsRevision,
 } from "../providers/screen/animation/types";
 
 mock.module("../providers/screen/animation/animation.provider", () => ({
 	useScreenAnimationStore: () => ({
-		screenInterpolatorProps: { get: () => ({}) },
-		screenInterpolatorPropsRevision: { get: () => 0 },
-		ancestorScreenAnimationSources: [],
-		descendantScreenAnimationSources: { get: () => [] },
+		transitionSources: [],
+		transitionOriginIndex: 0,
 	}),
 }));
 
 let createTransitionAccessor: typeof TransitionAccessorModule.createTransitionAccessor;
 
-const createSource = (routeKey: string): TransitionAccessorSource => {
+const createSource = (
+	routeKey: string,
+	stackProgress = 0,
+): TransitionAccessorSource => {
 	const frame = {
 		current: {
 			route: { key: routeKey },
 		},
+		stackProgress,
 	} as unknown as ScreenInterpolatorFrame;
 
 	return {
@@ -56,13 +57,14 @@ const createTrackedRevision = () => {
 
 const createRevisionSource = (
 	revision: ScreenInterpolatorPropsRevision,
-): ScreenAnimationSource =>
+): ScreenAnimationTransitionSource =>
 	({
 		screenInterpolatorProps: {
 			get: () => ({}),
 		},
 		screenInterpolatorPropsRevision: revision,
-	}) as ScreenAnimationSource;
+		boundsAccessor: {},
+	}) as ScreenAnimationTransitionSource;
 
 describe("createTransitionAccessor", () => {
 	beforeAll(async () => {
@@ -86,6 +88,13 @@ describe("createTransitionAccessor", () => {
 		expect(scope?.current.route.key).toBe("self");
 		expect(scope?.bounds).toBe(self.boundsAccessor);
 		expect(transition({ depth: 0 })?.current.route.key).toBe("self");
+	});
+
+	it("preserves stack progress from the selected frame", () => {
+		const source = createSource("self", 3.25);
+		const transition = createTransitionAccessor([source]);
+
+		expect(transition()?.stackProgress).toBe(3.25);
 	});
 
 	it("resolves negative depth to ancestors", () => {
@@ -112,33 +121,6 @@ describe("createTransitionAccessor", () => {
 			[grandparent, parent, self, child, grandchild],
 			2,
 		);
-
-		expect(transition({ depth: 1 })?.current.route.key).toBe("child");
-		expect(transition({ depth: 2 })?.current.route.key).toBe("grandchild");
-	});
-
-	it("reads descendant sources without rebuilding the accessor", () => {
-		const grandparent = createSource("grandparent");
-		const parent = createSource("parent");
-		const self = createSource("self");
-		const child = createSource("child");
-		const grandchild = createSource("grandchild");
-		let registered = [] as ScreenAnimationDescendantSources["value"];
-		const descendants: ScreenAnimationDescendantSources = {
-			get: () => registered,
-		} as ScreenAnimationDescendantSources;
-		const transition = createTransitionAccessor(
-			[grandparent, parent, self],
-			2,
-			descendants,
-		);
-
-		expect(transition({ depth: 1 })).toBeNull();
-
-		registered = [
-			{ source: child, depth: 1 },
-			{ source: grandchild, depth: 2 },
-		];
 
 		expect(transition({ depth: 1 })?.current.route.key).toBe("child");
 		expect(transition({ depth: 2 })?.current.route.key).toBe("grandchild");
@@ -181,22 +163,13 @@ describe("createTransitionAccessor", () => {
 		const ancestor = createTrackedRevision();
 		const descendant = createTrackedRevision();
 		const external = createTrackedRevision();
-		const descendants = {
-			get: () => [
-				{
-					source: {
-						...createRevisionSource(descendant.revision),
-						boundsAccessor: {},
-					},
-					depth: 1,
-				},
-			],
-		} as ScreenAnimationDescendantSources;
 
 		readScreenAnimationRevisions(
-			self.revision,
-			[createRevisionSource(ancestor.revision)],
-			descendants,
+			[
+				createRevisionSource(ancestor.revision),
+				createRevisionSource(self.revision),
+				createRevisionSource(descendant.revision),
+			],
 			[external.revision],
 		);
 

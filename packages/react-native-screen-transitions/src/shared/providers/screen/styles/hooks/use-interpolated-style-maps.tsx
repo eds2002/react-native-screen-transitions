@@ -148,9 +148,6 @@ export const useInterpolatedStylesMap = ({
 	const screenInterpolatorProps = useScreenAnimationStore(
 		(store) => store.screenInterpolatorProps,
 	);
-	const screenInterpolatorPropsRevision = useScreenAnimationStore(
-		(store) => store.screenInterpolatorPropsRevision,
-	);
 	const selectedInterpolatorOptions = useScreenAnimationStore(
 		(store) => store.selectedInterpolatorOptions,
 	);
@@ -160,17 +157,15 @@ export const useInterpolatedStylesMap = ({
 	const currentInterpolator = useScreenAnimationStore(
 		(store) => store.currentInterpolator,
 	);
-	const ancestorScreenAnimationSources = useScreenAnimationStore(
-		(store) => store.ancestorScreenAnimationSources,
+	const transitionSources = useScreenAnimationStore(
+		(store) => store.transitionSources,
 	);
-	const descendantScreenAnimationSources = useScreenAnimationStore(
-		(store) => store.descendantScreenAnimationSources,
+	const transitionOriginIndex = useScreenAnimationStore(
+		(store) => store.transitionOriginIndex,
 	);
 	const transition = useBuildTransitionAccessor({
-		screenInterpolatorProps,
-		screenInterpolatorPropsRevision,
-		ancestorScreenAnimationSources,
-		descendantScreenAnimationSources,
+		transitionSources,
+		transitionOriginIndex,
 	});
 	const hasCurrentInterpolator = !!currentInterpolator;
 	const { closing: currentClosing, entering: currentEntering } =
@@ -242,12 +237,7 @@ export const useInterpolatedStylesMap = ({
 
 	const localStylesMaps = useDerivedValue<LocalStyleLayers>(() => {
 		"worklet";
-		readScreenAnimationRevisions(
-			screenInterpolatorPropsRevision,
-			ancestorScreenAnimationSources,
-			descendantScreenAnimationSources,
-			interpolatorSharedValues,
-		);
+		readScreenAnimationRevisions(transitionSources, interpolatorSharedValues);
 		const props = screenInterpolatorProps.get();
 
 		const { current, next } = props;

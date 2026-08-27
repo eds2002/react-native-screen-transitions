@@ -1,6 +1,19 @@
 import { updateDerivations } from "../../../providers/screen/animation/helpers/derivations";
 import type { ScreenInterpolatorFrame } from "../../../providers/screen/animation/helpers/pipeline";
 
+export const shouldUseOverlayGestureDriver = (
+	overlayFrame: ScreenInterpolatorFrame,
+	driverFrame: ScreenInterpolatorFrame,
+): boolean => {
+	"worklet";
+	const gesture = overlayFrame.current.gesture;
+
+	return (
+		driverFrame.current.route.key !== overlayFrame.current.route.key &&
+		!!(gesture.dragging || gesture.dismissing || gesture.settling)
+	);
+};
+
 export const createOverlayInterpolatorFrame = ({
 	overlayFrame,
 	driverFrame,
@@ -22,7 +35,7 @@ export const createOverlayInterpolatorFrame = ({
 	};
 
 	updateDerivations(frame);
-	frame.stackProgress = frame.progress;
+	frame.stackProgress = overlayFrame.stackProgress;
 	frame.logicallySettled = frame.active.settled;
 
 	return frame;

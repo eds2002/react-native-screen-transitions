@@ -9,7 +9,7 @@ export type ActivePortalBoundaryHost = {
 	localMeasurement: BoundaryLocalMeasurementValue;
 	pairKey: string;
 	portalHostName: string;
-	portalHostReady: SharedValue<boolean>;
+	portalHostReady: SharedValue<string | null>;
 	slotsMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
 };
 

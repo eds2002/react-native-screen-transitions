@@ -1,4 +1,8 @@
-import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
+import type {
+	MeasuredDimensions,
+	SharedValue,
+	StyleProps,
+} from "react-native-reanimated";
 import type { BoundsMethod } from "../../types/bounds.types";
 import type { ScreenKey } from "../../types/screen.types";
 import type {
@@ -128,6 +132,19 @@ export type LinkPairState = {
 	links: Record<LinkKey, TagLink>;
 	groups: Record<GroupKey, LinkGroupState>;
 	sourceRequests?: Record<LinkKey, true>;
+	destinationRequests?: Record<LinkKey, true>;
+	destinationLinkDemands?: Record<LinkKey, true>;
+	destinationGroupDemands?: Record<GroupKey, true>;
+	refreshingLinks?: Record<LinkKey, true>;
+	blockedDestinations?: Record<LinkKey, true>;
+	portalReadySources?: Record<LinkKey, true>;
 };
 
 export type LinkPairsState = Record<ScreenPairKey, LinkPairState>;
+
+export type BoundsScreenNode = {
+	animationProgress: SharedValue<number>;
+	pendingLifecycleStartBlockCount: SharedValue<number>;
+};
+
+export type BoundsScreenState = Record<ScreenKey, BoundsScreenNode>;

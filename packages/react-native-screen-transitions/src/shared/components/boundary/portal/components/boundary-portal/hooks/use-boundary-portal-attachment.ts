@@ -1,9 +1,12 @@
+import { useIsFocused } from "@react-navigation/native";
 import { useAnimatedProps, useSharedValue } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../../../../providers/screen/descriptors";
-import { useScreenSlots } from "../../../../../../providers/screen/styles";
+import { useScreenSlotStore } from "../../../../../../providers/screen/styles";
+import { pairs } from "../../../../../../stores/bounds/internals/state";
 import { useBoundaryRootStore } from "../../../../providers/boundary-root.provider";
 import { PORTAL_HOST_NAME_RESET_VALUE } from "../../../utils/naming";
-import { isTeleportEnabled } from "../../../utils/teleport-control";
+import { shouldAttachBoundaryPortal } from "../helpers/attachment";
+import { resolveActiveBoundaryPortalPairKey } from "../helpers/local-measurement";
 import { useActiveHostKey } from "../stores/host-registry.store";
 import { useActivePortalBoundaryHost } from "./use-active-portal-boundary-host";
 
@@ -15,23 +18,22 @@ export const useBoundaryPortalAttachment = ({
 	boundaryId,
 }: UseBoundaryPortalAttachmentParams) => {
 	const localMeasurement = useBoundaryRootStore((root) => {
-		if (!root) {
-			throw new Error("Boundary portal attachment requires a boundary root.");
-		}
-
 		return root.localMeasurement;
 	});
 	const currentScreenKey = useDescriptorsStore(
 		(s) => s.derivations.currentScreenKey,
 	);
-	const { slotsMap } = useScreenSlots();
+	// React Navigation resolves focus through the entire parent navigator chain.
+	// A leaf that is still selected in its own one-screen stack becomes unfocused
+	// when any ancestor route is covered.
+	const focused = useIsFocused();
+	const slotsMap = useScreenSlotStore((store) => store.slotsMap);
 	const portalHostName = useSharedValue<string | null>(null);
-	const portalHostReady = useSharedValue(false);
+	const portalHostReady = useSharedValue<string | null>(null);
 	const escapeHostKey = useActiveHostKey(currentScreenKey);
 
 	useActivePortalBoundaryHost({
 		boundaryId,
-		currentScreenKey,
 		escapeHostKey,
 		localMeasurement,
 		portalHostName,
@@ -49,20 +51,31 @@ export const useBoundaryPortalAttachment = ({
 			...slotProps
 		} = slot?.props ?? {};
 
-		const shouldAttach =
-			slot !== undefined &&
-			isTeleportEnabled(teleport) &&
-			portalHostReady.get();
+		const activePortalHostName = portalHostName.get();
+		const shouldAttach = shouldAttachBoundaryPortal({
+			focused,
+			portalHostReady:
+				activePortalHostName !== null &&
+				portalHostReady.get() === activePortalHostName,
+			slotActive:
+				resolveActiveBoundaryPortalPairKey(
+					localMeasurement.get(),
+					slot,
+					boundaryId,
+					pairs.get(),
+				) !== null && slot !== undefined,
+			teleport,
+		});
 
 		const hostName = shouldAttach
-			? portalHostName.get()
+			? activePortalHostName
 			: PORTAL_HOST_NAME_RESET_VALUE;
 
 		return {
 			...slotProps,
 			hostName,
 		};
-	});
+	}, [focused]);
 
 	return { teleportProps };
 };

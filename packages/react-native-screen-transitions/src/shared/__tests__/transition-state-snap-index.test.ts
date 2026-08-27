@@ -117,7 +117,6 @@ describe("hydrateTransitionState snap indices", () => {
 			{
 				transitionProgress: shared(1),
 				visualProgress: shared(1),
-				stackProgress: shared(1),
 				willAnimate: shared(0),
 				closing: shared(0),
 				progressAnimating: shared(0),
@@ -178,7 +177,6 @@ describe("hydrateTransitionState snap indices", () => {
 			{
 				transitionProgress: shared(1),
 				visualProgress: shared(1),
-				stackProgress: shared(1),
 				willAnimate: shared(0),
 				closing: shared(0),
 				progressAnimating: shared(0),
@@ -237,7 +235,6 @@ describe("hydrateTransitionState snap indices", () => {
 				{
 					transitionProgress: shared(0.5),
 					visualProgress: shared(0.5),
-					stackProgress: shared(0.5),
 				willAnimate: shared(0),
 				closing: shared(0),
 				progressAnimating: shared(0),
@@ -263,6 +260,104 @@ describe("hydrateTransitionState snap indices", () => {
 		expect(hydrated.snapIndex).toBe(1);
 	});
 
+	it("locks animatedSnapIndex through gesture motion without blocking programmatic snaps", () => {
+		const options = buildScreenTransitionOptions({
+			gestureDirection: "vertical",
+			gestureSnapLocked: true,
+		});
+		const state = createScreenTransitionState(
+			{
+				key: "route-a",
+				name: "RouteA",
+			},
+			undefined,
+			options,
+		);
+		const gesture = createGestureStore();
+		const transitionProgress = shared(1);
+		const targetProgress = shared(1);
+		const builtState = {
+			transitionProgress,
+			visualProgress: shared(1),
+			willAnimate: shared(0),
+			closing: shared(0),
+			progressAnimating: shared(0),
+			entering: shared(0),
+			gesture,
+			route: state.route,
+			options,
+			optionsSlot: {},
+			targetProgress,
+			progressSettled: shared(1),
+			resolvedAutoSnapPoint: shared(0.4),
+			measuredContentLayout: shared(null),
+			scrollMetadata: shared(null),
+			contentLayoutSlot: { width: 0, height: 0 },
+			hasAutoSnapPoint: true,
+			sortedNumericSnapPoints: [1],
+			unwrapped: state,
+		};
+
+		gesture.active.set("vertical");
+		gesture.dragging.set(1);
+		gesture.internal.progressDeltaY.set(0.3);
+		gesture.internal.lockedSnapPoint.set(1);
+
+		const dragging = hydrateTransitionState(builtState, {
+			width: 390,
+			height: 844,
+		});
+
+		expect(dragging.progress).toBeCloseTo(0.7);
+		expect(dragging.animatedSnapIndex).toBe(1);
+
+		gesture.dragging.set(0);
+		gesture.settling.set(1);
+		gesture.internal.progressDeltaY.set(0);
+		transitionProgress.set(0.7);
+
+		expect(
+			hydrateTransitionState(builtState, { width: 390, height: 844 })
+				.animatedSnapIndex,
+		).toBe(1);
+
+		targetProgress.set(0.4);
+
+		expect(
+			hydrateTransitionState(builtState, { width: 390, height: 844 })
+				.animatedSnapIndex,
+		).toBeCloseTo(0.5);
+
+		gesture.settling.set(0);
+		gesture.dismissing.set(1);
+		transitionProgress.set(0.3);
+		targetProgress.set(0);
+
+		expect(
+			hydrateTransitionState(builtState, { width: 390, height: 844 })
+				.animatedSnapIndex,
+		).toBe(1);
+
+		gesture.dismissing.set(0);
+		transitionProgress.set(0.7);
+		targetProgress.set(0.4);
+
+		expect(
+			hydrateTransitionState(builtState, { width: 390, height: 844 })
+				.animatedSnapIndex,
+		).toBeCloseTo(0.5);
+
+		gesture.dragging.set(1);
+
+		expect(
+			hydrateTransitionState(
+				builtState,
+				{ width: 390, height: 844 },
+				{ gestureSnapLocked: false },
+			).animatedSnapIndex,
+		).toBeCloseTo(0.5);
+	});
+
 	it("merges the resolved auto snap point without changing snap index ordering", () => {
 		const state = createScreenTransitionState({
 			key: "route-a",
@@ -273,7 +368,6 @@ describe("hydrateTransitionState snap indices", () => {
 				{
 					transitionProgress: shared(0.45),
 					visualProgress: shared(0.45),
-					stackProgress: shared(0.45),
 				willAnimate: shared(0),
 				closing: shared(0),
 				progressAnimating: shared(0),
@@ -308,7 +402,6 @@ describe("hydrateTransitionState snap indices", () => {
 		const builtState = {
 			transitionProgress: shared(0.45),
 			visualProgress: shared(0.45),
-			stackProgress: shared(0.45),
 			willAnimate: shared(0),
 			closing: shared(0),
 			progressAnimating: shared(0),
@@ -365,7 +458,6 @@ describe("hydrateTransitionState snap indices", () => {
 			const builtState = {
 				transitionProgress: shared(1),
 				visualProgress: shared(1),
-				stackProgress: shared(1),
 			willAnimate: shared(0),
 			closing: shared(0),
 			progressAnimating: shared(0),

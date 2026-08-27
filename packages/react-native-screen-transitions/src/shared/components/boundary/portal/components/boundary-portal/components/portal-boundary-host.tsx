@@ -13,7 +13,9 @@ import Animated, {
 } from "react-native-reanimated";
 import { NO_STYLES } from "../../../../../../constants";
 import { composeSlotStyleWithLocalTransform } from "../../../../../../providers/screen/styles/helpers/compose-slot-style";
+import { markBoundaryPortalReady } from "../../../../../../stores/bounds/internals/coordinator";
 import { NativePortalHost, PORTAL_POINTER_EVENTS } from "../../../teleport";
+import { resolveReadyPortalHostName } from "../helpers/host-readiness";
 import { resolveBoundaryLocalMeasurement } from "../helpers/local-measurement";
 import { resolvePortalOffsetStyle } from "../helpers/offset-style";
 import type { ActivePortalBoundaryHost } from "../stores/portal-boundary-host.store";
@@ -57,8 +59,15 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 		},
 		(ready) => {
 			"worklet";
+			host.portalHostReady.set(
+				resolveReadyPortalHostName({
+					currentReadyHostName: host.portalHostReady.get(),
+					hostName: host.portalHostName,
+					ready,
+				}),
+			);
 			if (ready) {
-				host.portalHostReady.set(true);
+				markBoundaryPortalReady(host.pairKey, host.boundaryId);
 			}
 		},
 	);

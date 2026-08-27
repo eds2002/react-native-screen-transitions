@@ -1,5 +1,6 @@
 import { useWindowDimensions } from "react-native";
 import {
+	type SharedValue,
 	useAnimatedProps,
 	useAnimatedReaction,
 	useAnimatedStyle,
@@ -10,9 +11,18 @@ import { SystemStore } from "../../../../stores/system.store";
 import { getVisibilityBlockOffset } from "../../../../utils/visibility-block-offset";
 import { useDescriptorsStore } from "../../descriptors";
 import { hasCloseTransitionFinished } from "../helpers/transition-visual-state";
+import { resolveVisibilityBlockOwnership } from "../helpers/visibility-block-ownership";
 import { resolveScreenVisibilityGate } from "../helpers/visibility-gate";
 
-export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
+type Params = {
+	ancestorVisibilityBlocked: SharedValue<boolean> | null;
+	isFloatingOverlay?: boolean;
+};
+
+export const useMaybeBlockVisibility = ({
+	ancestorVisibilityBlocked,
+	isFloatingOverlay,
+}: Params) => {
 	const { height } = useWindowDimensions();
 	const currentScreenKey = useDescriptorsStore(
 		(store) => store.derivations.currentScreenKey,
@@ -25,29 +35,39 @@ export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 	} = SystemStore.getBag(currentScreenKey);
 
 	const hasVisibilityGateOpened = useSharedValue(false);
-	const shouldBlockVisibility = useSharedValue(!isFloatingOverlay);
+	const localVisibilityBlocked = useSharedValue(!isFloatingOverlay);
+	const effectiveVisibilityBlocked = useSharedValue(!isFloatingOverlay);
 
 	useAnimatedReaction(
 		() => {
 			"worklet";
 
-			return resolveScreenVisibilityGate({
-				isFloatingOverlay,
-				hasVisibilityGateOpened: hasVisibilityGateOpened.get(),
-				pendingLifecycleStartBlockCount: pendingLifecycleStartBlockCount.get(),
-				pendingLifecycleRequestKind: pendingLifecycleRequestKind.get(),
-				animationProgress: animationProgress.get(),
-				entering: entering.get(),
-			});
+			return {
+				gate: resolveScreenVisibilityGate({
+					isFloatingOverlay,
+					hasVisibilityGateOpened: hasVisibilityGateOpened.get(),
+					pendingLifecycleStartBlockCount:
+						pendingLifecycleStartBlockCount.get(),
+					pendingLifecycleRequestKind: pendingLifecycleRequestKind.get(),
+					animationProgress: animationProgress.get(),
+					entering: entering.get(),
+				}),
+				ancestorBlocked: ancestorVisibilityBlocked?.get() ?? false,
+			};
 		},
-		(gate) => {
+		({ gate, ancestorBlocked }) => {
 			"worklet";
 
 			if (gate.shouldOpenGate) {
 				hasVisibilityGateOpened.set(true);
 			}
 
-			shouldBlockVisibility.set(gate.shouldBlock);
+			const ownership = resolveVisibilityBlockOwnership({
+				localBlocked: gate.shouldBlock,
+				ancestorBlocked,
+			});
+			localVisibilityBlocked.set(gate.shouldBlock);
+			effectiveVisibilityBlocked.set(ownership.effectiveBlocked);
 		},
 	);
 
@@ -66,10 +86,15 @@ export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 			};
 		}
 
+		const ownership = resolveVisibilityBlockOwnership({
+			localBlocked: localVisibilityBlocked.get(),
+			ancestorBlocked: ancestorVisibilityBlocked?.get() ?? false,
+		});
+
 		return {
 			transform: [
 				{
-					translateY: shouldBlockVisibility.get() ? offset : 0,
+					translateY: ownership.appliesOffset ? offset : 0,
 				},
 			],
 		};
@@ -78,7 +103,7 @@ export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 	const animatedProps = useAnimatedProps(() => {
 		"worklet";
 		return {
-			pointerEvents: shouldBlockVisibility.get()
+			pointerEvents: effectiveVisibilityBlocked.get()
 				? ("none" as const)
 				: ("box-none" as const),
 		};
@@ -87,6 +112,6 @@ export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 	return {
 		animatedStyle,
 		animatedProps,
-		shouldBlockVisibility,
+		visibilityBlocked: effectiveVisibilityBlocked,
 	};
 };
