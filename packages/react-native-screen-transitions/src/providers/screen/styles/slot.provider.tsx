@@ -34,6 +34,7 @@ const createScreenSlotProvider = createProvider("ScreenSlot", {
 })<Props, ScreenSlotContextValue>;
 
 export const {
+	StoreProvider: ScreenSlotStoreProvider,
 	ScreenSlotProvider,
 	useOptionalScreenSlotStore,
 	useScreenSlotStore,

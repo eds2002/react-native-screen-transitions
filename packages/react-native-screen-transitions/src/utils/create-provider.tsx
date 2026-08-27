@@ -321,11 +321,13 @@ export default function createProvider<
 			);
 		const StoreProvider = ({
 			children,
+			registerGlobally = true,
 			storeKey,
 			unregisterOnCleanup = true,
 			value,
 		}: {
 			children?: ReactNode;
+			registerGlobally?: boolean;
 			storeKey?: string;
 			unregisterOnCleanup?: boolean;
 			value: ContextValue;
@@ -343,7 +345,7 @@ export default function createProvider<
 			const store = storeRef.current;
 
 			useLayoutEffect(() => {
-				if (!globalRegistry) {
+				if (!globalRegistry || !registerGlobally) {
 					return;
 				}
 
@@ -360,7 +362,7 @@ export default function createProvider<
 						unregister();
 					}
 				};
-			}, [storeKey, store]);
+			}, [registerGlobally, storeKey, store]);
 
 			pendingNotifyRef.current =
 				store.setSnapshot(value) || pendingNotifyRef.current;

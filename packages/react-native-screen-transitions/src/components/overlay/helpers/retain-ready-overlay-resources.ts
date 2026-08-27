@@ -4,6 +4,7 @@ import type { FloatOverlayEntry } from "./get-active-overlay";
 
 export type ReadyOverlayResources = {
 	overlayAnimationStore: ScreenAnimationContextValue;
+	overlaySlots: ScreenSlotContextValue;
 	driverScene: FloatOverlayEntry["scene"];
 	driverAnimationStore: ScreenAnimationContextValue;
 	driverSlots: ScreenSlotContextValue;
@@ -12,16 +13,23 @@ export type ReadyOverlayResources = {
 export function retainReadyOverlayResources(
 	previous: ReadyOverlayResources | null,
 	overlayAnimationStore: ScreenAnimationContextValue | null,
+	overlaySlots: ScreenSlotContextValue | null,
 	driverScene: FloatOverlayEntry["scene"],
 	driverAnimationStore: ScreenAnimationContextValue | null,
 	driverSlots: ScreenSlotContextValue | null,
 ): ReadyOverlayResources | null {
-	if (!overlayAnimationStore || !driverAnimationStore || !driverSlots) {
+	if (
+		!overlayAnimationStore ||
+		!overlaySlots ||
+		!driverAnimationStore ||
+		!driverSlots
+	) {
 		return previous;
 	}
 
 	if (
 		previous?.overlayAnimationStore === overlayAnimationStore &&
+		previous.overlaySlots === overlaySlots &&
 		previous.driverScene === driverScene &&
 		previous.driverAnimationStore === driverAnimationStore &&
 		previous.driverSlots === driverSlots
@@ -31,6 +39,7 @@ export function retainReadyOverlayResources(
 
 	return {
 		overlayAnimationStore,
+		overlaySlots,
 		driverScene,
 		driverAnimationStore,
 		driverSlots,

@@ -2,11 +2,14 @@ import { memo, useMemo, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, { useDerivedValue } from "react-native-reanimated";
 import { snapDescriptorToIndex } from "../../../animation/snap-to";
-import { NavigationScreenProvider } from "../../../providers/navigation/navigation-host.provider";
 import { useOptionalScreenAnimationStore } from "../../../providers/screen/animation";
-import type { ScreenAnimationContextValue } from "../../../providers/screen/animation/animation.provider";
+import {
+	type ScreenAnimationContextValue,
+	ScreenAnimationStoreProvider,
+} from "../../../providers/screen/animation/animation.provider";
 import {
 	type ScreenSlotContextValue,
+	ScreenSlotStoreProvider,
 	useOptionalScreenSlotStore,
 } from "../../../providers/screen/styles/slot.provider";
 import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
@@ -40,6 +43,7 @@ export const OverlayHost = memo(function OverlayHost({
 	const previousOverlayAnimationStore = useOptionalScreenAnimationStore(
 		previousOverlayScene?.route.key ?? scene.route.key,
 	);
+	const overlaySlots = useOptionalScreenSlotStore(scene.route.key);
 	const driverSlots = useOptionalScreenSlotStore(driverScene.route.key);
 	const overlayComponentRef = useRef(scene.descriptor.options.overlay);
 	const OverlayComponent = overlayComponentRef.current;
@@ -47,6 +51,7 @@ export const OverlayHost = memo(function OverlayHost({
 	readyResourcesRef.current = retainReadyOverlayResources(
 		readyResourcesRef.current,
 		overlayAnimationStore,
+		overlaySlots,
 		driverScene,
 		driverAnimationStore,
 		driverSlots,
@@ -63,6 +68,7 @@ export const OverlayHost = memo(function OverlayHost({
 			driverScene={readyResources.driverScene}
 			layerIndex={layerIndex}
 			overlayAnimationStore={readyResources.overlayAnimationStore}
+			overlaySlots={readyResources.overlaySlots}
 			driverAnimationStore={readyResources.driverAnimationStore}
 			previousOverlayAnimationStore={
 				previousOverlayScene ? previousOverlayAnimationStore : undefined
@@ -75,6 +81,7 @@ export const OverlayHost = memo(function OverlayHost({
 
 type ReadyOverlayHostProps = OverlayHostProps & {
 	overlayAnimationStore: ScreenAnimationContextValue;
+	overlaySlots: ScreenSlotContextValue;
 	driverAnimationStore: ScreenAnimationContextValue;
 	previousOverlayAnimationStore?: ScreenAnimationContextValue | null;
 	driverSlots: ScreenSlotContextValue;
@@ -88,13 +95,13 @@ function ReadyOverlayHost({
 	driverScene,
 	layerIndex,
 	overlayAnimationStore,
+	overlaySlots,
 	driverAnimationStore,
 	previousOverlayAnimationStore,
 	driverSlots,
 	OverlayComponent,
 }: ReadyOverlayHostProps) {
 	const { scenes, focusedIndex, routeKeys, routes } = useBlankStackStore();
-	const descriptor = scene.descriptor;
 	const focusedScene = scenes[focusedIndex] ?? scenes[scenes.length - 1];
 	const focusedDescriptor = focusedScene?.descriptor;
 	const { animatedProps, animatedStyle } = useOverlaySlot({
@@ -149,17 +156,19 @@ function ReadyOverlayHost({
 				animatedStyle,
 			]}
 		>
-			<NavigationScreenProvider
-				navigation={descriptor.navigation}
-				route={descriptor.route}
+			<ScreenAnimationStoreProvider
+				registerGlobally={false}
+				value={overlayAnimationStore}
 			>
-				<View
-					pointerEvents="box-none"
-					style={[StyleSheet.absoluteFill, styles.overlay]}
-				>
-					<OverlayComponent {...overlayProps} />
-				</View>
-			</NavigationScreenProvider>
+				<ScreenSlotStoreProvider registerGlobally={false} value={overlaySlots}>
+					<View
+						pointerEvents="box-none"
+						style={[StyleSheet.absoluteFill, styles.overlay]}
+					>
+						<OverlayComponent {...overlayProps} />
+					</View>
+				</ScreenSlotStoreProvider>
+			</ScreenAnimationStoreProvider>
 		</Animated.View>
 	);
 }

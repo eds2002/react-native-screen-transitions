@@ -1,29 +1,14 @@
 import { useMemo } from "react";
 import { useAnimatedProps, useAnimatedStyle } from "react-native-reanimated";
 import { NO_PROPS, NO_STYLES } from "../../../../constants";
-import { useNavigationRoute } from "../../../navigation/navigation-host.provider";
 import {
 	composeSlotStyleWithLocalTransform,
 	getLocalTransformForSlotComposition,
 } from "../helpers/compose-slot-style";
-import { useOptionalScreenSlotStore } from "../slot.provider";
+import { useScreenSlotStore } from "../slot.provider";
 
 const useCurrentScreenSlotsMap = () => {
-	const routeKey = useNavigationRoute().key;
-	const localSlotsMap = useOptionalScreenSlotStore(
-		(store) => store?.slotsMap ?? null,
-	);
-	const keyedSlotsMap = useOptionalScreenSlotStore(
-		localSlotsMap ? null : routeKey,
-		(store) => store.slotsMap,
-	);
-	const slotsMap = localSlotsMap ?? keyedSlotsMap;
-
-	if (!slotsMap) {
-		throw new Error(`ScreenSlotStore is unavailable for route "${routeKey}"`);
-	}
-
-	return slotsMap;
+	return useScreenSlotStore((store) => store.slotsMap);
 };
 
 export const useSlotStyles = (slotId: string | undefined) => {

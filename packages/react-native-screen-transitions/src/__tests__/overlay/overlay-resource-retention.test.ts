@@ -18,6 +18,7 @@ describe("overlay resource retention", () => {
 		const mounted = retainReadyOverlayResources(
 			null,
 			animationA,
+			slotsA,
 			sceneA,
 			animationA,
 			slotsA,
@@ -26,6 +27,7 @@ describe("overlay resource retention", () => {
 		const whileBRegisters = retainReadyOverlayResources(
 			mounted,
 			animationA,
+			slotsA,
 			sceneB,
 			null,
 			null,
@@ -33,6 +35,7 @@ describe("overlay resource retention", () => {
 		const drivenByB = retainReadyOverlayResources(
 			whileBRegisters,
 			animationA,
+			slotsA,
 			sceneB,
 			animationB,
 			slotsB,
@@ -41,6 +44,7 @@ describe("overlay resource retention", () => {
 		expect(whileBRegisters).toBe(mounted);
 		expect(drivenByB).toEqual({
 			overlayAnimationStore: animationA,
+			overlaySlots: slotsA,
 			driverScene: sceneB,
 			driverAnimationStore: animationB,
 			driverSlots: slotsB,
@@ -54,19 +58,28 @@ describe("overlay resource retention", () => {
 		const mounted = retainReadyOverlayResources(
 			null,
 			animation,
+			slots,
 			scene,
 			animation,
 			slots,
 		);
 
 		expect(
-			retainReadyOverlayResources(mounted, null, scene, animation, slots),
+			retainReadyOverlayResources(
+				mounted,
+				null,
+				null,
+				scene,
+				animation,
+				slots,
+			),
 		).toBe(mounted);
 	});
 
 	it("waits for complete resources before the first mount", () => {
 		expect(
 			retainReadyOverlayResources(
+				null,
 				null,
 				null,
 				createScene("A"),

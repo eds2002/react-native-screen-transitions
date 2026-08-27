@@ -27,67 +27,68 @@ const createScreenAnimationProvider = createProvider("ScreenAnimation", {
 })<Props, ScreenAnimationContextValue>;
 
 export const {
+	StoreProvider: ScreenAnimationStoreProvider,
 	ScreenAnimationProvider,
 	useOptionalScreenAnimationStore,
 	useScreenAnimationStore,
-}: ReturnType<typeof createScreenAnimationProvider> =
-	createScreenAnimationProvider((_props) => {
-		const currentScreenKey = useDescriptorsStore(
-			(store) => store.derivations.currentScreenKey,
-		);
-		const isClosing = useBlankStackStore(
-			(store) => store.scenesByKey[currentScreenKey]?.activity === "closing",
-		);
-		const relationships = useCurrentScreenRelationships();
-		const pipeline = useScreenAnimationPipeline();
+}: ReturnType<
+	typeof createScreenAnimationProvider
+> = createScreenAnimationProvider((_props) => {
+	const currentScreenKey = useDescriptorsStore(
+		(store) => store.derivations.currentScreenKey,
+	);
+	const isClosing = useBlankStackStore(
+		(store) => store.scenesByKey[currentScreenKey]?.activity === "closing",
+	);
+	const relationships = useCurrentScreenRelationships();
+	const pipeline = useScreenAnimationPipeline();
 
-		const screenAnimationSource = useMemo<ScreenAnimationTransitionSource>(
-			() => ({
-				screenInterpolatorProps: pipeline.screenInterpolatorProps,
-				screenInterpolatorPropsRevision:
-					pipeline.screenInterpolatorPropsRevision,
-				boundsAccessor: createBoundsAccessor(() => {
-					"worklet";
-					return pipeline.screenInterpolatorProps.get();
-				}),
+	const screenAnimationSource = useMemo<ScreenAnimationTransitionSource>(
+		() => ({
+			screenInterpolatorProps: pipeline.screenInterpolatorProps,
+			screenInterpolatorPropsRevision: pipeline.screenInterpolatorPropsRevision,
+			boundsAccessor: createBoundsAccessor(() => {
+				"worklet";
+				return pipeline.screenInterpolatorProps.get();
 			}),
-			[
-				pipeline.screenInterpolatorProps,
-				pipeline.screenInterpolatorPropsRevision,
-			],
-		);
-		const ancestorSources =
-			useOptionalScreenAnimationStore(
-				relationships.parentScreenKey,
-				(store) => store.transitionSourcesThroughSelf,
-			) ?? EMPTY_TRANSITION_SOURCES;
-		const descendantSources =
-			useOptionalScreenAnimationStore(
-				relationships.activeChildScreenKey,
-				(store) => store.transitionSourcesFromSelf,
-			) ?? EMPTY_TRANSITION_SOURCES;
-		const transitionSourcesThroughSelf = useMemo(
-			() => [...ancestorSources, screenAnimationSource],
-			[ancestorSources, screenAnimationSource],
-		);
-		const transitionSourcesFromSelf = useMemo(
-			() => [screenAnimationSource, ...descendantSources],
-			[screenAnimationSource, descendantSources],
-		);
-		const transitionSources = useMemo(
-			() => [...transitionSourcesThroughSelf, ...descendantSources],
-			[transitionSourcesThroughSelf, descendantSources],
-		);
+		}),
+		[
+			pipeline.screenInterpolatorProps,
+			pipeline.screenInterpolatorPropsRevision,
+		],
+	);
+	const ancestorSources =
+		useOptionalScreenAnimationStore(
+			relationships.parentScreenKey,
+			(store) => store.transitionSourcesThroughSelf,
+		) ?? EMPTY_TRANSITION_SOURCES;
+	const descendantSources =
+		useOptionalScreenAnimationStore(
+			relationships.activeChildScreenKey,
+			(store) => store.transitionSourcesFromSelf,
+		) ?? EMPTY_TRANSITION_SOURCES;
+	const transitionSourcesThroughSelf = useMemo(
+		() => [...ancestorSources, screenAnimationSource],
+		[ancestorSources, screenAnimationSource],
+	);
+	const transitionSourcesFromSelf = useMemo(
+		() => [screenAnimationSource, ...descendantSources],
+		[screenAnimationSource, descendantSources],
+	);
+	const transitionSources = useMemo(
+		() => [...transitionSourcesThroughSelf, ...descendantSources],
+		[transitionSourcesThroughSelf, descendantSources],
+	);
 
-		return {
-			key: currentScreenKey,
-			unregisterOnCleanup: isClosing,
-			value: {
-				...pipeline,
-				transitionSources,
-				transitionOriginIndex: ancestorSources.length,
-				transitionSourcesThroughSelf,
-				transitionSourcesFromSelf,
-			},
-		};
-	});
+	return {
+		key: currentScreenKey,
+		unregisterOnCleanup: isClosing,
+		value: {
+			...pipeline,
+			transitionSources,
+			transitionOriginIndex: ancestorSources.length,
+			transitionSourcesThroughSelf,
+			transitionSourcesFromSelf,
+		},
+	};
+});

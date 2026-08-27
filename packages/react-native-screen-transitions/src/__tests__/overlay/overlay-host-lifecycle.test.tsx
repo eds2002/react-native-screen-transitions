@@ -21,9 +21,10 @@ import type { ScreenSlotContextValue } from "../../providers/screen/styles/slot.
 
 const animationStores = new Map<string, ScreenAnimationContextValue>();
 const slotStores = new Map<string, ScreenSlotContextValue>();
-const NavigationRouteContext = createContext<
-	{ key: string; name: string } | undefined
->(undefined);
+const ScreenAnimationContext = createContext<ScreenAnimationContextValue | null>(
+	null,
+);
+const ScreenSlotContext = createContext<ScreenSlotContextValue | null>(null);
 let stackState: {
 	scenes: unknown[];
 	focusedIndex: number;
@@ -31,62 +32,82 @@ let stackState: {
 	routes: Array<{ key: string; name: string }>;
 };
 
-const useScreenAnimationStore = (key: string) =>
-	animationStores.get(key) ?? null;
+const useScreenAnimationStore = (key?: string | null) => {
+	const localStore = useContext(ScreenAnimationContext);
+	return typeof key === "string"
+		? (animationStores.get(key) ?? null)
+		: localStore;
+};
 
 const useScreenSlotStore = <Selected,>(
-	key: string,
+	keyOrSelector?:
+		| string
+		| null
+		| ((store: ScreenSlotContextValue) => Selected),
 	selector?: (store: ScreenSlotContextValue) => Selected,
 ) => {
-	const store = slotStores.get(key);
+	const localStore = useContext(ScreenSlotContext);
+	const store =
+		typeof keyOrSelector === "string"
+			? slotStores.get(keyOrSelector)
+			: localStore;
 	if (!store) {
 		return null;
 	}
 
-	return selector ? selector(store) : store;
+	const resolvedSelector =
+		typeof keyOrSelector === "function" ? keyOrSelector : selector;
+	return resolvedSelector ? resolvedSelector(store) : store;
 };
 
 mock.module("../../providers/stack/blank-stack.provider", () => ({
 	useBlankStackStore: () => stackState,
 }));
 
-mock.module(
-	"../../providers/navigation/navigation-host.provider",
-	() => ({
-		NavigationScreenProvider: ({
-			children,
-			navigation,
-			route,
-		}: {
-			children: ReactNode;
-			navigation: unknown;
-			route: { key: string; name: string };
-		}) => (
-			<NavigationRouteContext.Provider value={route}>
-				{children}
-			</NavigationRouteContext.Provider>
-		),
-		useNavigationRoute: () => {
-			const route = useContext(NavigationRouteContext);
-			if (!route) {
-				throw new Error("Navigation route was not provided");
-			}
-			return route;
-		},
-	}),
-);
-
 mock.module("../../providers/screen/animation/animation.provider", () => ({
+	ScreenAnimationStoreProvider: ({
+		children,
+		value,
+	}: {
+		children: ReactNode;
+		value: ScreenAnimationContextValue;
+	}) => (
+		<ScreenAnimationContext.Provider value={value}>
+			{children}
+		</ScreenAnimationContext.Provider>
+	),
 	useOptionalScreenAnimationStore: useScreenAnimationStore,
 	useScreenAnimationStore,
 }));
 
 mock.module("../../providers/screen/animation", () => ({
+	ScreenAnimationStoreProvider: ({
+		children,
+		value,
+	}: {
+		children: ReactNode;
+		value: ScreenAnimationContextValue;
+	}) => (
+		<ScreenAnimationContext.Provider value={value}>
+			{children}
+		</ScreenAnimationContext.Provider>
+	),
 	useOptionalScreenAnimationStore: useScreenAnimationStore,
 	useScreenAnimationStore,
 }));
 
 mock.module("../../providers/screen/styles/slot.provider", () => ({
+	ScreenSlotStoreProvider: ({
+		children,
+		value,
+	}: {
+		children: ReactNode;
+		value: ScreenSlotContextValue;
+	}) => (
+		<ScreenSlotContext.Provider value={value}>
+			{children}
+		</ScreenSlotContext.Provider>
+	),
 	useOptionalScreenSlotStore: useScreenSlotStore,
 	useScreenSlotStore,
 }));
