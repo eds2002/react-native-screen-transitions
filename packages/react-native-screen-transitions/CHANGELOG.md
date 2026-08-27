@@ -1,5 +1,7 @@
 # Changelog
 
+## [4.0.0](https://github.com/eds2002/react-native-screen-transitions/compare/v4.0.0-alpha.10...v4.0.0) (2026-08-27)
+
 ## [3.8.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.8.0-beta.1...v3.8.0) (2026-06-21)
 
 ## [3.7.1](https://github.com/eds2002/react-native-screen-transitions/compare/v3.7.0...v3.7.1) (2026-06-10)
