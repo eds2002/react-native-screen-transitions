@@ -1,8 +1,8 @@
 ---
 title: "Gestures"
 pageTitle: "Gestures"
-summary: "Configure dismiss gestures, snap-sheet handoff, backdrops, and gesture hooks from real screen options."
-description: "Configure dismiss gestures, snap-sheet handoff, backdrops, and gesture hooks from real screen options."
+summary: "Configure dismiss gestures, snap sheets, and gesture hooks from screen options."
+description: "Configure dismiss gestures, snap sheets, and gesture hooks from screen options."
 eyebrow: "Core Concepts"
 group: "Core Concepts"
 order: 7
@@ -270,89 +270,7 @@ Scroll-boundary handoff mode for snap sheets.
   </tbody>
 </table>
 
-### `backdropBehavior`
-
-Controls how taps on the backdrop are handled.
-
-<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
-  <thead>
-    <tr>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>"block" | "passthrough" | "dismiss" | "collapse"</code></td>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">stack default</td>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
-    </tr>
-  </tbody>
-</table>
-
-### `backdropComponent`
-
-Custom backdrop component type. Pass a stable component such as `BlurView`, or pass a function component that renders `{ styles, props, pointerEvents }`.
-
-<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
-  <thead>
-    <tr>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>React.ComponentType&lt;any&gt; | ScreenBackdropComponent</code></td>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>undefined</code></td>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
-    </tr>
-  </tbody>
-</table>
-
-### `contentComponent`
-
-Custom renderer for the screen content layer. Use it when a screen needs a custom shell that receives the `content` slot's animated styles, animated props, pointer events, and children.
-
-<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
-  <thead>
-    <tr>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>React.ComponentType&lt;any&gt; | ScreenContentComponent</code></td>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>undefined</code></td>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
-    </tr>
-  </tbody>
-</table>
-
-### `surfaceComponent`
-
-Custom renderer for the visual surface inside the content layer. It receives the `surface` slot's animated styles, animated props, pointer events, and screen children. Shared-element fallback content remains outside this component.
-
-<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
-  <thead>
-    <tr>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>React.ComponentType&lt;any&gt; | ScreenSurfaceComponent</code></td>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>undefined</code></td>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
-    </tr>
-  </tbody>
-</table>
+See [Snap Points](/snap-points#scroll-handoff) for transition-aware scrollables and the complete handoff behavior.
 
 ## Per-Direction Activation Area
 
@@ -562,117 +480,6 @@ navigation.setOptions({
 });
 ```
 
-## Scroll Handoff for Snap Sheets
-
-When a snap sheet contains scroll content, use the transition-aware scrollables:
-
-```tsx
-function SheetScreen() {
-  return (
-    <Transition.ScrollView>
-      <LongContent />
-    </Transition.ScrollView>
-  );
-}
-```
-
-`sheetScrollGestureBehavior` controls what happens when that scroll view reaches its boundary:
-
-### expand-and-collapse
-
-At the sheet boundary:
-
-- dragging toward expand can expand the sheet
-- dragging toward collapse can collapse or dismiss the sheet
-
-This is the Apple Maps-style behavior.
-
-### collapse-only
-
-At the sheet boundary:
-
-- dragging toward collapse can collapse or dismiss the sheet
-- dragging from the scrollable content does not expand the sheet
-
-Expansion must start from dead space outside the scrollable content. This is the Instagram-style behavior.
-
-```tsx
-<Stack.Screen
-  name="Sheet"
-  component={SheetScreen}
-  options={{
-    gestureEnabled: true,
-    gestureDirection: "vertical",
-    snapPoints: [0.4, 0.7, 1],
-    sheetScrollGestureBehavior: "collapse-only",
-  }}
-/>
-```
-
-## Scroll Metadata
-
-Transition-aware scrollables publish scroll state through `current.layouts.scroll`:
-
-```tsx
-screenStyleInterpolator: ({ current }) => {
-  "worklet";
-
-  const y = current.layouts.scroll?.vertical?.offset ?? 0;
-
-  return {
-    content: {
-      style: {
-        transform: [{ translateY: -Math.min(y, 24) }],
-      },
-    },
-  };
-};
-```
-
-For nested same-axis scrollables, the outermost scrollable owns that axis. Cross-axis nested scrollables can each publish their own axis.
-
-## Backdrop Interaction
-
-The supported values are:
-
-- `"block"`
-- `"passthrough"`
-- `"dismiss"`
-- `"collapse"`
-
-Use `backdropBehavior: "dismiss"` when tapping the backdrop should close the screen, or `backdropBehavior: "collapse"` when a snap sheet should step down to the next lower detent first.
-
-For a custom backdrop renderer, pass a component type:
-
-```tsx
-import { BlurView } from "expo-blur";
-
-<Stack.Screen
-  name="Detail"
-  component={DetailScreen}
-  options={{
-    backdropBehavior: "dismiss",
-    backdropComponent: BlurView,
-    screenStyleInterpolator: ({ progress }) => {
-      "worklet";
-
-      return {
-        backdrop: {
-          style: {
-            opacity: interpolate(progress, [0, 1, 2], [0, 0.2, 0]),
-          },
-          props: {
-            intensity: interpolate(progress, [0, 1, 2], [0, 80, 0]),
-          },
-        },
-      };
-    },
-  }}
-/>
-```
-
-The library wraps the backdrop component with `Animated.createAnimatedComponent` internally and drives it from the `backdrop` slot.
-
 ## Reading Gesture State
 
 Gesture values are exposed inside the interpolator on `current.gesture`:
@@ -733,9 +540,10 @@ const parentGestureRef = useScreenGesture({ depth: -1 });
 const customPan = Gesture.Pan().requireExternalGestureToFail(parentGestureRef);
 ```
 
-`useScreenGesture()` supports `depth: 0` for the current screen and negative depths for ancestors. `useScreenAnimation()` also supports positive depths for descendant transition scopes. Ancestor targeting stops at isolation boundaries. In an `independent` nested stack, negative depths can resolve to `null` when the lookup reaches that isolated tree edge.
+`useScreenGesture()` supports `depth: 0` for the current screen and negative depths for ancestors. `useScreenAnimation()` also supports positive depths for descendant transition scopes. Ancestor targeting stops at navigation-host isolation boundaries, where negative depths resolve to `null`.
 
 ## Related Reading
 
 - [Gesture Ownership](/gesture-ownership)
 - [Snap Points](/snap-points)
+- [Layers](/layers)

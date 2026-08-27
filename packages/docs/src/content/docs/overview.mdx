@@ -55,7 +55,7 @@ It is the best fit for:
 - snap sheets
 - overlays
 - bounds transitions
-- embedded and independent flows
+- embedded flows
 
 ### Native Stack
 
@@ -70,10 +70,6 @@ Under the hood, this is still a compatibility layer. The transitioned native-sta
 So while native-stack integration keeps you in the native-stack world for things like existing headers and screen primitives, it is not the path with the most control over custom animations.
 
 Use native stack when you already rely on native-stack behavior and you want a one-off custom transition inside that setup. If you want the full transition model and more control over the animation surface itself, choose blank stack.
-
-## One set of transition APIs
-
-Presets, interpolators, gestures, overlays, snap points, and bounds transitions work the same way across the supported navigation hosts. The integration pages only cover how each host creates and mounts Blank Stack.
 
 ## Special Thanks
 

@@ -82,10 +82,36 @@ In practice:
 | `stackProgress` | Accumulated progress from this screen upward through the stack |
 | `focused` | `true` when there is no `next` screen above `current` |
 | `bounds` | Bounds accessor for shared-element and navigation zoom helpers |
+| `transition` | Worklet-safe accessor for the current, ancestor, or descendant transition scope |
 | `insets` | Safe-area insets |
 | `layouts` | Layout measurements for the current screen |
 
 </PropertyTable>
+
+## Related Transition Scopes
+
+Use `transition()` when an interpolator needs animation state from another screen transition scope:
+
+```tsx
+screenStyleInterpolator: ({ transition }) => {
+  "worklet";
+
+  const parent = transition({ depth: -1 });
+  const parentProgress = parent?.progress ?? 1;
+
+  return {
+    content: {
+      style: {
+        opacity: interpolate(parentProgress, [0, 1], [0.8, 1], "clamp"),
+      },
+    },
+  };
+};
+```
+
+Calling `transition()` without a target, or with `depth: 0`, returns the current scope. Negative depths resolve ancestors and positive depths resolve descendants. The accessor returns `null` when the requested scope is unavailable.
+
+Returned scopes expose the same interpolation state, including `current`, `previous`, `next`, `active`, `inactive`, `progress`, `stackProgress`, `bounds`, and another relative `transition()` accessor.
 
 Each screen state object contains the same fields:
 

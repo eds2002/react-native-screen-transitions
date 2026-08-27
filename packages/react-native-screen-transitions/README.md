@@ -28,20 +28,15 @@ Install peer dependencies:
 
 ```bash
 npm install react-native-reanimated react-native-gesture-handler \
-  @react-navigation/native @react-navigation/native-stack \
-  @react-navigation/elements react-native-screens \
-  react-native-safe-area-context
+  @react-navigation/native react-native-safe-area-context \
+  react-native-worklets
 ```
 
 See [the documentation site](https://screen-transitions.esjr.org).
 
-## Support
+## Requirements
 
-v3 (current) supports Reanimated v3, Reanimated v4, and React Native Gesture Handler v2.
-
-| Line | Reanimated | React Native Gesture Handler |
-| ---- | ---------- | ---------------------------- |
-| v3 (current) | v3, v4 | v2 |
+Version 4 requires React 19.2 or later, React Navigation 7.3 or later, Reanimated 4, Worklets 0.8 or later, and React Native Gesture Handler 2.16.1 or later.
 
 ## Author
 

@@ -108,6 +108,31 @@ backdrop: {
 }
 ```
 
+### Backdrop interaction
+
+`backdropBehavior` controls how the backdrop layer handles touches:
+
+<PropertyTable>
+
+| Value | Behavior |
+| --- | --- |
+| `"block"` | Catch touches without changing navigation |
+| `"passthrough"` | Pass touches through to the content behind the screen |
+| `"dismiss"` | Dismiss the screen when the backdrop is tapped |
+| `"collapse"` | Move to the next lower snap point, then dismiss when already at the minimum |
+
+</PropertyTable>
+
+The default is `"block"`.
+
+```tsx
+options={{
+  backdropBehavior: "dismiss",
+}}
+```
+
+### Custom backdrop components
+
 If you provide `backdropComponent`, pass either a component type or a render-style function component.
 
 ```tsx
@@ -138,7 +163,7 @@ The render props are:
 - `props`: animated props from the `backdrop` slot
 - `pointerEvents`: the backdrop pointer-event state
 
-Use backdrop for dimming, blur intensity, tint, or any visual treatment outside the screen itself. `backdropBehavior` still controls how taps are handled.
+Use backdrop for dimming, blur intensity, tint, or any visual treatment outside the screen itself. The backdrop renderer and its tap behavior are configured independently.
 
 ## content
 

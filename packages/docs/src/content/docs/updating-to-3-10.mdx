@@ -31,8 +31,6 @@ When a boundary moves from A to B, B becomes the active receiving location for t
 
 This improves rapid A → B → A → B flows, preserves source placeholder sizing, and avoids a class of blank frames and premature returns.
 
-`handoff` remains experimental, particularly for native-backed Android views. The existing [live handoff caveats](/caveats#live-boundary-handoff) still apply to video surfaces and other platform-composited content.
-
 ## Smoother escape clipping
 
 `escapeClipping` now attaches a linked source to its closest valid screen host as soon as that host has committed layout. This fixes source elements that previously stayed inside their clipped container instead of participating in an `escapeClipping` transition.

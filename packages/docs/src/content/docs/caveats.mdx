@@ -82,24 +82,3 @@ If you do want that behavior, there is an experimental escape hatch:
 ```
 
 `experimental_animateOnInitialMount` is experimental and may change.
-
-## Live Boundary Handoff
-
-`Transition.Boundary` handoff moves one live payload between matching boundary hosts.
-
-It's useful for video players, maps, and other stateful native content, but it also makes platform view lifecycle and compositor behavior observable.
-
-In particular, Android video surfaces have a trade-off:
-
-- `SurfaceView` is efficient, but it may render outside normal React Native clipping, transforms, border radii, or portal stacking.
-- `TextureView` participates in the regular view hierarchy, but it can briefly flicker when native content moves between handoff hosts.
-
-For Expo Video content that must clip or animate with a boundary, prefer:
-
-```tsx
-<VideoView
-  player={player}
-  surfaceType="textureView"
-  style={StyleSheet.absoluteFill}
-/>
-```

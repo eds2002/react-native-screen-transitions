@@ -1,8 +1,8 @@
 ---
 title: "Installation"
 pageTitle: "Installation"
-summary: "Install Screen Transitions and the runtime used by the current release."
-description: "Install Screen Transitions with React 19.2, Reanimated 4, Worklets, and its navigation peers."
+summary: "Install Screen Transitions and its peer dependencies."
+description: "Install Screen Transitions with its required React Native, animation, gesture, and navigation peers."
 eyebrow: "Get Started"
 group: "Get Started"
 order: 2
@@ -15,7 +15,7 @@ The current release requires:
 
 - React 19.2 or later
 - Reanimated 4
-- Worklets 0.8
+- Worklets 0.8 or later
 - React Navigation 7.3 or later
 - Gesture Handler 2.16.1 or later
 
@@ -35,13 +35,13 @@ Expo Router support currently requires Expo Router 56.2.10 or later and is marke
   ]}
 />
 
-## Install the animation runtime
+## Install peer dependencies
 
-Expo projects should let Expo choose compatible native versions:
+For Expo projects:
 
 ```bash
-npx expo install react-native-reanimated react-native-worklets \
-  react-native-gesture-handler react-native-safe-area-context
+npx expo install @react-navigation/native react-native-gesture-handler \
+  react-native-reanimated react-native-safe-area-context react-native-worklets
 ```
 
 For bare React Native projects:
@@ -54,45 +54,31 @@ For bare React Native projects:
     {
       label: "npm",
       value: "npm",
-      code: `npm install react-native-reanimated@^4 react-native-worklets@~0.8 \
-  react-native-gesture-handler react-native-safe-area-context`,
+      code: `npm install @react-navigation/native react-native-gesture-handler \
+  react-native-reanimated react-native-safe-area-context react-native-worklets`,
     },
     {
       label: "yarn",
       value: "yarn",
-      code: `yarn add react-native-reanimated@^4 react-native-worklets@~0.8 \
-  react-native-gesture-handler react-native-safe-area-context`,
+      code: `yarn add @react-navigation/native react-native-gesture-handler \
+  react-native-reanimated react-native-safe-area-context react-native-worklets`,
     },
     {
       label: "pnpm",
       value: "pnpm",
-      code: `pnpm add react-native-reanimated@^4 react-native-worklets@~0.8 \
-  react-native-gesture-handler react-native-safe-area-context`,
+      code: `pnpm add @react-navigation/native react-native-gesture-handler \
+  react-native-reanimated react-native-safe-area-context react-native-worklets`,
     },
     {
       label: "bun",
       value: "bun",
-      code: `bun add react-native-reanimated@^4 react-native-worklets@~0.8 \
-  react-native-gesture-handler react-native-safe-area-context`,
+      code: `bun add @react-navigation/native react-native-gesture-handler \
+  react-native-reanimated react-native-safe-area-context react-native-worklets`,
     },
   ]}
 />
 
-Follow the Reanimated and Gesture Handler setup instructions for your React Native version. Bare iOS projects must also install pods after changing native dependencies.
-
-## Choose a navigation host
-
-Install `@react-navigation/native` for a React Navigation app:
-
-```bash
-npm install @react-navigation/native
-```
-
-Install Expo Router through Expo if your app uses file-based routing:
-
-```bash
-npx expo install expo-router
-```
+Follow the Reanimated and Gesture Handler setup instructions for your React Native version. Bare iOS projects must also install pods after changing native dependencies. Expo Router apps already install Expo Router as part of their app setup.
 
 Continue with [React Navigation](/react-navigation) or the Alpha [Expo Router integration](/expo-router).
 
@@ -107,5 +93,5 @@ npm install @react-native-masked-view/masked-view
 Boundary teleportation uses `react-native-teleport`:
 
 ```bash
-npm install react-native-teleport
+npm install react-native-teleport@1.2.0
 ```
