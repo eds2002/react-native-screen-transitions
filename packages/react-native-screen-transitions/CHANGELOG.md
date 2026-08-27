@@ -11,6 +11,11 @@
 ## [Unreleased](https://github.com/eds2002/react-native-screen-transitions/compare/v3.7.1...HEAD)
 
 
+### Breaking Changes
+
+* **blank-stack:** remove the non-functional `independent` navigator prop and `BlankStackFactoryOptions` export. Remove the prop from navigator configuration; isolated embedded flows must create their navigation boundary explicitly outside Blank Stack.
+
+
 ### Features
 
 * add new 'direction' property  ([#42](https://github.com/eds2002/react-native-screen-transitions/issues/42)) ([bc8f46d](https://github.com/eds2002/react-native-screen-transitions/commit/bc8f46d940aa3763b105b93133041e632cfcee45))
