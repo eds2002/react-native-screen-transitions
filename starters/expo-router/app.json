@@ -1,0 +1,14 @@
+{
+	"expo": {
+		"name": "Screen Transitions v3 — Expo Router",
+		"slug": "screen-transitions-expo-router",
+		"version": "1.0.0",
+		"orientation": "portrait",
+		"scheme": "screen-transitions-expo-router",
+		"userInterfaceStyle": "dark",
+		"plugins": ["expo-router"],
+		"experiments": {
+			"typedRoutes": true
+		}
+	}
+}
