@@ -53,6 +53,7 @@
 		"before:git:release": "node ../../.github/scripts/release-notes.mjs ${version} --check",
 		"after:bump": [
 			"node ../../.github/scripts/sync-bun-lock-version.mjs",
+			"git add ../../bun.lock",
 			"bun run --cwd ../.. build",
 			"npm pack --dry-run"
 		]

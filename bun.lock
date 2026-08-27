@@ -89,7 +89,7 @@
     },
     "packages/react-native-screen-transitions": {
       "name": "react-native-screen-transitions",
-      "version": "3.13.0-beta.0",
+      "version": "3.13.0",
       "devDependencies": {
         "@testing-library/react-native": "13.3.3",
         "@types/react": "~19.1.0",
@@ -3764,8 +3764,6 @@
 
     "dom-serializer/entities": ["entities@4.5.0", "", {}, "sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw=="],
 
-    "dotenv-expand/dotenv": ["dotenv@16.4.7", "", {}, "sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ=="],
-
     "e2e/@types/react": ["@types/react@19.1.17", "", { "dependencies": { "csstype": "^3.0.2" } }, "sha512-Qec1E3mhALmaspIrhWt9jkQMNdw6bReVu64mjvhbhq2NFPftLPVr+l1SZgmw/66WwBNpDh7ao5AT6gF5v41PFA=="],
 
     "e2e/react-dom": ["react-dom@19.1.0", "", { "dependencies": { "scheduler": "^0.26.0" }, "peerDependencies": { "react": "^19.1.0" } }, "sha512-Xs1hdnE+DyKgeHJeJznQmYMIBG3TKIHJJT95Q58nHLSrElKlGQqDTR2HQ9fx5CN/Gk6Vh/kupBTDLU11/nDk/g=="],
@@ -3907,10 +3905,6 @@
     "prompts/kleur": ["kleur@3.0.3", "", {}, "sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w=="],
 
     "prop-types/react-is": ["react-is@16.13.1", "", {}, "sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ=="],
-
-    "rc/strip-json-comments": ["strip-json-comments@2.0.1", "", {}, "sha512-4gB8na07fecVVkOI6Rs4e7T6NOTki5EmL7TUduTs6bu3EdnSycntVJ4re8kgZA+wx9IueI2Y11bfbgwtzuE0KQ=="],
-
-    "react-devtools-core/ws": ["ws@7.5.11", "", { "peerDependencies": { "bufferutil": "^4.0.1", "utf-8-validate": "^5.0.2" }, "optionalPeers": ["bufferutil", "utf-8-validate"] }, "sha512-zS54Oen9bITtp7kp2XM3AydrCIq1D+HwJOuH+c+e4LfpL/lotP5osijd+UoMnxwAam1GN8R4KtLAyIrIcBNpiA=="],
 
     "react-dom/scheduler": ["scheduler@0.27.0", "", {}, "sha512-eNv+WrVbKu1f3vbYJT/xtiF5syA5HPIMtf9IgY/nKg0sWqzAUEvqY/xm7OcZc/qafLx/iO9FgOmeSAp4v5ti/Q=="],
 
@@ -4161,8 +4155,6 @@
     "@types/react-native/react-native/@react-native/virtualized-lists": ["@react-native/virtualized-lists@0.81.5", "", { "dependencies": { "invariant": "^2.2.4", "nullthrows": "^1.1.1" }, "peerDependencies": { "@types/react": "^19.1.0", "react": "*", "react-native": "*" }, "optionalPeers": ["@types/react"] }, "sha512-UVXgV/db25OPIvwZySeToXD/9sKKhOdkcWmmf4Jh8iBZuyfML+/5CasaZ1E7Lqg6g3uqVQq75NqIwkYmORJMPw=="],
 
     "@types/react-native/react-native/babel-plugin-syntax-hermes-parser": ["babel-plugin-syntax-hermes-parser@0.29.1", "", { "dependencies": { "hermes-parser": "0.29.1" } }, "sha512-2WFYnoWGdmih1I1J5eIqxATOeycOqRwYxAQBu3cUu/rhwInwHUg7k60AFNbuGjSDL8tje5GDrAnxzRLcu2pYcA=="],
-
-    "@types/react-native/react-native/scheduler": ["scheduler@0.26.0", "", {}, "sha512-NlHwttCI/l5gCPR3D1nNXtWABUmBwvZpEQiD4IXSbIDq8BzLIK/7Ir5gTFSGZDUu37K5cMNp0hFtzO38sC7gWA=="],
 
     "@types/react-native/react-native/ws": ["ws@6.2.4", "", { "dependencies": { "async-limiter": "~1.0.0" } }, "sha512-PNIUUyLI5YpkJZj60YBzX1o0ByQ4ovvfmq9N/Kig/PAYbVlGyz4R6G0SEWrD0O9acc0sT2+IdMBVLFv8FSi0Nw=="],
 
