@@ -1,9 +1,9 @@
+import type { BlankStackDescriptorSources } from "../../../../types/providers/blank-stack-provider.types";
 import type { RouteWithKey } from "../../../../types/stack.types";
 import { composeDescriptors } from "./navigation/compose-descriptors";
 import { syncRoutesWithRemoved } from "./navigation/sync-routes-with-removed";
 import { routesHaveSameKeys } from "./state-equality";
 import type {
-	BlankStackDescriptors,
 	BlankStackRoutes,
 	LocalRoutesState,
 	ReconciledRoutes,
@@ -13,7 +13,7 @@ type ReconcileBlankStackRoutesParams = {
 	current: LocalRoutesState;
 	previousRoutesSnapshot: BlankStackRoutes;
 	nextRoutesSnapshot: BlankStackRoutes;
-	nextDescriptors: BlankStackDescriptors;
+	nextDescriptors: BlankStackDescriptorSources;
 	closingRouteKeys: Set<string>;
 };
 

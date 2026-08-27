@@ -1,6 +1,8 @@
-import type { BlankStackDescriptor } from "../../../../types/blank-stack.types";
+import type {
+	BlankStackDescriptorSource,
+	BlankStackDescriptorSources,
+} from "../../../../types/providers/blank-stack-provider.types";
 import type { RouteWithKey } from "../../../../types/stack.types";
-import type { BlankStackDescriptors } from "./types";
 
 export const areDescriptorsEqual = <
 	DescriptorMap extends Record<string, unknown>,
@@ -52,6 +54,22 @@ export const routesHaveSameKeys = <Route extends RouteWithKey>(
 	if (a.length !== b.length) return false;
 
 	return a.every((route, index) => route.key === b[index]?.key);
+};
+
+export const routesAreShallowlyEqual = <Route extends RouteWithKey>(
+	previous: readonly Route[],
+	next: readonly Route[],
+): boolean => {
+	if (!routesHaveSameKeys(previous, next)) {
+		return false;
+	}
+
+	return previous.every((route, index) =>
+		areRecordsShallowEqual(
+			route as unknown as Record<string, unknown>,
+			next[index] as unknown as Record<string, unknown>,
+		),
+	);
 };
 
 export const getRouteChildState = (route: RouteWithKey): unknown => {
@@ -111,25 +129,18 @@ export const areRecordsShallowEqual = (
 };
 
 export const areDescriptorSourcesEquivalent = (
-	previous: BlankStackDescriptor,
-	next: BlankStackDescriptor,
+	previous: BlankStackDescriptorSource,
+	next: BlankStackDescriptorSource,
 ): boolean => {
-	return (
-		previous.navigation === next.navigation &&
-		areRecordsShallowEqual(
-			previous.route as unknown as Record<string, unknown>,
-			next.route as unknown as Record<string, unknown>,
-		) &&
-		areRecordsShallowEqual(
-			previous.options as unknown as Record<string, unknown>,
-			next.options as unknown as Record<string, unknown>,
-		)
+	return areRecordsShallowEqual(
+		previous.options as unknown as Record<string, unknown>,
+		next.options as unknown as Record<string, unknown>,
 	);
 };
 
 export const areDescriptorSourceMapsEquivalent = (
-	previous: BlankStackDescriptors,
-	next: BlankStackDescriptors,
+	previous: BlankStackDescriptorSources,
+	next: BlankStackDescriptorSources,
 ): boolean => {
 	if (previous === next) return true;
 

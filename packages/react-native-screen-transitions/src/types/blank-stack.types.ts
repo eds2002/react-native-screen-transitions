@@ -1,7 +1,6 @@
 import type {
 	DefaultNavigatorOptions,
 	Descriptor,
-	NavigationHelpers,
 	NavigationProp,
 	ParamListBase,
 	RouteProp,
@@ -47,32 +46,6 @@ export type BlankStackOptionsArgs<
 > = BlankStackScreenProps<ParamList, RouteName, NavigatorID> & {
 	theme: Theme;
 };
-
-export type BlankStackNavigationHelpers = NavigationHelpers<
-	ParamListBase,
-	BlankStackNavigationEventMap
->;
-
-/**
- * Additional props accepted by the blank stack navigator.
- *
- * These can be passed to `<BlankStack.Navigator />` in the dynamic API, and
- * they are also supported as top-level keys in static navigator config.
- */
-export interface BlankStackFactoryOptions {
-	/**
-	 * Creates an isolated navigation tree for embedded flows.
-	 *
-	 * Use this when the blank stack needs to live inside another screen or host
-	 * application without joining the parent React Navigation tree.
-	 *
-	 * When enabled, the navigator:
-	 * - wraps itself in `NavigationIndependentTree` + `NavigationContainer`
-	 *
-	 * Leave this disabled for normal top-level app stacks.
-	 */
-	independent?: boolean;
-}
 
 /**
  * Props passed to overlay components in blank-stack.
@@ -121,8 +94,7 @@ export type BlankStackNavigatorProps = DefaultNavigatorOptions<
 	BlankStackNavigationEventMap,
 	BlankStackNavigationProp<ParamListBase>
 > &
-	StackRouterOptions &
-	BlankStackFactoryOptions;
+	StackRouterOptions;
 
 export type BlankStackDescriptor = Descriptor<
 	BlankStackNavigationOptions,

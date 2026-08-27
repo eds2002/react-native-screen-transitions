@@ -1,18 +1,23 @@
 import type { BlankStackDescriptor } from "../../../../types/blank-stack.types";
-import type { BlankStackProviderProps } from "../../../../types/providers/blank-stack-provider.types";
 import type {
+	BlankStackDescriptorSources,
+	BlankStackProviderProps,
+} from "../../../../types/providers/blank-stack-provider.types";
+import type {
+	BaseStackNavigation,
 	BaseStackRoute,
 	BaseStackScene,
 } from "../../../../types/stack.types";
 
-export type BlankStackRoutes = BlankStackDescriptor["route"][];
+export type BlankStackRoutes = BaseStackRoute[];
 
 export type BlankStackDescriptors = Record<string, BlankStackDescriptor>;
 
 export type LocalRoutesState = {
 	routes: BlankStackRoutes;
 	descriptors: BlankStackDescriptors;
-	sourceDescriptors: BlankStackDescriptors;
+	sourceDescriptors: BlankStackDescriptorSources;
+	navigation: BaseStackNavigation;
 	focusedRouteKey?: string;
 	routeChildStates: Record<string, unknown>;
 	scenes: BaseStackScene<BlankStackDescriptor>[];
@@ -35,7 +40,7 @@ export type BlankStackController = {
 
 export type ReconciledRoutes = {
 	routes: BlankStackRoutes;
-	descriptors: BlankStackDescriptors;
+	descriptors: BlankStackDescriptorSources;
 };
 
 export type SceneActivityWindow = {

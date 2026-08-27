@@ -4,11 +4,6 @@ import {
 	type StackRouterOptions,
 	unstable_integrateWithRouter,
 } from "expo-router";
-import {
-	NavigationContext,
-	NavigationRouteContext,
-} from "expo-router/react-navigation";
-import type { NavigationScreenProviderComponent } from "../../providers/navigation/navigation-host.provider";
 import type { BlankStackNavigationOptions } from "../../types/blank-stack.types";
 import {
 	BlankStackNavigator,
@@ -17,22 +12,6 @@ import {
 } from "../create-blank-stack-navigator";
 
 type BlankStackExpoRouterParamList = Record<string, object | undefined>;
-
-const ExpoRouterScreenProvider: NavigationScreenProviderComponent = ({
-	children,
-	navigation,
-	route,
-}) => (
-	<NavigationContext.Provider value={navigation as never}>
-		<NavigationRouteContext.Provider value={route as never}>
-			{children}
-		</NavigationRouteContext.Provider>
-	</NavigationContext.Provider>
-);
-
-const expoRouterNavigationHost = {
-	ScreenProvider: ExpoRouterScreenProvider,
-};
 
 export const BlankStack = unstable_integrateWithRouter<
 	BlankStackNavigationOptions,
@@ -44,14 +23,12 @@ export const BlankStack = unstable_integrateWithRouter<
 	createProps: ({ state, navigation }) => ({
 		navigationState: state,
 		navigation,
-		navigationHost: expoRouterNavigationHost,
 	}),
 });
 
 export const BlankStackScreen = BlankStack.Screen;
 
 export type {
-	BlankStackFactoryOptions,
 	BlankStackNavigationEventMap,
 	BlankStackNavigationOptions,
 	BlankStackNavigationProp,

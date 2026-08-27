@@ -1,5 +1,9 @@
 import type { BlankStackDescriptor } from "../../../../types/blank-stack.types";
-import type { BlankStackProviderProps } from "../../../../types/providers/blank-stack-provider.types";
+import type {
+	BlankStackDescriptorSource,
+	BlankStackDescriptorSources,
+	BlankStackProviderProps,
+} from "../../../../types/providers/blank-stack-provider.types";
 import type {
 	BaseStackScene,
 	StackSceneActivity,
@@ -9,6 +13,7 @@ import { resolveSceneNeighbors } from "./navigation/resolve-scene-neighbors";
 import {
 	areDescriptorSourcesEquivalent,
 	areDescriptorsEqual,
+	areRecordsShallowEqual,
 	areRouteChildStateMapsEqual,
 	getRouteChildState,
 	routeKeyListsAreEqual,
@@ -24,7 +29,7 @@ import type {
 type BuildBlankStackStateParams = {
 	props: BlankStackProviderProps;
 	routes: BlankStackRoutes;
-	descriptors: BlankStackDescriptors;
+	descriptors: BlankStackDescriptorSources;
 	closingRouteKeys: ReadonlySet<string>;
 	previousState?: LocalRoutesState;
 };
@@ -35,9 +40,9 @@ const resolveStableDescriptorSource = ({
 	previousState,
 }: {
 	routeKey: string;
-	sourceDescriptor: BlankStackDescriptor;
+	sourceDescriptor: BlankStackDescriptorSource;
 	previousState?: LocalRoutesState;
-}): BlankStackDescriptor => {
+}): BlankStackDescriptorSource => {
 	const previousSourceDescriptor = previousState?.sourceDescriptors[routeKey];
 
 	if (
@@ -125,6 +130,7 @@ const getSceneActivityWindow = ({
 };
 
 const buildBaseScenes = ({
+	props,
 	routes,
 	descriptors,
 	closingRouteKeys,
@@ -136,7 +142,7 @@ const buildBaseScenes = ({
 	const routeKeys: string[] = [];
 	const scenes: BaseStackScene<BlankStackDescriptor>[] = [];
 	const routeChildStates: Record<string, unknown> = {};
-	const sourceDescriptors: BlankStackDescriptors = {};
+	const sourceDescriptors: BlankStackDescriptorSources = {};
 	const blankStackDescriptors: BlankStackDescriptors = {};
 	let shouldShowFloatOverlay = false;
 
@@ -169,14 +175,28 @@ const buildBaseScenes = ({
 		});
 
 		const previousDescriptor = previousState?.descriptors[route.key];
+		const descriptorRoute =
+			previousDescriptor &&
+			childStateUnchanged &&
+			areRecordsShallowEqual(
+				previousDescriptor.route as unknown as Record<string, unknown>,
+				route as unknown as Record<string, unknown>,
+			)
+				? previousDescriptor.route
+				: route;
 		const descriptor =
 			previousDescriptor &&
 			childStateUnchanged &&
-			previousDescriptor.route === sourceDescriptor.route &&
-			previousDescriptor.navigation === sourceDescriptor.navigation &&
+			previousDescriptor.route === descriptorRoute &&
+			previousDescriptor.navigation === props.navigation &&
 			previousDescriptor.options === sourceDescriptor.options
 				? previousDescriptor
-				: sourceDescriptor;
+				: ({
+						route: descriptorRoute,
+						navigation: props.navigation,
+						options: sourceDescriptor.options,
+						render: sourceDescriptor.render,
+					} as BlankStackDescriptor);
 
 		routeKeys.push(route.key);
 		routeChildStates[route.key] = routeChildState;
@@ -206,12 +226,10 @@ const buildBaseScenes = ({
 
 const withSceneRelationships = ({
 	scenes,
-	sourceDescriptors,
 	closingRouteKeys,
 	previousState,
 }: {
 	scenes: BaseStackScene<BlankStackDescriptor>[];
-	sourceDescriptors: BlankStackDescriptors;
 	closingRouteKeys: ReadonlySet<string>;
 	previousState?: LocalRoutesState;
 }): BaseStackScene<BlankStackDescriptor>[] => {
@@ -231,7 +249,7 @@ const withSceneRelationships = ({
 
 	const relationshipScenes = scenes.map((scene) => ({
 		route: scene.route,
-		descriptor: sourceDescriptors[scene.route.key] ?? scene.descriptor,
+		descriptor: scene.descriptor,
 	}));
 
 	const nextScenes = scenes.map((scene, sceneIndex) => {
@@ -296,7 +314,6 @@ export const buildBlankStackState = (
 
 	const scenes = withSceneRelationships({
 		scenes: baseScenes,
-		sourceDescriptors,
 		closingRouteKeys: params.closingRouteKeys,
 		previousState: params.previousState,
 	});
@@ -305,6 +322,7 @@ export const buildBlankStackState = (
 
 	return {
 		routes: params.routes,
+		navigation: params.props.navigation,
 		descriptors:
 			params.previousState &&
 			areDescriptorsEqual(

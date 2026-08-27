@@ -7,7 +7,7 @@ import {
 	areDescriptorsEqual,
 	areRouteChildStateMapsEqual,
 	getRouteChildStateMap,
-	routesHaveSameKeys,
+	routesAreShallowlyEqual,
 	setsAreEqual,
 } from "./state-equality";
 import type { BlankStackRoutes, LocalRoutesState } from "./types";
@@ -39,6 +39,7 @@ export const deriveBlankStackState = ({
 	const nextDescriptors = props.descriptors;
 	const nextRouteChildStates = getRouteChildStateMap(nextRoutesSnapshot);
 	const nextFocusedRouteKey = nextRoutesSnapshot[props.state.index]?.key;
+	const navigationUnchanged = current.navigation === props.navigation;
 	const focusedRouteUnchanged = current.focusedRouteKey === nextFocusedRouteKey;
 	const closingRouteKeysUnchanged = setsAreEqual(
 		current.closingRouteKeys,
@@ -50,6 +51,7 @@ export const deriveBlankStackState = ({
 	);
 
 	const alreadyAligned =
+		navigationUnchanged &&
 		focusedRouteUnchanged &&
 		closingRouteKeysUnchanged &&
 		routeChildStatesUnchanged &&
@@ -61,10 +63,11 @@ export const deriveBlankStackState = ({
 	}
 
 	const logicallyAligned =
+		navigationUnchanged &&
 		focusedRouteUnchanged &&
 		closingRouteKeysUnchanged &&
 		routeChildStatesUnchanged &&
-		routesHaveSameKeys(current.routes, nextRoutesSnapshot) &&
+		routesAreShallowlyEqual(current.routes, nextRoutesSnapshot) &&
 		areDescriptorSourceMapsEquivalent(
 			current.sourceDescriptors,
 			nextDescriptors,
@@ -92,7 +95,12 @@ export const deriveBlankStackState = ({
 		closingRouteKeys,
 	);
 
-	if (!routesChanged && !descriptorsChanged && !closingRouteKeysChanged) {
+	if (
+		navigationUnchanged &&
+		!routesChanged &&
+		!descriptorsChanged &&
+		!closingRouteKeysChanged
+	) {
 		return current;
 	}
 

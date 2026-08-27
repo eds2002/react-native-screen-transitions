@@ -1,19 +1,6 @@
-import * as React from "react";
-import {
-	createStandardNavigator,
-	type NavigatorDescriptor,
-} from "standard-navigation";
+import { createStandardNavigator } from "standard-navigation";
 import { StackView } from "../components/stack-view";
-import {
-	type NavigationHostContextValue,
-	NavigationHostProvider,
-} from "../providers/navigation/navigation-host.provider";
-import type {
-	BlankStackDescriptor,
-	BlankStackFactoryOptions,
-	BlankStackNavigationHelpers,
-	BlankStackNavigationOptions,
-} from "../types/blank-stack.types";
+import type { BlankStackNavigationOptions } from "../types/blank-stack.types";
 import type {
 	BaseStackNavigation,
 	BaseStackRoute,
@@ -22,122 +9,27 @@ import type {
 
 export type BlankStackStandardEventMap = {};
 
-export type BlankStackStandardNavigatorProps = BlankStackFactoryOptions & {
+export type BlankStackStandardNavigatorProps = {
 	navigationState?: BaseStackState<BaseStackRoute>;
 	navigation?: BaseStackNavigation;
-	navigationHost?: NavigationHostContextValue;
 };
-
-type StandardDescriptor = NavigatorDescriptor<BlankStackNavigationOptions> & {
-	navigation?: BaseStackNavigation;
-	route?: BaseStackRoute;
-};
-
-type StandardDescriptorMap = Record<string, StandardDescriptor>;
-type BlankStackDescriptorMap = Record<string, BlankStackDescriptor>;
-
-function createDescriptorMap({
-	routes,
-	descriptors,
-	navigation,
-}: {
-	routes: BaseStackRoute[];
-	descriptors: StandardDescriptorMap;
-	navigation: BaseStackNavigation;
-}): BlankStackDescriptorMap {
-	const result: BlankStackDescriptorMap = {};
-
-	for (const route of routes) {
-		const descriptor = descriptors[route.key];
-
-		if (!descriptor) {
-			continue;
-		}
-
-		result[route.key] = {
-			route: descriptor.route ?? route,
-			navigation: (descriptor.navigation ??
-				navigation) as BlankStackDescriptor["navigation"],
-			options: descriptor.options,
-			render: () => descriptor.render() as React.JSX.Element,
-		};
-	}
-
-	return result;
-}
 
 export const BlankStackNavigator = createStandardNavigator<
 	BlankStackNavigationOptions,
 	BlankStackStandardEventMap,
 	BlankStackStandardNavigatorProps
->(
-	({
-		actions,
-		descriptors,
-		state,
-		navigation,
-		navigationHost,
-		navigationState,
-	}) => {
-		const stackState = navigationState ?? {
-			key: "blank-stack",
-			index: state.index,
-			routes: state.routes as BaseStackRoute[],
-		};
-		const stackStateRef = React.useRef(stackState);
-		stackStateRef.current = stackState;
-
-		const fallbackNavigation = React.useMemo<BaseStackNavigation>(
-			() => ({
-				getState: () => stackStateRef.current,
-				dispatch: (action) => {
-					if (action?.type === "GO_BACK" || action?.type === "POP") {
-						actions.back();
-						return;
-					}
-
-					const name = action?.payload?.name;
-					if (action?.type === "NAVIGATE" && typeof name === "string") {
-						actions.navigate(name, action.payload.params);
-					}
-				},
-			}),
-			[actions],
+>(({ descriptors, navigation, navigationState }) => {
+	if (!navigationState || !navigation) {
+		throw new Error(
+			"BlankStack requires navigation state and helpers from its integration.",
 		);
-		const stackNavigation = navigation ?? fallbackNavigation;
-		const stackDescriptors = React.useMemo(
-			() =>
-				createDescriptorMap({
-					routes: stackState.routes,
-					descriptors,
-					navigation: stackNavigation,
-				}),
-			[descriptors, stackNavigation, stackState.routes],
-		);
-		const describe = React.useCallback(
-			(route: BlankStackDescriptor["route"]) => {
-				const descriptor = stackDescriptors[route.key];
+	}
 
-				if (!descriptor) {
-					throw new Error(
-						`BlankStack could not find a descriptor for route "${route.key}".`,
-					);
-				}
-
-				return descriptor;
-			},
-			[stackDescriptors],
-		);
-
-		return (
-			<NavigationHostProvider value={navigationHost}>
-				<StackView
-					state={stackState}
-					navigation={stackNavigation as BlankStackNavigationHelpers}
-					descriptors={stackDescriptors}
-					describe={describe}
-				/>
-			</NavigationHostProvider>
-		);
-	},
-);
+	return (
+		<StackView
+			state={navigationState}
+			navigation={navigation}
+			descriptors={descriptors}
+		/>
+	);
+});

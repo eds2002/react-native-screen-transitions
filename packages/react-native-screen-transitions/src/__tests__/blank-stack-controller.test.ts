@@ -55,7 +55,6 @@ const createProps = (
 	},
 	navigation,
 	descriptors,
-	describe: (route) => descriptors[route.key],
 });
 
 beforeEach(() => {

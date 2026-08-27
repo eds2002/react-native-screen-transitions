@@ -1,23 +1,26 @@
-import type {
-	BlankStackDescriptor,
-	BlankStackNavigationHelpers,
-} from "../blank-stack.types";
+import type { NavigatorDescriptor } from "standard-navigation";
+import type { BlankStackNavigationOptions } from "../blank-stack.types";
 import type {
 	BaseStackDescriptor,
+	BaseStackNavigation,
 	BaseStackRoute,
 	BaseStackScene,
 	BaseStackState,
 } from "../stack.types";
 
 export interface BlankStackProviderProps {
-	state: BaseStackState<BlankStackDescriptor["route"]>;
-	navigation: BlankStackNavigationHelpers;
-	descriptors: Record<string, BlankStackDescriptor>;
-	describe: (
-		route: BlankStackDescriptor["route"],
-		placeholder: boolean,
-	) => BlankStackDescriptor;
+	state: BaseStackState<BaseStackRoute>;
+	navigation: BaseStackNavigation;
+	descriptors: BlankStackDescriptorSources;
 }
+
+export type BlankStackDescriptorSource =
+	NavigatorDescriptor<BlankStackNavigationOptions>;
+
+export type BlankStackDescriptorSources = Record<
+	string,
+	BlankStackDescriptorSource
+>;
 
 export interface BlankStackStoreValue {
 	navigatorKey: string;

@@ -6,7 +6,6 @@ import {
 	type StackRouterOptions,
 	type StandardNavigationTypeBagBase,
 } from "@react-navigation/native";
-import { reactNavigationHost } from "../../providers/navigation/react-navigation-host";
 import type {
 	BlankStackNavigationEventMap,
 	BlankStackNavigationOptions,
@@ -33,11 +32,9 @@ export const {
 >(BlankStackNavigator, StackRouter, ({ state, navigation }) => ({
 	navigationState: state,
 	navigation,
-	navigationHost: reactNavigationHost,
 }));
 
 export type {
-	BlankStackFactoryOptions,
 	BlankStackNavigationEventMap,
 	BlankStackNavigationOptions,
 	BlankStackNavigationProp,

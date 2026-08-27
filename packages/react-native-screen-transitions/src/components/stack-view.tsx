@@ -1,5 +1,4 @@
-import { memo, type ReactNode } from "react";
-import { NavigationScreenProvider } from "../providers/navigation/navigation-host.provider";
+import { memo } from "react";
 import { ScreenComposer } from "../providers/screen/screen-composer";
 import {
 	BlankStackProvider,
@@ -18,28 +17,6 @@ interface RouteKeyProps {
 	routeKey: string;
 }
 
-const BlankNavigationProvider = memo(function BlankNavigationProvider({
-	children,
-	routeKey,
-}: RouteKeyProps & { children: ReactNode }) {
-	const navigation = useBlankStackStore(
-		(store) => store.scenesByKey[routeKey]?.descriptor.navigation,
-	);
-	const route = useBlankStackStore(
-		(store) => store.scenesByKey[routeKey]?.route,
-	);
-
-	if (!navigation || !route) {
-		throw new Error(`Blank stack scene "${routeKey}" was not found.`);
-	}
-
-	return (
-		<NavigationScreenProvider navigation={navigation} route={route}>
-			{children}
-		</NavigationScreenProvider>
-	);
-});
-
 const BlankSceneContent = memo(function BlankSceneContent({
 	routeKey,
 }: RouteKeyProps) {
@@ -47,27 +24,21 @@ const BlankSceneContent = memo(function BlankSceneContent({
 		(store) => store?.scenesByKey[routeKey]?.descriptor.render,
 	);
 
-	return render?.() ?? null;
+	return render?.();
 });
 
 const BlankSceneRow = memo(function BlankSceneRow({ routeKey }: RouteKeyProps) {
 	return (
-		<BlankNavigationProvider routeKey={routeKey}>
-			<ActivityScreen routeKey={routeKey}>
-				<ScreenComposer routeKey={routeKey}>
-					<BlankSceneContent routeKey={routeKey} />
-				</ScreenComposer>
-			</ActivityScreen>
-		</BlankNavigationProvider>
+		<ActivityScreen routeKey={routeKey}>
+			<ScreenComposer routeKey={routeKey}>
+				<BlankSceneContent routeKey={routeKey} />
+			</ScreenComposer>
+		</ActivityScreen>
 	);
 });
 
-const EMPTY_ROUTE_KEYS: string[] = [];
-
 const StackViewContent = memo(function StackViewContent() {
-	const routeKeys = useBlankStackStore(
-		(store) => store?.routeKeys ?? EMPTY_ROUTE_KEYS,
-	);
+	const routeKeys = useBlankStackStore((store) => store?.routeKeys);
 
 	return (
 		<PortalProvider>
@@ -89,7 +60,6 @@ export const StackView = memo(function StackView({
 	state,
 	navigation,
 	descriptors,
-	describe,
 }: StackViewProps) {
 	return (
 		<StackCoreProvider
@@ -101,7 +71,6 @@ export const StackView = memo(function StackView({
 				state={state}
 				navigation={navigation}
 				descriptors={descriptors}
-				describe={describe}
 			>
 				<StackViewContent />
 			</BlankStackProvider>
