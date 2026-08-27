@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.13.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.13.0-beta.1...v3.13.0) (2026-08-27)
+
+### Bug Fixes
+
+* **boundary:** portal target content through handoff host ([315b730](https://github.com/eds2002/react-native-screen-transitions/commit/315b730b4d08d1f706aadcc566c7fe40998b6f1a))
+* **boundary:** retain handoffs across pair changes ([7863659](https://github.com/eds2002/react-native-screen-transitions/commit/7863659949413b3569e34219c2db46204766f941))
+
 ## [3.12.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.11.2...v3.12.0) (2026-08-09)
 
 ### Features
