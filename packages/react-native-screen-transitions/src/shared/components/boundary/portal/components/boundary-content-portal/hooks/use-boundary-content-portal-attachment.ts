@@ -149,6 +149,7 @@ export const useBoundaryContentPortalAttachment = ({
 					interpolatorReady: !!isInterpolatorReady,
 					pairChangedDuringClose,
 					pairDestinationScreenKey: pairDestination,
+					pairHasBoundaryLink: link !== undefined,
 					previousReceiverScreenKey,
 				});
 

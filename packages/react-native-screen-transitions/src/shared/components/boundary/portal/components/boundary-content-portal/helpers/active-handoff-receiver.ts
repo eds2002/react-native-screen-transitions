@@ -74,6 +74,7 @@ export const resolveHandoffAttachmentCandidate = ({
 	interpolatorReady,
 	pairChangedDuringClose = false,
 	pairDestinationScreenKey,
+	pairHasBoundaryLink,
 	previousReceiverScreenKey,
 }: {
 	activeReceiverClosing: boolean;
@@ -83,9 +84,20 @@ export const resolveHandoffAttachmentCandidate = ({
 	interpolatorReady: boolean;
 	pairChangedDuringClose?: boolean;
 	pairDestinationScreenKey: string | null;
+	pairHasBoundaryLink?: boolean;
 	previousReceiverScreenKey: string | null;
 }) => {
 	"worklet";
+	const currentPairHasBoundaryLink =
+		pairHasBoundaryLink ?? pairDestinationScreenKey !== null;
+
+	if (
+		activeReceiverClosing &&
+		attachedReceiverScreenKey !== activeReceiverScreenKey &&
+		!currentPairHasBoundaryLink
+	) {
+		return attachedReceiverScreenKey;
+	}
 
 	if (
 		activeReceiverClosing &&
@@ -94,6 +106,16 @@ export const resolveHandoffAttachmentCandidate = ({
 		pairChangedDuringClose
 	) {
 		return pairDestinationScreenKey;
+	}
+
+	if (
+		activeReceiverClosing &&
+		pairChangedDuringClose &&
+		!currentPairHasBoundaryLink
+	) {
+		return hasActiveCloseFinished
+			? previousReceiverScreenKey
+			: attachedReceiverScreenKey;
 	}
 
 	if (
