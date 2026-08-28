@@ -207,13 +207,5 @@ export function ScreenTransitionsScreenLayout({
 
 	const scene = scenes[sceneIndex];
 
-	return (
-		<ScreenComposer
-			previous={scene.previousDescriptor}
-			current={scene.descriptor}
-			next={scene.nextDescriptor}
-		>
-			{children}
-		</ScreenComposer>
-	);
+	return <ScreenComposer routeKey={scene.route.key}>{children}</ScreenComposer>;
 }

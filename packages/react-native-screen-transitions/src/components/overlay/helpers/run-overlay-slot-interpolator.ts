@@ -5,18 +5,15 @@ import { selectInterpolatorFrame } from "../../../providers/screen/styles/helper
 import type {
 	NormalizedTransitionSlotStyle,
 	ScreenStyleInterpolator,
-	ScreenTransitionAccessor,
 } from "../../../types/animation.types";
 import { logger } from "../../../utils/logger";
 
 export const runOverlaySlotInterpolator = ({
 	frame,
 	interpolator,
-	transition,
 }: {
 	frame: ScreenInterpolatorFrame;
 	interpolator: ScreenStyleInterpolator | undefined;
-	transition: ScreenTransitionAccessor;
 }): NormalizedTransitionSlotStyle | undefined => {
 	"worklet";
 
@@ -29,7 +26,6 @@ export const runOverlaySlotInterpolator = ({
 			createInterpolatorScope({
 				frame,
 				selectedFrame: selectInterpolatorFrame(frame, false),
-				transition,
 			}),
 		);
 

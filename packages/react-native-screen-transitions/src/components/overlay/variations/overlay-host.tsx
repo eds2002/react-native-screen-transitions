@@ -115,7 +115,6 @@ function ReadyOverlayHost({
 	});
 	const relativeProgress = useDerivedValue(() => {
 		"worklet";
-		overlayAnimationStore.screenInterpolatorPropsRevision.get();
 		return overlayAnimationStore.screenInterpolatorProps.get().stackProgress;
 	});
 

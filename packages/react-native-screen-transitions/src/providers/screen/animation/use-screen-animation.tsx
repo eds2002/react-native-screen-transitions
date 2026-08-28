@@ -1,11 +1,12 @@
+import { useCallback, useSyncExternalStore } from "react";
 import { type DerivedValue, useDerivedValue } from "react-native-reanimated";
+import { transition } from "../../../animation/transition";
 import type {
 	ScreenInterpolationProps,
 	ScreenTransitionTarget,
 } from "../../../types/animation.types";
-import { useScreenAnimationStore } from "./animation.provider";
-import { useBuildTransitionAccessor } from "./helpers/accessors/use-build-transition-accessor";
-import { readScreenAnimationRevisions } from "./helpers/read-screen-animation-revisions";
+import { useDescriptorsStore } from "../descriptors";
+import { screenTopology, useResolvedTransitionKey } from "../topology";
 import type { ScreenAnimationTarget } from "./types";
 
 export type { ScreenAnimationTarget } from "./types";
@@ -22,16 +23,30 @@ export function useScreenAnimation(
 ):
 	| DerivedValue<ScreenInterpolationProps>
 	| DerivedValue<ScreenInterpolationProps | null> {
-	const screenAnimationStore = useScreenAnimationStore();
+	const currentKey = useDescriptorsStore((s) => s.derivations.currentScreenKey);
+	const transitionKey = useResolvedTransitionKey(currentKey, target);
 
-	const { transitionSources } = screenAnimationStore;
-	const transition = useBuildTransitionAccessor(screenAnimationStore);
-	const transitionTarget = target;
+	const subscribe = useCallback(
+		(listener: () => void) =>
+			transitionKey
+				? screenTopology.subscribeTransition(transitionKey, listener)
+				: () => {},
+		[transitionKey],
+	);
+
+	const getSnapshot = useCallback(
+		() => (transitionKey ? transition(transitionKey) : null),
+		[transitionKey],
+	);
+
+	const transitionValue = useSyncExternalStore(
+		subscribe,
+		getSnapshot,
+		getSnapshot,
+	);
 
 	const animation = useDerivedValue<ScreenInterpolationProps | null>(() => {
-		"worklet";
-		readScreenAnimationRevisions(transitionSources);
-		return transition(transitionTarget);
+		return transitionValue?.get() ?? null;
 	});
 
 	return animation;

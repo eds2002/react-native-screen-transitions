@@ -206,6 +206,16 @@ export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 
 export type ScreenTransitionConfig = {
 	/**
+	 * Globally identifies this mounted screen for keyed animation observation.
+	 *
+	 * The key must be unique among mounted screens.
+	 *
+	 * @example
+	 * options={{ transitionKey: "feed" }}
+	 */
+	transitionKey?: string;
+
+	/**
 	 * The user-provided function to calculate styles based on animation progress.
 	 *
 	 * Return `null`, `undefined`, or `{}` to apply no transition styles for the

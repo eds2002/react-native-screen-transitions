@@ -8,20 +8,20 @@ import type { StackType } from "@/components/stack-examples/stack-routing";
 import { StackSelectionContext } from "@/components/stack-examples/stack-selection";
 import { BlankStack } from "@/layouts/blank-stack";
 import { IOSSlide } from "@/lib/screen-transitions/ios-slide";
+import { observerRootInterpolator } from "./observer/interpolators";
 
 LogBox.ignoreAllLogs();
 
 const stackScreen = (name: string) => `[stackType]/${name}`;
 
 export default function RootLayout() {
-	const [stackType, setStackType] = useState<StackType>("blank-stack");
-	const StackNavigator = BlankStack;
-
 	return (
-		<StackSelectionContext.Provider value={{ stackType, setStackType }}>
-			<StackNavigator>
-				<StackNavigator.Screen name="index" />
-				<StackNavigator.Screen
+		<StackSelectionContext.Provider
+			value={{ stackType: "blank-stack", setStackType: () => {} }}
+		>
+			<BlankStack>
+				<BlankStack.Screen name="index" />
+				<BlankStack.Screen
 					name={stackScreen("slide-vertical")}
 					options={{
 						gestureEnabled: true,
@@ -29,45 +29,45 @@ export default function RootLayout() {
 						...Transition.Presets.SlideFromBottom(),
 					}}
 				/>
-				<StackNavigator.Screen
+				<BlankStack.Screen
 					name={stackScreen("slide-top")}
 					options={{ ...Transition.Presets.SlideFromTop() }}
 				/>
-				<StackNavigator.Screen
+				<BlankStack.Screen
 					name={stackScreen("zoom-in")}
 					options={{ ...Transition.Presets.ZoomIn() }}
 				/>
-				<StackNavigator.Screen
+				<BlankStack.Screen
 					name={stackScreen("draggable-card")}
 					options={{
 						gestureEnabled: true,
 						...Transition.Presets.DraggableCard(),
 					}}
 				/>
-				<StackNavigator.Screen
+				<BlankStack.Screen
 					name={stackScreen("elastic-card")}
 					options={{
 						gestureEnabled: true,
 						...Transition.Presets.ElasticCard(),
 					}}
 				/>
-				<StackNavigator.Screen
+				<BlankStack.Screen
 					name={stackScreen("detail")}
 					options={{ ...IOSSlide() }}
 				/>
-				<StackNavigator.Screen
+				<BlankStack.Screen
 					name={stackScreen("stack-progress")}
 					options={{ ...IOSSlide() }}
 				/>
-				<StackNavigator.Screen
+				<BlankStack.Screen
 					name={stackScreen("inactive-behavior")}
 					options={{ ...IOSSlide() }}
 				/>
-				<StackNavigator.Screen
+				<BlankStack.Screen
 					name={stackScreen("overlay")}
 					options={{ ...IOSSlide() }}
 				/>
-				<StackNavigator.Screen
+				<BlankStack.Screen
 					name={stackScreen("custom-background")}
 					options={{
 						gestureEnabled: true,
@@ -104,39 +104,50 @@ export default function RootLayout() {
 						},
 					}}
 				/>
-				<StackNavigator.Screen
+				<BlankStack.Screen
 					name={stackScreen("bottom-sheet")}
 					options={{ ...IOSSlide() }}
 				/>
-				<StackNavigator.Screen
+				<BlankStack.Screen
 					name={stackScreen("gestures")}
 					options={{ ...IOSSlide() }}
 				/>
-				<StackNavigator.Screen
+				<BlankStack.Screen
 					name={stackScreen("bounds")}
 					options={{ ...IOSSlide() }}
 				/>
-				<StackNavigator.Screen
+				<BlankStack.Screen
 					name={stackScreen("backdrop")}
 					options={{ ...IOSSlide() }}
 				/>
-				<StackNavigator.Screen
-					name="presets/index"
-					options={{ ...IOSSlide() }}
+				<BlankStack.Screen name="presets/index" options={{ ...IOSSlide() }} />
+				<BlankStack.Screen name="maestro" options={{ animation: "none" }} />
+				<BlankStack.Screen name="backdrop" options={{ ...IOSSlide() }} />
+				<BlankStack.Screen name="example" options={{ ...IOSSlide() }} />
+				<BlankStack.Screen
+					name="observer"
+					options={{
+						transitionKey: "observer-root",
+						// enableTransitions: true,
+						gestureEnabled: true,
+						gestureDirection: "horizontal",
+						screenStyleInterpolator: observerRootInterpolator,
+						transitionSpec: {
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
+						},
+					}}
 				/>
-				<StackNavigator.Screen name="maestro" options={{ animation: "none" }} />
-				<StackNavigator.Screen name="backdrop" options={{ ...IOSSlide() }} />
-				<StackNavigator.Screen name="example" options={{ ...IOSSlide() }} />
-				<StackNavigator.Screen
+				<BlankStack.Screen
 					name="native-stack-adapter-recipe"
 					options={{ ...IOSSlide() }}
 				/>
-				<StackNavigator.Screen
+				<BlankStack.Screen
 					name="gesture-velocity-recipe"
 					options={{ ...IOSSlide() }}
 				/>
-				<StackNavigator.Screen name="gestures" />
-			</StackNavigator>
+				<BlankStack.Screen name="gestures" />
+			</BlankStack>
 		</StackSelectionContext.Provider>
 	);
 }

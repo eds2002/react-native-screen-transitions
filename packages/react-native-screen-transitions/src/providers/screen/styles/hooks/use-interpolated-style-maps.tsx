@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import {
 	type SharedValue,
 	useAnimatedReaction,
@@ -18,16 +17,13 @@ import type {
 } from "../../../../types/animation.types";
 import { logger } from "../../../../utils/logger";
 import { useScreenAnimationStore } from "../../animation";
-import { useBuildTransitionAccessor } from "../../animation/helpers/accessors/use-build-transition-accessor";
 import type { ScreenInterpolatorFrame } from "../../animation/helpers/pipeline";
-import { readScreenAnimationRevisions } from "../../animation/helpers/read-screen-animation-revisions";
 import { syncSelectedInterpolatorOptions } from "../../animation/helpers/selected-interpolator-options";
 import { useDescriptorsStore } from "../../descriptors";
 import {
 	syncScreenOptionsOverrides,
 	useScreenOptionsStore,
 } from "../../options";
-import { collectInterpolatorSharedValues } from "../helpers/collect-interpolator-shared-values";
 import { createInterpolatorScope } from "../helpers/create-interpolator-scope";
 import { normalizeSlots } from "../helpers/normalize-slots";
 import { resolveInterpolatorStyleHandoff } from "../helpers/resolve-interpolator-style-handoff";
@@ -55,7 +51,6 @@ type RunInterpolatorParams = {
 	interpolator: ScreenStyleInterpolator | undefined;
 	props: ScreenInterpolatorFrame;
 	selectedFrame: SelectedInterpolatorFrame;
-	transition: Parameters<ScreenStyleInterpolator>[0]["transition"];
 };
 
 const normalizeRawStyleMap = (
@@ -76,7 +71,6 @@ const runInterpolator = ({
 	interpolator,
 	props,
 	selectedFrame,
-	transition,
 }: RunInterpolatorParams): InterpolatorResult | undefined => {
 	"worklet";
 
@@ -89,7 +83,6 @@ const runInterpolator = ({
 			createInterpolatorScope({
 				frame: props,
 				selectedFrame,
-				transition,
 			}),
 		);
 
@@ -157,16 +150,6 @@ export const useInterpolatedStylesMap = ({
 	const currentInterpolator = useScreenAnimationStore(
 		(store) => store.currentInterpolator,
 	);
-	const transitionSources = useScreenAnimationStore(
-		(store) => store.transitionSources,
-	);
-	const transitionOriginIndex = useScreenAnimationStore(
-		(store) => store.transitionOriginIndex,
-	);
-	const transition = useBuildTransitionAccessor({
-		transitionSources,
-		transitionOriginIndex,
-	});
 	const hasCurrentInterpolator = !!currentInterpolator;
 	const { closing: currentClosing, entering: currentEntering } =
 		AnimationStore.getBag(currentScreenKey);
@@ -193,14 +176,6 @@ export const useInterpolatedStylesMap = ({
 			? 1
 			: 0;
 	});
-
-	// In some cases, a user may want to use external shared values to drive animations in the interpoaltor.
-	// We can now support this by collecting those shared values and reading them here to trigger an update.
-	const interpolatorSharedValues = useMemo(
-		() =>
-			collectInterpolatorSharedValues([currentInterpolator, nextInterpolator]),
-		[currentInterpolator, nextInterpolator],
-	);
 
 	const activeScreenKey = nextScreenKey ?? currentScreenKey;
 	const { closing: activeClosing, entering: activeEntering } =
@@ -236,8 +211,6 @@ export const useInterpolatedStylesMap = ({
 	);
 
 	const localStylesMaps = useDerivedValue<LocalStyleLayers>(() => {
-		"worklet";
-		readScreenAnimationRevisions(transitionSources, interpolatorSharedValues);
 		const props = screenInterpolatorProps.get();
 
 		const { current, next } = props;
@@ -298,7 +271,6 @@ export const useInterpolatedStylesMap = ({
 			interpolator: currentInterpolator,
 			props,
 			selectedFrame: currentSelectedFrame,
-			transition,
 		});
 
 		const initialDestinationStyleGate = resolveInitialDestinationStyleGate({
@@ -335,7 +307,6 @@ export const useInterpolatedStylesMap = ({
 			interpolator: nextInterpolator,
 			props,
 			selectedFrame: nextSelectedFrame,
-			transition,
 		});
 
 		syncSelectedInterpolatorOptions(

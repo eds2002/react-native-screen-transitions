@@ -171,11 +171,11 @@ export type ScreenTransitionDepthTarget = {
 	depth: number;
 };
 
-export type ScreenTransitionTarget = ScreenTransitionDepthTarget;
+export type ScreenTransitionTarget = ScreenTransitionDepthTarget | string;
 
-export type ScreenTransitionAccessor = (
-	target?: ScreenTransitionTarget,
-) => ScreenInterpolationProps | null;
+export type ScreenTransitionValue = Readonly<{
+	get: () => ScreenInterpolationProps | null;
+}>;
 
 export interface ScreenInterpolationProps {
 	/**
@@ -236,20 +236,6 @@ export interface ScreenInterpolationProps {
 	 * Function that provides access to bounds helpers for shared screen transitions.
 	 */
 	bounds: BoundsAccessor;
-
-	/**
-	 * Resolves interpolation props for this screen's transition timeline or an
-	 * ancestor/descendant transition timeline.
-	 *
-	 * Calling without a target returns the current transition.
-	 * `transition({ depth: -1 })` returns the immediate parent transition.
-	 * `transition({ depth: 1 })` returns the immediate child transition.
-	 * `transition({ depth: 0 })` returns the current transition.
-	 *
-	 * When called from a returned transition scope, targets are resolved relative
-	 * to that scope.
-	 */
-	transition: ScreenTransitionAccessor;
 
 	/**
 	 * The screen state that is currently driving the transition (either current or next, whichever is focused).

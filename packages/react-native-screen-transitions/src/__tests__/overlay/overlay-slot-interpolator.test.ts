@@ -1,7 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { runOverlaySlotInterpolator } from "../../components/overlay/helpers/run-overlay-slot-interpolator";
 import type { ScreenInterpolatorFrame } from "../../providers/screen/animation/helpers/pipeline";
-import type { ScreenTransitionAccessor } from "../../types/animation.types";
 
 describe("overlay slot interpolator", () => {
 	it("runs the destination interpolator against overlay adjacency", () => {
@@ -32,7 +31,6 @@ describe("overlay slot interpolator", () => {
 					},
 				};
 			},
-			transition: (() => null) as ScreenTransitionAccessor,
 		});
 
 		expect(slot?.style).toEqual({ transform: [{ translateX: 1.25 }] });
@@ -51,7 +49,6 @@ describe("overlay slot interpolator", () => {
 					"worklet";
 					return { content: { opacity: 0.5 } };
 				},
-				transition: (() => null) as ScreenTransitionAccessor,
 			}),
 		).toBeUndefined();
 	});

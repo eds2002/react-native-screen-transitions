@@ -16,8 +16,8 @@ interface Props {
  * Reads current/previous descriptors from DescriptorsProvider context.
  */
 export const ScreenLifecycle = ({ children }: Props) => {
-	const current = useDescriptorsStore((store) => store.current);
-	const previous = useDescriptorsStore((store) => store.previous);
+	const current = useDescriptorsStore((store) => store.descriptors.current);
+	const previous = useDescriptorsStore((store) => store.descriptors.previous);
 
 	const animations = AnimationStore.getBag(current.route.key);
 	const system = SystemStore.getBag(current.route.key);

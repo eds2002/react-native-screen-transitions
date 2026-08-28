@@ -34,9 +34,8 @@ export type ScreenInterpolatorFrame = Omit<
 	"bounds" | "transition"
 >;
 
-interface ScreenAnimationPipeline {
-	screenInterpolatorProps: SharedValue<ScreenInterpolatorFrame>;
-	screenInterpolatorPropsRevision: DerivedValue<number>;
+export interface ScreenAnimationPipeline {
+	screenInterpolatorProps: DerivedValue<ScreenInterpolatorFrame>;
 	selectedInterpolatorOptions: SharedValue<SelectedInterpolatorOptions>;
 	nextInterpolator: ScreenStyleInterpolator | undefined;
 	currentInterpolator: ScreenStyleInterpolator | undefined;
@@ -281,9 +280,13 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 		[routeKeys],
 	);
 
-	const currDescriptor = useDescriptorsStore((store) => store.current);
-	const nextDescriptor = useDescriptorsStore((store) => store.next);
-	const prevDescriptor = useDescriptorsStore((store) => store.previous);
+	const currDescriptor = useDescriptorsStore(
+		(store) => store.descriptors.current,
+	);
+	const nextDescriptor = useDescriptorsStore((store) => store.descriptors.next);
+	const prevDescriptor = useDescriptorsStore(
+		(store) => store.descriptors.previous,
+	);
 	const currentAnimation = useBuildTransitionState(currDescriptor);
 	const nextAnimation = useBuildTransitionState(nextDescriptor);
 	const prevAnimation = useBuildTransitionState(prevDescriptor);
@@ -306,20 +309,16 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 		[dimensions, insets, currDescriptor, nextDescriptor, prevDescriptor],
 	);
 
-	const screenInterpolatorProps = useSharedValue(initialInterpolatorProps);
 	const selectedInterpolatorOptions =
 		useSharedValue<SelectedInterpolatorOptions>({
 			owner: "current",
 		});
-
-	const propsRevisionState = useSharedValue({ value: 0 });
-	const screenInterpolatorPropsRevision = useDerivedValue<number>(() => {
-		"worklet";
-		screenInterpolatorProps.modify((frame) => {
+	const screenInterpolatorProps = useDerivedValue<ScreenInterpolatorFrame>(
+		() => {
 			"worklet";
 			const interpolatorOptions = selectedInterpolatorOptions.get();
 			return hydrateInterpolatorFrame({
-				frame,
+				frame: { ...initialInterpolatorProps },
 				dimensions,
 				insets,
 				currentAnimation,
@@ -330,25 +329,14 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 				stackProgressEntries,
 				currentRouteKey,
 			});
-		}, false);
-
-		// `screenInterpolatorProps` is mutated in place. Consumers read this
-		// revision first so Reanimated subscribes to the hydrated frame.
-		propsRevisionState.modify((revision) => {
-			"worklet";
-			revision.value += 1;
-			return revision;
-		}, false);
-
-		return propsRevisionState.get().value;
-	});
+		},
+	);
 
 	const nextInterpolator = nextDescriptor?.options.screenStyleInterpolator;
 	const currentInterpolator = currDescriptor.options.screenStyleInterpolator;
 
 	return {
 		screenInterpolatorProps,
-		screenInterpolatorPropsRevision,
 		selectedInterpolatorOptions,
 		nextInterpolator,
 		currentInterpolator,

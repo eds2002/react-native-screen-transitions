@@ -1,170 +1,134 @@
 import { describe, expect, it, mock } from "bun:test";
-import { createScreenTopology } from "../factories/screen-topology";
+import { createScreenTopology } from "../providers/screen/topology/helpers/create-screen-topology";
 
 describe("screen topology", () => {
-	it("owns direct parent and active-child relationships", () => {
+	it("resolves current, ancestor, and active descendant screen keys", () => {
 		const topology = createScreenTopology();
-
-		topology.register({
-			screenKey: "root",
-		});
+		topology.register({ screenKey: "root", navigatorKey: "root-stack" });
 		topology.register({
 			screenKey: "nested",
+			navigatorKey: "nested-stack",
 			parentScreenKey: "root",
 		});
 		topology.register({
-			screenKey: "leaf",
+			screenKey: "child",
+			navigatorKey: "child-stack",
 			parentScreenKey: "nested",
+		});
+		topology.activate({ parentScreenKey: "root", screenKey: "nested" });
+		topology.activate({ parentScreenKey: "nested", screenKey: "child" });
+
+		expect(topology.resolve("nested", -1)).toBe("root");
+		expect(topology.resolve("nested", 0)).toBe("nested");
+		expect(topology.resolve("nested", 1)).toBe("child");
+		expect(topology.resolve("nested", 2)).toBeNull();
+	});
+
+	it("rejects duplicate mounted transition keys", () => {
+		const topology = createScreenTopology();
+		topology.register({
+			screenKey: "feed-a",
+			navigatorKey: "root-stack",
+			transitionKey: "feed",
 		});
 
-		expect(topology.getRelationships("root")).toEqual({
-			parentScreenKey: null,
-			activeChildScreenKey: null,
-		});
-		expect(topology.getRelationships("nested")).toEqual({
+		expect(() =>
+			topology.register({
+				screenKey: "feed-b",
+				navigatorKey: "root-stack",
+				transitionKey: "feed",
+			}),
+		).toThrow('Transition key "feed" is already registered');
+	});
+
+	it("notifies key resolution subscribers when ownership changes", () => {
+		const topology = createScreenTopology();
+		const listener = mock(() => {});
+		topology.register({ screenKey: "root", navigatorKey: "root-stack" });
+		topology.register({
+			screenKey: "first",
+			navigatorKey: "nested-stack",
 			parentScreenKey: "root",
-			activeChildScreenKey: null,
 		});
-		expect(topology.getRelationships("leaf")).toEqual({
-			parentScreenKey: "nested",
-			activeChildScreenKey: null,
+		topology.register({
+			screenKey: "second",
+			navigatorKey: "nested-stack",
+			parentScreenKey: "root",
 		});
+		topology.activate({ parentScreenKey: "root", screenKey: "first" });
+		const unsubscribe = topology.subscribeResolution(listener);
+
+		topology.activate({ parentScreenKey: "root", screenKey: "second" });
+
+		expect(listener).toHaveBeenCalledTimes(1);
+		expect(topology.resolve("root", 1)).toBe("second");
+		unsubscribe();
+	});
+
+	it("keeps a closing child active until it unmounts", () => {
+		const topology = createScreenTopology();
+		topology.register({ screenKey: "root", navigatorKey: "root-stack" });
+		for (const screenKey of ["index", "child"]) {
+			topology.register({
+				screenKey,
+				navigatorKey: "nested-stack",
+				parentScreenKey: "root",
+			});
+		}
+		topology.activate({ parentScreenKey: "root", screenKey: "index" });
+		topology.activate({ parentScreenKey: "root", screenKey: "child" });
+
+		// Navigation focuses index while child is still closing. Since index already
+		// belongs to the active path, child remains authoritative until unmount.
+		topology.activate({ parentScreenKey: "root", screenKey: "index" });
+		expect(topology.resolve("root", 1)).toBe("child");
+
+		topology.unregister("child");
+		expect(topology.resolve("root", 1)).toBe("index");
 	});
 
 	it("supports children mounting before their parent", () => {
 		const topology = createScreenTopology();
-
-		topology.register({
-			screenKey: "child",
-			parentScreenKey: "root",
-		});
-		topology.register({
-			screenKey: "root",
-		});
+		topology.register({ screenKey: "child", parentScreenKey: "root" });
+		topology.register({ screenKey: "root" });
 
 		expect(topology.getRelationships("child").parentScreenKey).toBe("root");
 	});
 
-	it("unregisters by unique route key", () => {
+	it("unregisters by unique route key without losing a mounted sibling", () => {
 		const topology = createScreenTopology();
+		for (const screenKey of ["first", "second"]) {
+			topology.register({ screenKey, parentScreenKey: "root" });
+			topology.activate({ screenKey, parentScreenKey: "root" });
+		}
 
-		topology.register({
-			screenKey: "child",
-			parentScreenKey: "parent",
-		});
-		topology.activate({
-			screenKey: "child",
-			parentScreenKey: "parent",
-		});
-
-		topology.unregister("child");
-		expect(topology.getRelationships("child").parentScreenKey).toBeNull();
-		expect(topology.getRelationships("parent").activeChildScreenKey).toBeNull();
+		topology.unregister("second");
+		expect(topology.getRelationships("root").activeChildScreenKey).toBe(
+			"first",
+		);
 	});
 
 	it("safely stores object-like screen keys", () => {
 		const topology = createScreenTopology();
-
 		topology.register({
 			screenKey: "__proto__",
 			parentScreenKey: "constructor",
 		});
+
 		expect(topology.getRelationships("__proto__").parentScreenKey).toBe(
 			"constructor",
 		);
 	});
 
-	it("models the active nested path without losing a mounted sibling", () => {
-		const topology = createScreenTopology();
-
-		for (const [screenKey, parentScreenKey] of [
-			["child-a", "root"],
-			["child-b", "root"],
-			["grandchild", "child-b"],
-		] as const) {
-			topology.register({
-				screenKey,
-				parentScreenKey,
-			});
-		}
-
-		const clearA = topology.activate({
-			parentScreenKey: "root",
-			screenKey: "child-a",
-		});
-		const clearB = topology.activate({
-			parentScreenKey: "root",
-			screenKey: "child-b",
-		});
-		topology.activate({
-			parentScreenKey: "child-b",
-			screenKey: "grandchild",
-		});
-
-		expect(topology.getRelationships("root").activeChildScreenKey).toBe(
-			"child-b",
-		);
-		expect(topology.getRelationships("child-b").activeChildScreenKey).toBe(
-			"grandchild",
-		);
-
-		clearB();
-		expect(topology.getRelationships("root").activeChildScreenKey).toBe(
-			"child-a",
-		);
-
-		clearA();
-		expect(topology.getRelationships("root").activeChildScreenKey).toBeNull();
-	});
-
-	it("does not invalidate ancestors when only a direct child changes", () => {
-		const topology = createScreenTopology();
-		const rootListener = mock(() => {});
-		const childListener = mock(() => {});
-
-		topology.register({ screenKey: "child", parentScreenKey: "root" });
-		topology.register({ screenKey: "grandchild", parentScreenKey: "child" });
-		topology.activate({ screenKey: "child", parentScreenKey: "root" });
-		topology.subscribe("root", rootListener);
-		topology.subscribe("child", childListener);
-
-		topology.activate({ screenKey: "grandchild", parentScreenKey: "child" });
-
-		expect(rootListener).not.toHaveBeenCalled();
-		expect(childListener).toHaveBeenCalledTimes(1);
-	});
-
-	it("keeps a registered relationship snapshot stable across subscriptions", () => {
-		const topology = createScreenTopology();
-		topology.register({ screenKey: "child", parentScreenKey: "root" });
-		const relationships = topology.getRelationships("child");
-
-		const unsubscribe = topology.subscribe("child", () => {});
-		unsubscribe();
-
-		expect(topology.getRelationships("child")).toBe(relationships);
-	});
-
-	it("notifies only subscribers whose relationship snapshot changed", () => {
+	it("notifies only relationship subscribers whose snapshot changes", () => {
 		const topology = createScreenTopology();
 		const rootListener = mock(() => {});
 		const unrelatedListener = mock(() => {});
-		const unsubscribeRoot = topology.subscribe("root", rootListener);
-		const unsubscribeUnrelated = topology.subscribe(
-			"unrelated",
-			unrelatedListener,
-		);
+		topology.subscribe("root", rootListener);
+		topology.subscribe("unrelated", unrelatedListener);
 
-		topology.register({
-			screenKey: "child",
-			parentScreenKey: "root",
-		});
-		topology.activate({
-			parentScreenKey: "root",
-			screenKey: "child",
-		});
-		const rootRelationships = topology.getRelationships("root");
-
+		topology.register({ screenKey: "child", parentScreenKey: "root" });
+		topology.activate({ parentScreenKey: "root", screenKey: "child" });
 		topology.register({
 			screenKey: "other-child",
 			parentScreenKey: "other-parent",
@@ -172,9 +136,5 @@ describe("screen topology", () => {
 
 		expect(rootListener).toHaveBeenCalledTimes(1);
 		expect(unrelatedListener).not.toHaveBeenCalled();
-		expect(topology.getRelationships("root")).toBe(rootRelationships);
-
-		unsubscribeRoot();
-		unsubscribeUnrelated();
 	});
 });

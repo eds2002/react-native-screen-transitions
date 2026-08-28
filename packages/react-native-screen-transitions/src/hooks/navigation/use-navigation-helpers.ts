@@ -9,8 +9,10 @@ import {
 import { dispatchCloseAction } from "../../utils/navigation/close-action-replay";
 
 export function useNavigationHelpers() {
-	const route = useDescriptorsStore((store) => store.current.route);
-	const navigation = useDescriptorsStore((store) => store.current.navigation);
+	const route = useDescriptorsStore((store) => store.descriptors.current.route);
+	const navigation = useDescriptorsStore(
+		(store) => store.descriptors.current.navigation,
+	);
 	const requestStackDismiss = useBlankStackStore(
 		(stack) => stack.requestDismiss,
 	);

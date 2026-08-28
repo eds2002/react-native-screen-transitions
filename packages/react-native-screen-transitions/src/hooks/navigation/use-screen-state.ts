@@ -61,7 +61,7 @@ export function useScreenState<
 	TNavigation extends BaseStackNavigation = BaseStackNavigation,
 >(): ScreenState<TNavigation> {
 	const { routes, scenes, routeKeys, focusedIndex } = useBlankStackStore();
-	const current = useDescriptorsStore((store) => store.current);
+	const current = useDescriptorsStore((store) => store.descriptors.current);
 
 	const index = useMemo(
 		() => routeKeys.indexOf(current.route.key),

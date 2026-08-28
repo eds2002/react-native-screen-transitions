@@ -121,7 +121,7 @@ const getDescriptorClaimedDirections = (
 
 function ActiveGestureOwnershipBridge() {
 	const gestureContext = useScreenGestureStore();
-	const previous = useDescriptorsStore((store) => store.previous);
+	const previous = useDescriptorsStore((store) => store.descriptors.previous);
 	const isCurrentScreenClosing = useBlankStackStore(
 		(store) =>
 			store.scenesByKey[gestureContext.routeKey]?.activity === "closing",

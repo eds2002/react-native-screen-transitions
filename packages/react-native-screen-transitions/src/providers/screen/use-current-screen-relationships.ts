@@ -1,5 +1,5 @@
-import { useScreenRelationships } from "../../factories/screen-topology";
 import { useDescriptorsStore } from "./descriptors";
+import { useScreenRelationships } from "./topology";
 
 export const useCurrentScreenRelationships = () => {
 	const screenKey = useDescriptorsStore(

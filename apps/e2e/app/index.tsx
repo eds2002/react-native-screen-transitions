@@ -70,6 +70,13 @@ const STACK_GROUP_OPTIONS = [
 
 const RECIPE_OPTIONS = [
 	{
+		id: "observer",
+		title: "Transition Key Observer",
+		description:
+			"Observe exact parent and nested screen animations by transition key",
+		route: "/observer" as const,
+	},
+	{
 		id: "example",
 		title: "Sheet to Zoom Style Reset",
 		description:

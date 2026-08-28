@@ -1,6 +1,7 @@
-import { beforeAll, describe, expect, it, mock } from "bun:test";
+import { afterEach, beforeAll, describe, expect, it, mock } from "bun:test";
 import React from "react";
 import { act, create } from "react-test-renderer";
+import { AnimationStore } from "../stores/animation.store";
 import type { ScreenInterpolationProps } from "../types/animation.types";
 
 const descriptors: {
@@ -28,20 +29,19 @@ mock.module("../providers/stack/blank-stack.provider", () => ({
 }));
 
 mock.module("../providers/screen/descriptors", () => ({
-	useDescriptorsStore: (selector: (state: typeof descriptors) => unknown) =>
-		selector(descriptors),
+	useDescriptorsStore: (
+		selector: (state: { descriptors: typeof descriptors }) => unknown,
+	) => selector({ descriptors }),
 }));
-
-mock.module(
-	"../providers/screen/animation/helpers/use-build-transition-state",
-	() => ({
-		useBuildTransitionState: () => undefined,
-	}),
-);
 
 let useScreenAnimationPipeline: typeof import("../providers/screen/animation/helpers/pipeline").useScreenAnimationPipeline;
 
 describe("initial interpolator state", () => {
+	afterEach(() => {
+		AnimationStore.clearBag("home");
+		AnimationStore.clearBag("details");
+	});
+
 	beforeAll(async () => {
 		({ useScreenAnimationPipeline } = await import(
 			"../providers/screen/animation/helpers/pipeline"
@@ -59,6 +59,7 @@ describe("initial interpolator state", () => {
 		descriptors.next = {
 			route: { key: "details", name: "Details" },
 			options: {
+				enableTransitions: true,
 				screenStyleInterpolator: ({ next }: ScreenInterpolationProps) => {
 					observedNext = next;
 					return null;
@@ -66,6 +67,10 @@ describe("initial interpolator state", () => {
 			},
 		};
 		descriptors.previous = undefined;
+		const nextAnimation = AnimationStore.getBag("details");
+		nextAnimation.entering.set(1);
+		nextAnimation.progressAnimating.set(1);
+		nextAnimation.progressSettled.set(0);
 
 		const TestComponent = () => {
 			pipeline = useScreenAnimationPipeline();
@@ -85,7 +90,6 @@ describe("initial interpolator state", () => {
 		pipeline.nextInterpolator?.({
 			...props,
 			bounds: {} as ScreenInterpolationProps["bounds"],
-			transition: () => null,
 		});
 
 		expect(observedNext).toMatchObject({

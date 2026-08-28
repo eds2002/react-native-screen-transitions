@@ -1,5 +1,5 @@
 import { useCallback, useSyncExternalStore } from "react";
-import { screenTopology } from "./create-screen-topology";
+import { screenTopology } from "../helpers/create-screen-topology";
 
 export const useScreenRelationships = (screenKey: string) => {
 	const subscribe = useCallback(

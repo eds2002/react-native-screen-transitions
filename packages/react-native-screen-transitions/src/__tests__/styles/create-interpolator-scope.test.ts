@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import type { ScreenTransitionAccessor } from "../../types/animation.types";
 import type { ScreenInterpolatorFrame } from "../../providers/screen/animation/helpers/pipeline";
 import { createInterpolatorScope } from "../../providers/screen/styles/helpers/create-interpolator-scope";
 import { selectInterpolatorFrame } from "../../providers/screen/styles/helpers/select-interpolator-frame";
@@ -74,7 +73,6 @@ describe("createInterpolatorScope", () => {
 		const scope = createInterpolatorScope({
 			frame,
 			selectedFrame: selectInterpolatorFrame(frame, true),
-			transition: (() => null) as ScreenTransitionAccessor,
 		});
 
 		expect(scope.next).toBeUndefined();
@@ -83,29 +81,4 @@ describe("createInterpolatorScope", () => {
 		);
 	});
 
-	it("keeps transition() self scope aligned with the selected interpolator frame", () => {
-		const previous = createScreen("screen-a", 1, 1);
-		const current = createScreen("screen-b", 1, 1);
-		const next = createScreen("screen-c", 0.5, 0);
-		const frame = {
-			previous,
-			current,
-			next,
-			progress: 1.5,
-			transitionProgress: 1.5,
-			focused: false,
-			active: next,
-			inactive: current,
-			logicallySettled: 0,
-		} as unknown as ScreenInterpolatorFrame;
-		const globalScope = frame as unknown as ReturnType<ScreenTransitionAccessor>;
-		const scope = createInterpolatorScope({
-			frame,
-			selectedFrame: selectInterpolatorFrame(frame, true),
-			transition: (() => globalScope) as ScreenTransitionAccessor,
-		});
-
-		expect(scope.transition()?.next).toBeUndefined();
-		expect(scope.transition({ depth: 0 })?.next).toBeUndefined();
-	});
 });

@@ -13,6 +13,7 @@ import {
 	type ReactTestRenderer,
 } from "react-test-renderer";
 import { View } from "react-native";
+import { registerTransitionSource } from "../../providers/screen/topology";
 import type { ScreenAnimationContextValue } from "../../providers/screen/animation/animation.provider";
 import type { ScreenSlotContextValue } from "../../providers/screen/styles/slot.provider";
 
@@ -143,19 +144,19 @@ const createAnimationStore = (routeKey: string) => {
 		insets: { bottom: 0, left: 0, right: 0, top: 0 },
 		stackProgress: 1,
 	});
-	const screenInterpolatorPropsRevision = shared(0);
-
-	return {
+	const screenAnimationSource = {
+		boundsAccessor: {},
 		screenInterpolatorProps,
-		screenInterpolatorPropsRevision,
-		transitionSources: [
-			{
-				screenInterpolatorProps,
-				screenInterpolatorPropsRevision,
-				boundsAccessor: {},
-			},
-		],
-		transitionOriginIndex: 0,
+	};
+	registerTransitionSource(
+		routeKey,
+		undefined,
+		screenAnimationSource as never,
+	);
+	return {
+		screenKey: routeKey,
+		screenAnimationSource,
+		screenInterpolatorProps,
 	} as unknown as ScreenAnimationContextValue;
 };
 

@@ -32,6 +32,7 @@ import type {
 import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
+	transition,
 	useScreenAnimation,
 	useScreenGesture,
 	withScreenTransitions,
@@ -94,6 +95,8 @@ function usePublicApiHooksTypecheck() {
 		useScreenAnimation({ depth: -1 });
 	const childAnimation: DerivedValue<ScreenInterpolationProps | null> =
 		useScreenAnimation({ depth: 1 });
+	const keyedAnimation: DerivedValue<ScreenInterpolationProps | null> =
+		useScreenAnimation("feed");
 	const inheritedGesture = useScreenGesture();
 	const ancestorGesture = useScreenGesture({ depth: -1 });
 
@@ -102,6 +105,7 @@ function usePublicApiHooksTypecheck() {
 		selfTargetAnimation,
 		ancestorAnimation,
 		childAnimation,
+		keyedAnimation,
 		inheritedGesture,
 		ancestorGesture,
 	};
@@ -111,20 +115,13 @@ void usePublicApiHooksTypecheck;
 void transitionTarget;
 void transitionDepthTarget;
 
+const keyedGlobalTransition = transition("feed");
+
+void keyedGlobalTransition;
+
 const scopedBounds = interpolationProps.bounds({ id: 42 });
 const tagScopedBounds = interpolationProps.bounds("group:hero");
 const numericBoundsResult = scopedBounds.styles();
-const parentTransition = interpolationProps.transition({ depth: -1 });
-const grandparentTransition = interpolationProps.transition({ depth: -2 });
-const selfTransition = interpolationProps.transition({ depth: 0 });
-const childTransition = interpolationProps.transition({ depth: 1 });
-const grandchildTransition = interpolationProps.transition({ depth: 2 });
-const rootTransitionBounds = interpolationProps
-	.transition({ depth: -2 })
-	?.bounds({ id: 42 });
-const leafTransitionBounds = interpolationProps
-	.transition({ depth: 2 })
-	?.bounds({ id: 42 });
 const offsetBoundsResult = scopedBounds.styles({
 	offset: { x: 10, y: -10 },
 });
@@ -442,13 +439,6 @@ const publicApiTypecheck = {
 	nestedInterpolatedStyle,
 	gestureTarget,
 	animationTarget,
-	parentTransition,
-	grandparentTransition,
-	selfTransition,
-	childTransition,
-	grandchildTransition,
-	rootTransitionBounds,
-	leafTransitionBounds,
 	numericBoundsResult,
 	offsetBoundsResult,
 	absoluteRawBoundsResult,

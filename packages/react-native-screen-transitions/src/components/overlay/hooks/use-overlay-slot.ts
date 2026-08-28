@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import {
 	type SharedValue,
@@ -8,8 +7,6 @@ import {
 } from "react-native-reanimated";
 import { NO_PROPS, NO_STYLES } from "../../../constants";
 import type { ScreenAnimationContextValue } from "../../../providers/screen/animation/animation.provider";
-import { useBuildTransitionAccessor } from "../../../providers/screen/animation/helpers/accessors/use-build-transition-accessor";
-import { collectInterpolatorSharedValues } from "../../../providers/screen/styles/helpers/collect-interpolator-shared-values";
 import type {
 	NormalizedTransitionSlotStyle,
 	ScreenStyleInterpolator,
@@ -39,30 +36,9 @@ export const useOverlaySlot = ({
 	isIncoming: boolean;
 }) => {
 	const { height } = useWindowDimensions();
-	const overlayTransition = useBuildTransitionAccessor(overlayAnimationStore);
-	const driverTransition = useBuildTransitionAccessor(driverAnimationStore);
-
-	const interpolatorSharedValues = useMemo(
-		() =>
-			collectInterpolatorSharedValues([
-				overlayInterpolator,
-				driverInterpolator,
-			]),
-		[overlayInterpolator, driverInterpolator],
-	);
-
 	const overlaySlot = useDerivedValue<
 		NormalizedTransitionSlotStyle | undefined
 	>(() => {
-		"worklet";
-		overlayAnimationStore.screenInterpolatorPropsRevision.get();
-		driverAnimationStore.screenInterpolatorPropsRevision.get();
-		previousOverlayAnimationStore?.screenInterpolatorPropsRevision.get();
-
-		for (let index = 0; index < interpolatorSharedValues.length; index++) {
-			interpolatorSharedValues[index]?.get();
-		}
-
 		const overlayFrame = overlayAnimationStore.screenInterpolatorProps.get();
 		const driverFrame = driverAnimationStore.screenInterpolatorProps.get();
 		const overlayOwnsGesture = shouldUseOverlayGestureDriver(
@@ -81,7 +57,6 @@ export const useOverlaySlot = ({
 			interpolator: overlayOwnsGesture
 				? overlayInterpolator
 				: driverInterpolator,
-			transition: overlayOwnsGesture ? overlayTransition : driverTransition,
 		});
 	});
 

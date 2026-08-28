@@ -31,19 +31,10 @@ const createFrame = (key: string) =>
 
 const createAnimationStore = (key: string) => {
 	const screenInterpolatorProps = shared(createFrame(key));
-	const screenInterpolatorPropsRevision = shared(0);
 
 	return {
+		screenKey: key,
 		screenInterpolatorProps,
-		screenInterpolatorPropsRevision,
-		transitionOriginIndex: 0,
-		transitionSources: [
-			{
-				boundsAccessor: {},
-				screenInterpolatorProps,
-				screenInterpolatorPropsRevision,
-			},
-		],
 	} as unknown as ScreenAnimationContextValue;
 };
 
