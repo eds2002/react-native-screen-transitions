@@ -16,19 +16,19 @@ type Props = {
 export function ScreenComposer({ routeKey, children }: Props) {
 	return (
 		<DescriptorsProvider routeKey={routeKey}>
-			<ScreenLifecycle>
-				<ScreenOptionsProvider>
-					<ScreenGestureProvider>
-						<ScreenAnimationProvider>
-							<ScreenTopologyProvider>
+			<ScreenTopologyProvider>
+				<ScreenLifecycle>
+					<ScreenOptionsProvider>
+						<ScreenGestureProvider>
+							<ScreenAnimationProvider>
 								<ScreenSlotProvider>
 									<ScreenContainer>{children}</ScreenContainer>
 								</ScreenSlotProvider>
-							</ScreenTopologyProvider>
-						</ScreenAnimationProvider>
-					</ScreenGestureProvider>
-				</ScreenOptionsProvider>
-			</ScreenLifecycle>
+							</ScreenAnimationProvider>
+						</ScreenGestureProvider>
+					</ScreenOptionsProvider>
+				</ScreenLifecycle>
+			</ScreenTopologyProvider>
 		</DescriptorsProvider>
 	);
 }

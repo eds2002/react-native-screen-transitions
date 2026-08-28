@@ -24,13 +24,11 @@ import type {
 	SnapPoint,
 } from "../../../../types/screen.types";
 import { computeClaimedDirections } from "../ownership/compute-claimed-directions";
-import { resolveOwnership } from "../ownership/resolve-ownership";
 import type {
 	PanGesturePolicy,
 	PinchGesturePolicy,
 	ScreenGestureConfig,
 	ScreenGestureParticipation,
-	ScreenGestureSource,
 } from "../types";
 import {
 	getGestureDirectionEntries,
@@ -293,11 +291,9 @@ export const resolvePinchPolicy = (
 const resolveGestureParticipation = ({
 	options,
 	isFirstKey,
-	ancestorGestures,
 }: {
 	options: GesturePolicyOptions;
 	isFirstKey: boolean;
-	ancestorGestures: readonly ScreenGestureSource[];
 }): ScreenGestureParticipation => {
 	const canDismiss = resolveGestureCanDismiss({
 		isFirstKey,
@@ -325,23 +321,19 @@ const resolveGestureParticipation = ({
 		canTrackGesture,
 		effectiveSnapPoints,
 		claimedDirections,
-		ownershipStatus: resolveOwnership(claimedDirections, ancestorGestures),
 	};
 };
 
 export const resolveScreenGestureConfig = ({
 	options,
 	isFirstKey,
-	ancestorGestures,
 }: {
 	options: ScreenTransitionConfig;
 	isFirstKey: boolean;
-	ancestorGestures: readonly ScreenGestureSource[];
 }): ScreenGestureConfig => {
 	const participation = resolveGestureParticipation({
 		options,
 		isFirstKey,
-		ancestorGestures,
 	});
 	const hasSnapPoints = participation.effectiveSnapPoints.hasSnapPoints;
 

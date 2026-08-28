@@ -5,12 +5,11 @@ import {
 	type ScrollGestureState,
 } from "../../../../../types/gesture.types";
 import type { Direction } from "../../../../../types/ownership.types";
-import { shouldDeferToChildClaim } from "../../ownership/resolve-ownership";
 import { getPanSnapAxisConfigForDirection } from "../../shared/directions";
 import { resolveRuntimeSnapPoints } from "../../shared/snap-points";
 import type {
-	DirectionClaimMap,
 	GestureDimensions,
+	GestureOwnerMap,
 	PanGestureRuntime,
 } from "../../types";
 import {
@@ -23,7 +22,6 @@ export type PanActivationAction = "activate" | "fail" | "wait";
 export type PanActivationReason =
 	| "ancestor-dismissing"
 	| "already-dragging"
-	| "child-claim"
 	| "disabled"
 	| "dismissing"
 	| "multi-touch"
@@ -51,7 +49,7 @@ interface ResolvePanActivationMoveDecisionProps {
 	initialTouch: { x: number; y: number };
 	activationState: GestureActivationState;
 	ancestorDismissing: boolean;
-	childDirectionClaims: DirectionClaimMap;
+	gestureOwners: GestureOwnerMap;
 	currentScreenKey: string;
 	scrollState: ScrollGestureState | null;
 }
@@ -147,9 +145,8 @@ const resolveOffsetFailureDecision = (
 
 const resolveDirectionGateDecision = (
 	swipeDirection: Direction | null,
-	runtime: PanGestureRuntime,
 	offset: OffsetRuleResult,
-	childDirectionClaims: DirectionClaimMap,
+	gestureOwners: GestureOwnerMap,
 	currentScreenKey: string,
 ): PanActivationDecision | null => {
 	"worklet";
@@ -162,20 +159,10 @@ const resolveDirectionGateDecision = (
 		);
 	}
 
-	if (runtime.participation.ownershipStatus[swipeDirection] !== "self") {
+	if (gestureOwners[swipeDirection] !== currentScreenKey) {
 		return createDecision(
 			"fail",
 			"ownership",
-			swipeDirection,
-			offset.nextActivationState,
-		);
-	}
-
-	const childClaim = childDirectionClaims[swipeDirection];
-	if (shouldDeferToChildClaim(childClaim, currentScreenKey)) {
-		return createDecision(
-			"fail",
-			"child-claim",
 			swipeDirection,
 			offset.nextActivationState,
 		);
@@ -389,7 +376,7 @@ export const resolvePanActivationMoveDecision = ({
 	initialTouch,
 	activationState,
 	ancestorDismissing,
-	childDirectionClaims,
+	gestureOwners,
 	currentScreenKey,
 	scrollState,
 }: ResolvePanActivationMoveDecisionProps): PanActivationDecision => {
@@ -427,9 +414,8 @@ export const resolvePanActivationMoveDecision = ({
 	const swipeDirection = getSwipeDirection(offset);
 	const directionGateDecision = resolveDirectionGateDecision(
 		swipeDirection,
-		runtime,
 		offset,
-		childDirectionClaims,
+		gestureOwners,
 		currentScreenKey,
 	);
 	if (directionGateDecision) return directionGateDecision;

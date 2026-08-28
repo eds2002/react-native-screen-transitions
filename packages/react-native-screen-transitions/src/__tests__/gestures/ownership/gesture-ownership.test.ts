@@ -1,9 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import type { SharedValue } from "react-native-reanimated";
-import {
-	type DirectionClaimMap,
-	NO_DIRECTION_CLAIMS,
-} from "../../../providers/screen/gestures/types";
+import type { GestureOwnerMap } from "../../../providers/screen/gestures/types";
 import { resolvePanActivationMoveDecision } from "../../../providers/screen/gestures/pan/activation/pan-activation-decision";
 import { resolveShadowingClaimDirections } from "../../../providers/screen/gestures/ownership/shadowing-claims";
 import { GestureActivationState } from "../../../types/gesture.types";
@@ -24,12 +21,6 @@ const createRuntime = () =>
 	({
 		participation: {
 			canTrackGesture: true,
-			ownershipStatus: {
-				vertical: "none",
-				"vertical-inverted": "none",
-				horizontal: "self",
-				"horizontal-inverted": "none",
-			},
 			effectiveSnapPoints: {
 				hasSnapPoints: false,
 			},
@@ -67,12 +58,11 @@ const noClaims = (): ClaimedDirections => ({
 
 describe("gesture ownership activation", () => {
 	it("keeps an ancestor from activating while a child owner is dismissing", () => {
-		const childDirectionClaims: DirectionClaimMap = {
-			...NO_DIRECTION_CLAIMS,
-			horizontal: {
-				routeKey: "child",
-				isDismissing: shared(1),
-			},
+		const gestureOwners: GestureOwnerMap = {
+			vertical: null,
+			"vertical-inverted": null,
+			horizontal: "child",
+			"horizontal-inverted": null,
 		};
 
 		const decision = resolvePanActivationMoveDecision({
@@ -82,13 +72,13 @@ describe("gesture ownership activation", () => {
 			initialTouch: { x: 10, y: 10 },
 			activationState: GestureActivationState.PENDING,
 			ancestorDismissing: false,
-			childDirectionClaims,
+			gestureOwners,
 			currentScreenKey: "ancestor",
 			scrollState: null,
 		});
 
 		expect(decision.action).toBe("fail");
-		expect(decision.reason).toBe("child-claim");
+		expect(decision.reason).toBe("ownership");
 		expect(decision.direction).toBe("horizontal");
 	});
 

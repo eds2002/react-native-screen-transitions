@@ -1,10 +1,7 @@
-import {
-	type ChainTarget,
-	resolveChainTarget,
-} from "../../../../utils/resolve-chain-target";
+import { useResolvedTransitionKey } from "../../topology";
 import { useOptionalScreenGestureStore } from "../gestures.provider";
 
-export type ScreenGestureTarget = ChainTarget;
+export type ScreenGestureTarget = { depth: number };
 
 /**
  * Returns a screen navigation pan gesture.
@@ -20,13 +17,16 @@ export type ScreenGestureTarget = ChainTarget;
  * ```
  */
 export const useScreenGesture = (target?: ScreenGestureTarget) => {
-	const ctx = useOptionalScreenGestureStore();
-
-	return (
-		resolveChainTarget({
-			target,
-			self: ctx,
-			ancestors: ctx?.ancestorGestures ?? [],
-		})?.panGesture ?? null
+	const localGesture = useOptionalScreenGestureStore();
+	const usesLocalStore = target === undefined || target.depth === 0;
+	const screenKey = useResolvedTransitionKey(
+		localGesture?.routeKey ?? null,
+		target,
 	);
+	const keyedGesture = useOptionalScreenGestureStore(
+		usesLocalStore ? null : screenKey,
+		(store) => store.panGesture,
+	);
+
+	return usesLocalStore ? (localGesture?.panGesture ?? null) : keyedGesture;
 };

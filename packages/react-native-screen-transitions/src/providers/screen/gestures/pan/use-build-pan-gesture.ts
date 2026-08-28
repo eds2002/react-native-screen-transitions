@@ -5,8 +5,8 @@ import type { SharedValue } from "react-native-reanimated";
 import { useScreenOptionsStore } from "../../options";
 import { useStableRuntimeConfig } from "../hooks/use-stable-runtime-config";
 import type {
-	DirectionClaimMap,
 	GestureCompositionOwner,
+	GestureOwnerMap,
 	PanGesture,
 	ScreenGestureConfig,
 	ScrollGestureState,
@@ -17,14 +17,14 @@ import { usePanBehavior } from "./behavior/use-pan-behavior";
 interface UseBuildPanGestureProps {
 	scrollState: SharedValue<ScrollGestureState | null>;
 	gestureConfig: ScreenGestureConfig;
-	childDirectionClaims: SharedValue<DirectionClaimMap>;
+	gestureOwners: SharedValue<GestureOwnerMap>;
 	gestureCompositionOwner: SharedValue<GestureCompositionOwner>;
 }
 
 export const useBuildPanGesture = ({
 	scrollState,
 	gestureConfig,
-	childDirectionClaims,
+	gestureOwners,
 	gestureCompositionOwner,
 }: UseBuildPanGestureProps): PanGesture => {
 	const dimensions = useWindowDimensions();
@@ -38,7 +38,7 @@ export const useBuildPanGesture = ({
 
 	const activation = usePanActivation({
 		scrollState,
-		childDirectionClaims,
+		gestureOwners,
 		runtime,
 		screenOptions,
 		dimensions,

@@ -11,6 +11,7 @@ import useStableCallback from "../../../../hooks/use-stable-callback";
 import { AnimationStore } from "../../../../stores/animation.store";
 import { ScrollStore } from "../../../../stores/scroll.store";
 import { useOptionalScreenGestureStore } from "../gestures.provider";
+import { useGestureScrollCoordination } from "../ownership/use-gesture-scroll-coordination";
 import type {
 	ScrollGestureAxis,
 	ScrollGestureAxisState,
@@ -26,7 +27,6 @@ import {
 	updateScrollGestureAxisState,
 	updateScrollMetadataAxisState,
 } from "./update-scroll-gesture-state";
-import { walkUpScrollGestureCoordination } from "./walk-up-scroll-gesture-coordination";
 
 interface ScrollGestureCoordinationProps {
 	onContentSizeChange?: (width: number, height: number) => void;
@@ -90,10 +90,9 @@ export const useScrollGestureCoordination = (
 ) => {
 	const context = useOptionalScreenGestureStore();
 	const scrollDirection = props.direction ?? "vertical";
-	const gesturePath = useMemo(
-		() => (context ? [context, ...context.ancestorGestures] : []),
-		[context],
-	);
+	const routeKey = context?.routeKey ?? null;
+	const { scrollStates, panGestures, pinchGestures, ownerRouteKeys } =
+		useGestureScrollCoordination(routeKey, scrollDirection);
 
 	const metadataOwnerContext = useOptionalScrollMetadataOwnerStore();
 	const metadataOwnerProviderValue =
@@ -104,12 +103,6 @@ export const useScrollGestureCoordination = (
 	);
 	const [writesMetadata, setWritesMetadata] = useState(false);
 
-	const { scrollStates, panGestures, pinchGestures, ownerRouteKeys } = useMemo(
-		() => walkUpScrollGestureCoordination(gesturePath, scrollDirection),
-		[gesturePath, scrollDirection],
-	);
-
-	const routeKey = context?.routeKey;
 	const metadataState = useMemo(
 		() => (routeKey ? ScrollStore.getValue(routeKey, "metadata") : null),
 		[routeKey],

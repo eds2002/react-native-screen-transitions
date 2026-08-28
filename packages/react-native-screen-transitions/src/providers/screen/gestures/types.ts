@@ -25,7 +25,7 @@ import type {
 } from "../../../types/gesture.types";
 import type {
 	ClaimedDirections,
-	DirectionOwnership,
+	Direction,
 } from "../../../types/ownership.types";
 import type { ScreenTransitionConfig } from "../../../types/screen.types";
 import type { EffectiveSnapPointsResult } from "./shared/snap-points";
@@ -52,19 +52,9 @@ export type {
 	ScrollMetadataState,
 };
 
-export type DirectionClaim = {
-	routeKey: string;
-	isDismissing: SharedValue<number>;
-} | null;
+export type GestureOwnerMap = Record<Direction, string | null>;
 
-export type DirectionClaimMap = {
-	vertical: DirectionClaim;
-	"vertical-inverted": DirectionClaim;
-	horizontal: DirectionClaim;
-	"horizontal-inverted": DirectionClaim;
-};
-
-export const NO_DIRECTION_CLAIMS: DirectionClaimMap = {
+export const NO_GESTURE_OWNERS: GestureOwnerMap = {
 	vertical: null,
 	"vertical-inverted": null,
 	horizontal: null,
@@ -77,13 +67,9 @@ export interface ScreenGestureSource {
 	panGesture: PanGesture;
 	pinchGesture: PinchGesture;
 	scrollState: SharedValue<ScrollGestureState | null>;
-	claimedDirections: ClaimedDirections;
-	childDirectionClaims: SharedValue<DirectionClaimMap>;
 }
 
-export interface GestureContextType extends ScreenGestureSource {
-	ancestorGestures: readonly ScreenGestureSource[];
-}
+export type GestureContextType = ScreenGestureSource;
 
 export interface ScreenGestureParticipation {
 	/** Whether this route is the first route in its stack. First routes never track gestures. */
@@ -94,7 +80,6 @@ export interface ScreenGestureParticipation {
 	canTrackGesture: boolean;
 	effectiveSnapPoints: EffectiveSnapPointsResult;
 	claimedDirections: ClaimedDirections;
-	ownershipStatus: DirectionOwnership;
 }
 
 export interface ScreenGestureConfig {

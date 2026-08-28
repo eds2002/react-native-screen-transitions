@@ -12,9 +12,9 @@ import type { ScreenOptionsContextValue } from "../../../options";
 import { useCurrentScreenRelationships } from "../../../use-current-screen-relationships";
 import { resolvePanRuntime } from "../../shared/runtime";
 import type {
-	DirectionClaimMap,
 	GestureCompositionOwner,
 	GestureDimensions,
+	GestureOwnerMap,
 	PanGestureRuntime,
 	ScrollGestureState,
 } from "../../types";
@@ -22,7 +22,7 @@ import { resolvePanActivationMoveDecision } from "./pan-activation-decision";
 
 interface UsePanActivationProps {
 	scrollState: SharedValue<ScrollGestureState | null>;
-	childDirectionClaims: SharedValue<DirectionClaimMap>;
+	gestureOwners: SharedValue<GestureOwnerMap>;
 	runtime: SharedValue<PanGestureRuntime>;
 	screenOptions: ScreenOptionsContextValue;
 	dimensions: GestureDimensions;
@@ -31,7 +31,7 @@ interface UsePanActivationProps {
 
 export const usePanActivation = ({
 	scrollState,
-	childDirectionClaims,
+	gestureOwners,
 	runtime,
 	screenOptions,
 	dimensions,
@@ -114,7 +114,7 @@ export const usePanActivation = ({
 				initialTouch: initialTouch.get(),
 				activationState: currentActivationState,
 				ancestorDismissing: Boolean(ancestorDismissing?.get()),
-				childDirectionClaims: childDirectionClaims.get(),
+				gestureOwners: gestureOwners.get(),
 				currentScreenKey,
 				scrollState: scrollState.get(),
 			});
@@ -141,12 +141,12 @@ export const usePanActivation = ({
 		},
 		[
 			ancestorDismissing,
-			childDirectionClaims,
 			currentScreenKey,
 			dimensions,
 			gestureActivationState,
 			initialTouch,
 			pendingDirection,
+			gestureOwners,
 			runtime,
 			screenOptions,
 			scrollState,

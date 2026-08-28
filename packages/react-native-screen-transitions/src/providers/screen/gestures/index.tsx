@@ -4,8 +4,6 @@ export {
 	useScreenGestureStore,
 } from "./gestures.provider";
 export type {
-	DirectionClaim,
-	DirectionClaimMap,
 	GestureContextType,
 	ScrollGestureAxis,
 	ScrollGestureAxisState,

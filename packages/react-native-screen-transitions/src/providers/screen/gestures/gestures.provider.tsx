@@ -1,19 +1,17 @@
-import { Fragment, useMemo } from "react";
+import { useMemo } from "react";
 import { Gesture } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
 import { ScrollStore } from "../../../stores/scroll.store";
 import createProvider from "../../../utils/create-provider";
 import { useDescriptorsStore } from "../descriptors";
-import { useCurrentScreenRelationships } from "../use-current-screen-relationships";
 import { useScreenGestureConfig } from "./hooks/use-screen-gesture-config";
-import { GestureOwnershipBridge } from "./ownership/gesture-ownership-bridge";
+import { useRegisterGestureOwnership } from "./ownership/use-register-gesture-ownership";
 import { useBuildPanGesture } from "./pan/use-build-pan-gesture";
 import { useBuildPinchGesture } from "./pinch/use-build-pinch-gesture";
 import {
-	type DirectionClaimMap,
 	type GestureCompositionOwner,
 	type GestureContextType,
-	NO_DIRECTION_CLAIMS,
+	NO_GESTURE_OWNERS,
 	type ScreenGestureSource,
 } from "./types";
 
@@ -21,15 +19,9 @@ interface ScreenGestureProviderProps {
 	children: React.ReactNode;
 }
 
-type ScreenGestureStoreValue = GestureContextType & {
-	relationshipGestureSources: readonly ScreenGestureSource[];
-};
-
-const EMPTY_GESTURE_SOURCES: readonly ScreenGestureSource[] = [];
-
 const createScreenGestureProvider = createProvider("ScreenGesture", {
 	global: true,
-})<ScreenGestureProviderProps, ScreenGestureStoreValue>;
+})<ScreenGestureProviderProps, GestureContextType>;
 
 export const {
 	ScreenGestureProvider,
@@ -40,28 +32,15 @@ export const {
 		const currentScreenKey = useDescriptorsStore(
 			(store) => store.derivations.currentScreenKey,
 		);
-		const isTopMostScreen = useDescriptorsStore(
-			(store) => store.derivations.isTopMostScreen,
-		);
-		const relationships = useCurrentScreenRelationships();
-		const relationshipAncestorGestures =
-			useOptionalScreenGestureStore(
-				relationships.parentScreenKey,
-				(store) => store.relationshipGestureSources,
-			) ?? EMPTY_GESTURE_SOURCES;
-		const ancestorGestures = isTopMostScreen
-			? relationshipAncestorGestures
-			: EMPTY_GESTURE_SOURCES;
-		const gestureConfig = useScreenGestureConfig(ancestorGestures);
+		const gestureConfig = useScreenGestureConfig();
 		const scrollState = ScrollStore.getValue(currentScreenKey, "coordination");
-		const childDirectionClaims =
-			useSharedValue<DirectionClaimMap>(NO_DIRECTION_CLAIMS);
+		const gestureOwners = useSharedValue({ ...NO_GESTURE_OWNERS });
 		const gestureCompositionOwner =
 			useSharedValue<GestureCompositionOwner>(null);
 		const panGesture = useBuildPanGesture({
 			scrollState,
 			gestureConfig,
-			childDirectionClaims,
+			gestureOwners,
 			gestureCompositionOwner,
 		});
 		const pinchGesture = useBuildPinchGesture({
@@ -79,8 +58,6 @@ export const {
 				panGesture,
 				pinchGesture,
 				scrollState,
-				claimedDirections: gestureConfig.participation.claimedDirections,
-				childDirectionClaims,
 			}),
 			[
 				currentScreenKey,
@@ -88,36 +65,18 @@ export const {
 				panGesture,
 				pinchGesture,
 				scrollState,
-				gestureConfig.participation.claimedDirections,
-				childDirectionClaims,
 			],
 		);
-		const relationshipGestureSources = useMemo(
-			() => [source, ...ancestorGestures],
-			[source, ancestorGestures],
-		);
-		const value = useMemo<ScreenGestureStoreValue>(
-			() => ({
-				...source,
-				ancestorGestures,
-				relationshipGestureSources,
-			}),
-			[source, ancestorGestures, relationshipGestureSources],
-		);
-		const content = useMemo(
-			() => (
-				<Fragment>
-					<GestureOwnershipBridge />
-					{children}
-				</Fragment>
-			),
-			[children],
-		);
+		useRegisterGestureOwnership({
+			claimedDirections: gestureConfig.participation.claimedDirections,
+			owners: gestureOwners,
+			source,
+		});
 
 		return {
 			key: currentScreenKey,
-			value,
-			children: content,
+			value: source,
+			children,
 		};
 	},
 );
