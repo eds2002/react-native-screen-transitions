@@ -173,10 +173,6 @@ export type ScreenTransitionDepthTarget = {
 
 export type ScreenTransitionTarget = ScreenTransitionDepthTarget | string;
 
-export type ScreenTransitionValue = Readonly<{
-	get: () => ScreenInterpolationProps | null;
-}>;
-
 export interface ScreenInterpolationProps {
 	/**
 	 * Values for the screen that came before the current one in the navigation stack.

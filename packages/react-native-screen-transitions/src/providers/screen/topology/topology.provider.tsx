@@ -1,9 +1,6 @@
 import { type ReactNode, useLayoutEffect, useMemo } from "react";
-import type { ScreenTransitionSource } from "../../../types/bounds.types";
-import { createBoundsAccessor } from "../../../utils/bounds";
 import createProvider from "../../../utils/create-provider";
 import { useBlankStackStore } from "../../stack/blank-stack.provider";
-import { useScreenAnimationStore } from "../animation/animation.provider";
 import { useDescriptorsStore } from "../descriptors";
 import { screenTopology } from "./helpers/create-screen-topology";
 
@@ -38,21 +35,6 @@ const {
 				focusedScene.activity === "active"
 			);
 		});
-		const screenInterpolatorProps = useScreenAnimationStore(
-			(store) => store.screenInterpolatorProps,
-		);
-
-		const transitionSource = useMemo<ScreenTransitionSource>(
-			() => ({
-				screenInterpolatorProps,
-				boundsAccessor: createBoundsAccessor(() => {
-					"worklet";
-					return screenInterpolatorProps.get();
-				}),
-			}),
-			[screenInterpolatorProps],
-		);
-
 		useLayoutEffect(() => {
 			screenTopology.register({
 				screenKey,
@@ -61,14 +43,6 @@ const {
 				transitionKey,
 			});
 		}, [screenKey, navigatorKey, parentScreenKey, transitionKey]);
-
-		useLayoutEffect(() => {
-			screenTopology.registerTransitionSource(screenKey, transitionSource);
-
-			return () => {
-				screenTopology.unregisterTransitionSource(screenKey);
-			};
-		}, [screenKey, transitionSource]);
 
 		useLayoutEffect(() => {
 			if (!isActiveScreen || !parentScreenKey) return;

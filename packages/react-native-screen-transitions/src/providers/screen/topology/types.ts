@@ -22,16 +22,7 @@ export type ScreenTopology = {
 	activate(registration: ActiveScreenRegistration): void;
 	getRelationships(screenKey: string): ScreenRelationships;
 	resolve(screenKey: string, depth: number): string | null;
-	registerTransitionSource(
-		screenKey: string,
-		source: ScreenTransitionSource,
-	): void;
-	unregisterTransitionSource(screenKey: string): void;
-	getTransition(key: string): ScreenTransitionValue | null;
-	subscribeTransition(key: string, listener: () => void): () => void;
+	resolveTransitionKey(key: string): string | null;
 	subscribe(screenKey: string, listener: () => void): () => void;
 	subscribeResolution(listener: () => void): () => void;
 };
-
-import type { ScreenTransitionValue } from "../../../types/animation.types";
-import type { ScreenTransitionSource } from "../../../types/bounds.types";

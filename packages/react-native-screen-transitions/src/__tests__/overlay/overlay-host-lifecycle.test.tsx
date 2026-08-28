@@ -13,7 +13,6 @@ import {
 	type ReactTestRenderer,
 } from "react-test-renderer";
 import { View } from "react-native";
-import { registerTransitionSource } from "../../providers/screen/topology";
 import type { ScreenAnimationContextValue } from "../../providers/screen/animation/animation.provider";
 import type { ScreenSlotContextValue } from "../../providers/screen/styles/slot.provider";
 
@@ -33,11 +32,23 @@ let stackState: {
 	routes: Array<{ key: string; name: string }>;
 };
 
-const useScreenAnimationStore = (key?: string | null) => {
+const useScreenAnimationStore = <Selected,>(
+	keyOrSelector?:
+		| string
+		| null
+		| ((store: ScreenAnimationContextValue) => Selected),
+	selector?: (store: ScreenAnimationContextValue) => Selected,
+) => {
 	const localStore = useContext(ScreenAnimationContext);
-	return typeof key === "string"
-		? (animationStores.get(key) ?? null)
-		: localStore;
+	const store =
+		typeof keyOrSelector === "string"
+			? (animationStores.get(keyOrSelector) ?? null)
+			: localStore;
+	if (!store) return null;
+
+	const resolvedSelector =
+		typeof keyOrSelector === "function" ? keyOrSelector : selector;
+	return resolvedSelector ? resolvedSelector(store) : store;
 };
 
 const useScreenSlotStore = <Selected,>(
@@ -144,19 +155,10 @@ const createAnimationStore = (routeKey: string) => {
 		insets: { bottom: 0, left: 0, right: 0, top: 0 },
 		stackProgress: 1,
 	});
-	const screenAnimationSource = {
-		boundsAccessor: {},
-		screenInterpolatorProps,
-	};
-	registerTransitionSource(
-		routeKey,
-		undefined,
-		screenAnimationSource as never,
-	);
+	const boundsAccessor = (() => {}) as never;
 	return {
-		screenKey: routeKey,
-		screenAnimationSource,
 		screenInterpolatorProps,
+		boundsAccessor,
 	} as unknown as ScreenAnimationContextValue;
 };
 

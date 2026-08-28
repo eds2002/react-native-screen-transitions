@@ -24,7 +24,6 @@ export default {
 export type { NativeStackAdapterOptions } from "./adapters/with-screen-transitions";
 export { withScreenTransitions } from "./adapters/with-screen-transitions";
 export { snapTo } from "./animation/snap-to";
-export { transition } from "./animation/transition";
 export {
 	blockTransition,
 	unblockTransition,
@@ -79,7 +78,6 @@ export type {
 	ScreenTransitionConfig,
 	ScreenTransitionDepthTarget,
 	ScreenTransitionTarget,
-	ScreenTransitionValue,
 	ScrollGestureAxis,
 	ScrollGestureAxisState,
 	ScrollGestureState,

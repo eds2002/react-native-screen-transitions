@@ -27,12 +27,13 @@ type DescriptorsProviderProps = {
 	routeKey: string;
 };
 
-const { DescriptorsProvider, useDescriptorsStore } = createProvider(
-	"Descriptors",
-	{
-		global: true,
-	},
-)<DescriptorsProviderProps, DescriptorStoreValue>(({ routeKey, children }) => {
+const {
+	DescriptorsProvider,
+	useDescriptorsStore,
+	useOptionalDescriptorsStore,
+} = createProvider("Descriptors", {
+	global: true,
+})<DescriptorsProviderProps, DescriptorStoreValue>(({ routeKey, children }) => {
 	const scene = useBlankStackStore((s) => s.scenesByKey[routeKey]);
 
 	const currentDescriptor = scene.descriptor;
@@ -71,4 +72,8 @@ const { DescriptorsProvider, useDescriptorsStore } = createProvider(
 	};
 });
 
-export { DescriptorsProvider, useDescriptorsStore };
+export {
+	DescriptorsProvider,
+	useDescriptorsStore,
+	useOptionalDescriptorsStore,
+};

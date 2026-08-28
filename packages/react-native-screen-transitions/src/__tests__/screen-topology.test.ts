@@ -41,6 +41,20 @@ describe("screen topology", () => {
 		).toThrow('Transition key "feed" is already registered');
 	});
 
+	it("resolves transition aliases to registered screen keys", () => {
+		const topology = createScreenTopology();
+		topology.register({
+			screenKey: "feed-route",
+			transitionKey: "feed",
+		});
+
+		expect(topology.resolveTransitionKey("feed")).toBe("feed-route");
+		expect(topology.resolveTransitionKey("feed-route")).toBe("feed-route");
+
+		topology.unregister("feed-route");
+		expect(topology.resolveTransitionKey("feed")).toBeNull();
+	});
+
 	it("notifies key resolution subscribers when ownership changes", () => {
 		const topology = createScreenTopology();
 		const listener = mock(() => {});

@@ -1,11 +1,9 @@
-import type { ScreenTransitionValue } from "../../../../types/animation.types";
 import type {
 	ActiveScreenRegistration,
 	ScreenRelationships,
 	ScreenTopology,
 	ScreenTopologyRegistration,
 } from "../types";
-import { createTransitionValue } from "./create-transition-value";
 
 type ScreenNode = {
 	registered: boolean;
@@ -13,7 +11,6 @@ type ScreenNode = {
 	parentScreenKey: string | null;
 	activeChildScreenKeys: string[];
 	transitionKey: string | null;
-	transitionValue: ScreenTransitionValue | null;
 };
 
 const EMPTY_RELATIONSHIPS: ScreenRelationships = {
@@ -35,7 +32,6 @@ export const createScreenTopology = (): ScreenTopology => {
 	const screenKeyByTransitionKey = new Map<string, string>();
 	const listenersByScreenKey = new Map<string, Set<() => void>>();
 	const resolutionListeners = new Set<() => void>();
-	const transitionListenersByKey = new Map<string, Set<() => void>>();
 	const relationshipCache = new Map<string, ScreenRelationships>();
 
 	const getNode = (screenKey: string) => nodes.get(screenKey);
@@ -49,7 +45,6 @@ export const createScreenTopology = (): ScreenTopology => {
 			parentScreenKey: null,
 			activeChildScreenKeys: [],
 			transitionKey: null,
-			transitionValue: null,
 		};
 		nodes.set(screenKey, node);
 		return node;
@@ -158,18 +153,6 @@ export const createScreenTopology = (): ScreenTopology => {
 		});
 	};
 
-	const notifyTransition = (
-		screenKey: string,
-		transitionKey?: string | null,
-	) => {
-		for (const key of [screenKey, transitionKey]) {
-			if (!key) continue;
-			for (const listener of transitionListenersByKey.get(key) ?? []) {
-				listener();
-			}
-		}
-	};
-
 	const unregister = (screenKey: string) => {
 		const node = getNode(screenKey);
 		if (!node) return;
@@ -236,30 +219,9 @@ export const createScreenTopology = (): ScreenTopology => {
 		activate,
 		getRelationships,
 		resolve,
-		registerTransitionSource: (screenKey, source) => {
-			const node = ensureNode(screenKey);
-			node.transitionValue = createTransitionValue(source);
-			notifyTransition(screenKey, node.transitionKey);
-		},
-		unregisterTransitionSource: (screenKey) => {
-			const node = getNode(screenKey);
-			if (!node?.transitionValue) return;
-			node.transitionValue = null;
-			notifyTransition(screenKey, node.transitionKey);
-		},
-		getTransition: (key) => {
+		resolveTransitionKey: (key) => {
 			const screenKey = screenKeyByTransitionKey.get(key) ?? key;
-			return getNode(screenKey)?.transitionValue ?? null;
-		},
-		subscribeTransition: (key, listener) => {
-			const listeners =
-				transitionListenersByKey.get(key) ?? new Set<() => void>();
-			listeners.add(listener);
-			transitionListenersByKey.set(key, listeners);
-			return () => {
-				listeners.delete(listener);
-				if (listeners.size === 0) transitionListenersByKey.delete(key);
-			};
+			return getNode(screenKey)?.registered ? screenKey : null;
 		},
 		subscribe: (screenKey, listener) => {
 			const listeners =

@@ -32,7 +32,6 @@ import type {
 import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
-	transition,
 	useScreenAnimation,
 	useScreenGesture,
 	withScreenTransitions,
@@ -114,10 +113,6 @@ function usePublicApiHooksTypecheck() {
 void usePublicApiHooksTypecheck;
 void transitionTarget;
 void transitionDepthTarget;
-
-const keyedGlobalTransition = transition("feed");
-
-void keyedGlobalTransition;
 
 const scopedBounds = interpolationProps.bounds({ id: 42 });
 const tagScopedBounds = interpolationProps.bounds("group:hero");

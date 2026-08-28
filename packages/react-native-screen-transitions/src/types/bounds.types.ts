@@ -1,5 +1,4 @@
 import type { ColorValue } from "react-native";
-import type { DerivedValue } from "react-native-reanimated";
 import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
@@ -230,14 +229,6 @@ export type BoundsAccessor = (
 	options: BoundsIdentityInput,
 ) => BoundsScopedAccessor;
 
-export type BoundsInterpolationProps = Omit<
-	ScreenInterpolationProps,
-	"bounds" | "transition"
->;
-
-export type ScreenTransitionSource = {
-	screenInterpolatorProps: DerivedValue<BoundsInterpolationProps>;
-	boundsAccessor: BoundsAccessor;
-};
+export type BoundsInterpolationProps = Omit<ScreenInterpolationProps, "bounds">;
 
 export type { BoundsMotion, BoundsMotionFrame, BoundsMotionTransform };
