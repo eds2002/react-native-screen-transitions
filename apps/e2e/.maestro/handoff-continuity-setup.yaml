@@ -1,0 +1,14 @@
+appId: "com.eds2002.e2e"
+name: "Prepare handoff visual continuity stress"
+tags:
+  - maestro
+  - handoff-continuity
+---
+- launchApp:
+    clearState: true
+- openLink: "e2e:///blank-stack/bounds/matched-screen"
+- assertVisible:
+    id: "matched-screen-open-carried"
+- tapOn:
+    id: "matched-screen-payload-duplicate"
+- waitForAnimationToEnd

@@ -3,7 +3,7 @@ import Transition from "react-native-screen-transitions";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
-import type { MatchedScreenHandoffMode } from "./constants";
+import { CARRIED_HANDOFF_ID, type MatchedScreenHandoffMode } from "./constants";
 
 function getRouteParam(route: { params?: object } | undefined, key: string) {
 	"worklet";
@@ -54,7 +54,10 @@ const navigationZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolato
 				...boundarySlot,
 				props: {
 					handoffTarget:
-						active.closing && active.progress <= 0.5 ? "source" : "destination",
+						active.closing &&
+						active.progress <= (id === CARRIED_HANDOFF_ID ? 0.3 : 0.5)
+							? "source"
+							: "destination",
 				},
 			},
 		};

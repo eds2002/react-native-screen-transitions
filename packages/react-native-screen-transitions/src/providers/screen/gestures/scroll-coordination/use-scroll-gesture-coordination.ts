@@ -167,7 +167,10 @@ export const useScrollGestureCoordination = (
 	);
 
 	const nativeGesture = useMemo(() => {
-		if (panGestures.length === 0 && pinchGestures.length === 0) return null;
+		// Ownership registrations disappear while a screen's Activity is paused.
+		// Keep its detector mounted through that gap: removing the wrapper remounts
+		// scroll children and loses state, including captured boundary measurements.
+		if (!routeKey) return null;
 
 		const setIsTouched = () => {
 			"worklet";
@@ -223,6 +226,7 @@ export const useScrollGestureCoordination = (
 
 		return gesture;
 	}, [
+		routeKey,
 		panGestures,
 		pinchGestures,
 		scrollStates,

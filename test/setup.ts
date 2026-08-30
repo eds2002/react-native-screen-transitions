@@ -70,8 +70,50 @@ mock.module("react-native", () => ({
 		create: <T>(styles: T) => styles,
 	},
 }));
-mock.module("react-native-gesture-handler", () => ({}));
+mock.module("react-native-gesture-handler", () => ({
+	GestureDetector: ({ children }: { children: React.ReactNode }) => children,
+	Gesture: {
+		Native: () => ({
+			config: { enabled: true } as Record<string, unknown>,
+			enabled(value: boolean) {
+				this.config.enabled = value;
+				return this;
+			},
+			onTouchesDown(callback: unknown) {
+				this.config.onTouchesDown = callback;
+				return this;
+			},
+			onTouchesUp(callback: unknown) {
+				this.config.onTouchesUp = callback;
+				return this;
+			},
+			onTouchesCancelled(callback: unknown) {
+				this.config.onTouchesCancelled = callback;
+				return this;
+			},
+			requireExternalGestureToFail(...gestures: unknown[]) {
+				this.config.requireToFail = [
+					...((this.config.requireToFail as unknown[] | undefined) ?? []),
+					...gestures,
+				];
+				return this;
+			},
+			simultaneousWithExternalGesture(...gestures: unknown[]) {
+				this.config.simultaneousHandlers = [
+					...((this.config.simultaneousHandlers as unknown[] | undefined) ??
+						[]),
+					...gestures,
+				];
+				return this;
+			},
+		}),
+	},
+}));
 mock.module("react-native-worklets", () => ({
+	runOnUISync: <T extends (...args: any[]) => any>(
+		callback: T,
+		...args: Parameters<T>
+	) => callback(...args),
 	scheduleOnRN: <T extends (...args: any[]) => any>(
 		callback: T,
 		...args: Parameters<T>
@@ -130,6 +172,8 @@ mock.module("react-native-reanimated", () => ({
 	}),
 	useAnimatedStyle: <T>(factory: () => T) => factory(),
 	useAnimatedProps: <T>(factory: () => T) => factory(),
+	useAnimatedScrollHandler: <T>(handlers: T) => handlers,
+	useComposedEventHandler: (handlers: unknown[]) => handlers.filter(Boolean),
 	useAnimatedReaction: (
 		prepare: () => unknown,
 		react: (value: unknown, previousValue: unknown) => void,

@@ -38,6 +38,7 @@ export default function StackingBoundsIndex() {
 		<SafeAreaView
 			style={[styles.screen, { backgroundColor: theme.bg }]}
 			edges={["top"]}
+			testID={`stacking-index-depth-${depth}`}
 		>
 			<ScreenHeader
 				title="Stacking bounds"

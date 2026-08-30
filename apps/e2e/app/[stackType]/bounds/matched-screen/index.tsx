@@ -1,3 +1,4 @@
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useVideoPlayer, VideoView } from "expo-video";
@@ -17,11 +18,16 @@ import {
 	useResolvedStackType,
 } from "@/components/stack-examples/stack-routing";
 import {
+	CARRIED_HANDOFF_ID,
+	CARRIED_IMAGE_ASPECT_RATIO,
+	CARRIED_IMAGE_SOURCE,
 	MATCHED_SCREEN_ASPECT_RATIO,
 	MATCHED_SCREEN_DETAIL_WIDTH,
 	MATCHED_SCREEN_HANDOFF_MODES,
+	MATCHED_SCREEN_PAYLOAD_MODES,
 	MATCHED_SCREEN_VIDEOS,
 	type MatchedScreenHandoffMode,
+	type MatchedScreenPayloadMode,
 	type MatchedScreenVideo,
 	type MatchedScreenVideoId,
 } from "./constants";
@@ -74,6 +80,18 @@ export default function MatchedScreenIndex() {
 	const stackType = useResolvedStackType();
 	const [handoffMode, setHandoffMode] =
 		useState<MatchedScreenHandoffMode>("auto");
+	const [payloadMode, setPayloadMode] =
+		useState<MatchedScreenPayloadMode>("single");
+
+	const openCarriedImage = useCallback(() => {
+		router.push({
+			pathname: buildStackPath(
+				stackType,
+				"bounds/matched-screen/player",
+			) as never,
+			params: { handoffMode, id: CARRIED_HANDOFF_ID, payloadMode },
+		});
+	}, [handoffMode, payloadMode, stackType]);
 
 	const openVideo = useCallback(
 		(id: MatchedScreenVideoId) => {
@@ -98,6 +116,57 @@ export default function MatchedScreenIndex() {
 	const listHeader = (
 		<View style={styles.header}>
 			<Text style={styles.title}>Overlapping handoff flows</Text>
+			<Text style={styles.instructions}>
+				Carried-shaped image handoff. The transition stays identical while the
+				destination switches between an empty receiver and a second image
+				payload.
+			</Text>
+			<Transition.Boundary
+				accessibilityLabel="Open Carried image handoff"
+				accessibilityRole="button"
+				handoff
+				id={CARRIED_HANDOFF_ID}
+				onPress={openCarriedImage}
+				style={styles.carriedCard}
+				testID="matched-screen-open-carried"
+			>
+				<Image
+					contentFit="cover"
+					enforceEarlyResizing
+					recyclingKey="matched-screen-carried-feed"
+					source={CARRIED_IMAGE_SOURCE}
+					style={styles.carriedImage}
+				/>
+			</Transition.Boundary>
+			<View style={styles.modePicker}>
+				{MATCHED_SCREEN_PAYLOAD_MODES.map((mode) => {
+					const selected = mode === payloadMode;
+
+					return (
+						<Pressable
+							accessibilityRole="button"
+							accessibilityState={{ selected }}
+							key={mode}
+							onPress={() => setPayloadMode(mode)}
+							style={({ pressed }) => [
+								styles.modeButton,
+								selected && styles.modeButtonSelected,
+								pressed && styles.modeButtonPressed,
+							]}
+							testID={`matched-screen-payload-${mode}`}
+						>
+							<Text
+								style={[
+									styles.modeButtonText,
+									selected && styles.modeButtonTextSelected,
+								]}
+							>
+								{mode === "single" ? "One payload" : "Two payloads"}
+							</Text>
+						</Pressable>
+					);
+				})}
+			</View>
 			<Text style={styles.instructions}>
 				Open A, dismiss it, then open B before A finishes closing. Repeat with
 				the same card to cover same-ID replacement.
@@ -134,7 +203,7 @@ export default function MatchedScreenIndex() {
 			<Text style={styles.modeDescription} testID="matched-screen-mode-label">
 				{handoffMode === "auto"
 					? "Default ownership — no handoffTarget is returned."
-					: "Explicit ownership — destination until close crosses 50%, then source."}
+					: "Explicit ownership — Carried returns at 30%; videos return at 50%."}
 			</Text>
 		</View>
 	);
@@ -145,7 +214,7 @@ export default function MatchedScreenIndex() {
 			<MatchedScreenFlatList
 				contentContainerStyle={styles.listContent}
 				data={MATCHED_SCREEN_VIDEOS}
-				extraData={handoffMode}
+				extraData={`${handoffMode}:${payloadMode}`}
 				keyExtractor={(item) => item.id}
 				ListHeaderComponent={listHeader}
 				renderItem={renderItem}
@@ -230,6 +299,18 @@ const styles = StyleSheet.create({
 		borderCurve: "continuous",
 		borderRadius: 28,
 		maxWidth: MATCHED_SCREEN_DETAIL_WIDTH,
+		width: "100%",
+	},
+	carriedCard: {
+		alignSelf: "center",
+		aspectRatio: CARRIED_IMAGE_ASPECT_RATIO,
+		borderCurve: "continuous",
+		borderRadius: 24,
+		overflow: "hidden",
+		width: 96,
+	},
+	carriedImage: {
+		height: "100%",
 		width: "100%",
 	},
 	videoCard: {

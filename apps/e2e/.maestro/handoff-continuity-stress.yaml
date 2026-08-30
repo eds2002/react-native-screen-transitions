@@ -1,0 +1,21 @@
+appId: "com.eds2002.e2e"
+name: "Recorded handoff visual continuity stress"
+tags:
+  - maestro
+  - handoff-continuity
+---
+- assertVisible:
+    id: "matched-screen-open-carried"
+- repeat:
+    times: 12
+    commands:
+      - tapOn:
+          id: "matched-screen-open-carried"
+      - assertVisible:
+          id: "matched-screen-destination-carried-image"
+      - waitForAnimationToEnd
+      - tapOn:
+          id: "matched-screen-close"
+      - assertVisible:
+          id: "matched-screen-open-carried"
+      - waitForAnimationToEnd

@@ -42,6 +42,7 @@ export default function StackingBoundsDetail() {
 		<SafeAreaView
 			style={[styles.screen, { backgroundColor: theme.bg }]}
 			edges={["top"]}
+			testID={`stacking-detail-depth-${depth}-${routeId}`}
 		>
 			<ScreenHeader
 				title="Dynamic detail"

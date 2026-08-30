@@ -11,8 +11,12 @@
 		"ios": "expo run:ios",
 		"web": "expo start --web",
 		"maestro": "bun scripts/run-maestro.ts",
+		"maestro:handoff-continuity": "MAESTRO_FLOW=.maestro/handoff-continuity.yaml bun scripts/run-maestro.ts",
 		"maestro:smoke": "bun scripts/run-maestro.ts",
+		"maestro:stacking-continuity": "MAESTRO_FLOW=.maestro/stacking-bounds-continuity.yaml bun scripts/run-maestro.ts",
 		"maestro:verify": "bun scripts/verify-maestro-suite.ts",
+		"record:handoff-continuity": "bun scripts/run-handoff-continuity.ts",
+		"verify:handoff-continuity": "bun scripts/verify-handoff-continuity.ts",
 		"lint": "expo lint"
 	},
 	"dependencies": {

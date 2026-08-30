@@ -1,0 +1,93 @@
+appId: "com.eds2002.e2e"
+name: "Stacking bounds pair continuity"
+tags:
+  - maestro
+  - bounds-continuity
+---
+- launchApp:
+    clearState: true
+- openLink: "e2e:///blank-stack/bounds/stacking"
+- assertVisible:
+    text: "Index instance · depth 0"
+
+# A(card) -> B, B(button) -> C, C(card) -> D, then gesture-dismiss
+# every pair. Let the covering routes settle so A and B actually pause.
+- tapOn:
+    id: "stacking-index-boundary"
+- assertVisible:
+    id: "stacking-detail-depth-1-stacking-card"
+- tapOn:
+    id: "stacking-push-index"
+- assertVisible:
+    id: "stacking-index-depth-2"
+- waitForAnimationToEnd
+- tapOn:
+    id: "stacking-index-boundary"
+- assertVisible:
+    id: "stacking-detail-depth-3-stacking-card"
+- waitForAnimationToEnd
+- swipe:
+    start: "50%, 35%"
+    end: "65%, 95%"
+    duration: 250
+- waitForAnimationToEnd
+- assertNotVisible:
+    id: "stacking-detail-depth-3-stacking-card"
+- assertVisible:
+    id: "stacking-index-depth-2"
+- swipe:
+    start: "50%, 35%"
+    end: "65%, 95%"
+    duration: 250
+- waitForAnimationToEnd
+- assertNotVisible:
+    id: "stacking-index-depth-2"
+- assertVisible:
+    id: "stacking-detail-depth-1-stacking-card"
+- swipe:
+    start: "50%, 35%"
+    end: "65%, 95%"
+    duration: 250
+- waitForAnimationToEnd
+- assertNotVisible:
+    id: "stacking-detail-depth-1-stacking-card"
+- assertVisible:
+    text: "Index instance · depth 0"
+
+# Repeat with the opposite ids and programmatic dismissals.
+# A(button) -> B, B(card) -> C, C(button) -> D -> C -> B -> A.
+- tapOn:
+    id: "stacking-index-button"
+- assertVisible:
+    id: "stacking-detail-depth-1-stacking-button"
+- tapOn:
+    id: "stacking-detail-boundary"
+- assertVisible:
+    id: "stacking-index-depth-2"
+- waitForAnimationToEnd
+- tapOn:
+    id: "stacking-index-button"
+- assertVisible:
+    id: "stacking-detail-depth-3-stacking-button"
+- waitForAnimationToEnd
+- tapOn:
+    id: "header-back"
+- waitForAnimationToEnd
+- assertNotVisible:
+    id: "stacking-detail-depth-3-stacking-button"
+- assertVisible:
+    id: "stacking-index-depth-2"
+- tapOn:
+    id: "header-back"
+- waitForAnimationToEnd
+- assertNotVisible:
+    id: "stacking-index-depth-2"
+- assertVisible:
+    id: "stacking-detail-depth-1-stacking-button"
+- tapOn:
+    id: "header-back"
+- waitForAnimationToEnd
+- assertNotVisible:
+    id: "stacking-detail-depth-1-stacking-button"
+- assertVisible:
+    text: "Index instance · depth 0"

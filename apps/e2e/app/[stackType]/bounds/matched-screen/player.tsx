@@ -1,38 +1,57 @@
-import { useLocalSearchParams } from "expo-router";
+import { Image } from "expo-image";
+import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import Transition from "react-native-screen-transitions";
 import {
+	CARRIED_HANDOFF_ID,
+	CARRIED_IMAGE_ASPECT_RATIO,
+	CARRIED_IMAGE_SOURCE,
 	MATCHED_SCREEN_ASPECT_RATIO,
 	MATCHED_SCREEN_DETAIL_WIDTH,
 	MATCHED_SCREEN_VIDEOS,
+	type MatchedScreenPayloadMode,
 } from "./constants";
 
 export default function MatchedScreenPlayer() {
 	const params = useLocalSearchParams<{
 		handoffMode?: string | string[];
 		id?: string | string[];
+		payloadMode?: string | string[];
 	}>();
 	const id = Array.isArray(params.id) ? params.id[0] : params.id;
 	const handoffMode = Array.isArray(params.handoffMode)
 		? params.handoffMode[0]
 		: params.handoffMode;
 	const example = MATCHED_SCREEN_VIDEOS.find((video) => video.id === id);
+	const isCarriedImage = id === CARRIED_HANDOFF_ID;
+	const payloadMode = (
+		Array.isArray(params.payloadMode)
+			? params.payloadMode[0]
+			: params.payloadMode
+	) as MatchedScreenPayloadMode | undefined;
 
-	if (!example) {
+	if (!(id && (example || isCarriedImage))) {
 		throw new Error(`Unknown video example: ${String(id)}`);
 	}
 
-	const receiverStyle = {
-		width: MATCHED_SCREEN_DETAIL_WIDTH,
-		height: MATCHED_SCREEN_DETAIL_WIDTH / MATCHED_SCREEN_ASPECT_RATIO,
-		borderRadius: 34,
-	};
+	const receiverStyle = isCarriedImage
+		? {
+				width: 300,
+				height: 300 / CARRIED_IMAGE_ASPECT_RATIO,
+				borderRadius: 0,
+			}
+		: {
+				width: MATCHED_SCREEN_DETAIL_WIDTH,
+				height: MATCHED_SCREEN_DETAIL_WIDTH / MATCHED_SCREEN_ASPECT_RATIO,
+				borderRadius: 34,
+			};
 
 	return (
-		<View
+		<Pressable
 			accessibilityLabel="Close video"
 			accessibilityRole="button"
+			onPress={() => router.back()}
 			style={styles.detail}
 			testID="matched-screen-close"
 		>
@@ -40,18 +59,34 @@ export default function MatchedScreenPlayer() {
 			<View style={styles.detailContent}>
 				<Transition.Boundary
 					handoff
-					id={example.id}
+					id={id}
 					style={[styles.detailVideo, receiverStyle]}
-					testID={`matched-screen-destination-${example.id}`}
-				/>
-				<Text style={styles.detailCaption}>{example.title}</Text>
+					testID={`matched-screen-destination-${id}`}
+				>
+					{isCarriedImage && payloadMode === "duplicate" ? (
+						<Image
+							contentFit="cover"
+							enforceEarlyResizing
+							placeholder={CARRIED_IMAGE_SOURCE}
+							placeholderContentFit="cover"
+							recyclingKey="matched-screen-carried-full-size"
+							source={CARRIED_IMAGE_SOURCE}
+							style={styles.image}
+						/>
+					) : null}
+				</Transition.Boundary>
+				<Text style={styles.detailCaption}>
+					{isCarriedImage ? "Carried image" : example?.title}
+				</Text>
 				<Text style={styles.handoffMode} testID="matched-screen-player-mode">
-					{handoffMode === "explicit"
-						? "Explicit handoff target"
-						: "Automatic handoff"}
+					{isCarriedImage
+						? `${payloadMode === "duplicate" ? "Two" : "One"} payload handoff`
+						: handoffMode === "explicit"
+							? "Explicit handoff target"
+							: "Automatic handoff"}
 				</Text>
 			</View>
-		</View>
+		</Pressable>
 	);
 }
 
@@ -80,5 +115,9 @@ const styles = StyleSheet.create({
 		fontSize: 11,
 		fontWeight: "600",
 		textTransform: "uppercase",
+	},
+	image: {
+		height: "100%",
+		width: "100%",
 	},
 });

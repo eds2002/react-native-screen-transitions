@@ -1,6 +1,15 @@
 export const MATCHED_SCREEN_ASPECT_RATIO = 16 / 9;
 export const MATCHED_SCREEN_DETAIL_WIDTH = 328;
 
+export const CARRIED_HANDOFF_ID = "carried-image";
+export const CARRIED_IMAGE_ASPECT_RATIO = 1364 / 2382;
+export const CARRIED_IMAGE_SOURCE = require("../../../../assets/videos/thumbnails/1.webp");
+
+export const MATCHED_SCREEN_PAYLOAD_MODES = ["single", "duplicate"] as const;
+
+export type MatchedScreenPayloadMode =
+	(typeof MATCHED_SCREEN_PAYLOAD_MODES)[number];
+
 export const MATCHED_SCREEN_HANDOFF_MODES = ["auto", "explicit"] as const;
 
 export type MatchedScreenHandoffMode =
