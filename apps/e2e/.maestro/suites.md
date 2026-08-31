@@ -134,6 +134,17 @@ Assumptions:
 - [ ] Same visual tag in separate transition scopes does not animate to the wrong screen.
 - [ ] Closing a shared transition returns to the scenario's previous screen and leaves it usable.
 
+## SmoothClip v4
+
+- [ ] Transition.ClipView and Transition.Boundary.ClipView render with fixed maximum hosts.
+- [ ] Touches land on both SmoothClip native hosts.
+- [ ] Relayout preserves the clip hosts and their source-screen state.
+- [ ] Opening the destination runs a mixed clip and opacity slot alongside boundary zoom.
+- [ ] A short dismiss drag reverses to the open destination without losing either clip host.
+- [ ] Orientation relayout keeps the destination and both clip hosts attached.
+- [ ] A completed gesture dismiss returns to the preserved source clip hosts.
+- [ ] Programmatic close completes and returns to the preserved source route.
+
 ## Style Reset Behavior
 
 - [ ] The source route renders the half-screen style reset fixture.

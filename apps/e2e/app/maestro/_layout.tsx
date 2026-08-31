@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { BlankStack } from "@/layouts/blank-stack";
+
 import {
 	boundsOptions,
 	MaestroOverlay,
@@ -10,6 +10,8 @@ import {
 	styleResetDestinationOptions,
 	styleResetSourceOptions,
 } from "@/components/maestro/options";
+import { smoothClipOptions } from "@/components/maestro/smooth-clip-fixture";
+import { BlankStack } from "@/layouts/blank-stack";
 
 const hostOptions = slideOptions("horizontal", { gestureEnabled: false });
 
@@ -43,7 +45,10 @@ export default function MaestroLayout() {
 				name="swipe-horizontal-inverted"
 				options={slideOptions("horizontal-inverted")}
 			/>
-			<BlankStack.Screen name="swipe-vertical" options={slideOptions("vertical")} />
+			<BlankStack.Screen
+				name="swipe-vertical"
+				options={slideOptions("vertical")}
+			/>
 			<BlankStack.Screen
 				name="swipe-vertical-inverted"
 				options={slideOptions("vertical-inverted")}
@@ -212,6 +217,12 @@ export default function MaestroLayout() {
 
 			<BlankStack.Screen name="bounds" options={hostOptions} />
 			<BlankStack.Screen name="bounds-detail" options={boundsOptions} />
+
+			<BlankStack.Screen name="smooth-clip" options={hostOptions} />
+			<BlankStack.Screen
+				name="smooth-clip-detail"
+				options={smoothClipOptions}
+			/>
 
 			<BlankStack.Screen name="styles" options={styleResetSourceOptions} />
 			<BlankStack.Screen

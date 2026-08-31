@@ -576,6 +576,73 @@ tags:
 - assertVisible:
     id: "maestro-bounds-host"
 
+# Suite: smoothclip-v4
+- launchApp:
+    clearState: true
+- openLink: "e2e:///maestro/smooth-clip"
+- assertVisible:
+    id: "maestro-smooth-clip-host"
+- assertVisible:
+    id: "maestro-smooth-clip-public"
+- assertVisible:
+    id: "maestro-smooth-clip-boundary"
+- tapOn:
+    id: "maestro-smooth-clip-public"
+- assertVisible: "clip-touches:1;boundary-touches:0"
+- tapOn:
+    id: "maestro-smooth-clip-boundary"
+- assertVisible: "clip-touches:1;boundary-touches:1"
+- tapOn:
+    id: "maestro-smooth-clip-toggle-layout"
+- assertVisible: "clip-layout:compact"
+- assertVisible: "clip-touches:1;boundary-touches:1"
+- tapOn:
+    id: "maestro-smooth-clip-open-detail"
+- assertVisible:
+    id: "maestro-smooth-clip-detail"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "maestro-smooth-clip-public-detail"
+- assertVisible:
+    id: "maestro-smooth-clip-boundary-detail"
+- swipe:
+    start: "50%, 55%"
+    end: "50%, 66%"
+    duration: 220
+- waitForAnimationToEnd
+- assertVisible:
+    id: "maestro-smooth-clip-detail"
+- assertVisible:
+    id: "maestro-smooth-clip-boundary-detail"
+- setOrientation: LANDSCAPE
+- assertVisible:
+    id: "maestro-smooth-clip-detail"
+- assertVisible:
+    id: "maestro-smooth-clip-public-detail"
+- setOrientation: PORTRAIT
+- assertVisible:
+    id: "maestro-smooth-clip-detail"
+- swipe:
+    start: "50%, 35%"
+    end: "50%, 98%"
+    duration: 300
+- waitForAnimationToEnd
+- assertVisible:
+    id: "maestro-smooth-clip-host"
+- assertVisible: "clip-touches:1;boundary-touches:1"
+- tapOn:
+    id: "maestro-smooth-clip-open-detail"
+- assertVisible:
+    id: "maestro-smooth-clip-detail"
+- waitForAnimationToEnd
+- tapOn:
+    id: "maestro-smooth-clip-close-detail"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "maestro-smooth-clip-host"
+- assertVisible:
+    id: "maestro-smooth-clip-boundary"
+
 # Suite: style-reset-behavior
 - launchApp:
     clearState: true

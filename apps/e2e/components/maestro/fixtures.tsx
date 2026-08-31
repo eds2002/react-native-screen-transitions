@@ -140,6 +140,7 @@ export function MaestroIndexFixture() {
 					["backdrop", "Backdrop"],
 					["overlay", "Overlay"],
 					["bounds", "Bounds"],
+					["smooth-clip", "SmoothClip v4"],
 					["styles", "Styles"],
 				].map(([route, label]) => (
 					<ActionButton
