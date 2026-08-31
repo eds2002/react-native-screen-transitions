@@ -14,6 +14,14 @@ interface AnimateToProgressProps {
 	target: "open" | "close" | number;
 	spec?: TransitionSpec;
 	onAnimationFinish?: (finished: boolean) => void;
+	/** Internal route-coordinator callback carrying a UI-allocated request id. */
+	onIdentifiedAnimationFinish?: (
+		completionId: number,
+		finished: boolean,
+	) => void;
+	completionId?: number;
+	/** The coordinator performs the close paint barrier after every leg settles. */
+	deferClosePaintBarrier?: boolean;
 	animations: AnimationStoreMap;
 	targetProgress: SharedValue<number>;
 	emitWillAnimate?: boolean;
@@ -44,6 +52,9 @@ export const animateToProgress = ({
 	target,
 	spec,
 	onAnimationFinish,
+	onIdentifiedAnimationFinish,
+	completionId,
+	deferClosePaintBarrier = false,
 	animations,
 	targetProgress,
 	emitWillAnimate = true,
@@ -74,6 +85,17 @@ export const animateToProgress = ({
 		progressSettled,
 		entering,
 	} = animations;
+	const emitAnimationFinish = (finished: boolean) => {
+		"worklet";
+		if (
+			onIdentifiedAnimationFinish !== undefined &&
+			completionId !== undefined
+		) {
+			runOnJS(onIdentifiedAnimationFinish)(completionId, finished);
+			return;
+		}
+		if (onAnimationFinish) runOnJS(onAnimationFinish)(finished);
+	};
 
 	const startAnimation = () => {
 		"worklet";
@@ -92,8 +114,8 @@ export const animateToProgress = ({
 				entering.set(FALSE);
 			}
 
-			if (onAnimationFinish) {
-				runOnJS(onAnimationFinish)(true);
+			if (onAnimationFinish || onIdentifiedAnimationFinish) {
+				emitAnimationFinish(true);
 			}
 			return;
 		}
@@ -116,20 +138,24 @@ export const animateToProgress = ({
 				if (isClosing) {
 					progressAnimating.set(FALSE);
 
-					if (onAnimationFinish) {
+					if (onAnimationFinish || onIdentifiedAnimationFinish) {
 						// Paint the terminal UI-thread host/style state before React
 						// removes the closing route and its native portal host.
-						requestAnimationFrame(() => {
-							"worklet";
+						if (deferClosePaintBarrier) {
+							emitAnimationFinish(state.finished);
+						} else {
 							requestAnimationFrame(() => {
 								"worklet";
-								runOnJS(onAnimationFinish)(state.finished);
+								requestAnimationFrame(() => {
+									"worklet";
+									emitAnimationFinish(state.finished);
+								});
 							});
-						});
+						}
 					}
 				} else {
-					if (onAnimationFinish) {
-						runOnJS(onAnimationFinish)(state.finished);
+					if (onAnimationFinish || onIdentifiedAnimationFinish) {
+						emitAnimationFinish(state.finished);
 					}
 
 					// Delay clearing progress animation by one frame to ensure final frame is painted

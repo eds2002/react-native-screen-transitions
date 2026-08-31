@@ -1,7 +1,12 @@
 import { interpolate } from "react-native-reanimated";
 import { NAVIGATION_MASK_ELEMENT_STYLE_ID } from "../../../../constants";
+import type { AnimatedViewStyle } from "../../../../types/animation.types";
 import { createBoundsAccessorCore } from "../../helpers/create-bounds-accessor-core";
 import { getSourceBorderRadius } from "../helpers";
+import {
+	adaptRevealFocusedContentClip,
+	adaptRevealNavigationMaskClip,
+} from "./adapter";
 import {
 	CLOSE_SOURCE_HANDOFF_PROGRESS,
 	CONTENT_CLOSING_OPACITY_OUTPUT,
@@ -16,7 +21,6 @@ import {
 	REVEAL_BACKGROUND_SCALE,
 	REVEAL_BORDER_RADIUS,
 	REVEAL_SHADOW_OFFSET,
-	REVEAL_USES_TRANSFORM_MASK,
 	UNFOCUSED_ELEMENT_OPACITY_OUTPUT,
 	ZERO_TO_ONE_RANGE,
 } from "./config";
@@ -33,6 +37,10 @@ import {
 	resolveUniformScale,
 	resolveUnitDragTranslation,
 } from "./math";
+import {
+	projectRevealContentClip,
+	projectRevealNavigationMaskClip,
+} from "./projector";
 import type { BuildRevealStylesParams, RevealInterpolatedStyle } from "./types";
 
 /* -------------------------------------------------------------------------- */
@@ -66,16 +74,10 @@ export function buildRevealStyles({
 		revealOptions?.velocityDepth ?? DISMISS_SCALE_ORBIT_DEPTH;
 	const disablePointerEventsTillElementTransition =
 		revealOptions?.disablePointerEventsTillElementTransition ?? true;
-	const maskSizingMode = revealOptions?.maskSizingMode ?? "auto";
 	const backgroundScale =
 		revealOptions?.backgroundScale ?? REVEAL_BACKGROUND_SCALE;
 	const shouldBackgroundScaleResetOnSettled =
 		revealOptions?.shouldBackgroundScaleResetOnSettled ?? true;
-	const usesTransformMask =
-		maskSizingMode === "auto"
-			? REVEAL_USES_TRANSFORM_MASK
-			: maskSizingMode === "transform";
-
 	const bounds = createBoundsAccessorCore({
 		getProps: () => props,
 	});
@@ -155,7 +157,7 @@ export function buildRevealStyles({
 		);
 		const maskBorderCurve = borderContinuous
 			? ("continuous" as const)
-			: undefined;
+			: ("circular" as const);
 
 		const maskSizeMultiplier = props.active.closing
 			? mixUnit(0.9, 1, activeTransitionProgress)
@@ -264,38 +266,17 @@ export function buildRevealStyles({
 			safeContentBaseScale;
 
 		const compensatedMaskScale = 1 / safeContentBaseScale;
-		const maskBaseWidth = Math.max(1, screenLayout.width);
-		const maskBaseHeight = Math.max(1, screenLayout.height);
-		const maskScaleX = maskWidth / maskBaseWidth;
-		const maskScaleY = renderedMaskHeight / maskBaseHeight;
-		const transformMaskTranslateX =
-			compensatedMaskTranslateX + (maskWidth - maskBaseWidth) / 2;
-		const transformMaskTranslateY =
-			compensatedMaskTranslateY + (renderedMaskHeight - maskBaseHeight) / 2;
-		const maskElementStyle = usesTransformMask
-			? {
-					width: maskBaseWidth,
-					height: maskBaseHeight,
-					borderRadius: props.active.settled ? 0 : maskBorderRadius,
-					borderCurve: maskBorderCurve,
-					transform: [
-						{ translateX: transformMaskTranslateX },
-						{ translateY: transformMaskTranslateY },
-						{ scaleX: maskScaleX * compensatedMaskScale },
-						{ scaleY: maskScaleY * compensatedMaskScale },
-					],
-				}
-			: {
-					width: maskWidth,
-					height: renderedMaskHeight,
-					borderRadius: props.active.settled ? 0 : maskBorderRadius,
-					borderCurve: maskBorderCurve,
-					transform: [
-						{ translateX: compensatedMaskTranslateX },
-						{ translateY: compensatedMaskTranslateY },
-						{ scale: compensatedMaskScale },
-					],
-				};
+		const maskElementStyle: AnimatedViewStyle = {
+			width: maskWidth,
+			height: renderedMaskHeight,
+			borderRadius: props.active.settled ? 0 : maskBorderRadius,
+			borderCurve: borderContinuous ? "continuous" : undefined,
+			transform: [
+				{ translateX: compensatedMaskTranslateX },
+				{ translateY: compensatedMaskTranslateY },
+				{ scale: compensatedMaskScale },
+			],
+		};
 
 		const elementOffsetX = initialDestinationTarget
 			? initialDestinationTarget.pageX - link.destination.bounds.pageX
@@ -329,44 +310,67 @@ export function buildRevealStyles({
 				rawDrag,
 				maxSensitivity,
 			});
+		const contentOpacity = props.active.entering
+			? interpolate(
+					activeTransitionProgress,
+					CONTENT_ENTERING_OPACITY_RANGE,
+					CONTENT_ENTERING_OPACITY_OUTPUT,
+				)
+			: interpolate(
+					activeTransitionProgress,
+					CONTENT_CLOSING_OPACITY_RANGE,
+					CONTENT_CLOSING_OPACITY_OUTPUT,
+				);
+		const contentResidualStyle: AnimatedViewStyle = {
+			shadowColor: "#000",
+			shadowOffset: REVEAL_SHADOW_OFFSET,
+			shadowOpacity: interpolate(
+				activeTransitionProgress,
+				ZERO_TO_ONE_RANGE,
+				CONTENT_SHADOW_OPACITY_OUTPUT,
+			),
+			shadowRadius: 32,
+			elevation: 5,
+			opacity: contentOpacity,
+		};
+		const legacyContentStyle: AnimatedViewStyle = {
+			transform: [
+				{ translateX: contentTranslateX },
+				{ translateY: contentTranslateY },
+				{ scale: contentScale },
+			],
+			...contentResidualStyle,
+		};
+		const contentClip = projectRevealContentClip({
+			screenLayout,
+			translateX: contentTranslateX,
+			translateY: contentTranslateY,
+			scale: contentScale,
+		});
+		const maskClip = projectRevealNavigationMaskClip({
+			width: maskWidth,
+			height: renderedMaskHeight,
+			translateX: compensatedMaskTranslateX,
+			translateY: compensatedMaskTranslateY,
+			scale: compensatedMaskScale,
+			radius: props.active.settled ? 0 : maskBorderRadius,
+			curve: maskBorderCurve,
+		});
 
 		return {
 			options: {
 				gestureSensitivity,
 				gestureReleaseVelocityScale,
 			},
-			content: {
-				style: {
-					transform: [
-						{ translateX: contentTranslateX },
-						{ translateY: contentTranslateY },
-						{ scale: contentScale },
-					],
-					shadowColor: "#000",
-					shadowOffset: REVEAL_SHADOW_OFFSET,
-					shadowOpacity: interpolate(
-						activeTransitionProgress,
-						ZERO_TO_ONE_RANGE,
-						CONTENT_SHADOW_OPACITY_OUTPUT,
-					),
-					shadowRadius: 32,
-					elevation: 5,
-					opacity: props.active.entering
-						? interpolate(
-								activeTransitionProgress,
-								CONTENT_ENTERING_OPACITY_RANGE,
-								CONTENT_ENTERING_OPACITY_OUTPUT,
-							)
-						: interpolate(
-								activeTransitionProgress,
-								CONTENT_CLOSING_OPACITY_RANGE,
-								CONTENT_CLOSING_OPACITY_OUTPUT,
-							),
-				},
-			},
-			[NAVIGATION_MASK_ELEMENT_STYLE_ID]: {
-				style: maskElementStyle,
-			},
+			content: adaptRevealFocusedContentClip({
+				projectedClip: contentClip,
+				legacyStyle: legacyContentStyle,
+				residualStyle: contentResidualStyle,
+			}),
+			[NAVIGATION_MASK_ELEMENT_STYLE_ID]: adaptRevealNavigationMaskClip({
+				projectedClip: maskClip,
+				legacyStyle: maskElementStyle,
+			}),
 			[link.id]: {
 				style: {
 					transform: [{ translateX: elementTX }, { translateY: elementY }],

@@ -32,14 +32,22 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 	const boundaryId = rootContext?.boundTag.tag;
 	const isActiveTarget = rootContext?.activeTargetRef === targetAnimatedRef;
 	const portalRuntime = rootContext?.portalRuntime;
-	const handoffEnabled = isActiveTarget && rootContext?.handoffEnabled === true;
+	const wholeHostPortal = rootContext?.wholeHostPortal === true;
+	const handoffEnabled =
+		isActiveTarget && rootContext?.handoffEnabled === true && !wholeHostPortal;
 	const shouldEscapeTargetToScreenHost =
-		portalRuntime?.escapeClipping === true && boundaryId !== undefined;
+		portalRuntime?.escapeClipping === true &&
+		boundaryId !== undefined &&
+		!wholeHostPortal;
 
 	const shouldApplyAssociatedStyleInline =
-		isActiveTarget && portalRuntime?.escapeClipping !== true;
+		isActiveTarget &&
+		!wholeHostPortal &&
+		portalRuntime?.escapeClipping !== true;
 	const shouldApplyPortalLayoutStyle =
-		isActiveTarget && portalRuntime?.escapeClipping === true;
+		isActiveTarget &&
+		!wholeHostPortal &&
+		portalRuntime?.escapeClipping === true;
 
 	const associatedTargetStyles = useComposedSlotStyles(
 		rootContext?.boundTag.tag,

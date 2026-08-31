@@ -8,6 +8,7 @@ type BoundaryPortalProps = {
 	boundaryId: string;
 	children: ReactNode;
 	enabled: boolean;
+	filterClipResiduals?: boolean;
 	placeholderRef?: AnimatedRef<View>;
 };
 
@@ -15,11 +16,13 @@ export const BoundaryPortal = memo(function BoundaryPortal({
 	boundaryId,
 	children,
 	enabled,
+	filterClipResiduals = false,
 	placeholderRef,
 }: BoundaryPortalProps) {
 	const { teleportProps } = useBoundaryPortalAttachment({
 		boundaryId,
 		enabled,
+		filterClipResiduals,
 	});
 
 	return (

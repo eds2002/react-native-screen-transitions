@@ -241,15 +241,16 @@ describe("zoom bound target", () => {
 			zoomOptions,
 		});
 		const focusedBackdrop = focusedStyles.backdrop?.style as any;
-		const focusedContent = focusedStyles.content?.style as any;
-		const focusedMask = focusedStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID]
-			?.style as any;
+		const focusedContent = (focusedStyles.content as any)?.clip;
+		const focusedMask = (
+			focusedStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID] as any
+		)?.clip;
 		const unfocusedContent = unfocusedStyles.content?.style as any;
 
 		expect(focusedBackdrop.backgroundColor).toBe("#123456");
 		expect(focusedBackdrop.opacity).toBeCloseTo(0.2, 10);
-		expect(focusedContent.borderRadius).toBe(36);
-		expect(focusedMask.borderRadius).toBe(36);
+		expect(focusedContent.clip.radius).toBe(36);
+		expect(focusedMask.clip.radius).toBe(36);
 		expect(unfocusedContent.transform[0]?.scale).toBeCloseTo(0.9, 10);
 	});
 
@@ -268,10 +269,10 @@ describe("zoom bound target", () => {
 			props: createZoomProps({ focused: false, progress }),
 			zoomOptions,
 		});
-		const focusedTransform = focusedStyles.content?.style?.transform as any[];
-		const focusedTranslateX = focusedTransform[0]?.translateX as number;
-		const focusedTranslateY = focusedTransform[1]?.translateY as number;
-		const focusedScale = focusedTransform[2]?.scale as number;
+		const focusedClip = (focusedStyles.content as any)?.clip;
+		const focusedTranslateX = focusedClip.contentTranslateX as number;
+		const focusedTranslateY = focusedClip.contentTranslateY as number;
+		const focusedScale = focusedClip.contentScale as number;
 		const unfocusedParentScale = (
 			unfocusedStyles.content?.style?.transform as any[]
 		)[0]?.scale as number;
@@ -362,7 +363,7 @@ describe("zoom source-only target", () => {
 			props: createZoomProps({ focused: true, progress: 0 }),
 		});
 
-		expect(styles.content?.style?.transform).toBeDefined();
+		expect((styles.content as any)?.clip).toBeDefined();
 	});
 });
 

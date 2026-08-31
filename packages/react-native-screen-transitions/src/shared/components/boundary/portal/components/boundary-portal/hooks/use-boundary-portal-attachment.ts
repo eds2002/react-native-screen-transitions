@@ -27,11 +27,13 @@ import {
 interface UseBoundaryPortalAttachmentParams {
 	boundaryId: string;
 	enabled: boolean;
+	filterClipResiduals: boolean;
 }
 
 export const useBoundaryPortalAttachment = ({
 	boundaryId,
 	enabled,
+	filterClipResiduals,
 }: UseBoundaryPortalAttachmentParams) => {
 	const sourcePairKey = useDescriptorsStore((s) => s.derivations.sourcePairKey);
 	const currentScreenKey = useDescriptorsStore(
@@ -103,6 +105,7 @@ export const useBoundaryPortalAttachment = ({
 		mountPortalBoundaryHost({
 			boundaryId,
 			escapeClipping: true,
+			filterClipResiduals,
 			hostKey: escapeHostKey,
 			localStylesMaps,
 			pairKey: ownership.ownerPairKey,
@@ -121,6 +124,7 @@ export const useBoundaryPortalAttachment = ({
 		currentScreenKey,
 		enabled,
 		escapeHostKey,
+		filterClipResiduals,
 		localStylesMaps,
 		ownership,
 		requestedPortalHostName,

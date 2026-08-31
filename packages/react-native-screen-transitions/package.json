@@ -1,6 +1,6 @@
 {
 	"name": "react-native-screen-transitions",
-	"version": "3.9.0",
+	"version": "4.0.0",
 	"description": "Easy screen transitions for React Native and Expo",
 	"author": "Ed",
 	"license": "MIT",
@@ -79,13 +79,15 @@
 		"@react-navigation/native-stack": ">=7.0.0",
 		"@types/react": "*",
 		"@types/react-native": "*",
-		"react": "*",
-		"react-native": "*",
+		"react": ">=19.2.0",
+		"react-native": ">=0.86.0",
 		"react-native-gesture-handler": ">=2.16.1",
-		"react-native-reanimated": ">=3.16.0 || >=4.0.0-",
+		"react-native-reanimated": ">=4.5.0",
 		"react-native-safe-area-context": "*",
 		"react-native-screens": ">=4.4.0",
-		"react-native-teleport": ">=1.1.0 <1.1.11"
+		"react-native-smooth-clip-view": "^0.3.0",
+		"react-native-teleport": ">=1.1.0 <1.1.11",
+		"react-native-worklets": ">=0.10.0"
 	},
 	"peerDependenciesMeta": {
 		"react-native-teleport": {
@@ -94,9 +96,9 @@
 	},
 	"devDependencies": {
 		"@testing-library/react-native": "13.3.3",
-		"@types/react": "~19.1.0",
+		"@types/react": "~19.2.0",
 		"react-native-builder-bob": "0.41.0",
-		"react-test-renderer": "19.1.0",
+		"react-test-renderer": "19.2.3",
 		"typescript": "catalog:"
 	},
 	"react-native-builder-bob": {

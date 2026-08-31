@@ -1,6 +1,7 @@
 import type { MeasuredDimensions } from "react-native-reanimated";
 import { interpolate } from "react-native-reanimated";
 import type {
+	AnimatedViewStyle,
 	ScreenTransitionState,
 	TransitionSlotStyle,
 } from "../../../../types/animation.types";
@@ -16,8 +17,10 @@ import {
 	interpolateClamped,
 	resolveAspectRatioMaskHeight,
 } from "../reveal/math";
+import { adaptZoomNavigationMaskClip } from "./adapter";
 import { ZOOM_SHARED_OPTIONS } from "./config";
 import type { ZoomDragState } from "./drag";
+import { projectZoomNavigationMaskClip } from "./projector";
 
 export const ZOOM_NAVIGATION_MASK_BORDER_RADIUS = 64;
 const ZOOM_VERTICAL_DRAG_MASK_COLLAPSE_SCALE = 0.8;
@@ -108,26 +111,34 @@ export function resolveZoomNavigationMaskStyle({
 		link.initialSource?.styles.borderRadius,
 		sourceBorderRadius,
 	);
+	const maskRadius = interpolate(
+		transitionProgress,
+		[0, 1],
+		[initialSourceBorderRadius, active.animating ? expandedBorderRadius : 0],
+		"clamp",
+	);
+	const compensatedMaskScale = 1 / contentTransform.scale;
+	const legacyStyle: AnimatedViewStyle = {
+		width: maskWidth,
+		height: renderedMaskHeight,
+		borderRadius: maskRadius,
+		borderCurve: "continuous",
+		transform: [
+			{ translateX: compensatedMaskTranslateX },
+			{ translateY: compensatedMaskTranslateY },
+			{ scale: compensatedMaskScale },
+		],
+	};
 
-	return {
-		style: {
+	return adaptZoomNavigationMaskClip({
+		projectedClip: projectZoomNavigationMaskClip({
 			width: maskWidth,
 			height: renderedMaskHeight,
-			borderRadius: interpolate(
-				transitionProgress,
-				[0, 1],
-				[
-					initialSourceBorderRadius,
-					active.animating ? expandedBorderRadius : 0,
-				],
-				"clamp",
-			),
-			borderCurve: "continuous",
-			transform: [
-				{ translateX: compensatedMaskTranslateX },
-				{ translateY: compensatedMaskTranslateY },
-				{ scale: 1 / contentTransform.scale },
-			],
-		},
-	};
+			translateX: compensatedMaskTranslateX,
+			translateY: compensatedMaskTranslateY,
+			scale: compensatedMaskScale,
+			radius: maskRadius,
+		}),
+		legacyStyle,
+	});
 }

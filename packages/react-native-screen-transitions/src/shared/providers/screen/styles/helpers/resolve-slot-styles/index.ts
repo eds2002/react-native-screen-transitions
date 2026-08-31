@@ -43,9 +43,10 @@ const hasDefinedBucketValue = (value: unknown) => {
 const hasEitherResetPatch = (
 	hasStyleResetPatch: boolean,
 	hasPropResetPatch: boolean,
+	hasClipResetPatch: boolean,
 ) => {
 	"worklet";
-	return hasStyleResetPatch || hasPropResetPatch;
+	return hasStyleResetPatch || hasPropResetPatch || hasClipResetPatch;
 };
 
 const hasResettableDisappearedKeys = (
@@ -91,9 +92,11 @@ const getResolvedSlotOutput = ({
 		previousState?.propResetValues,
 		state.propKeys,
 	);
+	const hasClipResetPatch = previousState?.hadClip === true && !state.hasClip;
 	const hasResetPatch = hasEitherResetPatch(
 		hasStyleResetPatch,
 		hasPropResetPatch,
+		hasClipResetPatch,
 	);
 
 	if (!hasResetPatch) {
@@ -107,14 +110,17 @@ const getResolvedSlotOutput = ({
 		resolvedSlot: materializeResolvedSlot({
 			baseStyle: state.baseStyle,
 			baseProps: state.baseProps,
+			clip: state.clip,
 			boundsLocalTransform: slot?.boundsLocalTransform,
 			previousState,
 			styleKeys: state.styleKeys,
 			propKeys: state.propKeys,
 			hasAnyStyleKeys: state.hasAnyStyleKeys,
 			hasAnyPropKeys: state.hasAnyPropKeys,
+			hasClip: state.hasClip,
 			hasStyleResetPatch,
 			hasPropResetPatch,
+			hasClipResetPatch,
 		}),
 		nextState: state.nextState,
 	};
@@ -165,6 +171,8 @@ const getMergedLocalSlot = (
 	"worklet";
 	let mergedStyle: Record<string, unknown> | undefined;
 	let mergedProps: Record<string, unknown> | undefined;
+	let mergedClip: NormalizedTransitionSlotStyle["clip"];
+	let hasMergedClip = false;
 	let boundsLocalTransform:
 		| NormalizedTransitionSlotStyle["boundsLocalTransform"]
 		| undefined;
@@ -181,18 +189,23 @@ const getMergedLocalSlot = (
 			slot.style as Record<string, unknown> | undefined,
 		);
 		mergedProps = mergeBucket(mergedProps, slot.props);
+		if (slot.clip !== undefined) {
+			mergedClip = slot.clip;
+			hasMergedClip = true;
+		}
 		if (slot.boundsLocalTransform?.length) {
 			boundsLocalTransform = slot.boundsLocalTransform;
 		}
 	}
 
-	if (!mergedStyle && !mergedProps && !boundsLocalTransform) {
+	if (!mergedStyle && !mergedProps && !hasMergedClip && !boundsLocalTransform) {
 		return undefined;
 	}
 
 	return {
 		style: mergedStyle,
 		props: mergedProps,
+		clip: hasMergedClip ? mergedClip : undefined,
 		boundsLocalTransform,
 	};
 };
@@ -336,6 +349,42 @@ const areFlatObjectsEqual = (left: unknown, right: unknown): boolean => {
 	return true;
 };
 
+const areClipPresentationsEqual = (
+	left: NormalizedTransitionSlotStyle["clip"],
+	right: NormalizedTransitionSlotStyle["clip"],
+) => {
+	"worklet";
+	if (left === right) {
+		return true;
+	}
+
+	if (!left || !right) {
+		return false;
+	}
+
+	const leftClip = left.clip;
+	const rightClip = right.clip;
+
+	return (
+		leftClip.x === rightClip.x &&
+		leftClip.y === rightClip.y &&
+		leftClip.width === rightClip.width &&
+		leftClip.height === rightClip.height &&
+		(leftClip.topLeftRadius ?? leftClip.radius) ===
+			(rightClip.topLeftRadius ?? rightClip.radius) &&
+		(leftClip.topRightRadius ?? leftClip.radius) ===
+			(rightClip.topRightRadius ?? rightClip.radius) &&
+		(leftClip.bottomRightRadius ?? leftClip.radius) ===
+			(rightClip.bottomRightRadius ?? rightClip.radius) &&
+		(leftClip.bottomLeftRadius ?? leftClip.radius) ===
+			(rightClip.bottomLeftRadius ?? rightClip.radius) &&
+		(leftClip.curve ?? "circular") === (rightClip.curve ?? "circular") &&
+		left.contentTranslateX === right.contentTranslateX &&
+		left.contentTranslateY === right.contentTranslateY &&
+		(left.contentScale ?? 1) === (right.contentScale ?? 1)
+	);
+};
+
 const areSlotsEqual = (
 	left: NormalizedTransitionSlotStyle | undefined,
 	right: NormalizedTransitionSlotStyle | undefined,
@@ -352,6 +401,7 @@ const areSlotsEqual = (
 	return (
 		areFlatObjectsEqual(left.style, right.style) &&
 		areFlatObjectsEqual(left.props, right.props) &&
+		areClipPresentationsEqual(left.clip, right.clip) &&
 		areTransformArraysEqual(
 			left.boundsLocalTransform,
 			right.boundsLocalTransform,

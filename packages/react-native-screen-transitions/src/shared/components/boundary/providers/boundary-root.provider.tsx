@@ -20,6 +20,7 @@ import type { BoundTag } from "../../../stores/bounds/types";
 import createProvider from "../../../utils/create-provider";
 import { logger } from "../../../utils/logger";
 import { useBoundaryMeasurement } from "../hooks/use-boundary-measurement";
+import { resolveBoundaryPortalRenderOwnership } from "../portal/utils/render-ownership";
 import {
 	type BoundaryPortalRuntime,
 	resolveBoundaryPortal,
@@ -40,6 +41,8 @@ interface BoundaryRootContextValue extends BoundaryRootRenderState {
 	activeTargetRef: AnimatedRef<View> | null;
 	boundTag: BoundTag;
 	portalRuntime: BoundaryPortalRuntime;
+	/** The root owns escape/handoff even when a nested target owns measurement. */
+	wholeHostPortal: boolean;
 }
 
 type BoundaryTargetEntry = {
@@ -77,6 +80,7 @@ type BoundaryRootProviderProps = Pick<
 	forwardedRef?: ForwardedRef<any>;
 	id: BoundaryId;
 	style?: unknown;
+	wholeHostPortal?: boolean;
 };
 
 export const {
@@ -97,6 +101,7 @@ export const {
 		handoff,
 		id,
 		style,
+		wholeHostPortal = false,
 	}) => {
 		const requestedBoundTag = useMemo(
 			() => createBoundTag(String(id), group),
@@ -198,9 +203,14 @@ export const {
 			config,
 		});
 
-		const shouldRenderBoundaryRootThroughPortal =
-			shouldEscapeBoundaryRootToScreenHost && !hasActiveTarget;
 		const handoffEnabled = enabled && portalRuntime.handoff;
+		const { shouldRenderBoundaryRootThroughPortal, shouldRenderHandoffHost } =
+			resolveBoundaryPortalRenderOwnership({
+				escapeClipping: shouldEscapeBoundaryRootToScreenHost,
+				handoffEnabled,
+				hasActiveTarget,
+				wholeHostPortal,
+			});
 		// A nested active target takes the full associated style, so the root keeps
 		// only its stacking context. Root-owned escape-clipping moves the root
 		// through a screen host, so its associated style is applied through the
@@ -228,22 +238,24 @@ export const {
 				ref: rootRef,
 				rootEscapePlaceholderRef,
 				shouldRenderBoundaryRootThroughPortal,
-				shouldRenderHandoffHost: handoffEnabled && !hasActiveTarget,
+				shouldRenderHandoffHost,
 				unregisterTargetRef,
+				wholeHostPortal,
 			}),
 			[
 				attachedStyle,
 				boundTag,
 				currentScreenKey,
 				handoffEnabled,
-				hasActiveTarget,
 				portalRuntime,
 				registerTargetRef,
 				rootRef,
 				rootEscapePlaceholderRef,
 				shouldRenderBoundaryRootThroughPortal,
+				shouldRenderHandoffHost,
 				targetEntry,
 				unregisterTargetRef,
+				wholeHostPortal,
 			],
 		);
 

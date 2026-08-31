@@ -1,4 +1,4 @@
-import { memo, useCallback } from "react";
+import { memo } from "react";
 import { StyleSheet, View, type ViewProps } from "react-native";
 import Animated from "react-native-reanimated";
 import {
@@ -6,32 +6,34 @@ import {
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 } from "../../../constants";
 import { useSlotStyles } from "../../../providers/screen/styles";
-import { logger } from "../../../utils/logger";
+import { REVEAL_CLIP_NATIVE_PLAN } from "../../../utils/bounds/navigation/reveal/native-plan";
+import { ZOOM_CLIP_NATIVE_PLAN } from "../../../utils/bounds/navigation/zoom/native-plan";
+import type { TransitionClipMaximumSize } from "../../clip-view";
+import { LegacyGeometricClipView } from "../../legacy-geometric-clip-view";
 
 type Props = {
 	enabled: boolean;
 	children: React.ReactNode;
 	pointerEvents: ViewProps["pointerEvents"];
+	maximumSize: TransitionClipMaximumSize;
 };
 
-let LazyMaskedView = View;
-
-try {
-	LazyMaskedView = require("@react-native-masked-view/masked-view").default;
-} catch (_) {
-	// optional peer dependency
-}
-
-let hasWarnedMissingMaskedView = false;
+const BUILT_IN_NAVIGATION_MASK_CLIP_PLANS = [
+	ZOOM_CLIP_NATIVE_PLAN,
+	REVEAL_CLIP_NATIVE_PLAN,
+] as const;
 
 export const MaybeMaskedNavigationContainer = memo(
-	({ enabled, children, pointerEvents }: Props) => {
-		if (!enabled || LazyMaskedView === View) {
+	({ enabled, children, maximumSize, pointerEvents }: Props) => {
+		if (!enabled) {
 			return children;
 		}
 
 		return (
-			<MaskedNavigationContainer pointerEvents={pointerEvents}>
+			<MaskedNavigationContainer
+				maximumSize={maximumSize}
+				pointerEvents={pointerEvents}
+			>
 				{children}
 			</MaskedNavigationContainer>
 		);
@@ -41,51 +43,45 @@ export const MaybeMaskedNavigationContainer = memo(
 const MaskedNavigationContainer = memo(
 	({
 		children,
+		maximumSize,
 		pointerEvents,
 	}: {
 		children: React.ReactNode;
+		maximumSize: TransitionClipMaximumSize;
 		pointerEvents: ViewProps["pointerEvents"];
 	}) => {
-		const maybeLogWarning = useCallback(() => {
-			if (LazyMaskedView !== View) return;
-			if (hasWarnedMissingMaskedView) return;
-
-			hasWarnedMissingMaskedView = true;
-			logger.warn(
-				"navigationMaskEnabled requires @react-native-masked-view/masked-view. Install it to enable navigation bounds masking.",
-			);
-		}, []);
-
-		const animatedNavigationMaskStyle = useSlotStyles(
-			NAVIGATION_MASK_ELEMENT_STYLE_ID,
-		);
 		const animatedNavigationMaskContainerStyle = useSlotStyles(
 			NAVIGATION_MASK_CONTAINER_STYLE_ID,
 		);
+		const content = (
+			<Animated.View
+				style={[
+					styles.navigationContainer,
+					animatedNavigationMaskContainerStyle,
+				]}
+				collapsable={false}
+			>
+				{children}
+			</Animated.View>
+		);
 
 		return (
-			<LazyMaskedView
-				style={styles.navigationMaskedRoot}
-				// @ts-expect-error masked-view package types are too strict here
-				maskElement={
-					<Animated.View
-						style={[styles.navigationMaskElement, animatedNavigationMaskStyle]}
-						pointerEvents="none"
-					/>
-				}
+			<View
+				style={[
+					styles.navigationMaskedRoot,
+					{ height: maximumSize.height, width: maximumSize.width },
+				]}
+				collapsable={false}
 				pointerEvents={pointerEvents}
-				onLayout={maybeLogWarning}
 			>
-				<Animated.View
-					style={[
-						styles.navigationContainer,
-						animatedNavigationMaskContainerStyle,
-					]}
-					collapsable={false}
+				<LegacyGeometricClipView
+					maximumSize={maximumSize}
+					styleId={NAVIGATION_MASK_ELEMENT_STYLE_ID}
+					trustedPlans={BUILT_IN_NAVIGATION_MASK_CLIP_PLANS}
 				>
-					{children}
-				</Animated.View>
-			</LazyMaskedView>
+					{content}
+				</LegacyGeometricClipView>
+			</View>
 		);
 	},
 );
@@ -96,8 +92,5 @@ const styles = StyleSheet.create({
 	},
 	navigationContainer: {
 		flex: 1,
-	},
-	navigationMaskElement: {
-		backgroundColor: "white",
 	},
 });

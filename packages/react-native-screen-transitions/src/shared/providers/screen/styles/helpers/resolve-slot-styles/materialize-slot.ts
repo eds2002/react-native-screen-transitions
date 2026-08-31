@@ -111,25 +111,31 @@ const materializeResolvedProps = ({
 export const materializeResolvedSlot = ({
 	baseStyle,
 	baseProps,
+	clip,
 	boundsLocalTransform,
 	previousState,
 	styleKeys,
 	propKeys,
 	hasAnyStyleKeys,
 	hasAnyPropKeys,
+	hasClip,
 	hasStyleResetPatch,
 	hasPropResetPatch,
+	hasClipResetPatch,
 }: {
 	baseStyle: Record<string, unknown> | undefined;
 	baseProps: Record<string, unknown> | undefined;
+	clip: NormalizedTransitionSlotStyle["clip"];
 	boundsLocalTransform: NormalizedTransitionSlotStyle["boundsLocalTransform"];
 	previousState: ResettableStyleState | undefined;
 	styleKeys: Record<string, true> | undefined;
 	propKeys: Record<string, true> | undefined;
 	hasAnyStyleKeys: boolean;
 	hasAnyPropKeys: boolean;
+	hasClip: boolean;
 	hasStyleResetPatch: boolean;
 	hasPropResetPatch: boolean;
+	hasClipResetPatch: boolean;
 }) => {
 	"worklet";
 	const resolvedSlot = {} as NormalizedTransitionSlotStyle;
@@ -151,9 +157,15 @@ export const materializeResolvedSlot = ({
 
 	resolvedSlot.style = resolvedStyle;
 	resolvedSlot.props = resolvedProps;
+	resolvedSlot.clip = hasClip ? clip : hasClipResetPatch ? null : undefined;
 	resolvedSlot.boundsLocalTransform = boundsLocalTransform;
 
-	if (!resolvedSlot.style && !resolvedSlot.props) {
+	if (
+		!resolvedSlot.style &&
+		!resolvedSlot.props &&
+		resolvedSlot.clip === undefined &&
+		!resolvedSlot.boundsLocalTransform
+	) {
 		return undefined;
 	}
 

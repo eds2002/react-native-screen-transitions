@@ -3,8 +3,13 @@ import { Pressable, StyleSheet } from "react-native";
 import Animated, { runOnUI } from "react-native-reanimated";
 import { DefaultSnapSpec } from "../../../configs/specs";
 import { useNavigationHelpers } from "../../../hooks/navigation/use-navigation-helpers";
+import { useIgnoredClipSlot } from "../../../providers/screen/clip/clip-stream.provider";
 import { useDescriptors } from "../../../providers/screen/descriptors";
-import { useSlotProps, useSlotStyles } from "../../../providers/screen/styles";
+import {
+	useScreenSlots,
+	useSlotProps,
+	useSlotStyles,
+} from "../../../providers/screen/styles";
 import { AnimationStore } from "../../../stores/animation.store";
 import { GestureStore } from "../../../stores/gesture.store";
 import { SystemStore } from "../../../stores/system.store";
@@ -114,6 +119,8 @@ export const BackdropLayer = memo(function BackdropLayer({
 
 	const animatedBackdropStyle = useSlotStyles("backdrop");
 	const animatedBackdropProps = useSlotProps("backdrop");
+	const { slotsMap } = useScreenSlots();
+	useIgnoredClipSlot("backdrop", slotsMap);
 	const backdropPointerEvents = isBackdropActive ? "auto" : "none";
 	const backdropStyles = [
 		StyleSheet.absoluteFill,

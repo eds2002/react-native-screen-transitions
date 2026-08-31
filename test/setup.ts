@@ -57,6 +57,91 @@ mock.module("react-native", () => ({
 			obj.ios ?? obj.default,
 	},
 }));
+mock.module("react-native-smooth-clip-view", () => {
+	let nextSmoothClipDriverId = 1;
+	const canonicalizeClipPresentation = (presentation: any) => {
+		const clip = presentation?.clip;
+		const radius = clip?.radius ?? 0;
+		const values = [
+			clip?.x,
+			clip?.y,
+			clip?.width,
+			clip?.height,
+			clip?.topLeftRadius ?? radius,
+			clip?.topRightRadius ?? radius,
+			clip?.bottomRightRadius ?? radius,
+			clip?.bottomLeftRadius ?? radius,
+			presentation?.contentTranslateX ?? 0,
+			presentation?.contentTranslateY ?? 0,
+			presentation?.contentScale ?? 1,
+		];
+		if (values.some((value) => !Number.isFinite(value)) || values[10] <= 0) {
+			return null;
+		}
+		return {
+			clip: {
+				x: values[0],
+				y: values[1],
+				width: values[2],
+				height: values[3],
+				topLeftRadius: values[4],
+				topRightRadius: values[5],
+				bottomRightRadius: values[6],
+				bottomLeftRadius: values[7],
+				curve: clip?.curve ?? "circular",
+			},
+			contentTranslateX: values[8],
+			contentTranslateY: values[9],
+			contentScale: values[10],
+		};
+	};
+	return {
+		SmoothClipView: "SmoothClipView",
+		canonicalizeClipPresentation,
+		getSmoothClipCapabilities: () => ({
+			presentationProtocolVersion: 2,
+			groups: true,
+			perCornerRadii: true,
+			continuousCurve: true,
+			contentScale: true,
+			autonomousComplexPathAnimation: false,
+		}),
+		useSmoothClipDriver: (initial: any) => {
+			const presentation = createTestMutable(initial);
+			return {
+				kind: "hybrid",
+				presentation,
+				ui: {},
+				react: {},
+				__smoothClipHandle: {
+					driverId: nextSmoothClipDriverId++,
+					presentation,
+					ownership: createTestMutable(0),
+					activeAnimationId: createTestMutable(0),
+					disposed: createTestMutable(0),
+					ready: createTestMutable(1),
+				},
+			};
+		},
+		useSmoothClipGroupDriver: () => ({
+			kind: "group",
+			ui: {
+				beginInteraction: () => [],
+				snapshotCurrent: () => [],
+				setBatch: () => {},
+				animateTo: () => 1,
+				cancel: () => [],
+			},
+			react: {
+				beginInteraction: async () => [],
+				snapshotCurrent: async () => [],
+				setBatch: async () => {},
+				animateTo: async () => 1,
+				cancel: async () => [],
+			},
+		}),
+	};
+});
 mock.module("react-native-gesture-handler", () => ({}));
 mock.module("react-native-reanimated", () => ({
 	makeMutable: createTestMutable,

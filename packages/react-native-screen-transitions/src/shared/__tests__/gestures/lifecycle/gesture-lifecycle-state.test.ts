@@ -4,11 +4,13 @@ import {
 	finalizePanRelease,
 	startPanBase,
 } from "../../../providers/screen/gestures/pan/behavior/pan-lifecycle";
+import { resetPanGestureValues } from "../../../providers/screen/gestures/pan/behavior/pan-reset";
 import type { GestureCompositionOwner } from "../../../providers/screen/gestures/types";
 import {
 	finalizePinchRelease,
 	startPinchBase,
 } from "../../../providers/screen/gestures/pinch/behavior/pinch-lifecycle";
+import { resetPinchGestureValues } from "../../../providers/screen/gestures/pinch/behavior/pinch-reset";
 import { updateAbsolutePinchFocalPoint } from "../../../providers/screen/gestures/pinch/activation/use-pinch-activation";
 import type { AnimationStoreMap } from "../../../stores/animation.store";
 import type { GestureStoreMap } from "../../../stores/gesture.store";
@@ -173,6 +175,35 @@ afterEach(() => {
 });
 
 describe("gesture lifecycle state", () => {
+	it("reports pan and pinch geometric reset completion by request id", () => {
+		const pan = createGestureStore();
+		const pinch = createGestureStore();
+		const completions: [number, boolean][] = [];
+		const callback = (completionId: number, finished: boolean) => {
+			completions.push([completionId, finished]);
+		};
+
+		resetPanGestureValues({
+			plan: {
+				shouldDismiss: true,
+				resetSpec: undefined,
+			} as any,
+			gestures: pan,
+			identifiedCompletion: { callback, completionId: 41 },
+		});
+		resetPinchGestureValues({
+			spec: undefined,
+			gestures: pinch,
+			shouldDismiss: true,
+			identifiedCompletion: { callback, completionId: 42 },
+		});
+
+		expect(completions).toEqual([
+			[41, true],
+			[42, true],
+		]);
+	});
+
 	it("marks opening as entering before the willAnimate pulse is observed", () => {
 		const raf = installDeferredAnimationFrame();
 		const animations = createAnimations();

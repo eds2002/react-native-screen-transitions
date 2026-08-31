@@ -10,6 +10,7 @@ import {
 	getClampedScrollAxisDelta,
 	ScrollStore,
 } from "../../../../../../stores/scroll.store";
+import { resolveClipVisualCarrierStyle } from "../../../../../clip-view/helpers";
 import type { ScrollMeasuredDimensions } from "../../../../utils/measured-bounds";
 import { NativePortalHost, PORTAL_POINTER_EVENTS } from "../../../teleport";
 import { hasLocalSlot } from "../helpers/has-local-slot";
@@ -127,11 +128,15 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 
 		const slot = host.slotsMap.get()[host.boundaryId];
 
-		return composeSlotStyleWithLocalTransform(
+		const composed = composeSlotStyleWithLocalTransform(
 			slot?.style ?? NO_STYLES,
 			undefined,
 			slot?.boundsLocalTransform,
 		);
+
+		return host.filterClipResiduals
+			? resolveClipVisualCarrierStyle(composed, slot?.clip != null)
+			: composed;
 	});
 
 	// Without `react-native-teleport` no portal ever mounts a boundary host, so

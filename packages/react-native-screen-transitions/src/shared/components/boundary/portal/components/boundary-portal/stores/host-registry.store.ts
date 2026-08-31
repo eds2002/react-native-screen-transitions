@@ -1,4 +1,8 @@
 import { useSyncExternalStore } from "react";
+import {
+	globalSmoothClipCoordinatorRuntime,
+	INTERNAL_SMOOTH_CLIP_NATIVE_PROMOTION,
+} from "../../../../../../providers/screen/clips/coordinator/runtime-store";
 
 export type HostRegistration = {
 	hostKey: string;
@@ -92,6 +96,11 @@ export const registerHost = (registration: HostRegistration) => {
 	}
 
 	emit();
+	if (INTERNAL_SMOOTH_CLIP_NATIVE_PROMOTION) {
+		globalSmoothClipCoordinatorRuntime.notifyPortalChanged(
+			registration.screenKey,
+		);
+	}
 };
 
 export const unregisterHost = (screenKey: string, hostKey: string) => {
@@ -114,6 +123,9 @@ export const unregisterHost = (screenKey: string, hostKey: string) => {
 	}
 
 	emit();
+	if (INTERNAL_SMOOTH_CLIP_NATIVE_PROMOTION) {
+		globalSmoothClipCoordinatorRuntime.notifyPortalChanged(screenKey);
+	}
 };
 
 export const getActiveHostKey = (screenKey: string) => {

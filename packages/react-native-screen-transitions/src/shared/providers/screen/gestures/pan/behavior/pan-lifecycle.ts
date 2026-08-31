@@ -3,6 +3,12 @@ import { EPSILON, FALSE, TRUE } from "../../../../../constants";
 import { animateToProgress } from "../../../../../utils/animation/animate-to-progress";
 import { emit } from "../../../../../utils/animation/emit";
 import {
+	type ClipStreamCanonicalSnapshot,
+	flushClipStreamRouteOnUI,
+} from "../../../clip/clip-stream-ui";
+import { resolveSmoothClipNativeAnimation } from "../../../clips/coordinator/native-animation";
+import type { SmoothClipGestureCompletion } from "../../shared/clip-completion";
+import {
 	normalizeGestureTranslation,
 	resolveGestureVelocity,
 } from "../../shared/physics";
@@ -95,6 +101,36 @@ export const trackPanGesture = (
 	};
 };
 
+export const sampleFinalPanGestureAndFlush = (
+	event: PanGestureEvent,
+	rawEvent: PanGestureEvent,
+	gestures: PanGestureRuntime["stores"]["gestures"],
+	dimensions: GestureDimensions,
+	routeKey: string,
+): readonly ClipStreamCanonicalSnapshot[] => {
+	"worklet";
+	return trackPanGestureAndFlush(
+		event,
+		rawEvent,
+		gestures,
+		dimensions,
+		routeKey,
+	);
+};
+
+/** Tracks and atomically batches one built-in interactive pan frame. */
+export const trackPanGestureAndFlush = (
+	event: PanGestureEvent,
+	rawEvent: PanGestureEvent,
+	gestures: PanGestureRuntime["stores"]["gestures"],
+	dimensions: GestureDimensions,
+	routeKey: string,
+): readonly ClipStreamCanonicalSnapshot[] => {
+	"worklet";
+	trackPanGesture(event, rawEvent, gestures, dimensions);
+	return flushClipStreamRouteOnUI(routeKey);
+};
+
 export const finalizePanRelease = (
 	release: PanReleaseResult,
 	runtime: PanGestureRuntime,
@@ -103,6 +139,7 @@ export const finalizePanRelease = (
 	rawEvent: PanGestureEvent,
 	requestDismiss?: () => void,
 	gestureCompositionOwner?: SharedValue<GestureCompositionOwner>,
+	smoothClipCompletion?: SmoothClipGestureCompletion,
 ) => {
 	"worklet";
 	const {
@@ -138,11 +175,32 @@ export const finalizePanRelease = (
 			velocity: plan.handoffVelocity,
 		});
 	}
+	const coordinatedCompletion =
+		canDriveRelease && plan.shouldDismiss ? smoothClipCompletion : undefined;
+	if (coordinatedCompletion) {
+		runOnJS(coordinatedCompletion.begin)(
+			coordinatedCompletion.completionId,
+			coordinatedCompletion.snapshots,
+			plan.target,
+			resolveSmoothClipNativeAnimation(
+				plan.target === 0
+					? plan.transitionSpec?.close
+					: plan.transitionSpec?.open,
+				"gesture-release",
+			),
+		);
+	}
 
 	resetPanGestureValues({
 		plan,
 		gestures,
 		updateLifecycle: canDriveRelease,
+		identifiedCompletion: coordinatedCompletion
+			? {
+					callback: coordinatedCompletion.completeReset,
+					completionId: coordinatedCompletion.completionId,
+				}
+			: undefined,
 	});
 
 	if (!canDriveRelease) {
@@ -164,7 +222,11 @@ export const finalizePanRelease = (
 
 	animateToProgress({
 		target: plan.target,
-		onAnimationFinish: plan.shouldDismiss ? dismissScreen : undefined,
+		onAnimationFinish:
+			plan.shouldDismiss && !coordinatedCompletion ? dismissScreen : undefined,
+		onIdentifiedAnimationFinish: coordinatedCompletion?.completeReanimated,
+		completionId: coordinatedCompletion?.completionId,
+		deferClosePaintBarrier: coordinatedCompletion !== undefined,
 		spec: plan.transitionSpec,
 		emitWillAnimate: false,
 		markEntering: false,

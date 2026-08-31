@@ -1,6 +1,7 @@
 import type { TextStyle, ViewStyle } from "react-native";
 import type { StyleProps, TransformArrayItem } from "react-native-reanimated";
 import type { EdgeInsets } from "react-native-safe-area-context";
+import type { SmoothClipPresentation as TransitionClipPresentation } from "react-native-smooth-clip-view";
 import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
@@ -10,6 +11,8 @@ import type { BoundsAccessor } from "./bounds.types";
 import type { GestureValues } from "./gesture.types";
 import type { ScreenLayouts, ScreenTransitionConfig } from "./screen.types";
 import type { BaseStackRoute } from "./stack.types";
+
+export type { SmoothClipPresentation as TransitionClipPresentation } from "react-native-smooth-clip-view";
 
 /**
  * Public screen option values exposed to `screenStyleInterpolator`.
@@ -318,6 +321,14 @@ type TransitionSlotDefinition = {
 	style?: AnimatedViewStyle;
 	/** Animated props applied via `useAnimatedProps`. */
 	props?: TransitionSlotProps;
+	/**
+	 * Canonical SmoothClip presentation consumed by a matching
+	 * `Transition.ClipView` slot.
+	 *
+	 * The presentation is an atomic channel: higher-priority transition layers
+	 * replace the whole object rather than merging individual fields.
+	 */
+	clip?: TransitionClipPresentation;
 };
 
 /**
@@ -325,7 +336,7 @@ type TransitionSlotDefinition = {
  *
  * Can be written in two forms:
  * - **Shorthand**: Write styles directly — `{ opacity: 0.5, transform: [...] }`
- * - **Explicit**: Use `style` and/or `props` buckets — `{ style: { opacity: 0.5 }, props: { intensity: 80 } }`
+ * - **Explicit**: Use `style`, `props`, and/or `clip` buckets — `{ style: { opacity: 0.5 }, clip: presentation }`
  */
 export type TransitionSlotStyle = AnimatedViewStyle | TransitionSlotDefinition;
 
@@ -352,6 +363,11 @@ export type TransitionInterpolatorOptions = Omit<
 export type NormalizedTransitionSlotStyle = {
 	style?: StyleProps;
 	props?: TransitionSlotProps;
+	/**
+	 * A canonical clip presentation. `null` is an internal reset marker that
+	 * tells clip consumers to restore their base presentation.
+	 */
+	clip?: TransitionClipPresentation | null;
 	boundsLocalTransform?: TransformArrayItem[];
 };
 

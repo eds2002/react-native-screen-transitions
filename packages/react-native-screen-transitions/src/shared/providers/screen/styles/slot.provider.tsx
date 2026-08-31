@@ -7,6 +7,7 @@ import type {
 } from "../../../constants";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
 import createProvider from "../../../utils/create-provider";
+import { ScreenClipStreamProvider } from "../clip/clip-stream.provider";
 import { useDescriptorsStore } from "../descriptors";
 import { FloatingOverlayLayer } from "./components/floating-overlay-layer";
 import type { LocalStyleLayers } from "./helpers/resolve-slot-styles";
@@ -78,14 +79,18 @@ export const {
 	return {
 		value,
 		children: (
-			<FloatingOverlayLayer enabled={isFloatingOverlay}>
-				<Animated.View
-					style={[styles.container, animatedStyle]}
-					animatedProps={animatedProps}
-				>
-					{children}
-				</Animated.View>
-			</FloatingOverlayLayer>
+			<ScreenClipStreamProvider
+				kind={isFloatingOverlay ? "float-overlay" : "screen"}
+			>
+				<FloatingOverlayLayer enabled={isFloatingOverlay}>
+					<Animated.View
+						style={[styles.container, animatedStyle]}
+						animatedProps={animatedProps}
+					>
+						{children}
+					</Animated.View>
+				</FloatingOverlayLayer>
+			</ScreenClipStreamProvider>
 		),
 	};
 });

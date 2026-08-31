@@ -5,11 +5,13 @@ import {
 	View,
 	type ViewProps,
 } from "react-native";
+import { BoundaryClipView } from "./clip-view";
 import { BoundaryTarget } from "./components/boundary-target";
 import { createBoundaryComponent } from "./create-boundary-component";
 import { Host } from "./portal";
 import type { BoundaryComponentProps } from "./types";
 
+export type { BoundaryClipViewProps } from "./clip-view";
 export { createBoundaryComponent };
 
 type BoundaryPrimitiveProps = Omit<ViewProps, "id" | "style"> &
@@ -56,6 +58,8 @@ type BoundaryRootComponent = typeof BoundaryRoot;
  * - `Boundary.Host` to make clipping-escape host placement explicit.
  */
 export interface BoundaryComponent extends BoundaryRootComponent {
+	/** Fixed-footprint boundary whose aperture is driven by the matching clip slot. */
+	ClipView: typeof BoundaryClipView;
 	/**
 	 * Optional nested measurement override inside a boundary root.
 	 */
@@ -77,6 +81,7 @@ export interface BoundaryComponent extends BoundaryRootComponent {
 export type BoundaryProps = BoundaryComponentProps<BoundaryPrimitiveProps>;
 
 export const Boundary = Object.assign(BoundaryRoot, {
+	ClipView: BoundaryClipView,
 	Target: BoundaryTarget,
 	Host,
 	View: BoundaryView,

@@ -6,8 +6,6 @@ export const REVEAL_BORDER_RADIUS = Platform.select({
 	default: 36,
 });
 
-export const REVEAL_USES_TRANSFORM_MASK = Platform.OS === "android";
-
 export const DRAG_DIRECTIONAL_SCALE_MIN = 0.25;
 export const DRAG_DIRECTIONAL_SCALE_MAX = 1.06;
 export const DRAG_DIRECTIONAL_SCALE_EXPONENT = 2;

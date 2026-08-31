@@ -50,9 +50,10 @@ const collectDefinedKeys = ({
 const hasEitherKeySet = (
 	styleKeys: Record<string, true> | undefined,
 	propKeys: Record<string, true> | undefined,
+	hasClip: boolean,
 ) => {
 	"worklet";
-	return styleKeys !== undefined || propKeys !== undefined;
+	return styleKeys !== undefined || propKeys !== undefined || hasClip;
 };
 
 const getNextStyleState = ({
@@ -60,15 +61,17 @@ const getNextStyleState = ({
 	styleResetValues,
 	propKeys,
 	propResetValues,
+	hasClip,
 }: {
 	styleKeys: Record<string, true> | undefined;
 	styleResetValues: Record<string, unknown> | undefined;
 	propKeys: Record<string, true> | undefined;
 	propResetValues: Record<string, unknown> | undefined;
+	hasClip: boolean;
 }): ResettableStyleState | undefined => {
 	"worklet";
 
-	if (!hasEitherKeySet(styleKeys, propKeys)) {
+	if (!hasEitherKeySet(styleKeys, propKeys, hasClip)) {
 		return undefined;
 	}
 
@@ -77,6 +80,7 @@ const getNextStyleState = ({
 		styleResetValues,
 		propKeys,
 		propResetValues,
+		hadClip: hasClip ? true : undefined,
 	};
 };
 
@@ -86,6 +90,8 @@ export const getResolvedSlotState = (
 	"worklet";
 	const baseStyle = slot?.style as Record<string, unknown> | undefined;
 	const baseProps = slot?.props as Record<string, unknown> | undefined;
+	const clip = slot?.clip;
+	const hasClip = clip !== undefined && clip !== null;
 
 	const {
 		keys: styleKeys,
@@ -111,12 +117,15 @@ export const getResolvedSlotState = (
 		propKeys,
 		hasAnyStyleKeys,
 		hasAnyPropKeys,
-		hasAnyKeys: hasAnyStyleKeys || hasAnyPropKeys,
+		clip,
+		hasClip,
+		hasAnyKeys: hasAnyStyleKeys || hasAnyPropKeys || hasClip,
 		nextState: getNextStyleState({
 			styleKeys,
 			styleResetValues,
 			propKeys,
 			propResetValues,
+			hasClip,
 		}),
 	};
 };

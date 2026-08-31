@@ -31,6 +31,7 @@ import type {
 	ScrollGestureAxisState,
 	ScrollGestureState,
 	ScrollMetadataState,
+	TransitionClipPresentation,
 	TransitionInterpolatedStyle,
 	TransitionSlotStyle,
 	TransitionSpec,
@@ -50,6 +51,24 @@ blockTransition("route-key");
 unblockTransition();
 unblockTransition("route-key");
 
+const clipPresentation: TransitionClipPresentation = {
+	clip: {
+		x: 0,
+		y: 0,
+		width: 320,
+		height: 640,
+		radius: 0,
+		topLeftRadius: 32,
+		topRightRadius: 32,
+		bottomRightRadius: 20,
+		bottomLeftRadius: 20,
+		curve: "continuous",
+	},
+	contentTranslateX: 0,
+	contentTranslateY: 0,
+	contentScale: 1,
+};
+
 const slotStyle: TransitionSlotStyle = {
 	style: {
 		opacity: 1,
@@ -57,7 +76,14 @@ const slotStyle: TransitionSlotStyle = {
 	props: {
 		intensity: 80,
 	},
+	clip: clipPresentation,
 };
+
+const invalidNullClip: TransitionSlotStyle = {
+	// @ts-expect-error null is reserved for the internal normalized reset marker.
+	clip: null,
+};
+void invalidNullClip;
 
 const nestedInterpolatedStyle: TransitionInterpolatedStyle = {
 	content: slotStyle,

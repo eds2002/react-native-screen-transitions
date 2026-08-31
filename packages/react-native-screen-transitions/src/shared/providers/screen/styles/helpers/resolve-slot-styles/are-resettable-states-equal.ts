@@ -45,7 +45,8 @@ const areResettableStatesEqual = (
 		areRecordsEqual(left.styleKeys, right.styleKeys) &&
 		areRecordsEqual(left.styleResetValues, right.styleResetValues) &&
 		areRecordsEqual(left.propKeys, right.propKeys) &&
-		areRecordsEqual(left.propResetValues, right.propResetValues)
+		areRecordsEqual(left.propResetValues, right.propResetValues) &&
+		left.hadClip === right.hadClip
 	);
 };
 

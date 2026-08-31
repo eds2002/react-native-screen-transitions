@@ -7,6 +7,8 @@ export type ResettableStyleState = {
 	styleResetValues?: Record<string, unknown>;
 	propKeys?: Record<string, true>;
 	propResetValues?: Record<string, unknown>;
+	/** The previous resolved slot owned a clip presentation. */
+	hadClip?: true;
 };
 
 export type ResettableStyleStatesBySlot = Record<string, ResettableStyleState>;

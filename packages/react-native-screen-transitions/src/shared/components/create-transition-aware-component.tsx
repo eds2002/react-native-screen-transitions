@@ -9,11 +9,16 @@ import Animated, {
 	useComposedEventHandler,
 } from "react-native-reanimated";
 import { RegisterBoundsProvider } from "../providers/register-bounds.provider";
+import { useIgnoredClipSlot } from "../providers/screen/clip/clip-stream.provider";
 import {
 	ScrollMetadataOwnerProvider,
 	useScrollGestureCoordination,
 } from "../providers/screen/gestures/scroll-coordination";
-import { useSlotProps, useSlotStyles } from "../providers/screen/styles";
+import {
+	useScreenSlots,
+	useSlotProps,
+	useSlotStyles,
+} from "../providers/screen/styles";
 import type { TransitionAwareProps } from "../types/screen.types";
 
 interface CreateTransitionAwareComponentOptions {
@@ -35,6 +40,8 @@ export function createTransitionAwareComponent<P extends object>(
 		React.ComponentRef<typeof Wrapped>,
 		TransitionAwareProps<P>
 	>((props: any, ref) => {
+		const { slotsMap } = useScreenSlots();
+		useIgnoredClipSlot(props.sharedBoundTag || props.styleId, slotsMap);
 		const {
 			remeasureOnFocus: _remeasureOnFocus,
 			onScroll: userOnScroll,
@@ -126,6 +133,8 @@ export function createTransitionAwareComponent<P extends object>(
 
 		const animatedRef = useAnimatedRef<View>();
 		const associatedId = sharedBoundTag || styleId;
+		const { slotsMap } = useScreenSlots();
+		useIgnoredClipSlot(associatedId, slotsMap);
 		const associatedStyles = useSlotStyles(associatedId);
 		const associatedProps = useSlotProps(associatedId);
 

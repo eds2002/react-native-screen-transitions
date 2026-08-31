@@ -2,6 +2,12 @@ import { clamp, runOnJS } from "react-native-reanimated";
 import { EPSILON, FALSE, TRUE } from "../../../../../constants";
 import { animateToProgress } from "../../../../../utils/animation/animate-to-progress";
 import { emit } from "../../../../../utils/animation/emit";
+import {
+	type ClipStreamCanonicalSnapshot,
+	flushClipStreamRouteOnUI,
+} from "../../../clip/clip-stream-ui";
+import { resolveSmoothClipNativeAnimation } from "../../../clips/coordinator/native-animation";
+import type { SmoothClipGestureCompletion } from "../../shared/clip-completion";
 import { normalizePinchScale } from "../../shared/physics";
 import { snapshotGestureHandoff } from "../../shared/snapshot";
 import { clearTransformTrackingValues } from "../../shared/values";
@@ -66,11 +72,34 @@ export const trackPinchGesture = (
 	};
 };
 
+export const sampleFinalPinchGestureAndFlush = (
+	event: PinchGestureEvent,
+	rawEvent: PinchGestureEvent,
+	gestures: PinchGestureRuntime["stores"]["gestures"],
+	routeKey: string,
+): readonly ClipStreamCanonicalSnapshot[] => {
+	"worklet";
+	return trackPinchGestureAndFlush(event, rawEvent, gestures, routeKey);
+};
+
+/** Tracks and atomically batches one built-in interactive pinch frame. */
+export const trackPinchGestureAndFlush = (
+	event: PinchGestureEvent,
+	rawEvent: PinchGestureEvent,
+	gestures: PinchGestureRuntime["stores"]["gestures"],
+	routeKey: string,
+): readonly ClipStreamCanonicalSnapshot[] => {
+	"worklet";
+	trackPinchGesture(event, rawEvent, gestures);
+	return flushClipStreamRouteOnUI(routeKey);
+};
+
 export const finalizePinchRelease = (
 	release: PinchReleaseResult,
 	runtime: PinchGestureRuntime,
 	dismissScreen: ((finished: boolean) => void) | undefined,
 	requestDismiss?: () => void,
+	smoothClipCompletion?: SmoothClipGestureCompletion,
 ) => {
 	"worklet";
 	const {
@@ -87,12 +116,34 @@ export const finalizePinchRelease = (
 			velocity: release.handoffVelocity,
 		});
 	}
+	const coordinatedCompletion = release.shouldDismiss
+		? smoothClipCompletion
+		: undefined;
+	if (coordinatedCompletion) {
+		runOnJS(coordinatedCompletion.begin)(
+			coordinatedCompletion.completionId,
+			coordinatedCompletion.snapshots,
+			release.target,
+			resolveSmoothClipNativeAnimation(
+				release.target === 0
+					? release.transitionSpec?.close
+					: release.transitionSpec?.open,
+				"gesture-release",
+			),
+		);
+	}
 
 	resetPinchGestureValues({
 		spec: release.resetSpec,
 		gestures,
 		shouldDismiss: release.shouldDismiss,
 		resetValuesImmediately: release.resetValuesImmediately,
+		identifiedCompletion: coordinatedCompletion
+			? {
+					callback: coordinatedCompletion.completeReset,
+					completionId: coordinatedCompletion.completionId,
+				}
+			: undefined,
 	});
 
 	if (release.shouldDismiss && requestDismiss) {
@@ -101,7 +152,13 @@ export const finalizePinchRelease = (
 
 	animateToProgress({
 		target: release.target,
-		onAnimationFinish: release.shouldDismiss ? dismissScreen : undefined,
+		onAnimationFinish:
+			release.shouldDismiss && !coordinatedCompletion
+				? dismissScreen
+				: undefined,
+		onIdentifiedAnimationFinish: coordinatedCompletion?.completeReanimated,
+		completionId: coordinatedCompletion?.completionId,
+		deferClosePaintBarrier: coordinatedCompletion !== undefined,
 		spec: release.transitionSpec,
 		emitWillAnimate: false,
 		markEntering: false,

@@ -1,6 +1,7 @@
 import type {
 	NormalizedTransitionInterpolatedStyle,
 	NormalizedTransitionSlotStyle,
+	TransitionInterpolatedStyle,
 } from "../types/animation.types";
 
 /**
@@ -8,14 +9,14 @@ import type {
  *
  * Handles three cases per key:
  * 1. Legacy renamed keys (`contentStyle` → `content`, `backdropStyle` → `backdrop`)
- * 2. Proper `TransitionSlotStyle` values (has `style` or `props` key) — pass through
+ * 2. Proper `TransitionSlotStyle` values (has `style`, `props`, or `clip` key) — pass through
  * 3. Style shorthand (plain StyleProps without wrapping) — auto-wrapped as `{ style: value }`
  *
  * Mixed-format objects (e.g. new-format spread + a legacy `backdropStyle` key) are
  * handled correctly because each key is processed individually.
  */
 export function normalizeInterpolatedStyle(raw: Record<string, any>): {
-	result: NormalizedTransitionInterpolatedStyle;
+	result: NormalizedTransitionInterpolatedStyle & TransitionInterpolatedStyle;
 	wasLegacy: boolean;
 } {
 	"worklet";
@@ -51,7 +52,10 @@ export function normalizeInterpolatedStyle(raw: Record<string, any>): {
 			continue;
 		}
 
-		if (typeof value === "object" && ("style" in value || "props" in value)) {
+		if (
+			typeof value === "object" &&
+			("style" in value || "props" in value || "clip" in value)
+		) {
 			// Proper TransitionSlotStyle — pass through
 			normalized[key] = value;
 		} else {
@@ -61,7 +65,8 @@ export function normalizeInterpolatedStyle(raw: Record<string, any>): {
 	}
 
 	return {
-		result: normalized as NormalizedTransitionInterpolatedStyle,
+		result: normalized as NormalizedTransitionInterpolatedStyle &
+			TransitionInterpolatedStyle,
 		wasLegacy: hasLegacyKeys,
 	};
 }

@@ -284,15 +284,11 @@ export type BoundsNavigationRevealOptions = {
 	 */
 	disablePointerEventsTillElementTransition?: boolean;
 	/**
-	 * How reveal should resize the navigation mask element.
+	 * Deprecated compatibility option retained for the next-major migration.
+	 * SmoothClip geometry does not resize a mask view, so every value is now a
+	 * visual no-op.
 	 *
-	 * `"auto"` uses the platform default. Android defaults to transform-based
-	 * resizing to avoid masked-size animation cost, while other platforms animate
-	 * width and height. Transform-based resizing can make large border radii look
-	 * less natural on Android; use `"size"` to force width/height animation when
-	 * radius quality is more important than that optimization.
-	 *
-	 * @default "auto"
+	 * @deprecated SmoothClip always uses presentation geometry. Remove this option.
 	 */
 	maskSizingMode?: "auto" | "transform" | "size";
 };

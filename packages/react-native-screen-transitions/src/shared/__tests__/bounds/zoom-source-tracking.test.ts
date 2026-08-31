@@ -640,9 +640,9 @@ describe("zoom source tracking", () => {
 			zoomOptions: {},
 		});
 
-		const focusedTransform = focusedStyles.content?.style?.transform as any[];
-		const focusedTranslateY = focusedTransform[1]?.translateY as number;
-		const focusedScale = focusedTransform[2]?.scale as number;
+		const focusedClip = (focusedStyles.content as any)?.clip;
+		const focusedTranslateY = focusedClip.contentTranslateY as number;
+		const focusedScale = focusedClip.contentScale as number;
 		const unfocusedParentScale = (
 			unfocusedStyles.content?.style?.transform as any[]
 		)[0]?.scale as number;
@@ -767,6 +767,7 @@ describe("zoom source tracking", () => {
 						settled: false,
 					},
 					progress,
+					transitionProgress: progress,
 					layouts: { screen: screenLayout },
 					insets: { top: 0, right: 0, bottom: 34, left: 0 },
 					focused: true,
@@ -782,9 +783,7 @@ describe("zoom source tracking", () => {
 				} as any,
 				zoomOptions: {},
 			});
-			const transform = styles.content?.style?.transform as any[];
-
-			return transform[1]?.translateY as number;
+			return (styles.content as any)?.clip.contentTranslateY as number;
 		};
 
 		const releaseTranslateY = getTranslateY({

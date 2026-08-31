@@ -12,7 +12,7 @@ const isExplicitTransitionSlot = (value: unknown) => {
 	return (
 		typeof value === "object" &&
 		value != null &&
-		("style" in value || "props" in value)
+		("style" in value || "props" in value || "clip" in value)
 	);
 };
 
@@ -53,7 +53,7 @@ const isAlreadyNormalizedStyleMapWithoutBoundsMetadata = (
  * Normalizes an interpolator result into the canonical `{ style, props }` slot format.
  *
  * Handles three cases per key:
- * 1. Proper `TransitionSlotStyle` values (has `style` or `props` key) — pass through
+ * 1. Proper `TransitionSlotStyle` values (has `style`, `props`, or `clip` key) — pass through
  * 2. Style shorthand (plain StyleProps without wrapping) — auto-wrapped as `{ style: value }`
  */
 export function normalizeSlots(
@@ -91,6 +91,7 @@ export function normalizeSlots(
 					? stripBoundsLocalTransform(explicitSlot.style)
 					: undefined,
 				props: explicitSlot.props,
+				clip: explicitSlot.clip,
 				boundsLocalTransform,
 			};
 		} else {

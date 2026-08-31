@@ -1,6 +1,7 @@
 import { FlatList, Pressable, ScrollView, View } from "react-native";
 import { withScreenTransitions } from "./adapters/with-screen-transitions";
 import { Boundary, createBoundaryComponent } from "./components/boundary";
+import { TransitionClipView } from "./components/clip-view";
 import { createTransitionAwareComponent } from "./components/create-transition-aware-component";
 import MaskedView from "./components/masked-view";
 import { Presets, Specs } from "./configs";
@@ -10,6 +11,7 @@ export default {
 	createBoundaryComponent,
 	withScreenTransitions,
 	Boundary,
+	ClipView: TransitionClipView,
 	View: createTransitionAwareComponent(View),
 	Pressable: createTransitionAwareComponent(Pressable),
 	ScrollView: createTransitionAwareComponent(ScrollView, {
@@ -19,8 +21,7 @@ export default {
 		isScrollable: true,
 	}),
 	/**
-	 * @deprecated Use `navigationMaskEnabled` with the navigation mask style IDs
-	 * instead.
+	 * @deprecated Render `Transition.ClipView` with an explicit clip channel.
 	 */
 	MaskedView: MaskedView,
 	Presets,
@@ -34,6 +35,12 @@ export {
 	blockTransition,
 	unblockTransition,
 } from "./animation/transition-blocking";
+export type { BoundaryClipViewProps } from "./components/boundary";
+export type {
+	TransitionClipMaximumSize,
+	TransitionClipViewProps,
+} from "./components/clip-view";
+export type { TransitionMaskedViewProps } from "./components/masked-view";
 export {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
@@ -88,6 +95,7 @@ export type {
 	ScrollGestureAxisState,
 	ScrollGestureState,
 	ScrollMetadataState,
+	TransitionClipPresentation,
 	TransitionInterpolatedStyle,
 	TransitionSlotProps,
 	TransitionSlotStyle,

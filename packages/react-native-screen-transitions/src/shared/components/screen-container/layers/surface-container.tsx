@@ -1,8 +1,13 @@
 import { type ComponentType, memo, useMemo } from "react";
 import { StyleSheet, type ViewProps } from "react-native";
 import Animated from "react-native-reanimated";
+import { useIgnoredClipSlot } from "../../../providers/screen/clip/clip-stream.provider";
 import { useDescriptors } from "../../../providers/screen/descriptors";
-import { useSlotProps, useSlotStyles } from "../../../providers/screen/styles";
+import {
+	useScreenSlots,
+	useSlotProps,
+	useSlotStyles,
+} from "../../../providers/screen/styles";
 
 type Props = {
 	children: React.ReactNode;
@@ -11,6 +16,8 @@ type Props = {
 
 export const SurfaceContainer = memo(({ children, pointerEvents }: Props) => {
 	const { current } = useDescriptors();
+	const { slotsMap } = useScreenSlots();
+	useIgnoredClipSlot("surface", slotsMap);
 
 	/** @deprecated Use `contentComponent` instead. */
 	const DeprecatedSurfaceComponent = current.options.surfaceComponent;

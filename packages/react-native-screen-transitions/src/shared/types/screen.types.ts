@@ -218,10 +218,8 @@ export type ScreenTransitionConfig = {
 	transitionSpec?: TransitionSpec;
 
 	/**
-	 * Pre-mounts the masked view wrapper so navigation bounds masking
+	 * Pre-mounts the SmoothClip aperture so navigation bounds clipping
 	 * (e.g. `bounds().navigation.zoom()`) is ready from the first frame.
-	 *
-	 * Requires `@react-native-masked-view/masked-view` to be installed.
 	 *
 	 * @default false
 	 */

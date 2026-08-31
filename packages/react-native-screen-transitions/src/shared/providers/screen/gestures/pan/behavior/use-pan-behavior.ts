@@ -2,6 +2,15 @@ import { useCallback, useMemo } from "react";
 import type { SharedValue } from "react-native-reanimated";
 import { useNavigationHelpers } from "../../../../../hooks/navigation/use-navigation-helpers";
 import type { Direction } from "../../../../../types/ownership.types";
+import {
+	allocateClipGestureReleaseIdOnUI,
+	type ClipStreamCanonicalSnapshot,
+} from "../../../clip/clip-stream-ui";
+import {
+	globalSmoothClipCoordinatorRuntime,
+	INTERNAL_SMOOTH_CLIP_NATIVE_PROMOTION,
+} from "../../../clips/coordinator/runtime-store";
+import { useDescriptorDerivations } from "../../../descriptors";
 import type { ScreenOptionsContextValue } from "../../../options";
 import { usePanGestureSensitivity } from "../../hooks/use-gesture-sensitivity";
 import { resolvePanRuntime } from "../../shared/runtime";
@@ -15,8 +24,9 @@ import type {
 } from "../../types";
 import {
 	finalizePanRelease,
+	sampleFinalPanGestureAndFlush,
 	startPanBase,
-	trackPanGesture,
+	trackPanGestureAndFlush,
 } from "./pan-lifecycle";
 import {
 	primeSnapPanRelease,
@@ -32,8 +42,57 @@ export const usePanBehavior = (
 	pendingDirection: SharedValue<Direction | null>,
 ): PanBehavior => {
 	const { dismissScreen, requestDismiss } = useNavigationHelpers();
+	const { currentScreenKey } = useDescriptorDerivations();
 	const { withSensitivity, resetSensitivity } =
 		usePanGestureSensitivity(screenOptions);
+	const beginSmoothClipRelease = useCallback(
+		(
+			completionId: number,
+			snapshots: readonly ClipStreamCanonicalSnapshot[],
+			targetProgress: number,
+			animation:
+				| Parameters<
+						typeof globalSmoothClipCoordinatorRuntime.requestRecordedBuiltInPromotion
+				  >[0]["animation"]
+				| null,
+		) => {
+			globalSmoothClipCoordinatorRuntime.beginGestureRelease({
+				completionId,
+				onTeardown: () => {
+					dismissScreen();
+				},
+				requiresReset: true,
+				routeKey: currentScreenKey,
+				snapshots,
+			});
+			if (animation) {
+				void globalSmoothClipCoordinatorRuntime.requestRecordedBuiltInPromotion(
+					{
+						animation,
+						routeKey: currentScreenKey,
+						source: "gesture-release",
+						targetProgress,
+					},
+				);
+			}
+		},
+		[currentScreenKey, dismissScreen],
+	);
+	const completeSmoothClipReanimated = useCallback(
+		(completionId: number, finished: boolean) => {
+			globalSmoothClipCoordinatorRuntime.completeReanimated(
+				completionId,
+				finished,
+			);
+		},
+		[],
+	);
+	const completeSmoothClipReset = useCallback(
+		(completionId: number, finished: boolean) => {
+			globalSmoothClipCoordinatorRuntime.completeReset(completionId, finished);
+		},
+		[],
+	);
 
 	const onStart = useCallback(() => {
 		"worklet";
@@ -74,14 +133,15 @@ export const usePanBehavior = (
 				screenOptions.get(),
 			);
 			const event = withSensitivity(rawEvent);
-			trackPanGesture(
+			trackPanGestureAndFlush(
 				event,
 				rawEvent,
 				latestRuntime.stores.gestures,
 				dimensions,
+				currentScreenKey,
 			);
 		},
-		[runtime, screenOptions, dimensions, withSensitivity],
+		[runtime, screenOptions, dimensions, withSensitivity, currentScreenKey],
 	);
 
 	const onEnd = useCallback(
@@ -92,6 +152,13 @@ export const usePanBehavior = (
 				screenOptions.get(),
 			);
 			const event = withSensitivity(rawEvent);
+			const finalClipSnapshots = sampleFinalPanGestureAndFlush(
+				event,
+				rawEvent,
+				latestRuntime.stores.gestures,
+				dimensions,
+				currentScreenKey,
+			);
 
 			const release = !latestRuntime.policy.enabled
 				? {
@@ -105,6 +172,9 @@ export const usePanBehavior = (
 					? resolveSnapPanRelease(event, latestRuntime, dimensions)
 					: resolvePanRelease(event, latestRuntime, dimensions);
 			const isPanCompositionOwner = gestureCompositionOwner.get() === "pan";
+			const completionId = INTERNAL_SMOOTH_CLIP_NATIVE_PROMOTION
+				? allocateClipGestureReleaseIdOnUI()
+				: undefined;
 
 			finalizePanRelease(
 				release,
@@ -114,6 +184,15 @@ export const usePanBehavior = (
 				rawEvent,
 				requestDismiss,
 				gestureCompositionOwner,
+				completionId === undefined
+					? undefined
+					: {
+							begin: beginSmoothClipRelease,
+							completeReanimated: completeSmoothClipReanimated,
+							completeReset: completeSmoothClipReset,
+							completionId,
+							snapshots: finalClipSnapshots,
+						},
 			);
 
 			if (isPanCompositionOwner) {
@@ -128,6 +207,10 @@ export const usePanBehavior = (
 			requestDismiss,
 			withSensitivity,
 			gestureCompositionOwner,
+			currentScreenKey,
+			beginSmoothClipRelease,
+			completeSmoothClipReanimated,
+			completeSmoothClipReset,
 		],
 	);
 

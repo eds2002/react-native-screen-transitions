@@ -3,9 +3,11 @@ import {
 	EPSILON,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 } from "../../../../constants";
+import type { AnimatedViewStyle } from "../../../../types/animation.types";
 import { createBoundsAccessorCore } from "../../helpers/create-bounds-accessor-core";
 import { getSourceBorderRadius } from "../helpers";
 import { resolveRevealContentBaseTransform } from "../reveal/math";
+import { adaptZoomFocusedContentClip } from "./adapter";
 import {
 	ZOOM_BACKDROP_MAX_OPACITY,
 	ZOOM_BACKGROUND_SCALE,
@@ -26,6 +28,7 @@ import {
 	resolveZoomNavigationMaskStyle,
 	ZOOM_NAVIGATION_MASK_BORDER_RADIUS,
 } from "./mask";
+import { projectZoomContentClip } from "./projector";
 import {
 	getZoomContentAnchor,
 	getZoomContentTarget,
@@ -187,6 +190,31 @@ export function buildZoomStyles({
 		const contentScale = drag.isDismissing
 			? drag.dismissContentScale
 			: contentBaseScale * drag.gestureScale;
+		const contentRadius = interpolate(
+			transitionProgress,
+			[0, 1],
+			[sourceBorderRadius, active.animating ? expandedBorderRadius : 0],
+			"clamp",
+		);
+		const focusedOpacity = keepFocusedVisible ? undefined : focusedFade;
+		const legacyContentStyle: AnimatedViewStyle = {
+			...(focusedOpacity === undefined ? {} : { opacity: focusedOpacity }),
+			transform: [
+				{ translateX: contentTranslateX },
+				{ translateY: contentTranslateY },
+				{ scale: contentScale },
+				{ rotateZ: `${drag.rotation}rad` },
+			],
+			borderRadius: contentRadius,
+			overflow: "hidden",
+		};
+		const contentClip = projectZoomContentClip({
+			screenLayout,
+			translateX: contentTranslateX,
+			translateY: contentTranslateY,
+			scale: contentScale,
+			radius: contentRadius,
+		});
 
 		return {
 			options: {
@@ -198,24 +226,12 @@ export function buildZoomStyles({
 					opacity: backdropOpacity,
 				},
 			},
-			content: {
-				style: {
-					...(keepFocusedVisible ? {} : { opacity: focusedFade }),
-					transform: [
-						{ translateX: contentTranslateX },
-						{ translateY: contentTranslateY },
-						{ scale: contentScale },
-						{ rotateZ: `${drag.rotation}rad` },
-					],
-					borderRadius: interpolate(
-						transitionProgress,
-						[0, 1],
-						[sourceBorderRadius, active.animating ? expandedBorderRadius : 0],
-						"clamp",
-					),
-					overflow: "hidden" as const,
-				},
-			},
+			content: adaptZoomFocusedContentClip({
+				projectedClip: contentClip,
+				opacity: focusedOpacity,
+				rotation: drag.rotation,
+				legacyStyle: legacyContentStyle,
+			}),
 			[NAVIGATION_MASK_ELEMENT_STYLE_ID]: navigationMaskEnabled
 				? resolveZoomNavigationMaskStyle({
 						scopedBounds,

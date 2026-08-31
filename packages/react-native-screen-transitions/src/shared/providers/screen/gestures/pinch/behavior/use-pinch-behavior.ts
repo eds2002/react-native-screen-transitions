@@ -1,6 +1,15 @@
 import { useCallback, useMemo } from "react";
 import type { SharedValue } from "react-native-reanimated";
 import { useNavigationHelpers } from "../../../../../hooks/navigation/use-navigation-helpers";
+import {
+	allocateClipGestureReleaseIdOnUI,
+	type ClipStreamCanonicalSnapshot,
+} from "../../../clip/clip-stream-ui";
+import {
+	globalSmoothClipCoordinatorRuntime,
+	INTERNAL_SMOOTH_CLIP_NATIVE_PROMOTION,
+} from "../../../clips/coordinator/runtime-store";
+import { useDescriptorDerivations } from "../../../descriptors";
 import type { ScreenOptionsContextValue } from "../../../options";
 import { usePinchGestureSensitivity } from "../../hooks/use-gesture-sensitivity";
 import { resolvePinchRuntime } from "../../shared/runtime";
@@ -12,8 +21,9 @@ import type {
 } from "../../types";
 import {
 	finalizePinchRelease,
+	sampleFinalPinchGestureAndFlush,
 	startPinchBase,
-	trackPinchGesture,
+	trackPinchGestureAndFlush,
 } from "./pinch-lifecycle";
 import {
 	primeSnapPinchRelease,
@@ -27,8 +37,57 @@ export const usePinchBehavior = (
 	gestureCompositionOwner: SharedValue<GestureCompositionOwner>,
 ): PinchBehavior => {
 	const { dismissScreen, requestDismiss } = useNavigationHelpers();
+	const { currentScreenKey } = useDescriptorDerivations();
 	const { withSensitivity, resetSensitivity } =
 		usePinchGestureSensitivity(screenOptions);
+	const beginSmoothClipRelease = useCallback(
+		(
+			completionId: number,
+			snapshots: readonly ClipStreamCanonicalSnapshot[],
+			targetProgress: number,
+			animation:
+				| Parameters<
+						typeof globalSmoothClipCoordinatorRuntime.requestRecordedBuiltInPromotion
+				  >[0]["animation"]
+				| null,
+		) => {
+			globalSmoothClipCoordinatorRuntime.beginGestureRelease({
+				completionId,
+				onTeardown: () => {
+					dismissScreen();
+				},
+				requiresReset: true,
+				routeKey: currentScreenKey,
+				snapshots,
+			});
+			if (animation) {
+				void globalSmoothClipCoordinatorRuntime.requestRecordedBuiltInPromotion(
+					{
+						animation,
+						routeKey: currentScreenKey,
+						source: "gesture-release",
+						targetProgress,
+					},
+				);
+			}
+		},
+		[currentScreenKey, dismissScreen],
+	);
+	const completeSmoothClipReanimated = useCallback(
+		(completionId: number, finished: boolean) => {
+			globalSmoothClipCoordinatorRuntime.completeReanimated(
+				completionId,
+				finished,
+			);
+		},
+		[],
+	);
+	const completeSmoothClipReset = useCallback(
+		(completionId: number, finished: boolean) => {
+			globalSmoothClipCoordinatorRuntime.completeReset(completionId, finished);
+		},
+		[],
+	);
 
 	const onStart = useCallback(() => {
 		"worklet";
@@ -51,9 +110,14 @@ export const usePinchBehavior = (
 				screenOptions.get(),
 			);
 			const event = withSensitivity(rawEvent);
-			trackPinchGesture(event, rawEvent, latestRuntime.stores.gestures);
+			trackPinchGestureAndFlush(
+				event,
+				rawEvent,
+				latestRuntime.stores.gestures,
+				currentScreenKey,
+			);
 		},
-		[runtime, screenOptions, withSensitivity],
+		[runtime, screenOptions, withSensitivity, currentScreenKey],
 	);
 
 	const onEnd = useCallback(
@@ -64,15 +128,33 @@ export const usePinchBehavior = (
 				screenOptions.get(),
 			);
 			const event = withSensitivity(rawEvent);
+			const finalClipSnapshots = sampleFinalPinchGestureAndFlush(
+				event,
+				rawEvent,
+				latestRuntime.stores.gestures,
+				currentScreenKey,
+			);
 			const release = latestRuntime.participation.effectiveSnapPoints
 				.hasSnapPoints
 				? resolveSnapPinchRelease(event, latestRuntime)
 				: resolvePinchRelease(event, latestRuntime);
+			const completionId = INTERNAL_SMOOTH_CLIP_NATIVE_PROMOTION
+				? allocateClipGestureReleaseIdOnUI()
+				: undefined;
 			finalizePinchRelease(
 				release,
 				latestRuntime,
 				dismissScreen,
 				requestDismiss,
+				completionId === undefined
+					? undefined
+					: {
+							begin: beginSmoothClipRelease,
+							completeReanimated: completeSmoothClipReanimated,
+							completeReset: completeSmoothClipReset,
+							completionId,
+							snapshots: finalClipSnapshots,
+						},
 			);
 			gestureCompositionOwner.set(null);
 		},
@@ -83,6 +165,10 @@ export const usePinchBehavior = (
 			requestDismiss,
 			withSensitivity,
 			gestureCompositionOwner,
+			currentScreenKey,
+			beginSmoothClipRelease,
+			completeSmoothClipReanimated,
+			completeSmoothClipReset,
 		],
 	);
 

@@ -4,6 +4,7 @@ import { SystemStore } from "../../stores/system.store";
 import { useScreenHistory } from "./hooks/history/use-screen-history";
 import { useCloseTransitionIntent } from "./hooks/use-close-transition-intent";
 import { useOpenTransitionIntent } from "./hooks/use-open-transition-intent";
+import { useSmoothClipRouteLifecycle } from "./hooks/use-smooth-clip-route-lifecycle";
 import { useTransitionStartController } from "./hooks/use-transition-start-controller";
 
 interface Props {
@@ -19,6 +20,7 @@ export const ScreenLifecycle = ({ children }: Props) => {
 
 	const animations = AnimationStore.getBag(current.route.key);
 	const system = SystemStore.getBag(current.route.key);
+	useSmoothClipRouteLifecycle(current.route.key);
 
 	const { handleBlankStackCloseEnd, handleNativeCloseEnd } =
 		useCloseTransitionIntent(current, system);
