@@ -1,0 +1,82 @@
+---
+title: "Clip Presentations"
+pageTitle: "Animate fixed-footprint apertures"
+summary: "Clip slots, ClipView, Boundary ClipView, and compatibility behavior."
+description: "Use a canonical clip presentation for geometry while visual effects remain on an outer carrier."
+eyebrow: "Components"
+group: "Components"
+order: 1
+to: /clip-presentations
+---
+
+An explicit transition slot may contain `clip` beside `style` and `props`:
+
+```tsx
+return {
+  hero: {
+    clip: {
+      clip: {
+        x,
+        y,
+        width,
+        height,
+        radius: 24,
+        topRightRadius: 40,
+        curve: "continuous",
+      },
+      contentTranslateX: -x,
+      contentTranslateY: -y,
+      contentScale: 1,
+    },
+    style: { opacity, transform: [{ rotateZ: `${rotation}rad` }] },
+  },
+};
+```
+
+`clip` is one value: normalization, inheritance, equality, and reset never merge individual presentation fields. An explicit clip replaces legacy geometric style projection for that slot. If it disappears, the participant returns to its own base presentation.
+
+## `Transition.ClipView`
+
+```tsx
+<Transition.ClipView
+  styleId="hero"
+  maximumSize={{ width: 320, height: 480 }}
+  hostStyle={styles.host}
+  contentStyle={styles.content}
+  accessibilityLabel="Animated preview"
+>
+  <Preview />
+</Transition.ClipView>
+```
+
+`styleId` and finite, positive `maximumSize` dimensions are required. `maximumSize` owns the native host width and height; dimension-affecting `hostStyle` fields are ignored with a development warning. Events, accessibility, hit testing, and the forwarded `View` ref target the native SmoothClip host.
+
+The optional base `clip` defaults to the complete maximum rectangle with circular zero-radius corners, zero content translation, and scale 1.
+
+## `Transition.Boundary.ClipView`
+
+```tsx
+<Transition.Boundary.ClipView
+  id="photo"
+  maximumSize={{ width: 240, height: 320 }}
+  escapeClipping
+>
+  <Photo />
+</Transition.Boundary.ClipView>
+```
+
+The required `id` is both boundary identity and clip-slot identity. The in-flow placeholder remains stable while escape and handoff portals move the complete host unit, preserving the SmoothClip driver.
+
+## Channel ownership
+
+The hierarchy is fixed Yoga shell → outer visual carrier → SmoothClip aperture → content carrier. Aperture rectangle, per-corner radii, curve, compatible translation, and uniform positive scale belong to SmoothClip. Opacity, rotation, shadow, border, and unrelated transforms stay on the outer carrier.
+
+Uniform circular corners use each platform's fast path. Unequal or continuous corners use SmoothClip's fixed-topology portable path; Android does not claim pixel identity with Apple's proprietary continuous curve. Complex paths remain batched and streamed while autonomous complex-path capability is disabled. React Native Web is unsupported because SmoothClip is native-only.
+
+`clip` is ignored with a development warning on backdrop, surface, and arbitrary `Transition.View` slots. Reserved content/navigation slots remain local; custom slot inheritance is unchanged.
+
+## Legacy compatibility
+
+`Transition.MaskedView` remains for one major as a geometric adapter. It supports documented numeric/simple-percent edges and size, ordered translations, positive uniform scale, transform origin, corner radii, and curve. Unsupported matrices, skew, perspective, rotation, negative/nonuniform scale, borders, shadows, or ambiguous combinations latch the React Native overflow fallback for that transition.
+
+Opacity and translucent-background masks cannot be represented by geometric clipping. They warn once and render unclipped. `maskSizingMode` remains accepted as a deprecated visual no-op.

@@ -1,0 +1,36 @@
+---
+title: "Migrating to v4"
+pageTitle: "Move a v3 application to v4"
+summary: "Dependency, platform, mask, and clip-slot migration steps."
+description: "Upgrade the native floor first, then adopt explicit clip presentations without changing unrelated transition styles."
+eyebrow: "Guide"
+group: "Guides"
+order: 1
+to: /migrating-to-v4
+---
+
+## 1. Upgrade the native baseline
+
+Move to React Native 0.86+, React 19.2+, Reanimated 4.5+, Worklets 0.10+, iOS 16.4+, and Android API 33. Install `react-native-smooth-clip-view ^0.3.0`, then rebuild both native applications.
+
+## 2. Remove the mask dependency
+
+Remove `@react-native-masked-view/masked-view` if nothing else imports it. `navigationMaskEnabled`, zoom, and reveal now use SmoothClip. Keep both exported navigation-mask style IDs; their identity and slot behavior are unchanged.
+
+`maskSizingMode` can remain temporarily, but it no longer changes rendering.
+
+## 3. Migrate geometric custom masks
+
+Prefer `Transition.ClipView` with a fixed `maximumSize` and emit a whole `clip` presentation from your interpolator. Keep opacity, shadows, borders, and rotation in `style`.
+
+Existing `Transition.MaskedView` code continues through the geometric adapter when its size can be measured. It renders unclipped until the first valid measurement. Alpha/background-alpha masks now warn and render unclipped; replace those with an explicit visual composition.
+
+## 4. Audit unsupported transforms
+
+Legacy projection supports ordered translation, positive uniform scale, transform origin, radii, and curve. Rotation, skew, perspective, matrices, and nonuniform/negative scale use a latched React Native overflow fallback. Built-in zoom/reveal also stay streamed whenever an independent rotation or unsupported residual is active.
+
+## 5. Preserve completion semantics
+
+v4 waits for transition progress, geometric gesture-reset animations, and any promoted native group leg before teardown and navigation completion. Custom code should not infer completion from one Reanimated progress value alone.
+
+Native promotion is release-gated and disabled by default until physical-device profiling passes. This does not disable clip transitions; they continue through batched UI-runtime streaming.

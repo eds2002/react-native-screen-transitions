@@ -1,0 +1,29 @@
+---
+title: "v4.0.0"
+pageTitle: "v4.0.0"
+summary: "Fabric-only SmoothClip transition architecture."
+description: "First-class clip slots, fixed aperture components, screen-scoped coordination, and grouped native settlement infrastructure."
+eyebrow: "Release"
+group: "Changelogs"
+order: 1
+to: /changelog
+changelogDate: "2026-08-30"
+---
+
+## Added
+
+- Whole-object `clip` transition slots and the `TransitionClipPresentation` export.
+- `Transition.ClipView` and `Transition.Boundary.ClipView`.
+- One route-keyed clip coordinator, screen-level batch streaming, ownership epochs, immutable native group IDs, interruption snapshots, global driver leases, and a multi-leg completion barrier.
+- Pure zoom/reveal clip projectors plus immutable built-in native-plan metadata.
+
+## Changed
+
+- Fabric, React Native 0.86, React 19.2, Reanimated 4.5, Worklets 0.10, iOS 16.4, Android 33, and SmoothClip 0.3 are required.
+- Navigation masks use fixed SmoothClip hosts. `maskSizingMode` is a deprecated no-op.
+- Native promotion is available behind an internal flag but remains disabled until physical-device release gates pass.
+
+## Removed
+
+- The package dependency on `@react-native-masked-view/masked-view`.
+- Alpha/background-alpha behavior from the deprecated geometric `Transition.MaskedView` adapter; unsupported cases warn and render unclipped.

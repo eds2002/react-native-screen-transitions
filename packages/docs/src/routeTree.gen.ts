@@ -43,6 +43,7 @@ import { Route as ApiCreateTransitionAwareComponentRouteImport } from './routes/
 import { Route as ApiCreateBoundaryComponentRouteImport } from './routes/api.create-boundary-component'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as V4NextIndexRouteImport } from './routes/v4-next.index'
+import { Route as V4NextSlugRouteImport } from './routes/v4-next.$slug'
 import { Route as RecipesModalRouteImport } from './routes/recipes.modal'
 
 const UpdatingTo37Route = UpdatingTo37RouteImport.update({
@@ -217,6 +218,11 @@ const V4NextIndexRoute = V4NextIndexRouteImport.update({
   path: '/v4-next/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const V4NextSlugRoute = V4NextSlugRouteImport.update({
+  id: '/v4-next/$slug',
+  path: '/v4-next/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecipesModalRoute = RecipesModalRouteImport.update({
   id: '/recipes/modal',
   path: '/recipes/modal',
@@ -259,6 +265,7 @@ export interface FileRoutesByFullPath {
   '/updating-to-3-7': typeof UpdatingTo37Route
   '/recipes/modal': typeof RecipesModalRoute
   '/v4-next/': typeof V4NextIndexRoute
+  '/v4-next/$slug': typeof V4NextSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -296,6 +303,7 @@ export interface FileRoutesByTo {
   '/updating-to-3-7': typeof UpdatingTo37Route
   '/recipes/modal': typeof RecipesModalRoute
   '/v4-next': typeof V4NextIndexRoute
+  '/v4-next/$slug': typeof V4NextSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -334,6 +342,7 @@ export interface FileRoutesById {
   '/updating-to-3-7': typeof UpdatingTo37Route
   '/recipes/modal': typeof RecipesModalRoute
   '/v4-next/': typeof V4NextIndexRoute
+  '/v4-next/$slug': typeof V4NextSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -373,6 +382,7 @@ export interface FileRouteTypes {
     | '/updating-to-3-7'
     | '/recipes/modal'
     | '/v4-next/'
+    | '/v4-next/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -410,6 +420,7 @@ export interface FileRouteTypes {
     | '/updating-to-3-7'
     | '/recipes/modal'
     | '/v4-next'
+    | '/v4-next/$slug'
   id:
     | '__root__'
     | '/'
@@ -447,6 +458,7 @@ export interface FileRouteTypes {
     | '/updating-to-3-7'
     | '/recipes/modal'
     | '/v4-next/'
+    | '/v4-next/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -485,6 +497,7 @@ export interface RootRouteChildren {
   UpdatingTo37Route: typeof UpdatingTo37Route
   RecipesModalRoute: typeof RecipesModalRoute
   V4NextIndexRoute: typeof V4NextIndexRoute
+  V4NextSlugRoute: typeof V4NextSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -727,6 +740,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof V4NextIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/v4-next/$slug': {
+      id: '/v4-next/$slug'
+      path: '/v4-next/$slug'
+      fullPath: '/v4-next/$slug'
+      preLoaderRoute: typeof V4NextSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recipes/modal': {
       id: '/recipes/modal'
       path: '/recipes/modal'
@@ -773,6 +793,7 @@ const rootRouteChildren: RootRouteChildren = {
   UpdatingTo37Route: UpdatingTo37Route,
   RecipesModalRoute: RecipesModalRoute,
   V4NextIndexRoute: V4NextIndexRoute,
+  V4NextSlugRoute: V4NextSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

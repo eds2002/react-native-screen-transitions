@@ -1,5 +1,29 @@
 # Changelog
 
+## 4.0.0 (unreleased)
+
+Version 4 coordinates geometric transitions through `react-native-smooth-clip-view` 0.3 while retaining a streamed correctness path for plans that are not yet eligible for native ownership.
+
+### Added
+
+* Added whole-object `clip` presentation slots with per-corner radii, circular or continuous curves, independent content translation, and centered uniform content scale.
+* Added `Transition.ClipView` and `Transition.Boundary.ClipView`, including fixed maximum-size hosts whose native aperture owns hit testing, accessibility, events, and forwarded refs.
+* Added one route-keyed SmoothClip coordinator for atomic batches, interruption snapshots, group settlement, and completion-barrier participation.
+
+### Changed
+
+* Replaced navigation-mask geometry with SmoothClip apertures while preserving `navigationMaskEnabled` and both reserved navigation mask IDs.
+* Reimplemented deprecated `Transition.MaskedView` as a geometric compatibility adapter. Alpha and background-alpha masks warn and render unclipped.
+* Treats `maskSizingMode` as a deprecated visual no-op.
+* Keeps native promotion behind an internal, hard-disabled gate until the physical-device continuity and frame-time gates are met. Streaming remains the release baseline.
+
+### Breaking Changes
+
+* Requires Fabric, React Native 0.86 or newer, React 19.2 or newer, Reanimated 4.5 or newer, Worklets 0.10 or newer, iOS 16.4, and Android API 33.
+* Requires `react-native-smooth-clip-view ^0.3.0` as a peer dependency.
+* Removes `@react-native-masked-view/masked-view`; legacy masks with non-geometric semantics are no longer emulated.
+* `Transition.ClipView` requires a finite positive `maximumSize`, and that value owns the native host's width and height.
+
 ## [3.9.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.8.0...v3.9.0) (2026-07-21)
 
 v3.9 focuses on more predictable bounds transitions, a native-style navigation zoom, and experimental live-content handoff.

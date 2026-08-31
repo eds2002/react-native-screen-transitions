@@ -1,21 +1,28 @@
 ---
 title: "Overview"
-pageTitle: "Preview the next major docs without leaving the current shell."
-summary: "The single preview page for the v4 docs."
-description: "The v4 docs currently expose one preview page so version switching can be verified without pretending the rest of the next major release is already documented."
+pageTitle: "Screen Transitions v4"
+summary: "The Fabric-only release with first-class geometric clip presentations."
+description: "v4 moves transition apertures onto fixed SmoothClip hosts, keeps interactive streaming deterministic, and prepares eligible built-ins for grouped native settlement."
 eyebrow: "v4"
 group: "Get Started"
 order: 1
 to: /
-image: "/media/overview-demo.webp"
-imageAlt: "A still from the example app used as a motion reference."
-imageCaption: "A frame from the example app used as lightweight motion context."
 ---
 
-This preview currently has a single page on purpose. It gives you a real version target to switch into, without forcing placeholder docs for the rest of `v4`.
+v4 is the next major line of `react-native-screen-transitions`. It requires the React Native New Architecture and replaces layout-driven navigation masks with first-class clip presentations rendered by `react-native-smooth-clip-view`.
 
-## What ships in this first pass
+## What changed
 
-- version-aware navigation, with `v3` as the current track and `v4` as the preview track
-- the docs shell, theming, and page-level navigation you can keep filling out
-- one preview page so version switching can be verified before the v4 content lands
+- Transition slots may emit a whole-object `clip` beside `style` and `props`.
+- `Transition.ClipView` and `Transition.Boundary.ClipView` provide fixed-footprint apertures with correct hit testing and accessibility.
+- Built-in zoom and reveal transitions project clip geometry directly. Interactive frames are batched once per screen; eligible settlement can move to one native group without per-frame JSI writes.
+- Navigation masks preserve both existing mask IDs and `navigationMaskEnabled`, but no longer require `@react-native-masked-view/masked-view`.
+- Deprecated `Transition.MaskedView` is now a geometric compatibility adapter. Alpha-mask semantics are intentionally not emulated.
+
+Native promotion remains internally gated. Scalar streaming is the correctness baseline, and promotion stays disabled by default until the physical-device continuity and frame-time gates pass.
+
+## Compatibility floor
+
+v4 requires Fabric, React Native 0.86+, React 19.2+, Reanimated 4.5+, Worklets 0.10+, SmoothClip 0.3, iOS 16.4+, and Android API 33+.
+
+Continue with [Installation](/v4-next/installation), read the [Clip presentations guide](/v4-next/clip-presentations), or follow [Migrating to v4](/v4-next/migrating-to-v4).

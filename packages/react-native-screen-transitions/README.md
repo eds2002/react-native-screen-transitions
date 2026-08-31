@@ -12,6 +12,7 @@ Customizable screen transitions for React Native. Build gesture-driven, shared e
 - Shared element and fullscreen navigation zoom transitions through the Bounds API.
 - Snap-point sheets with gesture-aware `ScrollView` and `FlatList` coordination.
 - Transition slots for content, backdrop, surface, and custom tagged elements.
+- First-class fixed-footprint clip presentations with `Transition.ClipView` and `Transition.Boundary.ClipView`.
 - Built-in presets for common modal, card, and shared-transition patterns.
 - Blank stack, native stack, and Expo Router integration.
 - Written in TypeScript.
@@ -28,6 +29,7 @@ Install peer dependencies:
 
 ```bash
 npm install react-native-reanimated react-native-gesture-handler \
+  react-native-worklets react-native-smooth-clip-view \
   @react-navigation/native @react-navigation/native-stack \
   @react-navigation/elements react-native-screens \
   react-native-safe-area-context
@@ -37,11 +39,12 @@ See [the documentation site](https://screen-transitions.esjr.org).
 
 ## Support
 
-v3 (current) supports Reanimated v3, Reanimated v4, and React Native Gesture Handler v2.
+v4 is Fabric-only and requires React Native 0.86+, React 19.2+, Reanimated 4.5+, Worklets 0.10+, SmoothClip 0.3, iOS 16.4+, and Android API 33+. React Native Web is not supported because SmoothClip is native-only. v3 remains the compatibility line for older applications.
 
-| Line | Reanimated | React Native Gesture Handler |
-| ---- | ---------- | ---------------------------- |
-| v3 (current) | v3, v4 | v2 |
+| Line | Architecture | Reanimated | SmoothClip |
+| ---- | ------------ | ---------- | ---------- |
+| v4 | Fabric | >=4.5 | ^0.3.0 |
+| v3 | Paper / Fabric | v3, v4 | not required |
 
 ## Author
 

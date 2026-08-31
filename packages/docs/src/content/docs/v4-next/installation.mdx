@@ -1,0 +1,56 @@
+---
+title: "Installation"
+pageTitle: "Install v4 and its native peers"
+summary: "Required packages, platform floors, and native rebuild steps."
+description: "Install the Fabric-only v4 dependency set before enabling clip-aware transitions."
+eyebrow: "Get Started"
+group: "Get Started"
+order: 2
+to: /installation
+---
+
+Install the package and its mandatory runtime peers together:
+
+```sh
+npm install react-native-screen-transitions@^4 \
+  react-native-smooth-clip-view@^0.3.0 \
+  react-native-reanimated@^4.5.0 \
+  react-native-worklets@^0.10.0 \
+  react-native-gesture-handler \
+  @react-navigation/native @react-navigation/native-stack \
+  @react-navigation/elements react-native-screens \
+  react-native-safe-area-context
+```
+
+For Expo, use SDK 57 or newer and let Expo select compatible packages, while retaining the exact SmoothClip, Reanimated, and Worklets floors required by v4:
+
+```sh
+npx expo install react-native-reanimated react-native-worklets \
+  react-native-gesture-handler react-native-screens \
+  react-native-safe-area-context
+npm install react-native-screen-transitions@^4 \
+  react-native-smooth-clip-view@^0.3.0
+```
+
+## Required platform versions
+
+- React Native `>=0.86` with Fabric
+- React `>=19.2`
+- Reanimated `>=4.5`
+- Worklets `>=0.10`
+- iOS `>=16.4`
+- Android `minSdkVersion 33`
+
+Paper, React Native Web, and Android API 32 or older are not supported. SmoothClip is an iOS-and-Android-only native library and enforces API 33 on Android even if a root Gradle extension requests a lower minimum.
+
+## Native rebuild
+
+After installing or upgrading SmoothClip, rebuild the native application. Bare iOS projects must install pods:
+
+```sh
+cd ios && pod install
+```
+
+Expo projects must regenerate development builds after changing native versions. An OTA update may use V2 only when the installed native protocol reports V2; widened clip channels are never silently discarded on an older binary.
+
+`@react-native-masked-view/masked-view` is no longer a dependency of v4 and should be removed unless your application uses it directly.

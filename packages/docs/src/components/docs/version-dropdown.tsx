@@ -70,7 +70,7 @@ export function VersionDropdown({
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [open, setOpen] = useState(false);
 	const currentVersion = docVersions.find((version) => version.id === value);
-	const publicVersions = docVersions.filter((version) => version.id === "v3-4");
+	const publicVersions = docVersions;
 
 	useOutsideClose(containerRef, open, () => setOpen(false));
 
