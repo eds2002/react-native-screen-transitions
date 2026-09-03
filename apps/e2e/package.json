@@ -45,7 +45,7 @@
 		"react-native-safe-area-context": "~5.7.0",
 		"react-native-screen-transitions": "workspace:*",
 		"react-native-screens": "~4.26.0",
-		"react-native-smooth-clip-view": "^0.3.0",
+		"react-native-smooth-clip-view": "workspace:*",
 		"react-native-teleport": "1.1.10",
 		"react-native-web": "~0.21.0",
 		"react-native-worklets": "0.10.4",

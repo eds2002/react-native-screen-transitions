@@ -7,6 +7,16 @@ export type TransitionClipMaximumSize = Readonly<{
 	width: number;
 }>;
 
+export type ClipHostLayoutMode = "fill" | "fixed";
+
+export const resolveClipHostFootprintStyle = (
+	maximumSize: TransitionClipMaximumSize,
+	layoutMode: ClipHostLayoutMode,
+): ViewStyle =>
+	layoutMode === "fill"
+		? { bottom: 0, left: 0, position: "absolute", right: 0, top: 0 }
+		: { height: maximumSize.height, width: maximumSize.width };
+
 export const assertValidMaximumSize = (
 	maximumSize: TransitionClipMaximumSize,
 ) => {

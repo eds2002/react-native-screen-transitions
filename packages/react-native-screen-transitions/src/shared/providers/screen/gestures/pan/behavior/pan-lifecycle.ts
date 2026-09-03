@@ -2,10 +2,7 @@ import { clamp, runOnJS, type SharedValue } from "react-native-reanimated";
 import { EPSILON, FALSE, TRUE } from "../../../../../constants";
 import { animateToProgress } from "../../../../../utils/animation/animate-to-progress";
 import { emit } from "../../../../../utils/animation/emit";
-import {
-	type ClipStreamCanonicalSnapshot,
-	flushClipStreamRouteOnUI,
-} from "../../../clip/clip-stream-ui";
+import { scheduleClipStreamRouteFlushOnUI } from "../../../clip/clip-stream-ui";
 import { resolveSmoothClipNativeAnimation } from "../../../clips/coordinator/native-animation";
 import type { SmoothClipGestureCompletion } from "../../shared/clip-completion";
 import {
@@ -101,23 +98,6 @@ export const trackPanGesture = (
 	};
 };
 
-export const sampleFinalPanGestureAndFlush = (
-	event: PanGestureEvent,
-	rawEvent: PanGestureEvent,
-	gestures: PanGestureRuntime["stores"]["gestures"],
-	dimensions: GestureDimensions,
-	routeKey: string,
-): readonly ClipStreamCanonicalSnapshot[] => {
-	"worklet";
-	return trackPanGestureAndFlush(
-		event,
-		rawEvent,
-		gestures,
-		dimensions,
-		routeKey,
-	);
-};
-
 /** Tracks and atomically batches one built-in interactive pan frame. */
 export const trackPanGestureAndFlush = (
 	event: PanGestureEvent,
@@ -125,10 +105,10 @@ export const trackPanGestureAndFlush = (
 	gestures: PanGestureRuntime["stores"]["gestures"],
 	dimensions: GestureDimensions,
 	routeKey: string,
-): readonly ClipStreamCanonicalSnapshot[] => {
+) => {
 	"worklet";
 	trackPanGesture(event, rawEvent, gestures, dimensions);
-	return flushClipStreamRouteOnUI(routeKey);
+	scheduleClipStreamRouteFlushOnUI(routeKey);
 };
 
 export const finalizePanRelease = (
@@ -181,12 +161,13 @@ export const finalizePanRelease = (
 		runOnJS(coordinatedCompletion.begin)(
 			coordinatedCompletion.completionId,
 			coordinatedCompletion.snapshots,
+			animations.transitionProgress.get(),
 			plan.target,
+			plan.progressVelocity,
 			resolveSmoothClipNativeAnimation(
 				plan.target === 0
 					? plan.transitionSpec?.close
 					: plan.transitionSpec?.open,
-				"gesture-release",
 			),
 		);
 	}

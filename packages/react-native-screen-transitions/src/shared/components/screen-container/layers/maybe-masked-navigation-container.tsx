@@ -67,14 +67,12 @@ const MaskedNavigationContainer = memo(
 
 		return (
 			<View
-				style={[
-					styles.navigationMaskedRoot,
-					{ height: maximumSize.height, width: maximumSize.width },
-				]}
+				style={styles.navigationMaskedRoot}
 				collapsable={false}
 				pointerEvents={pointerEvents}
 			>
 				<LegacyGeometricClipView
+					layoutMode="fill"
 					maximumSize={maximumSize}
 					styleId={NAVIGATION_MASK_ELEMENT_STYLE_ID}
 					trustedPlans={BUILT_IN_NAVIGATION_MASK_CLIP_PLANS}

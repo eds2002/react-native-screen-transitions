@@ -3,13 +3,16 @@ import type { SharedValue } from "react-native-reanimated";
 import {
 	type CanonicalSmoothClipPresentation,
 	canonicalizeClipPresentation,
-	type SmoothClipDriver,
-	type SmoothClipGroupDriver,
+	type SmoothClipGroup,
 	type SmoothClipGroupSnapshot,
+	type SmoothClipRef,
+	type SmoothClipRunHandle,
 } from "react-native-smooth-clip-view";
+import { DefaultSpec } from "../../configs/specs";
 import {
 	flushClipStreamRouteOnUI,
 	registerClipStreamRootOnUI,
+	scheduleClipStreamRouteFlushOnUI,
 	unregisterClipStreamRootOnUI,
 } from "../../providers/screen/clip/clip-stream-ui";
 import {
@@ -18,11 +21,11 @@ import {
 import { resolveSmoothClipNativeAnimation } from "../../providers/screen/clips/coordinator/native-animation";
 import { SmoothClipCoordinatorRuntimeStore } from "../../providers/screen/clips/coordinator/runtime-store";
 import {
-	sampleFinalPanGestureAndFlush,
+	trackPanGesture,
 	trackPanGestureAndFlush,
 } from "../../providers/screen/gestures/pan/behavior/pan-lifecycle";
 import {
-	sampleFinalPinchGestureAndFlush,
+	trackPinchGesture,
 	trackPinchGestureAndFlush,
 } from "../../providers/screen/gestures/pinch/behavior/pinch-lifecycle";
 import { defineBuiltInClipNativePlan } from "../../utils/bounds/navigation/clip/native-plan";
@@ -74,101 +77,62 @@ const createMutable = <T>(initial: T) => {
 
 let nextDriverId = 1;
 
-const createDriver = (ready = true): SmoothClipDriver => {
-	const driverId = nextDriverId++;
-	const presentation = createMutable(PRESENTATION);
-	return {
-		kind: "hybrid",
-		presentation,
-		ui: {
-			beginInteraction: () => PRESENTATION,
-			set: () => {},
-			setScalars: () => {},
-			setPresentationScalars: () => {},
-			animateTo: () => 1,
-			cancel: () => PRESENTATION,
-		},
-		react: {
-			beginInteraction: async () => PRESENTATION,
-			set: async () => {},
-			animateTo: async () => 1,
-			cancel: async () => PRESENTATION,
-		},
-		__smoothClipHandle: {
-			driverId,
-			presentation,
-			ownership: createMutable(0),
-			activeAnimationId: createMutable(0),
-			disposed: createMutable(0),
-			ready: createMutable(ready ? 1 : 0),
-		},
-	};
+const readyByDriver = new WeakMap<object, boolean>();
+
+const createDriver = (ready = true): SmoothClipRef => {
+	const driver = { testId: nextDriverId++ } as unknown as SmoothClipRef;
+	readyByDriver.set(driver, ready);
+	return driver;
 };
 
 type GroupHarness = ReturnType<typeof createGroupHarness>;
 
 const createGroupHarness = () => {
-	let nextGroupId = 100;
-	let animateOverride:
-		| ((
-				entries: readonly Record<string, unknown>[],
-				animation: Record<string, unknown>,
-			) => Promise<number>)
-		| null = null;
 	let snapshotOverride:
-		| ((drivers: readonly SmoothClipDriver[]) => Promise<readonly SmoothClipGroupSnapshot[]>)
+		| ((drivers: readonly SmoothClipRef[]) => readonly SmoothClipGroupSnapshot[])
 		| null = null;
 	const animateCalls: { entries: readonly Record<string, unknown>[]; animation: Record<string, unknown> }[] = [];
-	const cancelCalls: { groupId: number; behavior: string }[] = [];
+	const cancelCalls: SmoothClipRunHandle[] = [];
 	const setBatchCalls: readonly Record<string, unknown>[][] = [];
-	const snapshots = (drivers: readonly SmoothClipDriver[]) =>
-		drivers.map((driver) => ({
-			driver,
-			presentation: PRESENTATION,
-			ready: driver.__smoothClipHandle?.ready?.get() !== 0,
+	const completionTags: number[] = [];
+	const snapshots = (drivers: readonly SmoothClipRef[]) =>
+		drivers.map((clip) => ({
+			clip,
+			frame: PRESENTATION,
+			ready: readyByDriver.get(clip) ?? false,
 		}));
 	const driver = {
-		kind: "group",
 		ui: {
-			beginInteraction: snapshots,
-			snapshotCurrent: snapshots,
-			setBatch: (entries: readonly Record<string, unknown>[]) => {
+			beginInteraction: (drivers: readonly SmoothClipRef[]) =>
+				snapshotOverride ? snapshotOverride(drivers) : snapshots(drivers),
+			setFrames: (entries: readonly Record<string, unknown>[]) => {
 				setBatchCalls.push(entries);
 			},
-			animateTo: () => nextGroupId++,
-			cancel: () => [],
-		},
-		react: {
-			beginInteraction: async (drivers: readonly SmoothClipDriver[]) =>
-				snapshots(drivers),
-			snapshotCurrent: (drivers: readonly SmoothClipDriver[]) =>
-				snapshotOverride
-					? snapshotOverride(drivers)
-					: Promise.resolve(snapshots(drivers)),
-			setBatch: async () => {},
-			animateTo: async (
+			animateTo: (
 				entries: readonly Record<string, unknown>[],
 				animation: Record<string, unknown>,
+				completionTag = 0,
 			) => {
 				animateCalls.push({ entries, animation });
-				return animateOverride
-					? animateOverride(entries, animation)
-					: nextGroupId++;
+				completionTags.push(completionTag);
+				return { testRunId: completionTags.length } as unknown as SmoothClipRunHandle;
 			},
-			cancel: async (groupId: number, behavior = "freeze") => {
-				cancelCalls.push({ groupId, behavior });
+			cancel: (handle: SmoothClipRunHandle) => {
+				cancelCalls.push(handle);
 				return [];
 			},
 		},
-	} as unknown as SmoothClipGroupDriver;
+		react: {},
+	} as unknown as SmoothClipGroup;
 	return {
 		animateCalls,
 		cancelCalls,
 		driver,
 		setBatchCalls,
-		setAnimateOverride: (override: typeof animateOverride) => {
-			animateOverride = override;
-		},
+		finishRun: (index: number, finished: boolean) => ({
+			completionTag: completionTags[index],
+			finished,
+		}),
 		setSnapshotOverride: (override: typeof snapshotOverride) => {
 			snapshotOverride = override;
 		},
@@ -178,7 +142,6 @@ const createGroupHarness = () => {
 const createPlan = () =>
 	defineBuiltInClipNativePlan({
 		id: "zoom",
-		protocolVersion: 2,
 		trusted: true,
 		projectionSpace: "output",
 		requiresReadyFixedHost: true,
@@ -220,7 +183,7 @@ const register = ({
 	routeKey = "route-B",
 	store,
 }: {
-	driver?: SmoothClipDriver;
+	driver?: SmoothClipRef;
 	harness: GroupHarness;
 	kind?: "screen" | "float-overlay";
 	plan?: ReturnType<typeof createPlan>;
@@ -229,9 +192,9 @@ const register = ({
 	routeKey?: string;
 	store: SmoothClipCoordinatorRuntimeStore;
 }) => {
-	store.registerRoot({ driver: harness.driver, kind, rootId, routeKey });
+	store.registerRoot({ group: harness.driver, kind, rootId, routeKey });
 	store.registerParticipant({
-		driver,
+		clip: driver,
 		registrationId,
 		rootId,
 		slotId: "content",
@@ -257,14 +220,11 @@ const promote = (
 	});
 
 describe("SmoothClipCoordinatorRuntimeStore", () => {
-	it("keeps native promotion compiled off by default", async () => {
+	it("keeps native promotion disabled by default", async () => {
 		const plan = createPlan();
 		const store = new SmoothClipCoordinatorRuntimeStore({ trustedPlans: [plan] });
-		expect(await promote(store, plan)).toEqual({
-			status: "unavailable",
-			reason: "disabled",
-			groupId: null,
-		});
+		expect(store.isEnabled()).toBe(false);
+		expect(await promote(store, plan)).toMatchObject({ reason: "disabled" });
 	});
 
 	it("rejects lookalike metadata and arbitrary streamed ClipViews", async () => {
@@ -295,6 +255,7 @@ describe("SmoothClipCoordinatorRuntimeStore", () => {
 			rotation: 0,
 		}) as { clip?: typeof TARGET };
 		const reveal = adaptRevealFocusedContentClip({
+			endpointClips: { "0": PRESENTATION, "1": TARGET },
 			legacyStyle: {},
 			projectedClip: TARGET,
 		}) as { clip?: typeof TARGET };
@@ -303,29 +264,87 @@ describe("SmoothClipCoordinatorRuntimeStore", () => {
 			slotId: "content",
 		});
 		expect(getBuiltInClipRuntimeMarker(reveal.clip)).toMatchObject({
+			endpoints: { "0": PRESENTATION, "1": TARGET },
 			planId: "reveal",
 			slotId: "content",
 		});
 		expect(getBuiltInClipRuntimeMarker(TARGET)).toBeNull();
 	});
 
+	it("promotes from endpoint metadata that arrives on the next frame", async () => {
+		const scheduled: Array<() => void> = [];
+		const { plan, store } = createStore(createPlan(), {
+			scheduleFrame: (callback) => scheduled.push(callback),
+		});
+		const harness = createGroupHarness();
+		register({ harness, plan, rootId: 91, routeKey: "route-race", store });
+		store.beginCompletion({
+			completionId: 91,
+			requiresReset: false,
+			routeKey: "route-race",
+		});
+
+		const pending = store.requestRecordedBuiltInPromotion({
+			animation: TIMING,
+			routeKey: "route-race",
+			source: "transition",
+			targetProgress: 1,
+		});
+		expect(scheduled).toHaveLength(1);
+		store.recordBuiltInFrame(91, "route-race", {
+			hostReady: true,
+			participantFingerprint: "stable-race-host",
+			planId: plan.id,
+			progress: 0.2,
+			targets: [
+				{
+					endpoints: { "0": PRESENTATION, "1": TARGET },
+					slotId: "content",
+					target: PRESENTATION,
+				},
+			],
+		});
+		scheduled.shift()?.();
+
+		expect(await pending).toMatchObject({
+			reason: "promoted",
+			status: "native",
+		});
+		expect(harness.animateCalls[0]?.entries).toMatchObject([
+			{ target: TARGET },
+		]);
+	});
+
 	it("maps only compatible lifecycle motion into native animations", () => {
 		expect(
-			resolveSmoothClipNativeAnimation(
-				{ damping: 80, mass: 3, stiffness: 900 },
-				"gesture-release",
-			),
+			resolveSmoothClipNativeAnimation({
+				damping: 500,
+				energyThreshold: 1e-8,
+				mass: 3,
+				reduceMotion: "always",
+				stiffness: 1000,
+				velocity: 2,
+			}),
 		).toEqual({
 			type: "spring",
-			damping: 80,
-			initialVelocity: "inherit",
+			damping: 500,
+			energyThreshold: 1e-8,
 			mass: 3,
-			stiffness: 900,
+			reduceMotion: "always",
+			stiffness: 1000,
+			velocity: 2,
+		});
+		expect(resolveSmoothClipNativeAnimation(DefaultSpec)).toBeNull();
+		expect(
+			resolveSmoothClipNativeAnimation({ duration: 240 }),
+		).toEqual({
+			type: "timing",
+			duration: 240,
+			controlPoints: [0.25, 0.1, 0.25, 1],
 		});
 		expect(
 			resolveSmoothClipNativeAnimation(
 				{ duration: 200, easing: () => 0.5 },
-				"transition",
 			),
 		).toBeNull();
 	});
@@ -344,7 +363,7 @@ describe("SmoothClipCoordinatorRuntimeStore", () => {
 				trustedPlans: [plan],
 			});
 			store.registerRoot({
-				driver: harness.driver,
+				group: harness.driver,
 				kind: "screen",
 				rootId: 91,
 				routeKey: "route-built-in",
@@ -354,7 +373,7 @@ describe("SmoothClipCoordinatorRuntimeStore", () => {
 				const streamingSuspended = createMutable(0);
 				streamingSuspensions.push(streamingSuspended);
 				store.registerParticipant({
-					driver: createDriver(),
+					clip: createDriver(),
 					registrationId: index + 1,
 					rootId: 91,
 					slotId: participant.slotId,
@@ -402,10 +421,7 @@ describe("SmoothClipCoordinatorRuntimeStore", () => {
 			expect(streamingSuspensions.every((value) => value.get() === 1)).toBe(
 				true,
 			);
-			store.handleGroupCompletion(91, {
-				finished: true,
-				groupId: result.groupId ?? 0,
-			});
+			store.handleNativeCompletion(91, harness.finishRun(0, true));
 			expect(streamingSuspensions.every((value) => value.get() === 1)).toBe(
 				true,
 			);
@@ -415,6 +431,60 @@ describe("SmoothClipCoordinatorRuntimeStore", () => {
 			);
 		},
 	);
+
+	it("promotes reveal when its optional navigation-mask host is absent", async () => {
+		const plan = REVEAL_CLIP_NATIVE_PLAN;
+		const harness = createGroupHarness();
+		const store = new SmoothClipCoordinatorRuntimeStore({
+			leaseRegistry: new SmoothClipLeaseRegistry(),
+			promotionEnabled: true,
+			storeId: "built-in-reveal-content-only",
+			trustedPlans: [plan],
+		});
+		store.registerRoot({
+			group: harness.driver,
+			kind: "screen",
+			rootId: 92,
+			routeKey: "route-reveal-content-only",
+		});
+		store.registerParticipant({
+			clip: createDriver(),
+			registrationId: 1,
+			rootId: 92,
+			slotId: "content",
+			streamingSuspended: createMutable(0),
+			trustedPlans: [plan],
+		});
+		store.recordBuiltInFrame(92, "route-reveal-content-only", {
+			hostReady: true,
+			participantFingerprint: "stable-reveal-content-host",
+			planId: plan.id,
+			progress: 0,
+			targets: [{ slotId: "content", target: PRESENTATION }],
+		});
+		store.recordBuiltInFrame(92, "route-reveal-content-only", {
+			hostReady: true,
+			participantFingerprint: "stable-reveal-content-host",
+			planId: plan.id,
+			progress: 1,
+			targets: [{ slotId: "content", target: TARGET }],
+		});
+		store.beginCompletion({
+			completionId: 92,
+			requiresReset: false,
+			routeKey: "route-reveal-content-only",
+		});
+
+		expect(
+			await store.requestRecordedBuiltInPromotion({
+				animation: TIMING,
+				routeKey: "route-reveal-content-only",
+				source: "transition",
+				targetProgress: 1,
+			}),
+		).toMatchObject({ reason: "promoted", status: "native" });
+		expect(harness.animateCalls[0]?.entries).toHaveLength(1);
+	});
 
 	it("joins screen and FloatOverlay roots under the active route owner", async () => {
 		const { plan, store } = createStore();
@@ -463,41 +533,32 @@ describe("SmoothClipCoordinatorRuntimeStore", () => {
 			requiresReset: false,
 			routeKey: "route-B",
 		});
-		harness.setSnapshotOverride(async () => [
-			{ driver: first, presentation: PRESENTATION, ready: false },
+		harness.setSnapshotOverride(() => [
+			{ clip: first, frame: PRESENTATION, ready: false },
 		]);
 		expect(await promote(store, plan)).toMatchObject({
 			status: "streaming",
 			reason: "not-ready",
 		});
 
-		let resolveSnapshot: ((value: readonly SmoothClipGroupSnapshot[]) => void) | null = null;
-		harness.setSnapshotOverride(
-			(drivers) =>
-				new Promise((resolve) => {
-					resolveSnapshot = () =>
-						resolve(
-							drivers.map((driver) => ({
-								driver,
-								presentation: PRESENTATION,
-								ready: true,
-							})),
-						);
-				}),
-		);
-		const pending = promote(store, plan);
-		register({
-			driver: createDriver(),
-			harness,
-			plan,
-			registrationId: 9,
-			rootId: 1,
-			store,
+		harness.setSnapshotOverride((drivers) => {
+			register({
+				driver: createDriver(),
+				harness,
+				plan,
+				registrationId: 9,
+				rootId: 1,
+				store,
+			});
+			return drivers.map((clip) => ({
+				clip,
+				frame: PRESENTATION,
+				ready: true,
+			}));
 		});
-		resolveSnapshot?.([]);
-		expect(await pending).toMatchObject({
+		expect(await promote(store, plan)).toMatchObject({
 			status: "streaming",
-			reason: "unstable-participants",
+			reason: "stale",
 		});
 	});
 
@@ -510,65 +571,23 @@ describe("SmoothClipCoordinatorRuntimeStore", () => {
 			requiresReset: false,
 			routeKey: "route-B",
 		});
-		let resolveSnapshot:
-			| ((value: readonly SmoothClipGroupSnapshot[]) => void)
-			| undefined;
-		harness.setSnapshotOverride(
-			() =>
-				new Promise((resolve) => {
-					resolveSnapshot = resolve;
-				}),
-		);
-		const pending = promote(store, plan);
-		store.beginCompletion({
-			completionId: 34,
-			requiresReset: false,
-			routeKey: "route-B",
+		harness.setSnapshotOverride(() => {
+			store.beginCompletion({
+				completionId: 34,
+				requiresReset: false,
+				routeKey: "route-B",
+			});
+			return [{ clip: driver, frame: PRESENTATION, ready: true }];
 		});
-		resolveSnapshot?.([{ driver, presentation: PRESENTATION, ready: true }]);
-		expect(await pending).toMatchObject({
+		expect(await promote(store, plan)).toMatchObject({
 			status: "streaming",
 			reason: "stale",
 		});
-		expect(harness.animateCalls).toHaveLength(0);
+		expect(harness.animateCalls).toHaveLength(1);
+		expect(harness.cancelCalls).toHaveLength(1);
 	});
 
-	it("freezes a native start that resolves after replacement", async () => {
-		const { plan, store } = createStore();
-		const harness = createGroupHarness();
-		register({ harness, plan, store });
-		store.beginCompletion({
-			completionId: 35,
-			requiresReset: false,
-			routeKey: "route-B",
-		});
-		let resolveAnimation: ((groupId: number) => void) | undefined;
-		harness.setAnimateOverride(
-			() =>
-				new Promise((resolve) => {
-					resolveAnimation = resolve;
-				}),
-		);
-		const pending = promote(store, plan);
-		await Promise.resolve();
-		await Promise.resolve();
-		store.beginCompletion({
-			completionId: 36,
-			requiresReset: false,
-			routeKey: "route-B",
-		});
-		resolveAnimation?.(777);
-		expect(await pending).toMatchObject({
-			status: "streaming",
-			reason: "stale",
-		});
-		expect(harness.cancelCalls).toContainEqual({
-			groupId: 777,
-			behavior: "freeze",
-		});
-	});
-
-	it("enforces host, capability, stability, and geometric gates", async () => {
+	it("enforces host, stability, and geometric gates", async () => {
 		const { plan, store } = createStore();
 		const harness = createGroupHarness();
 		register({ harness, plan, store });
@@ -608,38 +627,19 @@ describe("SmoothClipCoordinatorRuntimeStore", () => {
 				],
 			}),
 		).toMatchObject({ reason: "geometric-blocker" });
-
-		const unsupported = createStore(plan, {
-			capabilities: () => ({
-				presentationProtocolVersion: 2,
-				groups: false,
-				perCornerRadii: true,
-				continuousCurve: true,
-				contentScale: true,
-				autonomousComplexPathAnimation: false,
-			}),
-		});
-		register({ harness: createGroupHarness(), plan, store: unsupported.store });
-		expect(
-			await unsupported.store.requestNativePromotion({
-				...base,
-				hostReady: true,
-				stableParticipants: true,
-			}),
-		).toMatchObject({ reason: "capabilities" });
 	});
 
 	it("seeds gesture release from the canonical final-UP snapshot", async () => {
 		const { plan, store } = createStore();
 		const harness = createGroupHarness();
-		const driver = register({ harness, plan, store });
+		register({ harness, plan, store });
 		store.beginGestureRelease({
 			completionId: 5,
 			requiresReset: true,
 			routeKey: "route-B",
 			snapshots: [
 				{
-					driverId: driver.__smoothClipHandle?.driverId ?? 0,
+					driverId: 1,
 					presentation: PRESENTATION,
 					ready: true,
 				},
@@ -648,12 +648,9 @@ describe("SmoothClipCoordinatorRuntimeStore", () => {
 		expect((await promote(store, plan, "gesture-release")).status).toBe(
 			"native",
 		);
-		expect(harness.animateCalls[0]?.entries[0]).toMatchObject({
-			from: PRESENTATION,
-		});
-		expect(harness.animateCalls[0]?.animation).toMatchObject({
-			suspensionPolicy: "finish",
-		});
+		expect(harness.setBatchCalls[0]?.[0]).toMatchObject({ frame: PRESENTATION });
+		expect(harness.animateCalls[0]?.entries[0]).not.toHaveProperty("from");
+		expect(harness.animateCalls[0]?.animation).toEqual(TIMING);
 	});
 
 	it("omits from on native-to-native retarget and freezes the displaced group", async () => {
@@ -675,10 +672,7 @@ describe("SmoothClipCoordinatorRuntimeStore", () => {
 			targets: [{ slotId: "content", target: PRESENTATION }],
 		});
 		expect(retargeted.status).toBe("native");
-		expect(harness.cancelCalls).toContainEqual({
-			groupId: first.groupId,
-			behavior: "freeze",
-		});
+		expect(harness.cancelCalls).toHaveLength(1);
 		expect(harness.animateCalls[1]?.entries[0]).not.toHaveProperty("from");
 	});
 
@@ -691,13 +685,10 @@ describe("SmoothClipCoordinatorRuntimeStore", () => {
 			requiresReset: false,
 			routeKey: "route-B",
 		});
-		const promoted = await promote(store, plan);
+		await promote(store, plan);
 		store.notifyPortalChanged("route-B");
 		await Promise.resolve();
-		expect(harness.cancelCalls).toContainEqual({
-			groupId: promoted.groupId,
-			behavior: "freeze",
-		});
+		expect(harness.cancelCalls).toHaveLength(1);
 		expect(store.getSnapshot("route-B")).toMatchObject({
 			state: "tracking",
 			groupId: null,
@@ -722,8 +713,8 @@ describe("SmoothClipCoordinatorRuntimeStore", () => {
 		});
 		const promoted = await promote(store, plan);
 		store.completeReanimated(8, true);
-		store.handleGroupCompletion(1, {
-			groupId: promoted.groupId ?? 0,
+		store.handleNativeCompletion(1, {
+			completionTag: promoted.groupId ?? 0,
 			finished: false,
 		});
 		await Promise.resolve();
@@ -758,7 +749,7 @@ describe("SmoothClipCoordinatorRuntimeStore", () => {
 			requiresReset: false,
 			routeKey: "route-B",
 		});
-		const oldPromotion = await promote(store, plan);
+		await promote(store, plan);
 		store.beginCompletion({
 			completionId: 32,
 			onTeardown: () => {
@@ -768,10 +759,7 @@ describe("SmoothClipCoordinatorRuntimeStore", () => {
 			routeKey: "route-B",
 		});
 		expect(store.completeReanimated(31, true)).toBe(false);
-		store.handleGroupCompletion(1, {
-			groupId: oldPromotion.groupId ?? 0,
-			finished: true,
-		});
+		store.handleNativeCompletion(1, harness.finishRun(0, true));
 		expect(store.completeReanimated(32, true)).toBe(true);
 		frames.shift()?.();
 		frames.shift()?.();
@@ -818,12 +806,9 @@ describe("SmoothClipCoordinatorRuntimeStore", () => {
 			requiresReset: false,
 			routeKey: "route-B",
 		});
-		const promoted = await promote(store, plan);
+		await promote(store, plan);
 		expect(store.finishRoute("route-B")).toBe(true);
-		expect(harness.cancelCalls).toContainEqual({
-			groupId: promoted.groupId,
-			behavior: "finish",
-		});
+		expect(harness.cancelCalls).toHaveLength(1);
 		expect(store.getSnapshot("route-B")).toMatchObject({
 			state: "terminal",
 			terminalReason: "finished",
@@ -836,9 +821,9 @@ describe("clip final-UP UI registry", () => {
 		const first = createDriver();
 		const second = createDriver();
 		const batches: readonly Record<string, unknown>[][] = [];
-		const makeParticipant = (driver: SmoothClipDriver, registrationId: number) => ({
+		const makeParticipant = (driver: SmoothClipRef, registrationId: number) => ({
 			base: PRESENTATION,
-			driver,
+			clip: driver,
 			registrationId,
 			slotsMap: createMutable({ content: { clip: TARGET } }),
 			styleId: "content",
@@ -847,13 +832,13 @@ describe("clip final-UP UI registry", () => {
 			participants: createMutable([makeParticipant(first, 1)]),
 			rootId: 8001,
 			routeKey: "route-B",
-			setBatch: (entries) => batches.push(entries),
+			setFrames: (entries) => batches.push(entries),
 		});
 		registerClipStreamRootOnUI({
 			participants: createMutable([makeParticipant(second, 2)]),
 			rootId: 8002,
 			routeKey: "route-B",
-			setBatch: () => {
+			setFrames: () => {
 				throw new Error("Only the deterministic first root owns the batch");
 			},
 		});
@@ -872,7 +857,7 @@ describe("clip final-UP UI registry", () => {
 			participants: createMutable([
 				{
 					base: PRESENTATION,
-					driver,
+					clip: driver,
 					footprint: { height: 200, width: 300 },
 					projection: "legacy" as const,
 					registrationId: 1,
@@ -891,8 +876,8 @@ describe("clip final-UP UI registry", () => {
 			]),
 			rootId: 8050,
 			routeKey: "route-legacy",
-			setBatch: (entries) => {
-				presentation = entries[0]?.presentation;
+			setFrames: (entries) => {
+				presentation = entries[0]?.frame;
 			},
 		});
 		flushClipStreamRouteOnUI("route-legacy");
@@ -905,7 +890,7 @@ describe("clip final-UP UI registry", () => {
 		unregisterClipStreamRootOnUI(8050);
 	});
 
-	it("batches pan and pinch update frames directly and resamples final UP", () => {
+	it("batches pan and pinch after mapper projection and resamples final UP", async () => {
 		const driver = createDriver();
 		const panGestures = {
 			x: createMutable(0),
@@ -934,18 +919,25 @@ describe("clip final-UP UI registry", () => {
 			active: createMutable<string | null>(null),
 		};
 		const projected: string[] = [];
-		let expectedPanX = 30;
+		let resolvedPanX = 0;
+		let finalPanX: number | undefined;
 		registerClipStreamRootOnUI({
 			participants: createMutable([
 				{
 					base: PRESENTATION,
-					driver,
+					clip: driver,
 					registrationId: 1,
 					slotsMap: {
 						get: () => {
-							expect(panGestures.x.get()).toBe(expectedPanX);
-							projected.push(`pan:${expectedPanX}`);
-							return { content: { clip: TARGET } };
+							projected.push(`pan:${resolvedPanX}`);
+							return {
+								content: {
+									clip: {
+										...TARGET,
+										clip: { ...TARGET.clip, x: resolvedPanX },
+									},
+								},
+							};
 						},
 					} as SharedValue<Record<string, unknown>>,
 					styleId: "content",
@@ -953,7 +945,7 @@ describe("clip final-UP UI registry", () => {
 			]),
 			rootId: 8101,
 			routeKey: "route-pan",
-			setBatch: () => {},
+			setFrames: () => {},
 		});
 		trackPanGestureAndFlush(
 			{ translationX: 30, translationY: 20, velocityX: 50, velocityY: 25 } as any,
@@ -962,28 +954,43 @@ describe("clip final-UP UI registry", () => {
 			{ width: 300, height: 400 },
 			"route-pan",
 		);
-		expectedPanX = 60;
-		sampleFinalPanGestureAndFlush(
+		resolvedPanX = panGestures.x.get();
+		await Promise.resolve();
+		trackPanGesture(
 			{ translationX: 60, translationY: 40, velocityX: 100, velocityY: 50 } as any,
 			{ translationX: 60, translationY: 40, velocityX: 100, velocityY: 50 } as any,
 			panGestures as any,
 			{ width: 300, height: 400 },
-			"route-pan",
 		);
+		scheduleClipStreamRouteFlushOnUI(
+			"route-pan",
+			(snapshots) => {
+				finalPanX = snapshots[0]?.presentation.clip.x;
+			},
+		);
+		resolvedPanX = panGestures.x.get();
+		await Promise.resolve();
 		unregisterClipStreamRootOnUI(8101);
 
-		let expectedPinchScale = 0.85;
+		let resolvedPinchScale = 1;
+		let finalPinchScale: number | undefined;
 		registerClipStreamRootOnUI({
 			participants: createMutable([
 				{
 					base: PRESENTATION,
-					driver,
+					clip: driver,
 					registrationId: 2,
 					slotsMap: {
 						get: () => {
-							expect(pinchGestures.scale.get()).toBe(expectedPinchScale);
-							projected.push(`pinch:${expectedPinchScale}`);
-							return { content: { clip: TARGET } };
+							projected.push(`pinch:${resolvedPinchScale}`);
+							return {
+								content: {
+									clip: {
+										...TARGET,
+										contentScale: resolvedPinchScale,
+									},
+								},
+							};
 						},
 					} as SharedValue<Record<string, unknown>>,
 					styleId: "content",
@@ -991,7 +998,7 @@ describe("clip final-UP UI registry", () => {
 			]),
 			rootId: 8102,
 			routeKey: "route-pinch",
-			setBatch: () => {},
+			setFrames: () => {},
 		});
 		trackPinchGestureAndFlush(
 			{ scale: 0.85 } as any,
@@ -999,13 +1006,21 @@ describe("clip final-UP UI registry", () => {
 			pinchGestures as any,
 			"route-pinch",
 		);
-		expectedPinchScale = 0.7;
-		sampleFinalPinchGestureAndFlush(
+		resolvedPinchScale = pinchGestures.scale.get();
+		await Promise.resolve();
+		trackPinchGesture(
 			{ scale: 0.7 } as any,
 			{ scale: 0.7 } as any,
 			pinchGestures as any,
-			"route-pinch",
 		);
+		scheduleClipStreamRouteFlushOnUI(
+			"route-pinch",
+			(snapshots) => {
+				finalPinchScale = snapshots[0]?.presentation.contentScale;
+			},
+		);
+		resolvedPinchScale = pinchGestures.scale.get();
+		await Promise.resolve();
 		unregisterClipStreamRootOnUI(8102);
 		expect(projected).toEqual([
 			"pan:30",
@@ -1013,5 +1028,7 @@ describe("clip final-UP UI registry", () => {
 			"pinch:0.85",
 			"pinch:0.7",
 		]);
+		expect(finalPanX).toBe(60);
+		expect(finalPinchScale).toBe(0.7);
 	});
 });

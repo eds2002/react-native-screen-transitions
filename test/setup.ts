@@ -57,8 +57,19 @@ mock.module("react-native", () => ({
 			obj.ios ?? obj.default,
 	},
 }));
+mock.module("react-native-worklets", () => ({
+	scheduleOnRN: <T extends (...args: any[]) => any>(
+		callback: T,
+		...args: Parameters<T>
+	) => callback(...args),
+	scheduleOnUI: <T extends (...args: any[]) => any>(
+		callback: T,
+		...args: Parameters<T>
+	) => callback(...args),
+}));
 mock.module("react-native-smooth-clip-view", () => {
-	let nextSmoothClipDriverId = 1;
+	let nextSmoothClipControllerId = 1;
+	let nextSmoothClipRunId = 1;
 	const canonicalizeClipPresentation = (presentation: any) => {
 		const clip = presentation?.clip;
 		const radius = clip?.radius ?? 0;
@@ -93,53 +104,96 @@ mock.module("react-native-smooth-clip-view", () => {
 			contentTranslateX: values[8],
 			contentTranslateY: values[9],
 			contentScale: values[10],
+			...(presentation.boxShadow === undefined
+				? {}
+				: {
+						boxShadow: {
+							color: presentation.boxShadow.color ?? 0x000000ff,
+							offsetX: presentation.boxShadow.offsetX ?? 0,
+							offsetY: presentation.boxShadow.offsetY ?? 0,
+							blurRadius: Math.max(0, presentation.boxShadow.blurRadius ?? 0),
+							spreadDistance: presentation.boxShadow.spreadDistance ?? 0,
+						},
+					}),
 		};
 	};
 	return {
 		SmoothClipView: "SmoothClipView",
 		canonicalizeClipPresentation,
 		getSmoothClipCapabilities: () => ({
-			presentationProtocolVersion: 2,
-			groups: true,
-			perCornerRadii: true,
-			continuousCurve: true,
-			contentScale: true,
 			autonomousComplexPathAnimation: false,
 		}),
-		useSmoothClipDriver: (initial: any) => {
-			const presentation = createTestMutable(initial);
-			return {
-				kind: "hybrid",
-				presentation,
-				ui: {},
-				react: {},
-				__smoothClipHandle: {
-					driverId: nextSmoothClipDriverId++,
-					presentation,
-					ownership: createTestMutable(0),
-					activeAnimationId: createTestMutable(0),
-					disposed: createTestMutable(0),
-					ready: createTestMutable(1),
-				},
-			};
+		useSmoothClipController: (initial: any) => {
+			const state = React.useRef<any>(null);
+			if (state.current === null) {
+				let frame = canonicalizeClipPresentation(initial);
+				const ref = { id: nextSmoothClipControllerId++ };
+				const completion = (status: "finished" | "interrupted") => ({
+					status,
+					frame,
+				});
+				state.current = {
+					ref,
+					ui: {
+						beginInteraction: () => frame,
+						setFrame: (next: any) => {
+							frame = canonicalizeClipPresentation(next);
+						},
+						animateTo: (target: any, _animation: any, onComplete?: any) => {
+							frame = canonicalizeClipPresentation(target);
+							onComplete?.(completion("finished"));
+							return { id: nextSmoothClipRunId++ };
+						},
+						cancel: () => frame,
+					},
+					react: {
+						animateTo: (target: any) => {
+							frame = canonicalizeClipPresentation(target);
+							return {
+								finished: Promise.resolve(completion("finished")),
+								cancel: async () => completion("interrupted"),
+							};
+						},
+					},
+				};
+			}
+			return state.current;
 		},
-		useSmoothClipGroupDriver: () => ({
-			kind: "group",
-			ui: {
-				beginInteraction: () => [],
-				snapshotCurrent: () => [],
-				setBatch: () => {},
-				animateTo: () => 1,
-				cancel: () => [],
-			},
-			react: {
-				beginInteraction: async () => [],
-				snapshotCurrent: async () => [],
-				setBatch: async () => {},
-				animateTo: async () => 1,
-				cancel: async () => [],
-			},
-		}),
+		useSmoothClipGroup: () => {
+			const group = React.useRef<any>(null);
+			if (group.current === null) {
+				const frames = new Map<number, any>();
+				const snapshots = (refs: readonly { id: number }[]) =>
+					refs.map((clip) => ({ clip, frame: frames.get(clip.id), ready: true }));
+				group.current = {
+					ui: {
+						beginInteraction: snapshots,
+						setFrames: (entries: readonly any[]) => {
+							for (const entry of entries) {
+								frames.set(entry.clip.id, canonicalizeClipPresentation(entry.frame));
+							}
+						},
+					},
+					react: {
+						snapshot: async (refs: readonly { id: number }[]) => snapshots(refs),
+						animateTo: (entries: readonly any[]) => {
+							for (const entry of entries) {
+								frames.set(entry.clip.id, canonicalizeClipPresentation(entry.target));
+							}
+							const result = {
+								status: "finished" as const,
+								snapshots: snapshots(entries.map((entry) => entry.clip)),
+							};
+							return {
+								finished: Promise.resolve(result),
+								cancel: async () => ({ ...result, status: "interrupted" as const }),
+							};
+						},
+					},
+				};
+			}
+			return group.current;
+		},
 	};
 });
 mock.module("react-native-gesture-handler", () => ({}));

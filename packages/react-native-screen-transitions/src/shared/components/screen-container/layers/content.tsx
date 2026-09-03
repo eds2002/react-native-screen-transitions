@@ -104,12 +104,18 @@ export const ContentLayer = memo(
 			() => createPositiveMaximumSizeFallback(window.width, window.height),
 			[window.height, window.width],
 		);
+		const maximumSizeLayoutEpoch = `${window.width}:${window.height}`;
 		const { maximumSize, onLayout: handleFixedShellLayout } =
-			useFixedShellMaximumSize(maximumSizeFallback, handleMaximumSizeChange);
+			useFixedShellMaximumSize(
+				maximumSizeFallback,
+				maximumSizeLayoutEpoch,
+				handleMaximumSizeChange,
+			);
 		const contentChildren = (
 			<ClipAperture
 				contentStyle={styles.apertureContent}
 				hostStyle={styles.apertureHost}
+				layoutMode="fill"
 				maximumSize={maximumSize}
 				pointerEvents={contentPointerEvents}
 				resolveSlotProps={false}

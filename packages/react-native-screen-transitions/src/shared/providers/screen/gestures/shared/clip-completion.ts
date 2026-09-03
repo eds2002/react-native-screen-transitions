@@ -1,12 +1,14 @@
-import type { SmoothClipGroupMotionAnimation } from "react-native-smooth-clip-view";
+import type { SmoothClipAnimation } from "react-native-smooth-clip-view";
 import type { ClipStreamCanonicalSnapshot } from "../../clip/clip-stream-ui";
 
 export type SmoothClipGestureCompletion = Readonly<{
 	begin: (
 		completionId: number,
 		snapshots: readonly ClipStreamCanonicalSnapshot[],
+		currentProgress: number,
 		targetProgress: number,
-		animation: SmoothClipGroupMotionAnimation | null,
+		progressVelocity: number,
+		animation: SmoothClipAnimation | null,
 	) => void;
 	completeReanimated: (completionId: number, finished: boolean) => void;
 	completeReset: (completionId: number, finished: boolean) => void;

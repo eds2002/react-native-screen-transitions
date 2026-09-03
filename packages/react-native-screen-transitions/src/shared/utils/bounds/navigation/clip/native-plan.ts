@@ -6,19 +6,20 @@ export type BuiltInClipPlanSlot =
 
 export type BuiltInClipPlanParticipant = Readonly<{
 	slotId: BuiltInClipPlanSlot;
+	/** A physical participant that joins the group only when the host renders it. */
+	optional?: boolean;
 	geometry: "uniform-corners";
 	curve: "circular" | "continuous" | "option";
 	ownsContentTranslation: boolean;
 	ownsContentScale: boolean;
 	/** Visual channels that remain on the Reanimated outer carrier. */
-	residualChannels: readonly ("rotation" | "shadow" | "opacity")[];
+	residualChannels: readonly ("rotation" | "opacity")[];
 	/** Residual channels that must be static/identity before native promotion. */
 	promotionBlockers: readonly ("rotation" | "nonuniform-scale" | "matrix")[];
 }>;
 
 export type BuiltInClipNativePlanMetadata = Readonly<{
 	id: "zoom" | "reveal";
-	protocolVersion: 2;
 	trusted: true;
 	projectionSpace: "output";
 	requiresReadyFixedHost: true;

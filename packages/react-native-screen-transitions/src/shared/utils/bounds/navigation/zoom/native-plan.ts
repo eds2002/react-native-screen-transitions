@@ -4,7 +4,6 @@ import { defineBuiltInClipNativePlan } from "../clip/native-plan";
 /** Internal promotion description; runtime ownership is intentionally separate. */
 export const ZOOM_CLIP_NATIVE_PLAN = defineBuiltInClipNativePlan({
 	id: "zoom",
-	protocolVersion: 2,
 	trusted: true,
 	projectionSpace: "output",
 	requiresReadyFixedHost: true,

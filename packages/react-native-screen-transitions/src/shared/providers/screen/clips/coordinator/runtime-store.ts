@@ -1,21 +1,17 @@
 import type { SharedValue } from "react-native-reanimated";
 import {
 	canonicalizeClipPresentation,
-	getSmoothClipCapabilities,
-	type SmoothClipCapabilities,
-	type SmoothClipDriver,
-	type SmoothClipGroupAnimationResult,
-	type SmoothClipGroupDriver,
-	type SmoothClipGroupKeyframeAnimation,
-	type SmoothClipGroupKeyframeEntry,
-	type SmoothClipGroupMotionAnimation,
-	type SmoothClipGroupMotionEntry,
+	type SmoothClipAnimation,
+	type SmoothClipCompletion,
+	type SmoothClipGroup,
 	type SmoothClipGroupSnapshot,
 	type SmoothClipPresentation,
+	type SmoothClipRef,
+	type SmoothClipRunHandle,
 } from "react-native-smooth-clip-view";
+import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
 import type { BuiltInClipNativePlanMetadata } from "../../../../utils/bounds/navigation/clip/native-plan";
 import { REVEAL_CLIP_NATIVE_PLAN } from "../../../../utils/bounds/navigation/reveal/native-plan";
-import { ZOOM_CLIP_NATIVE_PLAN } from "../../../../utils/bounds/navigation/zoom/native-plan";
 import type { ClipStreamCanonicalSnapshot } from "../../clip/clip-stream-ui";
 import { SmoothClipCoordinatorCore } from "./core";
 import {
@@ -28,7 +24,7 @@ import type {
 	SmoothClipOwnershipInvalidationReason,
 } from "./types";
 
-/** Physical promotion remains opt-in until built-in hosts supply all gates. */
+/** Opt-in only until cross-platform trajectory and release verification pass. */
 export const INTERNAL_SMOOTH_CLIP_NATIVE_PROMOTION = false;
 
 export type SmoothClipNativePlanBlocker =
@@ -41,7 +37,7 @@ export type TrustedSmoothClipNativePlan = BuiltInClipNativePlanMetadata;
 export type SmoothClipPhysicalRootKind = "screen" | "float-overlay";
 
 export type SmoothClipRuntimeParticipantRegistration = Readonly<{
-	driver: SmoothClipDriver;
+	clip: SmoothClipRef;
 	registrationId: number;
 	rootId: number;
 	slotId: string;
@@ -50,7 +46,7 @@ export type SmoothClipRuntimeParticipantRegistration = Readonly<{
 }>;
 
 type RuntimeRoot = {
-	driver: SmoothClipGroupDriver;
+	group: SmoothClipGroup;
 	kind: SmoothClipPhysicalRootKind;
 	rootId: number;
 	routeKey: string;
@@ -70,12 +66,69 @@ type CompletionRecord = {
 };
 
 type NativeGroupRecord = {
-	driver: SmoothClipGroupDriver;
-	drivers: readonly SmoothClipDriver[];
+	group: SmoothClipGroup;
 	groupId: number;
+	handle: SmoothClipRunHandle;
 	rootId: number;
 	routeKey: string;
 	token: SmoothClipCompletionToken;
+};
+
+type AtomicNativeStart = Readonly<{
+	handle: SmoothClipRunHandle | null;
+	snapshots: readonly SmoothClipGroupSnapshot[];
+}>;
+
+const launchAtomicNativeStart = (
+	group: SmoothClipGroup,
+	refs: readonly SmoothClipRef[],
+	releaseFrames: readonly Readonly<{
+		clip: SmoothClipRef;
+		frame: SmoothClipPresentation;
+	}>[],
+	targets: readonly Readonly<{
+		clip: SmoothClipRef;
+		target: SmoothClipPresentation;
+	}>[],
+	animation: SmoothClipAnimation,
+	streamingSuspended: readonly SharedValue<number>[],
+	completionTag: number,
+	report: (result: AtomicNativeStart) => void,
+) => {
+	"worklet";
+	let suspended = false;
+	try {
+		if (releaseFrames.length > 0) group.ui.setFrames(releaseFrames);
+		const snapshots = group.ui.beginInteraction(refs);
+		if (
+			snapshots.length !== refs.length ||
+			snapshots.some((snapshot) => !snapshot.ready)
+		) {
+			scheduleOnRN(report, { handle: null, snapshots });
+			return;
+		}
+		for (const value of streamingSuspended) value.set(1);
+		suspended = true;
+		const handle = group.ui.animateTo(targets, animation, completionTag);
+		if (handle === null) {
+			for (const value of streamingSuspended) value.set(0);
+			suspended = false;
+		}
+		scheduleOnRN(report, { handle, snapshots });
+	} catch {
+		if (suspended) {
+			for (const value of streamingSuspended) value.set(0);
+		}
+		scheduleOnRN(report, { handle: null, snapshots: [] });
+	}
+};
+
+const cancelNativeHandle = (
+	group: SmoothClipGroup,
+	handle: SmoothClipRunHandle,
+) => {
+	"worklet";
+	group.ui.cancel(handle);
 };
 
 type RuntimeOwner = {
@@ -89,7 +142,6 @@ type RuntimeOwner = {
 };
 
 type RuntimeStoreOptions = Readonly<{
-	capabilities?: () => SmoothClipCapabilities;
 	leaseRegistry?: SmoothClipLeaseRegistry;
 	promotionEnabled?: boolean;
 	scheduleFrame?: (callback: () => void) => void;
@@ -106,16 +158,13 @@ type BeginCompletionOptions = Readonly<{
 
 export type SmoothClipNativeTarget = Readonly<{
 	activeBlockers?: readonly SmoothClipNativePlanBlocker[];
-	frames?: readonly Readonly<{
-		offset: number;
-		presentation: SmoothClipPresentation;
-	}>[];
+	endpoints?: Readonly<Partial<Record<"0" | "1", SmoothClipPresentation>>>;
 	slotId: string;
 	target: SmoothClipPresentation;
 }>;
 
 type NativePromotionRequest = Readonly<{
-	animation: SmoothClipGroupMotionAnimation | SmoothClipGroupKeyframeAnimation;
+	animation: SmoothClipAnimation;
 	hostReady: boolean;
 	plan: TrustedSmoothClipNativePlan;
 	routeKey: string;
@@ -136,7 +185,6 @@ export type SmoothClipNativePromotionResult = Readonly<{
 		| "promoted"
 		| "disabled"
 		| "untrusted-plan"
-		| "capabilities"
 		| "host-not-ready"
 		| "unstable-participants"
 		| "participant-mismatch"
@@ -198,24 +246,6 @@ const isDeepFrozen = (value: unknown, seen = new Set<object>()): boolean => {
 	return true;
 };
 
-const planMatchesCapabilities = (
-	plan: TrustedSmoothClipNativePlan,
-	capabilities: SmoothClipCapabilities,
-) => {
-	if (
-		capabilities.presentationProtocolVersion < plan.protocolVersion ||
-		!capabilities.groups ||
-		!capabilities.perCornerRadii ||
-		!capabilities.contentScale
-	) {
-		return false;
-	}
-	return (
-		capabilities.continuousCurve ||
-		plan.participants.every((participant) => participant.curve === "circular")
-	);
-};
-
 const rootPriority = (root: RuntimeRoot) =>
 	root.kind === "screen"
 		? root.rootId
@@ -231,8 +261,8 @@ let nextStoreId = 1;
  * participants and completion legs; it alone may promote trusted built-ins.
  */
 export class SmoothClipCoordinatorRuntimeStore {
-	private readonly capabilities: () => SmoothClipCapabilities;
 	private readonly completionById = new Map<number, CompletionRecord>();
+	private readonly earlyNativeCompletions = new Map<number, boolean>();
 	private readonly groups = new Map<number, NativeGroupRecord>();
 	private readonly leaseRegistry: SmoothClipLeaseRegistry;
 	private readonly owners = new Map<string, RuntimeOwner>();
@@ -248,16 +278,15 @@ export class SmoothClipCoordinatorRuntimeStore {
 	private readonly scheduleFrame: (callback: () => void) => void;
 	private readonly storeId: string;
 	private readonly trustedPlans = new WeakSet<object>();
+	private nextNativeRunId = 1;
 
 	constructor({
-		capabilities = getSmoothClipCapabilities,
 		leaseRegistry = globalSmoothClipLeaseRegistry,
 		promotionEnabled = INTERNAL_SMOOTH_CLIP_NATIVE_PROMOTION,
 		scheduleFrame = defaultScheduleFrame,
 		storeId = `runtime-${nextStoreId++}`,
 		trustedPlans = [],
 	}: RuntimeStoreOptions = {}) {
-		this.capabilities = capabilities;
 		this.leaseRegistry = leaseRegistry;
 		this.promotionEnabled = promotionEnabled;
 		this.scheduleFrame = scheduleFrame;
@@ -272,12 +301,11 @@ export class SmoothClipCoordinatorRuntimeStore {
 	private registerTrustedPlan(plan: TrustedSmoothClipNativePlan) {
 		if (
 			plan.trusted !== true ||
-			plan.protocolVersion !== 2 ||
 			plan.projectionSpace !== "output" ||
 			!isDeepFrozen(plan)
 		) {
 			throw new Error(
-				"SmoothClip native plans must be trusted protocol-v2 immutable metadata.",
+				"SmoothClip native plans must be trusted immutable output-space metadata.",
 			);
 		}
 		this.trustedPlans.add(plan);
@@ -354,7 +382,7 @@ export class SmoothClipCoordinatorRuntimeStore {
 
 	registerParticipant(registration: SmoothClipRuntimeParticipantRegistration) {
 		if (!this.promotionEnabled) return () => {};
-		const driverId = registration.driver.__smoothClipHandle?.driverId ?? 0;
+		const driverId = registration.registrationId;
 		if (!Number.isSafeInteger(driverId) || driverId <= 0) return () => {};
 		const participantId = createParticipantId(
 			registration.rootId,
@@ -571,10 +599,11 @@ export class SmoothClipCoordinatorRuntimeStore {
 			targetBySlot.size !== targets.length ||
 			plan.participants.some(
 				(planParticipant) =>
-					!targetBySlot.has(planParticipant.slotId) ||
-					!participants.some(
-						(participant) => participant.slotId === planParticipant.slotId,
-					),
+					planParticipant.optional !== true &&
+					(!targetBySlot.has(planParticipant.slotId) ||
+						!participants.some(
+							(participant) => participant.slotId === planParticipant.slotId,
+						)),
 			) ||
 			participants.some((participant) => !targetBySlot.has(participant.slotId))
 		) {
@@ -643,6 +672,10 @@ export class SmoothClipCoordinatorRuntimeStore {
 			(participant) => participant.trustedPlans?.includes(plan) === true,
 		);
 		const targetBySlot = new Map<string, SmoothClipNativeTarget>();
+		const endpointTargetsBySlot = {
+			"0": new Map<string, SmoothClipNativeTarget>(),
+			"1": new Map<string, SmoothClipNativeTarget>(),
+		};
 		for (const record of frames) {
 			for (const target of record.frame.targets) {
 				const canonical = canonicalizeClipPresentation(target.target);
@@ -651,12 +684,27 @@ export class SmoothClipCoordinatorRuntimeStore {
 					return;
 				}
 				targetBySlot.set(target.slotId, { ...target, target: canonical });
+				for (const endpointKey of ["0", "1"] as const) {
+					const endpoint = target.endpoints?.[endpointKey];
+					if (endpoint === undefined) continue;
+					const canonicalEndpoint = canonicalizeClipPresentation(endpoint);
+					if (canonicalEndpoint === null) {
+						if (previous) previous.active = false;
+						return;
+					}
+					endpointTargetsBySlot[endpointKey].set(target.slotId, {
+						...target,
+						target: canonicalEndpoint,
+					});
+				}
 			}
 		}
 		if (
 			participants.length === 0 ||
 			plan.participants.some(
-				(participant) => !targetBySlot.has(participant.slotId),
+				(participant) =>
+					participant.optional !== true &&
+					!targetBySlot.has(participant.slotId),
 			) ||
 			participants.some((participant) => !targetBySlot.has(participant.slotId))
 		) {
@@ -692,6 +740,21 @@ export class SmoothClipCoordinatorRuntimeStore {
 		recorded.stableParticipants =
 			recorded.hostReady &&
 			frames.every((record) => record.frame.participantFingerprint.length > 0);
+		for (const endpointKey of ["0", "1"] as const) {
+			const endpointBySlot = endpointTargetsBySlot[endpointKey];
+			if (
+				plan.participants.every(
+					(participant) =>
+						participant.optional === true ||
+						endpointBySlot.has(participant.slotId),
+				) &&
+				participants.every((participant) =>
+					endpointBySlot.has(participant.slotId),
+				)
+			) {
+				recorded.endpoints[endpointKey] = Array.from(endpointBySlot.values());
+			}
+		}
 		if (Math.abs(progress) <= 1e-6) recorded.endpoints["0"] = currentTargets;
 		if (Math.abs(progress - 1) <= 1e-6)
 			recorded.endpoints["1"] = currentTargets;
@@ -718,40 +781,43 @@ export class SmoothClipCoordinatorRuntimeStore {
 		this.rebuildRecordedRoute(routeKey);
 	}
 
-	requestRecordedBuiltInPromotion({
+	async requestRecordedBuiltInPromotion({
 		animation,
 		routeKey,
 		source,
 		targetProgress,
 	}: Readonly<{
-		animation:
-			| SmoothClipGroupMotionAnimation
-			| SmoothClipGroupKeyframeAnimation;
+		animation: SmoothClipAnimation;
 		routeKey: string;
 		source: "transition" | "gesture-release";
 		targetProgress: number;
 	}>) {
 		if (!this.promotionEnabled) {
-			return Promise.resolve<SmoothClipNativePromotionResult>({
+			return {
 				status: "unavailable",
 				reason: "disabled",
 				groupId: null,
-			});
+			} satisfies SmoothClipNativePromotionResult;
 		}
-		const recorded = this.recordedPlans.get(routeKey);
 		const endpointKey =
 			Math.abs(targetProgress) <= 1e-6
 				? ("0" as const)
 				: Math.abs(targetProgress - 1) <= 1e-6
 					? ("1" as const)
 					: null;
-		const endpoint = endpointKey ? recorded?.endpoints[endpointKey] : undefined;
+		let recorded = this.recordedPlans.get(routeKey);
+		let endpoint = endpointKey ? recorded?.endpoints[endpointKey] : undefined;
 		if (!recorded?.active || endpoint === undefined) {
-			return Promise.resolve<SmoothClipNativePromotionResult>({
+			await new Promise<void>((resolve) => this.scheduleFrame(resolve));
+			recorded = this.recordedPlans.get(routeKey);
+			endpoint = endpointKey ? recorded?.endpoints[endpointKey] : undefined;
+		}
+		if (!recorded?.active || endpoint === undefined) {
+			return {
 				status: "streaming",
 				reason: "participant-mismatch",
 				groupId: null,
-			});
+			} satisfies SmoothClipNativePromotionResult;
 		}
 		const currentBlockers = new Map(
 			recorded.currentTargets.map((target) => [
@@ -759,7 +825,7 @@ export class SmoothClipCoordinatorRuntimeStore {
 				target.activeBlockers,
 			]),
 		);
-		return this.requestNativePromotion({
+		return await this.requestNativePromotion({
 			animation,
 			hostReady: recorded.hostReady,
 			plan: recorded.plan,
@@ -803,9 +869,6 @@ export class SmoothClipCoordinatorRuntimeStore {
 		if (!this.trustedPlans.has(plan) || !isDeepFrozen(plan)) {
 			return { status: "fallback", reason: "untrusted-plan", groupId: null };
 		}
-		if (!planMatchesCapabilities(plan, this.capabilities())) {
-			return { status: "fallback", reason: "capabilities", groupId: null };
-		}
 		if (plan.requiresReadyFixedHost && !hostReady) {
 			return { status: "streaming", reason: "host-not-ready", groupId: null };
 		}
@@ -843,64 +906,6 @@ export class SmoothClipCoordinatorRuntimeStore {
 		}
 		owner.selectedPlan = plan;
 		this.synchronizeSelectedParticipants(owner, participants);
-		const readinessToken = owner.coordinator.getCompletionToken();
-		if (
-			readinessToken === null ||
-			!this.tokenIsCurrent(owner, readinessToken, "tracking")
-		) {
-			return { status: "streaming", reason: "stale", groupId: null };
-		}
-		const fingerprint = this.participantFingerprint(participants);
-		const drivers = participants.map((participant) => participant.driver);
-		let readiness: readonly SmoothClipGroupSnapshot[];
-		try {
-			readiness = await root.driver.react.snapshotCurrent(drivers);
-		} catch {
-			return { status: "streaming", reason: "not-ready", groupId: null };
-		}
-		if (
-			fingerprint !==
-			this.participantFingerprint(this.selectPlanParticipants(owner, plan))
-		) {
-			return {
-				status: "streaming",
-				reason: "unstable-participants",
-				groupId: null,
-			};
-		}
-		if (!this.tokenIsCurrent(owner, readinessToken, "tracking")) {
-			return { status: "streaming", reason: "stale", groupId: null };
-		}
-		const expectedDriverIds = new Set(
-			participants.map((participant) => participant.driverId),
-		);
-		const snapshotDriverIds = new Set<number>();
-		for (const snapshot of readiness) {
-			const driverId = snapshot.driver.__smoothClipHandle?.driverId;
-			if (
-				driverId === undefined ||
-				!expectedDriverIds.has(driverId) ||
-				snapshotDriverIds.has(driverId)
-			) {
-				return { status: "streaming", reason: "not-ready", groupId: null };
-			}
-			snapshotDriverIds.add(driverId);
-			const participant = participants.find(
-				(entry) => entry.driverId === driverId,
-			);
-			if (participant) {
-				owner.coordinator.setParticipantReady(
-					participant.participantId,
-					snapshot.ready,
-				);
-			}
-		}
-		if (
-			snapshotDriverIds.size !== expectedDriverIds.size ||
-			readiness.some((entry) => !entry.ready)
-		) {
-			return { status: "streaming", reason: "not-ready", groupId: null };
-		}
 		const animationToken = owner.coordinator.getCompletionToken();
 		if (
 			animationToken === null ||
@@ -908,6 +913,8 @@ export class SmoothClipCoordinatorRuntimeStore {
 		) {
 			return { status: "streaming", reason: "stale", groupId: null };
 		}
+		const fingerprint = this.participantFingerprint(participants);
+		const refs = participants.map((participant) => participant.clip);
 
 		const preflight = owner.coordinator.preflightNativePromotion();
 		if (preflight.status !== "ready") {
@@ -923,8 +930,14 @@ export class SmoothClipCoordinatorRuntimeStore {
 			};
 		}
 
-		const motionEntries: SmoothClipGroupMotionEntry[] = [];
-		const keyframeEntries: SmoothClipGroupKeyframeEntry[] = [];
+		const motionEntries: Array<{
+			clip: SmoothClipRef;
+			target: SmoothClipPresentation;
+		}> = [];
+		const releaseFrames: Array<{
+			clip: SmoothClipRef;
+			frame: SmoothClipPresentation;
+		}> = [];
 		for (const participant of participants) {
 			const target = targetBySlot.get(participant.slotId);
 			if (!target) continue;
@@ -935,76 +948,76 @@ export class SmoothClipCoordinatorRuntimeStore {
 			if (source === "gesture-release" && from === undefined) {
 				return { status: "streaming", reason: "stale", groupId: null };
 			}
-			if (animation.type === "keyframes") {
-				if (!target.frames) {
-					return {
-						status: "streaming",
-						reason: "participant-mismatch",
-						groupId: null,
-					};
-				}
-				keyframeEntries.push({
-					driver: participant.driver,
-					target: target.target,
-					frames: target.frames,
-					...(from === undefined ? {} : { from }),
-				});
-			} else {
-				motionEntries.push({
-					driver: participant.driver,
-					target: target.target,
-					...(from === undefined ? {} : { from }),
-				});
-			}
+			if (from !== undefined)
+				releaseFrames.push({ clip: participant.clip, frame: from });
+			motionEntries.push({ clip: participant.clip, target: target.target });
 		}
 
-		this.suspendOwnerStreaming(owner, participants);
-		let groupId: number;
-		try {
-			groupId =
-				animation.type === "keyframes"
-					? await root.driver.react.animateTo(keyframeEntries, {
-							...animation,
-							suspensionPolicy:
-								animation.suspensionPolicy ??
-								(source === "gesture-release" ? "finish" : "pause"),
-						})
-					: await root.driver.react.animateTo(motionEntries, {
-							...animation,
-							suspensionPolicy:
-								animation.suspensionPolicy ??
-								(source === "gesture-release" ? "finish" : "pause"),
-						});
-		} catch {
-			this.resumeOwnerStreaming(owner);
-			return { status: "streaming", reason: "invalid-state", groupId: null };
+		const groupId = this.nextNativeRunId++;
+		const started = await new Promise<AtomicNativeStart>((resolve) => {
+			scheduleOnUI(
+				launchAtomicNativeStart,
+				root.group,
+				refs,
+				releaseFrames,
+				motionEntries,
+				animation,
+				participants.map((participant) => participant.streamingSuspended),
+				groupId,
+				resolve,
+			);
+		});
+		if (started.handle === null) {
+			return { status: "streaming", reason: "not-ready", groupId: null };
 		}
+		this.suspendOwnerStreaming(owner, participants);
 		if (!this.tokenIsCurrent(owner, animationToken, "tracking")) {
-			try {
-				await root.driver.react.cancel(groupId, "freeze");
-			} catch {
-				// The stale native start is already disowned by the current token.
-			}
+			scheduleOnUI(cancelNativeHandle, root.group, started.handle);
 			this.resumeOwnerStreaming(owner);
 			return { status: "streaming", reason: "stale", groupId: null };
 		}
+		if (
+			fingerprint !==
+			this.participantFingerprint(this.selectPlanParticipants(owner, plan))
+		) {
+			scheduleOnUI(cancelNativeHandle, root.group, started.handle);
+			this.resumeOwnerStreaming(owner);
+			return {
+				status: "streaming",
+				reason: "unstable-participants",
+				groupId: null,
+			};
+		}
+		for (const snapshot of started.snapshots) {
+			const participant = participants.find(
+				(entry) => entry.clip === snapshot.clip,
+			);
+			if (participant) {
+				owner.coordinator.setParticipantReady(
+					participant.participantId,
+					snapshot.ready,
+				);
+			}
+		}
 		const promotion = owner.coordinator.tryBeginNative(groupId);
 		if (promotion.status !== "native" || promotion.token === null) {
-			try {
-				await root.driver.react.cancel(groupId, "freeze");
-			} finally {
-				this.resumeOwnerStreaming(owner);
-			}
+			scheduleOnUI(cancelNativeHandle, root.group, started.handle);
+			this.resumeOwnerStreaming(owner);
 			return { status: "streaming", reason: "invalid-state", groupId: null };
 		}
 		this.groups.set(groupId, {
-			driver: root.driver,
-			drivers,
+			group: root.group,
 			groupId,
+			handle: started.handle,
 			rootId: root.rootId,
 			routeKey,
 			token: promotion.token,
 		});
+		const earlyCompletion = this.earlyNativeCompletions.get(groupId);
+		if (earlyCompletion !== undefined) {
+			this.earlyNativeCompletions.delete(groupId);
+			this.handleGroupCompletion(root.rootId, groupId, earlyCompletion);
+		}
 		return { status: "native", reason: "promoted", groupId };
 	}
 
@@ -1023,17 +1036,14 @@ export class SmoothClipCoordinatorRuntimeStore {
 		});
 	}
 
-	handleGroupCompletion(
-		rootId: number,
-		result: SmoothClipGroupAnimationResult,
-	) {
-		const record = this.groups.get(result.groupId);
+	handleGroupCompletion(rootId: number, groupId: number, finished: boolean) {
+		const record = this.groups.get(groupId);
 		if (!record || record.rootId !== rootId) return;
-		this.groups.delete(result.groupId);
+		this.groups.delete(groupId);
 		const owner = this.owners.get(record.routeKey);
 		if (!owner) return;
 
-		const settle = (snapshots: readonly SmoothClipGroupSnapshot[]) => {
+		const settle = () => {
 			const current = owner.coordinator.getSnapshot();
 			if (
 				current.ownerRouteKey !== record.token.ownerRouteKey ||
@@ -1043,16 +1053,12 @@ export class SmoothClipCoordinatorRuntimeStore {
 			) {
 				return;
 			}
-			for (const snapshot of snapshots) {
-				const driverId = snapshot.driver.__smoothClipHandle?.driverId;
-				if (driverId) owner.gestureFrom.set(driverId, snapshot.presentation);
-			}
 			const completion =
 				current.state === "interrupting"
 					? owner.coordinator.completeInterruption(
 							owner.coordinator.getCompletionToken() ?? record.token,
 						)
-					: owner.coordinator.completeNative(record.token, result.finished);
+					: owner.coordinator.completeNative(record.token, finished);
 			if (completion.demoted || completion.becameTerminal) {
 				this.resumeOwnerStreaming(owner);
 			}
@@ -1061,27 +1067,30 @@ export class SmoothClipCoordinatorRuntimeStore {
 			}
 		};
 
-		if (result.finished) {
-			settle([]);
+		settle();
+	}
+
+	handleNativeCompletion(rootId: number, result: SmoothClipCompletion) {
+		const groupId = result.completionTag;
+		if (groupId === undefined) return;
+		const record = this.groups.get(groupId);
+		if (!record) {
+			this.earlyNativeCompletions.set(groupId, result.finished);
 			return;
 		}
-		void record.driver.react
-			.snapshotCurrent(record.drivers)
-			.then(settle)
-			.catch(() => settle([]));
+		if (record.rootId !== rootId) return;
+		this.handleGroupCompletion(rootId, groupId, result.finished);
 	}
 
 	private cancelDisplacedGroup(
 		groupId: number | null,
-		behavior: "freeze" | "finish",
+		_behavior: "freeze" | "finish",
 	) {
 		if (groupId === null) return;
 		const record = this.groups.get(groupId);
 		if (!record) return;
 		this.groups.delete(groupId);
-		void record.driver.react.cancel(groupId, behavior).catch(() => {
-			// Route replacement/detach already released logical ownership.
-		});
+		scheduleOnUI(cancelNativeHandle, record.group, record.handle);
 	}
 
 	private interruptNative(owner: RuntimeOwner, groupId: number | null) {
@@ -1098,12 +1107,7 @@ export class SmoothClipCoordinatorRuntimeStore {
 		const record = this.groups.get(groupId);
 		if (!record) return;
 		this.groups.delete(groupId);
-		let snapshots: readonly SmoothClipGroupSnapshot[] = [];
-		try {
-			snapshots = await record.driver.react.cancel(groupId, "freeze");
-		} catch {
-			// Cancellation is best-effort; ownership must still leave interrupting.
-		}
+		scheduleOnUI(cancelNativeHandle, record.group, record.handle);
 		const current = owner.coordinator.getSnapshot();
 		if (
 			current.state !== "interrupting" ||
@@ -1112,10 +1116,6 @@ export class SmoothClipCoordinatorRuntimeStore {
 			current.ownerRouteKey !== record.token.ownerRouteKey
 		) {
 			return;
-		}
-		for (const snapshot of snapshots) {
-			const driverId = snapshot.driver.__smoothClipHandle?.driverId;
-			if (driverId) owner.gestureFrom.set(driverId, snapshot.presentation);
 		}
 		const interruptionToken = owner.coordinator.getCompletionToken();
 		if (!interruptionToken) return;
@@ -1213,5 +1213,5 @@ export class SmoothClipCoordinatorRuntimeStore {
 
 export const globalSmoothClipCoordinatorRuntime =
 	new SmoothClipCoordinatorRuntimeStore({
-		trustedPlans: [ZOOM_CLIP_NATIVE_PLAN, REVEAL_CLIP_NATIVE_PLAN],
+		trustedPlans: [REVEAL_CLIP_NATIVE_PLAN],
 	});

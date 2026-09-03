@@ -30,4 +30,3 @@ export const CONTENT_ENTERING_OPACITY_OUTPUT = [0, 1] as const;
 export const CONTENT_CLOSING_OPACITY_OUTPUT = [0, 1, 1] as const;
 export const CONTENT_SHADOW_OPACITY_OUTPUT = [0, 0.25] as const;
 export const UNFOCUSED_ELEMENT_OPACITY_OUTPUT = [1, 0] as const;
-export const REVEAL_SHADOW_OFFSET = { width: 0, height: 2 } as const;

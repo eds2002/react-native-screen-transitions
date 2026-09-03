@@ -13,21 +13,20 @@ import Animated, {
 import {
 	type SmoothClipPresentation,
 	SmoothClipView,
-	useSmoothClipDriver,
+	useSmoothClipController,
 } from "react-native-smooth-clip-view";
 import { NO_PROPS, NO_STYLES } from "../../constants";
 import { useClipStreamRegistration } from "../../providers/screen/clip/clip-stream.provider";
-import {
-	INTERNAL_SMOOTH_CLIP_NATIVE_PROMOTION,
-	type TrustedSmoothClipNativePlan,
-} from "../../providers/screen/clips/coordinator/runtime-store";
+import type { TrustedSmoothClipNativePlan } from "../../providers/screen/clips/coordinator/runtime-store";
 import { useScreenSlots } from "../../providers/screen/styles";
 import { composeSlotStyleWithLocalTransform } from "../../providers/screen/styles/helpers/compose-slot-style";
 import type { NormalizedTransitionSlotStyle } from "../../types/animation.types";
 import { logger } from "../../utils/logger";
 import {
 	assertValidMaximumSize,
+	type ClipHostLayoutMode,
 	createDefaultClipPresentation,
+	resolveClipHostFootprintStyle,
 	resolveClipHostStyle,
 	resolveClipVisualCarrierStyle,
 	type TransitionClipMaximumSize,
@@ -62,6 +61,7 @@ type ClipHostUnitProps = TransitionClipViewProps & {
 
 type ClipApertureProps = TransitionClipViewProps & {
 	absolute?: boolean;
+	layoutMode?: ClipHostLayoutMode;
 	resolveSlotProps?: boolean;
 	trustedPlans?: readonly TrustedSmoothClipNativePlan[];
 };
@@ -79,6 +79,7 @@ export const ClipAperture = forwardRef<View, ClipApertureProps>(
 			children,
 			contentStyle,
 			hostStyle,
+			layoutMode = "fixed",
 			maximumSize,
 			resolveSlotProps = true,
 			styleId,
@@ -90,6 +91,10 @@ export const ClipAperture = forwardRef<View, ClipApertureProps>(
 		assertValidMaximumSize(maximumSize);
 		const maximumWidth = maximumSize.width;
 		const maximumHeight = maximumSize.height;
+		const footprintStyle = resolveClipHostFootprintStyle(
+			maximumSize,
+			layoutMode,
+		);
 		const base = useMemo(
 			() =>
 				clip ??
@@ -99,15 +104,11 @@ export const ClipAperture = forwardRef<View, ClipApertureProps>(
 				}),
 			[clip, maximumHeight, maximumWidth],
 		);
-		const driver = useSmoothClipDriver(base, {
-			velocityTracking:
-				INTERNAL_SMOOTH_CLIP_NATIVE_PROMOTION &&
-				(trustedPlans?.length ?? 0) > 0,
-		});
+		const controller = useSmoothClipController(base);
 		const { slotsMap } = useScreenSlots();
 		useClipStreamRegistration({
 			base,
-			driver,
+			controller,
 			slotsMap,
 			styleId,
 			trustedPlans,
@@ -124,7 +125,7 @@ export const ClipAperture = forwardRef<View, ClipApertureProps>(
 			return props;
 		}, [resolveSlotProps, styleId]);
 
-		if (__DEV__ && hasConflictingDimensions) {
+		if (__DEV__ && layoutMode === "fixed" && hasConflictingDimensions) {
 			logger.warnOnce(
 				`clip:owned-host-size:${styleId}`,
 				`Transition.ClipView "${styleId}" ignores dimension-affecting hostStyle values because maximumSize owns the native host dimensions.`,
@@ -136,15 +137,12 @@ export const ClipAperture = forwardRef<View, ClipApertureProps>(
 				{...hostProps}
 				animatedProps={animatedHostProps}
 				collapsable={false}
-				driver={driver}
+				controller={controller}
 				ref={forwardedRef as never}
 				style={[
 					resolvedHostStyle,
 					absolute && styles.absoluteHost,
-					{
-						height: maximumHeight,
-						width: maximumWidth,
-					},
+					footprintStyle,
 				]}
 			>
 				<Animated.View

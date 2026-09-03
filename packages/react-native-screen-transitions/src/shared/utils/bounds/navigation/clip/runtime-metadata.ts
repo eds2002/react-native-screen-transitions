@@ -9,6 +9,7 @@ export type BuiltInClipRuntimeBlocker =
 
 export type BuiltInClipRuntimeMarker = Readonly<{
 	activeBlockers: readonly BuiltInClipRuntimeBlocker[];
+	endpoints?: Readonly<Partial<Record<"0" | "1", SmoothClipPresentation>>>;
 	planId: BuiltInClipRuntimePlanId;
 	slotId: BuiltInClipPlanSlot;
 }>;

@@ -17,21 +17,21 @@ import {
 import {
 	type CanonicalSmoothClipPresentation,
 	canonicalizeClipPresentation,
-	type SmoothClipDriver,
+	type SmoothClipCompletion,
+	type SmoothClipController,
 	type SmoothClipPresentation,
-	useSmoothClipGroupDriver,
+	type SmoothClipRef,
+	useSmoothClipGroup,
 } from "react-native-smooth-clip-view";
 import type {
 	NormalizedTransitionInterpolatedStyle,
 	NormalizedTransitionSlotStyle,
 } from "../../../types/animation.types";
-import { getBuiltInClipRuntimeMarker } from "../../../utils/bounds/navigation/clip/runtime-metadata";
 import { logger } from "../../../utils/logger";
 import { useScreenAnimationContext } from "../animation";
 import {
 	globalSmoothClipCoordinatorRuntime,
 	type SmoothClipPhysicalRootKind,
-	type SmoothClipRecordedNativeFrame,
 	type TrustedSmoothClipNativePlan,
 } from "../clips/coordinator/runtime-store";
 import { useDescriptorDerivations } from "../descriptors";
@@ -59,7 +59,7 @@ type ClipSlot = NormalizedTransitionSlotStyle & {
 
 type ClipStreamParticipant = {
 	base: CanonicalSmoothClipPresentation;
-	driver: SmoothClipDriver;
+	clip: SmoothClipRef;
 	footprint?: LegacyClipFootprint;
 	projection: "explicit" | "legacy";
 	registrationId: number;
@@ -71,7 +71,7 @@ type ClipStreamParticipant = {
 };
 
 type ClipStreamParticipantRegistration = ClipStreamParticipant & {
-	runtimeDriver: SmoothClipDriver;
+	runtimeController: SmoothClipController;
 	trustedPlans?: readonly TrustedSmoothClipNativePlan[];
 };
 
@@ -103,11 +103,6 @@ const allocateClipStreamRootId = () => {
 	return rootId;
 };
 
-const getDriverId = (driver: SmoothClipDriver) => {
-	"worklet";
-	return driver.__smoothClipHandle?.driverId ?? 0;
-};
-
 const presentationEquals = (
 	left: CanonicalSmoothClipPresentation,
 	right: CanonicalSmoothClipPresentation,
@@ -125,25 +120,27 @@ const presentationEquals = (
 		left.clip.curve === right.clip.curve &&
 		left.contentTranslateX === right.contentTranslateX &&
 		left.contentTranslateY === right.contentTranslateY &&
-		left.contentScale === right.contentScale
+		left.contentScale === right.contentScale &&
+		left.boxShadow?.color === right.boxShadow?.color &&
+		left.boxShadow?.offsetX === right.boxShadow?.offsetX &&
+		left.boxShadow?.offsetY === right.boxShadow?.offsetY &&
+		left.boxShadow?.blurRadius === right.boxShadow?.blurRadius &&
+		left.boxShadow?.spreadDistance === right.boxShadow?.spreadDistance
 	);
 };
 
 type PreparedClipBatch = {
 	directGestureStreaming: boolean;
 	entries: readonly {
-		driver: SmoothClipDriver;
+		clip: SmoothClipRef;
 		nextRenderState?: LegacyClipRenderState;
-		presentation: CanonicalSmoothClipPresentation;
+		frame: CanonicalSmoothClipPresentation;
 		registrationId: number;
 		renderState?: SharedValue<LegacyClipRenderState>;
 	}[];
 	ignoredStyleIds: readonly string[];
 	invalidStyleId: string | null;
 	legacyIssues: readonly LegacyClipIssue[];
-	nativeFrame: SmoothClipRecordedNativeFrame | null;
-	nativeFrameKey: string;
-	readiness: readonly { driverId: number; ready: boolean }[];
 	routeKey: string;
 };
 
@@ -166,8 +163,6 @@ const preparedBatchEquals = (
 		left.entries.length !== right.entries.length ||
 		left.ignoredStyleIds.length !== right.ignoredStyleIds.length ||
 		left.legacyIssues.length !== right.legacyIssues.length ||
-		left.nativeFrameKey !== right.nativeFrameKey ||
-		left.readiness.length !== right.readiness.length ||
 		left.routeKey !== right.routeKey
 	) {
 		return false;
@@ -179,8 +174,8 @@ const preparedBatchEquals = (
 			previous === undefined ||
 			next === undefined ||
 			previous.registrationId !== next.registrationId ||
-			getDriverId(previous.driver) !== getDriverId(next.driver) ||
-			!presentationEquals(previous.presentation, next.presentation) ||
+			previous.clip !== next.clip ||
+			!presentationEquals(previous.frame, next.frame) ||
 			previous.nextRenderState?.mode !== next.nextRenderState?.mode ||
 			previous.nextRenderState?.overflowLatched !==
 				next.nextRenderState?.overflowLatched
@@ -206,43 +201,7 @@ const preparedBatchEquals = (
 			return false;
 		}
 	}
-	for (let index = 0; index < right.readiness.length; index += 1) {
-		const previous = left.readiness[index];
-		const next = right.readiness[index];
-		if (
-			previous === undefined ||
-			next === undefined ||
-			previous.driverId !== next.driverId ||
-			previous.ready !== next.ready
-		) {
-			return false;
-		}
-	}
 	return true;
-};
-
-const recordBuiltInClipFrame = (
-	rootId: number,
-	routeKey: string,
-	frame: SmoothClipRecordedNativeFrame | null,
-) => {
-	globalSmoothClipCoordinatorRuntime.recordBuiltInFrame(
-		rootId,
-		routeKey,
-		frame,
-	);
-};
-
-const notifyClipReadiness = (
-	routeKey: string,
-	driverId: number,
-	ready: boolean,
-) => {
-	globalSmoothClipCoordinatorRuntime.notifyReadinessChanged(
-		routeKey,
-		driverId,
-		ready,
-	);
 };
 
 const warnIgnoredClipSlot = (styleId: string) => {
@@ -299,24 +258,23 @@ function ClipStreamRoot({
 	const ignoredSlots = useSharedValue<readonly IgnoredClipSlot[]>([]);
 	const participantsRef = useRef(new Map<number, ClipStreamParticipant>());
 	const ignoredSlotsRef = useRef(new Map<number, IgnoredClipSlot>());
-	const handleGroupComplete = useCallback(
-		(result: { groupId: number; finished: boolean }) => {
-			globalSmoothClipCoordinatorRuntime.handleGroupCompletion(rootId, result);
+	const onNativeAnimationComplete = useCallback(
+		(result: SmoothClipCompletion) => {
+			globalSmoothClipCoordinatorRuntime.handleNativeCompletion(rootId, result);
 		},
 		[rootId],
 	);
-	const groupDriver = useSmoothClipGroupDriver({
-		reduceMotion: "system",
-		onAnimationComplete: handleGroupComplete,
+	const group = useSmoothClipGroup({
+		onAnimationComplete: onNativeAnimationComplete,
 	});
-	const setBatch = groupDriver.ui.setBatch;
+	const setFrames = group.ui.setFrames;
 	const shouldWarn = __DEV__;
 	const nativePromotionEnabled = globalSmoothClipCoordinatorRuntime.isEnabled();
 
 	useLayoutEffect(() => {
 		const unregisterRuntimeRoot =
 			globalSmoothClipCoordinatorRuntime.registerRoot({
-				driver: groupDriver,
+				group,
 				kind,
 				rootId,
 				routeKey: initialRouteKey,
@@ -327,13 +285,13 @@ function ClipStreamRoot({
 			>,
 			rootId,
 			routeKey: initialRouteKey,
-			setBatch,
+			setFrames,
 		});
 		return () => {
 			runOnUI(unregisterClipStreamRootOnUI)(rootId);
 			unregisterRuntimeRoot();
 		};
-	}, [groupDriver, initialRouteKey, kind, participants, rootId, setBatch]);
+	}, [group, initialRouteKey, kind, participants, rootId, setFrames]);
 
 	const moveRuntimeRoot = useCallback(
 		(routeKey: string) => {
@@ -349,13 +307,6 @@ function ClipStreamRoot({
 			const routeKey = interpolatorProps.active.route.key;
 			const currentParticipants = participants.get();
 			const entries: PreparedClipBatch["entries"][number][] = [];
-			const nativeTargets: SmoothClipRecordedNativeFrame["targets"][number][] =
-				[];
-			let nativePlanId: SmoothClipRecordedNativeFrame["planId"] | null = null;
-			let nativeFrameInvalid = false;
-			let nativeHostReady = true;
-			const nativeFingerprintParts: string[] = [];
-			const readiness: { driverId: number; ready: boolean }[] = [];
 			let invalidStyleId: string | null = null;
 			const legacyIssues: LegacyClipIssue[] = [];
 
@@ -409,60 +360,16 @@ function ClipStreamRoot({
 					invalidStyleId = participant.styleId;
 					break;
 				}
-				const driverId = getDriverId(participant.driver);
-				// Registration proves the native driver identity exists. Native group
-				// snapshots perform the authoritative host-attachment check before a
-				// promoted animation can start.
-				const ready = driverId > 0;
 				const nativeAnimationActive =
-					nativePromotionEnabled &&
-					(participant.streamingSuspended.get() !== 0 ||
-						(participant.driver.__smoothClipHandle?.activeAnimationId?.get() ??
-							0) > 0);
+					nativePromotionEnabled && participant.streamingSuspended.get() !== 0;
 				if (!nativeAnimationActive) {
 					entries.push({
-						driver: participant.driver,
+						clip: participant.clip,
 						nextRenderState,
-						presentation,
+						frame: presentation,
 						registrationId: participant.registrationId,
 						renderState: participant.renderState,
 					});
-				}
-				if (driverId > 0) {
-					readiness.push({
-						driverId,
-						ready,
-					});
-				}
-				if (
-					nextRenderState?.mode !== undefined &&
-					nextRenderState.mode !== "smooth"
-				) {
-					nativeFrameInvalid = true;
-				}
-				const marker = getBuiltInClipRuntimeMarker(slot?.clip);
-				if (
-					nativePromotionEnabled &&
-					marker !== null &&
-					marker.slotId === participant.styleId &&
-					participant.trustedPlanIds?.includes(marker.planId) === true
-				) {
-					if (nativePlanId !== null && nativePlanId !== marker.planId) {
-						nativeFrameInvalid = true;
-					} else {
-						nativePlanId = marker.planId;
-						nativeHostReady = nativeHostReady && ready;
-						nativeTargets.push({
-							activeBlockers: marker.activeBlockers,
-							slotId: marker.slotId,
-							target: presentation,
-						});
-						nativeFingerprintParts.push(
-							`${participant.registrationId}:${driverId}:${marker.slotId}:${
-								ready ? 1 : 0
-							}:${marker.activeBlockers.join(",")}`,
-						);
-					}
 				}
 			}
 
@@ -485,39 +392,12 @@ function ClipStreamRoot({
 				return leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
 			});
 
-			const nativeFrame =
-				nativeFrameInvalid ||
-				nativePlanId === null ||
-				nativeTargets.length === 0
-					? null
-					: {
-							hostReady: nativeHostReady,
-							participantFingerprint: nativeFingerprintParts.sort().join("|"),
-							planId: nativePlanId,
-							progress: interpolatorProps.active.transitionProgress,
-							targets: nativeTargets,
-						};
-			const nativeFrameKey =
-				nativeFrame === null
-					? ""
-					: `${nativeFrame.planId}:${nativeFrame.progress}:${
-							nativeFrame.participantFingerprint
-						}:${nativeFrame.targets
-							.map(
-								(target) =>
-									`${target.slotId}:${target.target.clip.x}:${target.target.clip.y}:${target.target.clip.width}:${target.target.clip.height}:${target.target.clip.topLeftRadius}:${target.target.clip.topRightRadius}:${target.target.clip.bottomRightRadius}:${target.target.clip.bottomLeftRadius}:${target.target.clip.curve}:${target.target.contentTranslateX}:${target.target.contentTranslateY}:${target.target.contentScale}`,
-							)
-							.join("|")}`;
-
 			return {
 				directGestureStreaming: interpolatorProps.active.gesture.dragging !== 0,
 				entries,
 				ignoredStyleIds,
 				invalidStyleId,
 				legacyIssues,
-				nativeFrame,
-				nativeFrameKey,
-				readiness,
 				routeKey,
 			};
 		},
@@ -529,37 +409,6 @@ function ClipStreamRoot({
 					runOnJS(moveRuntimeRoot)(next.routeKey);
 				}
 			}
-			if (
-				nativePromotionEnabled &&
-				(previous?.nativeFrameKey !== next.nativeFrameKey ||
-					previous?.routeKey !== next.routeKey)
-			) {
-				runOnJS(recordBuiltInClipFrame)(
-					rootId,
-					next.routeKey,
-					next.nativeFrame,
-				);
-			}
-			for (
-				let index = 0;
-				nativePromotionEnabled && index < next.readiness.length;
-				index += 1
-			) {
-				const readiness = next.readiness[index];
-				const previousReadiness = previous?.readiness[index];
-				if (
-					readiness !== undefined &&
-					(previousReadiness?.driverId !== readiness.driverId ||
-						previousReadiness.ready !== readiness.ready)
-				) {
-					runOnJS(notifyClipReadiness)(
-						next.routeKey,
-						readiness.driverId,
-						readiness.ready,
-					);
-				}
-			}
-
 			if (shouldWarn) {
 				if (next.invalidStyleId !== null) {
 					runOnJS(warnInvalidClipSlot)(next.invalidStyleId);
@@ -600,7 +449,7 @@ function ClipStreamRoot({
 					}
 				}
 			}
-			setBatch(next.entries);
+			setFrames(next.entries);
 		},
 		[
 			moveRuntimeRoot,
@@ -608,14 +457,14 @@ function ClipStreamRoot({
 			rootId,
 			screenInterpolatorProps,
 			screenInterpolatorPropsRevision,
-			setBatch,
+			setFrames,
 			shouldWarn,
 		],
 	);
 
 	const registerParticipant = useCallback(
 		(entry: ClipStreamParticipantRegistration) => {
-			const { runtimeDriver, trustedPlans, ...streamParticipant } = entry;
+			const { runtimeController, trustedPlans, ...streamParticipant } = entry;
 			participantsRef.current.set(
 				streamParticipant.registrationId,
 				streamParticipant,
@@ -623,7 +472,7 @@ function ClipStreamRoot({
 			participants.set(Array.from(participantsRef.current.values()));
 			const unregisterRuntimeParticipant =
 				globalSmoothClipCoordinatorRuntime.registerParticipant({
-					driver: runtimeDriver,
+					clip: runtimeController.ref,
 					registrationId: entry.registrationId,
 					rootId,
 					slotId: entry.styleId,
@@ -687,13 +536,13 @@ export function ScreenClipStreamProvider({
 
 export function useClipStreamRegistration({
 	base,
-	driver,
+	controller,
 	slotsMap,
 	styleId,
 	trustedPlans,
 }: {
 	base: SmoothClipPresentation;
-	driver: SmoothClipDriver;
+	controller: SmoothClipController;
 	slotsMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
 	styleId: string;
 	trustedPlans?: readonly TrustedSmoothClipNativePlan[];
@@ -717,16 +566,12 @@ export function useClipStreamRegistration({
 	}
 
 	useLayoutEffect(() => {
-		const streamDriver = {
-			kind: driver.kind,
-			__smoothClipHandle: driver.__smoothClipHandle,
-		} as SmoothClipDriver;
 		return context.registerParticipant({
 			base: canonicalBase,
-			driver: streamDriver,
+			clip: controller.ref,
 			projection: "explicit",
 			registrationId,
-			runtimeDriver: driver,
+			runtimeController: controller,
 			slotsMap,
 			streamingSuspended,
 			styleId,
@@ -736,7 +581,7 @@ export function useClipStreamRegistration({
 	}, [
 		canonicalBase,
 		context,
-		driver,
+		controller,
 		registrationId,
 		slotsMap,
 		streamingSuspended,
@@ -748,7 +593,7 @@ export function useClipStreamRegistration({
 /** Registers a deprecated geometric-mask consumer with the one screen stream. */
 export function useLegacyClipStreamRegistration({
 	base,
-	driver,
+	controller,
 	enabled = true,
 	footprint,
 	renderState,
@@ -757,7 +602,7 @@ export function useLegacyClipStreamRegistration({
 	trustedPlans,
 }: {
 	base: SmoothClipPresentation;
-	driver: SmoothClipDriver;
+	controller: SmoothClipController;
 	enabled?: boolean;
 	footprint: LegacyClipFootprint;
 	renderState: SharedValue<LegacyClipRenderState>;
@@ -783,18 +628,14 @@ export function useLegacyClipStreamRegistration({
 
 	useLayoutEffect(() => {
 		if (!enabled) return;
-		const streamDriver = {
-			kind: driver.kind,
-			__smoothClipHandle: driver.__smoothClipHandle,
-		} as SmoothClipDriver;
 		return context.registerParticipant({
 			base: canonicalBase,
-			driver: streamDriver,
+			clip: controller.ref,
 			footprint,
 			projection: "legacy",
 			registrationId,
 			renderState,
-			runtimeDriver: driver,
+			runtimeController: controller,
 			slotsMap,
 			streamingSuspended,
 			styleId,
@@ -804,7 +645,7 @@ export function useLegacyClipStreamRegistration({
 	}, [
 		canonicalBase,
 		context,
-		driver,
+		controller,
 		enabled,
 		footprint,
 		registrationId,

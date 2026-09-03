@@ -20,7 +20,6 @@ import {
 	IDENTITY_DRAG_SCALE_OUTPUT,
 	REVEAL_BACKGROUND_SCALE,
 	REVEAL_BORDER_RADIUS,
-	REVEAL_SHADOW_OFFSET,
 	UNFOCUSED_ELEMENT_OPACITY_OUTPUT,
 	ZERO_TO_ONE_RANGE,
 } from "./config";
@@ -321,17 +320,24 @@ export function buildRevealStyles({
 					CONTENT_CLOSING_OPACITY_RANGE,
 					CONTENT_CLOSING_OPACITY_OUTPUT,
 				);
+		const contentShadowOpacity = interpolate(
+			activeTransitionProgress,
+			ZERO_TO_ONE_RANGE,
+			CONTENT_SHADOW_OPACITY_OUTPUT,
+		);
 		const contentResidualStyle: AnimatedViewStyle = {
-			shadowColor: "#000",
-			shadowOffset: REVEAL_SHADOW_OFFSET,
-			shadowOpacity: interpolate(
-				activeTransitionProgress,
-				ZERO_TO_ONE_RANGE,
-				CONTENT_SHADOW_OPACITY_OUTPUT,
-			),
-			shadowRadius: 32,
-			elevation: 5,
 			opacity: contentOpacity,
+		};
+		const legacyContentShadowStyle: AnimatedViewStyle = {
+			boxShadow: [
+				{
+					color: `rgba(0, 0, 0, ${contentShadowOpacity})`,
+					offsetX: 0,
+					offsetY: 2,
+					blurRadius: 64,
+					spreadDistance: 0,
+				},
+			],
 		};
 		const legacyContentStyle: AnimatedViewStyle = {
 			transform: [
@@ -340,12 +346,14 @@ export function buildRevealStyles({
 				{ scale: contentScale },
 			],
 			...contentResidualStyle,
+			...legacyContentShadowStyle,
 		};
 		const contentClip = projectRevealContentClip({
 			screenLayout,
 			translateX: contentTranslateX,
 			translateY: contentTranslateY,
 			scale: contentScale,
+			shadowOpacity: contentShadowOpacity,
 		});
 		const maskClip = projectRevealNavigationMaskClip({
 			width: maskWidth,
@@ -357,17 +365,142 @@ export function buildRevealStyles({
 			curve: maskBorderCurve,
 		});
 
+		const projectEndpointClips = (progress: 0 | 1) => {
+			"worklet";
+			const endpointContentRaw = scopedBounds.values({
+				scaleMode: "uniform",
+				method: "content",
+				target: initialDestinationTarget,
+				progress,
+			});
+			const endpointMaskRaw = scopedBounds.values({
+				scaleMode: "uniform",
+				method: "size",
+				space: "absolute",
+				target: "fullscreen",
+				progress,
+			});
+			const endpointMaskMultiplier = props.active.closing
+				? mixUnit(0.9, 1, progress)
+				: 1;
+			const endpointMaskWidth = Math.max(
+				1,
+				endpointMaskRaw.width * endpointMaskMultiplier,
+			);
+			const endpointMaskHeight = Math.max(
+				1,
+				endpointMaskRaw.height * endpointMaskMultiplier,
+			);
+			const endpointMaskAspectBounds =
+				link.initialSource?.bounds ?? link.source.bounds;
+			const endpointMinMaskHeight = resolveAspectRatioMaskHeight({
+				maskWidth: endpointMaskWidth,
+				maskHeight: endpointMaskHeight,
+				targetWidth: endpointMaskAspectBounds.width,
+				targetHeight: endpointMaskAspectBounds.height,
+			});
+			const endpointMaskCollapse =
+				props.active.gesture.dismissing && progress === 0 ? 1 : 0;
+			const endpointRenderedMaskHeight = interpolateClamped(
+				endpointMaskCollapse,
+				0,
+				DRAG_MASK_HEIGHT_COLLAPSE_END,
+				endpointMaskHeight,
+				endpointMinMaskHeight,
+			);
+			const endpointContentTargetBounds =
+				initialDestinationTarget ?? link.destination.bounds;
+			const endpointTargetScale = resolveUniformScale({
+				sourceWidth: link.source.bounds.width,
+				sourceHeight: link.source.bounds.height,
+				destinationWidth: endpointContentTargetBounds.width,
+				destinationHeight: endpointContentTargetBounds.height,
+			});
+			const endpointContentScale = props.active.gesture.dismissing
+				? resolveDismissScaleHandoff({
+						progress,
+						releaseScale: dragScale,
+						targetScale: endpointTargetScale,
+						velocity: gestureHandoff.velocity,
+						velocityDepth,
+					})
+				: endpointContentRaw.scale;
+			const endpointSafeContentScale = resolveSafeScale(
+				endpointContentRaw.scale,
+			);
+			const endpointMaskCenterX = endpointMaskWidth / 2;
+			const endpointMaskCenterY = endpointRenderedMaskHeight / 2;
+			const endpointMaskCenteringOffsetX =
+				(endpointMaskRaw.width - endpointMaskWidth) / 2;
+			const endpointMaskCenteringOffsetY =
+				(endpointMaskRaw.height - endpointMaskHeight) / 2;
+			const endpointVerticalCollapseOffsetY =
+				initialGesture === "vertical-inverted"
+					? endpointMaskHeight - endpointRenderedMaskHeight
+					: 0;
+			const endpointMaskTranslateX =
+				(endpointMaskRaw.translateX -
+					endpointContentRaw.translateX +
+					endpointMaskCenteringOffsetX +
+					(1 - endpointContentRaw.scale) *
+						(endpointMaskCenterX - contentCenterX)) /
+				endpointSafeContentScale;
+			const endpointMaskTranslateY =
+				(endpointMaskRaw.translateY -
+					endpointContentRaw.translateY +
+					endpointMaskCenteringOffsetY +
+					endpointVerticalCollapseOffsetY +
+					(1 - endpointContentRaw.scale) *
+						(endpointMaskCenterY - contentCenterY)) /
+				endpointSafeContentScale;
+
+			return {
+				content: projectRevealContentClip({
+					screenLayout,
+					translateX: endpointContentRaw.translateX,
+					translateY: endpointContentRaw.translateY,
+					scale: endpointContentScale,
+					shadowOpacity: interpolate(
+						progress,
+						ZERO_TO_ONE_RANGE,
+						CONTENT_SHADOW_OPACITY_OUTPUT,
+					),
+				}),
+				mask: projectRevealNavigationMaskClip({
+					width: endpointMaskWidth,
+					height: endpointRenderedMaskHeight,
+					translateX: endpointMaskTranslateX,
+					translateY: endpointMaskTranslateY,
+					scale: 1 / endpointSafeContentScale,
+					radius: mixUnit(sourceBorderRadius, borderRadius, progress),
+					curve: maskBorderCurve,
+				}),
+			};
+		};
+		const endpoint0 = projectEndpointClips(0);
+		const endpoint1 = projectEndpointClips(1);
+		const contentEndpointClips = {
+			...(endpoint0.content === null ? {} : { "0": endpoint0.content }),
+			...(endpoint1.content === null ? {} : { "1": endpoint1.content }),
+		};
+		const maskEndpointClips = {
+			...(endpoint0.mask === null ? {} : { "0": endpoint0.mask }),
+			...(endpoint1.mask === null ? {} : { "1": endpoint1.mask }),
+		};
+
 		return {
 			options: {
 				gestureSensitivity,
 				gestureReleaseVelocityScale,
 			},
 			content: adaptRevealFocusedContentClip({
+				endpointClips: contentEndpointClips,
 				projectedClip: contentClip,
 				legacyStyle: legacyContentStyle,
 				residualStyle: contentResidualStyle,
 			}),
 			[NAVIGATION_MASK_ELEMENT_STYLE_ID]: adaptRevealNavigationMaskClip({
+				endpointClips: maskEndpointClips,
 				projectedClip: maskClip,
 				legacyStyle: maskElementStyle,
 			}),

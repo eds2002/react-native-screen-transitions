@@ -38,27 +38,48 @@ export const updateDurableMaximumSize = (
 	return { height, width };
 };
 
+export type FixedShellMeasurement = Readonly<{
+	epoch: string;
+	maximumSize: TransitionClipMaximumSize;
+}>;
+
+export const selectFixedShellMaximumSize = (
+	measurement: FixedShellMeasurement | null,
+	currentEpoch: string,
+	fallback: TransitionClipMaximumSize,
+): TransitionClipMaximumSize =>
+	measurement?.epoch === currentEpoch ? measurement.maximumSize : fallback;
+
 export const useFixedShellMaximumSize = (
 	fallback: TransitionClipMaximumSize,
+	layoutEpoch: string,
 	onMaximumSizeChange?: (maximumSize: TransitionClipMaximumSize) => void,
 ) => {
-	const [measured, setMeasured] = useState<TransitionClipMaximumSize | null>(
+	const [measurement, setMeasurement] = useState<FixedShellMeasurement | null>(
 		null,
 	);
-	const measuredRef = useRef<TransitionClipMaximumSize | null>(null);
+	const measurementRef = useRef<FixedShellMeasurement | null>(null);
 	const onLayout = useCallback(
 		(event: LayoutChangeEvent) => {
 			const { height, width } = event.nativeEvent.layout;
-			const next = updateDurableMaximumSize(measuredRef.current, width, height);
-			if (next === measuredRef.current || next === null) return;
+			const previous =
+				measurementRef.current?.epoch === layoutEpoch
+					? measurementRef.current.maximumSize
+					: null;
+			const next = updateDurableMaximumSize(previous, width, height);
+			if (next === previous || next === null) return;
 
-			measuredRef.current = next;
-			setMeasured(next);
+			const nextMeasurement = { epoch: layoutEpoch, maximumSize: next };
+			measurementRef.current = nextMeasurement;
+			setMeasurement(nextMeasurement);
 			onMaximumSizeChange?.(next);
 		},
-		[onMaximumSizeChange],
+		[layoutEpoch, onMaximumSizeChange],
 	);
-	const maximumSize = useMemo(() => measured ?? fallback, [fallback, measured]);
+	const maximumSize = useMemo(
+		() => selectFixedShellMaximumSize(measurement, layoutEpoch, fallback),
+		[fallback, layoutEpoch, measurement],
+	);
 
 	return { maximumSize, onLayout } as const;
 };

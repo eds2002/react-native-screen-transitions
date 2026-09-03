@@ -10,6 +10,7 @@ type RevealContentClipProjectionParams = Readonly<{
 	translateX: number;
 	translateY: number;
 	scale: number;
+	shadowOpacity: number;
 }>;
 
 type RevealNavigationMaskClipProjectionParams = Readonly<{
@@ -28,10 +29,11 @@ export function projectRevealContentClip({
 	translateX,
 	translateY,
 	scale,
+	shadowOpacity,
 }: RevealContentClipProjectionParams): SmoothClipPresentation | null {
 	"worklet";
 
-	return projectCenteredAperture({
+	const projected = projectCenteredAperture({
 		aperture: {
 			x: 0,
 			y: 0,
@@ -47,6 +49,17 @@ export function projectRevealContentClip({
 		contentTranslateY: translateY,
 		contentScale: scale,
 	});
+	if (projected === null) return null;
+	return {
+		...projected,
+		boxShadow: {
+			color: `rgba(0, 0, 0, ${shadowOpacity})`,
+			offsetX: 0,
+			offsetY: 2 * scale,
+			blurRadius: 64 * scale,
+			spreadDistance: 0,
+		},
+	};
 }
 
 /** Projects reveal's compensated nested mask into its fixed-host space. */

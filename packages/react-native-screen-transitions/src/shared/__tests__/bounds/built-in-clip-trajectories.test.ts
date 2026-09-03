@@ -5,6 +5,7 @@ import { BoundStore } from "../../stores/bounds";
 import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { adaptBuiltInClipSlot } from "../../utils/bounds/navigation/clip/adapter";
 import { projectCenteredAperture } from "../../utils/bounds/navigation/clip/projector";
+import { getBuiltInClipRuntimeMarker } from "../../utils/bounds/navigation/clip/runtime-metadata";
 import { buildRevealStyles } from "../../utils/bounds/navigation/reveal/build";
 import { REVEAL_CLIP_NATIVE_PLAN } from "../../utils/bounds/navigation/reveal/native-plan";
 import { buildZoomStyles } from "../../utils/bounds/navigation/zoom/build";
@@ -387,8 +388,24 @@ describe("built-in output-space clip trajectories", () => {
 			expect(content.clip.curve).toBe("circular");
 			expect(mask.clip.curve).toBe("continuous");
 			expect(result.content?.style).not.toHaveProperty("transform");
-			expect(result.content?.style?.shadowColor).toBe("#000");
-			expect(result.content?.style?.elevation).toBe(5);
+			expect(result.content?.style).not.toHaveProperty("shadowColor");
+			expect(result.content?.style).not.toHaveProperty("shadowOpacity");
+			expect(result.content?.style).not.toHaveProperty("shadowRadius");
+			expect(result.content?.style).not.toHaveProperty("elevation");
+			expect(content.boxShadow).toEqual({
+				color: `rgba(0, 0, 0, ${frame.progress * 0.25})`,
+				offsetX: 0,
+				offsetY: 2 * frame.content.scale,
+				blurRadius: 64 * frame.content.scale,
+				spreadDistance: 0,
+			});
+			const marker = getBuiltInClipRuntimeMarker(content);
+			expect(marker?.endpoints?.["0"]?.boxShadow?.color).toBe(
+				"rgba(0, 0, 0, 0)",
+			);
+			expect(marker?.endpoints?.["1"]?.boxShadow?.color).toBe(
+				"rgba(0, 0, 0, 0.25)",
+			);
 			expect(
 				(result[NAVIGATION_MASK_ELEMENT_STYLE_ID] as any)?.style,
 			).toBeUndefined();
@@ -535,7 +552,6 @@ describe("built-in clip projection contract", () => {
 
 	it("publishes recursively immutable promotion metadata", () => {
 		for (const plan of [ZOOM_CLIP_NATIVE_PLAN, REVEAL_CLIP_NATIVE_PLAN]) {
-			expect(plan.protocolVersion).toBe(2);
 			expect(plan.trusted).toBe(true);
 			expect(plan.projectionSpace).toBe("output");
 			expect(Object.isFrozen(plan)).toBe(true);

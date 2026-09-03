@@ -2,9 +2,9 @@ import type { SharedValue } from "react-native-reanimated";
 import {
 	type CanonicalSmoothClipPresentation,
 	canonicalizeClipPresentation,
-	type SmoothClipDriver,
-	type SmoothClipGroupUIControls,
+	type SmoothClipGroup,
 	type SmoothClipPresentation,
+	type SmoothClipRef,
 } from "react-native-smooth-clip-view";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
 import {
@@ -24,7 +24,7 @@ type ClipSlot = {
 
 export type ClipStreamUIRegistration = Readonly<{
 	base: CanonicalSmoothClipPresentation;
-	driver: SmoothClipDriver;
+	clip: SmoothClipRef;
 	footprint?: LegacyClipFootprint;
 	projection?: "explicit" | "legacy";
 	registrationId: number;
@@ -38,7 +38,7 @@ type ClipStreamUIRoot = Readonly<{
 	participants: SharedValue<readonly ClipStreamUIRegistration[]>;
 	rootId: number;
 	routeKey: string;
-	setBatch: SmoothClipGroupUIControls["setBatch"];
+	setFrames: SmoothClipGroup["ui"]["setFrames"];
 }>;
 
 export type ClipStreamCanonicalSnapshot = Readonly<{
@@ -50,9 +50,14 @@ export type ClipStreamCanonicalSnapshot = Readonly<{
 	slotId?: string;
 }>;
 
+export type ClipStreamFlushCallback = (
+	snapshots: readonly ClipStreamCanonicalSnapshot[],
+) => void;
+
 type ClipStreamWorkletGlobal = typeof globalThis & {
 	__screenTransitionClipRoots?: Record<number, ClipStreamUIRoot>;
 	__screenTransitionClipReleaseId?: number;
+	queueMicrotask(callback: () => void): void;
 };
 
 const getWorkletGlobal = () => {
@@ -103,11 +108,11 @@ export const flushClipStreamRouteOnUI = (
 		.map(Number)
 		.sort((left, right) => left - right);
 	const entries: {
-		driver: SmoothClipDriver;
-		presentation: CanonicalSmoothClipPresentation;
+		clip: SmoothClipRef;
+		frame: CanonicalSmoothClipPresentation;
 	}[] = [];
 	const snapshots: ClipStreamCanonicalSnapshot[] = [];
-	const seenDriverIds: Record<number, boolean> = {};
+	const seenRegistrations: Record<number, boolean> = {};
 	let batchOwner: ClipStreamUIRoot | undefined;
 
 	for (let rootIndex = 0; rootIndex < rootIds.length; rootIndex += 1) {
@@ -121,8 +126,8 @@ export const flushClipStreamRouteOnUI = (
 		for (let index = 0; index < participants.length; index += 1) {
 			const participant = participants[index];
 			if (participant === undefined) continue;
-			const driverId = participant.driver.__smoothClipHandle?.driverId ?? 0;
-			if (driverId <= 0 || seenDriverIds[driverId] === true) continue;
+			const driverId = participant.registrationId;
+			if (driverId <= 0 || seenRegistrations[driverId] === true) continue;
 
 			const slot = participant.slotsMap.get()[participant.styleId] as
 				| ClipSlot
@@ -151,8 +156,8 @@ export const flushClipStreamRouteOnUI = (
 			// batch instead of moving only a subset of the physical apertures.
 			if (presentation === null) return [];
 
-			seenDriverIds[driverId] = true;
-			entries.push({ driver: participant.driver, presentation });
+			seenRegistrations[driverId] = true;
+			entries.push({ clip: participant.clip, frame: presentation });
 			const trustedMarker =
 				marker !== null &&
 				marker.slotId === participant.styleId &&
@@ -178,9 +183,27 @@ export const flushClipStreamRouteOnUI = (
 	}
 
 	if (batchOwner !== undefined && entries.length > 0) {
-		batchOwner.setBatch(entries);
+		batchOwner.setFrames(entries);
 	}
 	return snapshots;
+};
+
+/**
+ * Defers the route flush until the current UI-runtime job has finished. Gesture
+ * SharedValue writes dirty the interpolation mappers, and Reanimated runs those
+ * mappers before draining this microtask. The slot map therefore represents the
+ * gesture event that scheduled the flush instead of the preceding event.
+ */
+export const scheduleClipStreamRouteFlushOnUI = (
+	routeKey: string,
+	onFlushed?: ClipStreamFlushCallback,
+) => {
+	"worklet";
+	getWorkletGlobal().queueMicrotask(() => {
+		"worklet";
+		const snapshots = flushClipStreamRouteOnUI(routeKey);
+		onFlushed?.(snapshots);
+	});
 };
 
 export const allocateClipGestureReleaseIdOnUI = () => {

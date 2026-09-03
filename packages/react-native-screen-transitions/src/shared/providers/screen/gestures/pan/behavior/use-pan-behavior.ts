@@ -5,6 +5,7 @@ import type { Direction } from "../../../../../types/ownership.types";
 import {
 	allocateClipGestureReleaseIdOnUI,
 	type ClipStreamCanonicalSnapshot,
+	scheduleClipStreamRouteFlushOnUI,
 } from "../../../clip/clip-stream-ui";
 import {
 	globalSmoothClipCoordinatorRuntime,
@@ -24,8 +25,8 @@ import type {
 } from "../../types";
 import {
 	finalizePanRelease,
-	sampleFinalPanGestureAndFlush,
 	startPanBase,
+	trackPanGesture,
 	trackPanGestureAndFlush,
 } from "./pan-lifecycle";
 import {
@@ -49,7 +50,9 @@ export const usePanBehavior = (
 		(
 			completionId: number,
 			snapshots: readonly ClipStreamCanonicalSnapshot[],
+			currentProgress: number,
 			targetProgress: number,
+			progressVelocity: number,
 			animation:
 				| Parameters<
 						typeof globalSmoothClipCoordinatorRuntime.requestRecordedBuiltInPromotion
@@ -66,9 +69,20 @@ export const usePanBehavior = (
 				snapshots,
 			});
 			if (animation) {
+				const distance = targetProgress - currentProgress;
+				const nativeAnimation =
+					Math.abs(distance) < 1e-6
+						? {
+								type: "timing" as const,
+								duration: 0,
+								controlPoints: [0, 0, 1, 1] as const,
+							}
+						: animation.type === "spring"
+							? { ...animation, velocity: progressVelocity / distance }
+							: animation;
 				void globalSmoothClipCoordinatorRuntime.requestRecordedBuiltInPromotion(
 					{
-						animation,
+						animation: nativeAnimation,
 						routeKey: currentScreenKey,
 						source: "gesture-release",
 						targetProgress,
@@ -152,12 +166,11 @@ export const usePanBehavior = (
 				screenOptions.get(),
 			);
 			const event = withSensitivity(rawEvent);
-			const finalClipSnapshots = sampleFinalPanGestureAndFlush(
+			trackPanGesture(
 				event,
 				rawEvent,
 				latestRuntime.stores.gestures,
 				dimensions,
-				currentScreenKey,
 			);
 
 			const release = !latestRuntime.policy.enabled
@@ -172,32 +185,38 @@ export const usePanBehavior = (
 					? resolveSnapPanRelease(event, latestRuntime, dimensions)
 					: resolvePanRelease(event, latestRuntime, dimensions);
 			const isPanCompositionOwner = gestureCompositionOwner.get() === "pan";
-			const completionId = INTERNAL_SMOOTH_CLIP_NATIVE_PROMOTION
-				? allocateClipGestureReleaseIdOnUI()
-				: undefined;
+			scheduleClipStreamRouteFlushOnUI(
+				currentScreenKey,
+				(finalClipSnapshots) => {
+					"worklet";
+					const completionId = INTERNAL_SMOOTH_CLIP_NATIVE_PROMOTION
+						? allocateClipGestureReleaseIdOnUI()
+						: undefined;
 
-			finalizePanRelease(
-				release,
-				latestRuntime,
-				dismissScreen,
-				dimensions,
-				rawEvent,
-				requestDismiss,
-				gestureCompositionOwner,
-				completionId === undefined
-					? undefined
-					: {
-							begin: beginSmoothClipRelease,
-							completeReanimated: completeSmoothClipReanimated,
-							completeReset: completeSmoothClipReset,
-							completionId,
-							snapshots: finalClipSnapshots,
-						},
+					finalizePanRelease(
+						release,
+						latestRuntime,
+						dismissScreen,
+						dimensions,
+						rawEvent,
+						requestDismiss,
+						gestureCompositionOwner,
+						completionId === undefined
+							? undefined
+							: {
+									begin: beginSmoothClipRelease,
+									completeReanimated: completeSmoothClipReanimated,
+									completeReset: completeSmoothClipReset,
+									completionId,
+									snapshots: finalClipSnapshots,
+								},
+					);
+
+					if (isPanCompositionOwner) {
+						gestureCompositionOwner.set(null);
+					}
+				},
 			);
-
-			if (isPanCompositionOwner) {
-				gestureCompositionOwner.set(null);
-			}
 		},
 		[
 			runtime,

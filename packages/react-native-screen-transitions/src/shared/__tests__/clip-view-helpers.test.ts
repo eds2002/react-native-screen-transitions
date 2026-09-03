@@ -2,12 +2,14 @@ import { describe, expect, it } from "bun:test";
 import {
 	assertValidMaximumSize,
 	createDefaultClipPresentation,
+	resolveClipHostFootprintStyle,
 	resolveClipHostStyle,
 	resolveClipVisualCarrierStyle,
 	resolveScreenContentCarrierStyle,
 } from "../components/clip-view/helpers";
 import {
 	createPositiveMaximumSizeFallback,
+	selectFixedShellMaximumSize,
 	updateDurableMaximumSize,
 } from "../components/screen-container/hooks/use-fixed-shell-maximum-size";
 
@@ -146,5 +148,37 @@ describe("Transition.ClipView helpers", () => {
 			width: 1,
 			height: 1,
 		});
+	});
+
+	it("lets internal clip hosts fill Yoga without applying stale maximum dimensions", () => {
+		expect(
+			resolveClipHostFootprintStyle({ width: 320, height: 640 }, "fixed"),
+		).toEqual({ width: 320, height: 640 });
+		expect(
+			resolveClipHostFootprintStyle({ width: 320, height: 640 }, "fill"),
+		).toEqual({ bottom: 0, left: 0, position: "absolute", right: 0, top: 0 });
+	});
+
+	it("rejects a durable shell measurement from a previous window epoch", () => {
+		const portraitMeasurement = {
+			epoch: "320:640",
+			maximumSize: { width: 280, height: 600 },
+		};
+		const landscapeFallback = { width: 640, height: 320 };
+
+		expect(
+			selectFixedShellMaximumSize(
+				portraitMeasurement,
+				"640:320",
+				landscapeFallback,
+			),
+		).toBe(landscapeFallback);
+		expect(
+			selectFixedShellMaximumSize(
+				portraitMeasurement,
+				"320:640",
+				landscapeFallback,
+			),
+		).toBe(portraitMeasurement.maximumSize);
 	});
 });

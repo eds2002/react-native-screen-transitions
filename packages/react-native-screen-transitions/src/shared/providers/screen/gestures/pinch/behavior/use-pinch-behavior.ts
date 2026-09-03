@@ -4,6 +4,7 @@ import { useNavigationHelpers } from "../../../../../hooks/navigation/use-naviga
 import {
 	allocateClipGestureReleaseIdOnUI,
 	type ClipStreamCanonicalSnapshot,
+	scheduleClipStreamRouteFlushOnUI,
 } from "../../../clip/clip-stream-ui";
 import {
 	globalSmoothClipCoordinatorRuntime,
@@ -21,8 +22,8 @@ import type {
 } from "../../types";
 import {
 	finalizePinchRelease,
-	sampleFinalPinchGestureAndFlush,
 	startPinchBase,
+	trackPinchGesture,
 	trackPinchGestureAndFlush,
 } from "./pinch-lifecycle";
 import {
@@ -44,7 +45,9 @@ export const usePinchBehavior = (
 		(
 			completionId: number,
 			snapshots: readonly ClipStreamCanonicalSnapshot[],
+			currentProgress: number,
 			targetProgress: number,
+			progressVelocity: number,
 			animation:
 				| Parameters<
 						typeof globalSmoothClipCoordinatorRuntime.requestRecordedBuiltInPromotion
@@ -61,9 +64,20 @@ export const usePinchBehavior = (
 				snapshots,
 			});
 			if (animation) {
+				const distance = targetProgress - currentProgress;
+				const nativeAnimation =
+					Math.abs(distance) < 1e-6
+						? {
+								type: "timing" as const,
+								duration: 0,
+								controlPoints: [0, 0, 1, 1] as const,
+							}
+						: animation.type === "spring"
+							? { ...animation, velocity: progressVelocity / distance }
+							: animation;
 				void globalSmoothClipCoordinatorRuntime.requestRecordedBuiltInPromotion(
 					{
-						animation,
+						animation: nativeAnimation,
 						routeKey: currentScreenKey,
 						source: "gesture-release",
 						targetProgress,
@@ -128,35 +142,36 @@ export const usePinchBehavior = (
 				screenOptions.get(),
 			);
 			const event = withSensitivity(rawEvent);
-			const finalClipSnapshots = sampleFinalPinchGestureAndFlush(
-				event,
-				rawEvent,
-				latestRuntime.stores.gestures,
-				currentScreenKey,
-			);
+			trackPinchGesture(event, rawEvent, latestRuntime.stores.gestures);
 			const release = latestRuntime.participation.effectiveSnapPoints
 				.hasSnapPoints
 				? resolveSnapPinchRelease(event, latestRuntime)
 				: resolvePinchRelease(event, latestRuntime);
-			const completionId = INTERNAL_SMOOTH_CLIP_NATIVE_PROMOTION
-				? allocateClipGestureReleaseIdOnUI()
-				: undefined;
-			finalizePinchRelease(
-				release,
-				latestRuntime,
-				dismissScreen,
-				requestDismiss,
-				completionId === undefined
-					? undefined
-					: {
-							begin: beginSmoothClipRelease,
-							completeReanimated: completeSmoothClipReanimated,
-							completeReset: completeSmoothClipReset,
-							completionId,
-							snapshots: finalClipSnapshots,
-						},
+			scheduleClipStreamRouteFlushOnUI(
+				currentScreenKey,
+				(finalClipSnapshots) => {
+					"worklet";
+					const completionId = INTERNAL_SMOOTH_CLIP_NATIVE_PROMOTION
+						? allocateClipGestureReleaseIdOnUI()
+						: undefined;
+					finalizePinchRelease(
+						release,
+						latestRuntime,
+						dismissScreen,
+						requestDismiss,
+						completionId === undefined
+							? undefined
+							: {
+									begin: beginSmoothClipRelease,
+									completeReanimated: completeSmoothClipReanimated,
+									completeReset: completeSmoothClipReset,
+									completionId,
+									snapshots: finalClipSnapshots,
+								},
+					);
+					gestureCompositionOwner.set(null);
+				},
 			);
-			gestureCompositionOwner.set(null);
 		},
 		[
 			runtime,

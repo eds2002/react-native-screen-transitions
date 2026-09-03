@@ -2,10 +2,7 @@ import { clamp, runOnJS } from "react-native-reanimated";
 import { EPSILON, FALSE, TRUE } from "../../../../../constants";
 import { animateToProgress } from "../../../../../utils/animation/animate-to-progress";
 import { emit } from "../../../../../utils/animation/emit";
-import {
-	type ClipStreamCanonicalSnapshot,
-	flushClipStreamRouteOnUI,
-} from "../../../clip/clip-stream-ui";
+import { scheduleClipStreamRouteFlushOnUI } from "../../../clip/clip-stream-ui";
 import { resolveSmoothClipNativeAnimation } from "../../../clips/coordinator/native-animation";
 import type { SmoothClipGestureCompletion } from "../../shared/clip-completion";
 import { normalizePinchScale } from "../../shared/physics";
@@ -72,26 +69,16 @@ export const trackPinchGesture = (
 	};
 };
 
-export const sampleFinalPinchGestureAndFlush = (
-	event: PinchGestureEvent,
-	rawEvent: PinchGestureEvent,
-	gestures: PinchGestureRuntime["stores"]["gestures"],
-	routeKey: string,
-): readonly ClipStreamCanonicalSnapshot[] => {
-	"worklet";
-	return trackPinchGestureAndFlush(event, rawEvent, gestures, routeKey);
-};
-
 /** Tracks and atomically batches one built-in interactive pinch frame. */
 export const trackPinchGestureAndFlush = (
 	event: PinchGestureEvent,
 	rawEvent: PinchGestureEvent,
 	gestures: PinchGestureRuntime["stores"]["gestures"],
 	routeKey: string,
-): readonly ClipStreamCanonicalSnapshot[] => {
+) => {
 	"worklet";
 	trackPinchGesture(event, rawEvent, gestures);
-	return flushClipStreamRouteOnUI(routeKey);
+	scheduleClipStreamRouteFlushOnUI(routeKey);
 };
 
 export const finalizePinchRelease = (
@@ -123,12 +110,13 @@ export const finalizePinchRelease = (
 		runOnJS(coordinatedCompletion.begin)(
 			coordinatedCompletion.completionId,
 			coordinatedCompletion.snapshots,
+			animations.transitionProgress.get(),
 			release.target,
+			release.initialVelocity,
 			resolveSmoothClipNativeAnimation(
 				release.target === 0
 					? release.transitionSpec?.close
 					: release.transitionSpec?.open,
-				"gesture-release",
 			),
 		);
 	}

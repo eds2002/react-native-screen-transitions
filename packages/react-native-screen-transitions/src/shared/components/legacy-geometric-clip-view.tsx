@@ -22,7 +22,7 @@ import {
 } from "react-native-reanimated";
 import {
 	SmoothClipView,
-	useSmoothClipDriver,
+	useSmoothClipController,
 } from "react-native-smooth-clip-view";
 import { NO_PROPS } from "../constants";
 import { useLegacyClipStreamRegistration } from "../providers/screen/clip/clip-stream.provider";
@@ -31,10 +31,7 @@ import {
 	resolveLegacyOverflowCarrierStyle,
 } from "../providers/screen/clip/legacy-clip-fallback";
 import { updateLegacyClipFootprint } from "../providers/screen/clip/legacy-clip-projector";
-import {
-	INTERNAL_SMOOTH_CLIP_NATIVE_PROMOTION,
-	type TrustedSmoothClipNativePlan,
-} from "../providers/screen/clips/coordinator/runtime-store";
+import type { TrustedSmoothClipNativePlan } from "../providers/screen/clips/coordinator/runtime-store";
 import { useScreenSlots } from "../providers/screen/styles";
 import type { NormalizedTransitionSlotStyle } from "../types/animation.types";
 import {
@@ -129,15 +126,12 @@ export const LegacyGeometricClipView = forwardRef<
 		() => createDefaultClipPresentation({ height, width }),
 		[height, width],
 	);
-	const driver = useSmoothClipDriver(base, {
-		velocityTracking:
-			INTERNAL_SMOOTH_CLIP_NATIVE_PROMOTION && (trustedPlans?.length ?? 0) > 0,
-	});
+	const controller = useSmoothClipController(base);
 	const { slotsMap } = useScreenSlots();
 	const renderState = useSharedValue(INITIAL_LEGACY_CLIP_RENDER_STATE);
 	useLegacyClipStreamRegistration({
 		base,
-		driver,
+		controller,
 		enabled: streamEnabled,
 		footprint: maximumSize,
 		renderState,
@@ -175,7 +169,7 @@ export const LegacyGeometricClipView = forwardRef<
 				{...hostProps}
 				animatedProps={animatedHostProps}
 				collapsable={false}
-				driver={driver}
+				controller={controller}
 				style={[hostStyle, footprintStyle]}
 			>
 				<Animated.View

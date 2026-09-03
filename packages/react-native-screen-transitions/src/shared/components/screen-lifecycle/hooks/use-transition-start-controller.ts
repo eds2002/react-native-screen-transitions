@@ -58,7 +58,6 @@ export const useTransitionStartController = ({
 				target === "close" || (typeof target === "number" && target === 0);
 			const nativeAnimation = resolveSmoothClipNativeAnimation(
 				isClosing ? transitionSpec?.close : transitionSpec?.open,
-				"transition",
 			);
 			if (nativeAnimation) {
 				void globalSmoothClipCoordinatorRuntime.requestRecordedBuiltInPromotion(

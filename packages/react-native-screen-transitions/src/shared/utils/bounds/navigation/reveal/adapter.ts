@@ -8,14 +8,16 @@ import { adaptBuiltInClipSlot } from "../clip/adapter";
 import { markBuiltInClipPresentation } from "../clip/runtime-metadata";
 
 type RevealClipAdapterParams = Readonly<{
+	endpointClips?: Readonly<Partial<Record<"0" | "1", SmoothClipPresentation>>>;
 	projectedClip: SmoothClipPresentation | null;
 	explicitClip?: SmoothClipPresentation;
 	legacyStyle: AnimatedViewStyle;
 	residualStyle?: AnimatedViewStyle;
 }>;
 
-/** Leaves reveal's opacity and shadow channels on the outer visual carrier. */
+/** Leaves only reveal opacity on the outer visual carrier. */
 export function adaptRevealFocusedContentClip({
+	endpointClips,
 	projectedClip,
 	explicitClip,
 	legacyStyle,
@@ -29,6 +31,7 @@ export function adaptRevealFocusedContentClip({
 			explicitClip === undefined && projectedClip !== null
 				? markBuiltInClipPresentation(projectedClip, {
 						activeBlockers: [],
+						endpoints: endpointClips,
 						planId: "reveal",
 						slotId: "content",
 					})
@@ -39,6 +42,7 @@ export function adaptRevealFocusedContentClip({
 }
 
 export function adaptRevealNavigationMaskClip({
+	endpointClips,
 	projectedClip,
 	explicitClip,
 	legacyStyle,
@@ -51,6 +55,7 @@ export function adaptRevealNavigationMaskClip({
 			explicitClip === undefined && projectedClip !== null
 				? markBuiltInClipPresentation(projectedClip, {
 						activeBlockers: [],
+						endpoints: endpointClips,
 						planId: "reveal",
 						slotId: NAVIGATION_MASK_ELEMENT_STYLE_ID,
 					})
