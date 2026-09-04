@@ -189,6 +189,7 @@ const buildBaseScenes = ({
 			childStateUnchanged &&
 			previousDescriptor.route === descriptorRoute &&
 			previousDescriptor.navigation === props.navigation &&
+			previousDescriptor.render === sourceDescriptor.render &&
 			previousDescriptor.options === sourceDescriptor.options
 				? previousDescriptor
 				: ({

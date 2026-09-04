@@ -8,6 +8,8 @@ import {
 } from "../stores/system.store";
 import { isCloseActionReplay } from "../utils/navigation/close-action-replay";
 
+globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+
 const route = { key: "soft-dismiss-route", name: "details" };
 const current = {
 	route,
@@ -53,6 +55,15 @@ let handleBlankClose: boolean;
 mock.module("../providers/screen/descriptors", () => ({
 	useDescriptorsStore: (selector: (store: any) => unknown) =>
 		selector({
+			descriptors: { current },
+			current,
+			derivations: {
+				currentScreenKey: route.key,
+			},
+		}),
+	useOptionalDescriptorsStore: (selector: (store: any) => unknown) =>
+		selector({
+			descriptors: { current },
 			current,
 			derivations: {
 				currentScreenKey: route.key,

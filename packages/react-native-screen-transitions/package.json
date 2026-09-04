@@ -41,6 +41,12 @@
 			"import": "./lib/module/navigators/expo-router/index.js",
 			"require": "./lib/commonjs/navigators/expo-router/index.js",
 			"types": "./lib/typescript/navigators/expo-router/index.d.ts"
+		},
+		"./custom-navigator": {
+			"react-native": "./src/custom-navigator.ts",
+			"import": "./lib/module/custom-navigator.js",
+			"require": "./lib/commonjs/custom-navigator.js",
+			"types": "./lib/typescript/custom-navigator.d.ts"
 		}
 	},
 	"scripts": {
