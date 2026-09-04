@@ -132,12 +132,9 @@ export const areDescriptorSourcesEquivalent = (
 	previous: BlankStackDescriptorSource,
 	next: BlankStackDescriptorSource,
 ): boolean => {
-	return (
-		previous.render === next.render &&
-		areRecordsShallowEqual(
-			previous.options as unknown as Record<string, unknown>,
-			next.options as unknown as Record<string, unknown>,
-		)
+	return areRecordsShallowEqual(
+		previous.options as unknown as Record<string, unknown>,
+		next.options as unknown as Record<string, unknown>,
 	);
 };
 
