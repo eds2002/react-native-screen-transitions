@@ -9,11 +9,11 @@ import {
 import type { View } from "react-native";
 import type { AnimatedRef } from "react-native-reanimated";
 import { useAnimatedRef, useSharedValue } from "react-native-reanimated";
-import { useDescriptorsStore } from "../../../providers/screen/descriptors";
+import { useBuilderStore } from "../../../providers/screen/builder";
 import {
 	useComposedSlotStyles,
 	useSlotStackingStyles,
-} from "../../../providers/screen/styles";
+} from "../../../providers/screen/orchestrator/styles";
 import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
 import { createBoundTag } from "../../../stores/bounds/helpers/link-pairs.helpers";
 import type { BoundTag } from "../../../stores/bounds/types";
@@ -99,7 +99,7 @@ export const {
 			escapeClipping,
 		});
 
-		const currentScreenKey = useDescriptorsStore(
+		const currentScreenKey = useBuilderStore(
 			(s) => s.derivations.currentScreenKey,
 		);
 		const isCurrentScreenClosing = useBlankStackStore(

@@ -1,11 +1,11 @@
 import { useAnimatedReaction } from "react-native-reanimated";
-import type { BaseDescriptor } from "../../../providers/screen/descriptors";
+import type { BaseDescriptor } from "../../../providers/screen/builder";
+import {
+	type BuilderAnimationState,
+	LifecycleTransitionRequestKind,
+} from "../../../providers/screen/builder/hooks/use-builder-animation-state";
 import type { AnimationStoreMap } from "../../../stores/animation.store";
 import { GestureStore } from "../../../stores/gesture.store";
-import {
-	LifecycleTransitionRequestKind,
-	type SystemStoreMap,
-} from "../../../stores/system.store";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
 
 export const useTransitionStartController = ({
@@ -15,7 +15,7 @@ export const useTransitionStartController = ({
 }: {
 	current: BaseDescriptor;
 	animations: AnimationStoreMap;
-	system: SystemStoreMap;
+	system: BuilderAnimationState;
 }) => {
 	const {
 		targetProgress,

@@ -1,7 +1,7 @@
 import { scheduleOnUI } from "react-native-worklets";
+import { getBuilderStore } from "../providers/screen/builder/builder.provider";
 import { AnimationStore } from "../stores/animation.store";
 import type { HistoryEntry } from "../stores/history.store";
-import { SystemStore } from "../stores/system.store";
 import { animateToProgress } from "../utils/animation/animate-to-progress";
 import { resolveSnapTransitionSpec } from "../utils/animation/resolve-snap-transition-spec";
 import { logger } from "../utils/logger";
@@ -13,11 +13,10 @@ const getSortedSnapPoints = (
 	const snapPoints = descriptor.options?.snapPoints;
 	if (!snapPoints || snapPoints.length === 0) return null;
 
-	// Resolve 'auto' to the measured fraction stored in SystemStore
-	const autoVal = SystemStore.getValue(
+	// Resolve 'auto' to the measured fraction owned by Builder
+	const autoVal = getBuilderStore(
 		descriptor.route.key,
-		"resolvedAutoSnapPoint",
-	).get();
+	).animationState.resolvedAutoSnapPoint.get();
 
 	const resolved = snapPoints
 		.map((p) => (p === "auto" ? autoVal : p))
@@ -45,14 +44,10 @@ export function snapDescriptorToIndex(
 
 	const targetProgress = sorted[index];
 	const animations = AnimationStore.getBag(descriptor.route.key);
-	const targetProgressValue = SystemStore.getValue(
-		descriptor.route.key,
-		"targetProgress",
-	);
-	const animationProgressValue = SystemStore.getValue(
-		descriptor.route.key,
-		"animationProgress",
-	);
+	const {
+		targetProgress: targetProgressValue,
+		animationProgress: animationProgressValue,
+	} = getBuilderStore(descriptor.route.key).animationState;
 
 	scheduleOnUI(() => {
 		"worklet";

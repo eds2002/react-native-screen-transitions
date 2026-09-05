@@ -1,10 +1,10 @@
 import { useAnimatedProps, useSharedValue } from "react-native-reanimated";
-import { useDescriptorsStore } from "../../../../../../providers/screen/descriptors";
 import {
-	useOptionalScreenSlotStore,
-	useScreenSlotStore,
-} from "../../../../../../providers/screen/styles";
-import { hasCloseTransitionFinished } from "../../../../../../providers/screen/styles/helpers/transition-visual-state";
+	useBuilderStore,
+	useOptionalBuilderStore,
+} from "../../../../../../providers/screen/builder";
+import { useOrchestratorStore } from "../../../../../../providers/screen/orchestrator";
+import { hasCloseTransitionFinished } from "../../../../../../providers/screen/orchestrator/styles/helpers/transition-visual-state";
 import { useBlankStackStore } from "../../../../../../providers/stack/blank-stack.provider";
 import { AnimationStore } from "../../../../../../stores/animation.store";
 import { getLinkKeyFromTag } from "../../../../../../stores/bounds/helpers/link-pairs.helpers";
@@ -18,7 +18,6 @@ import type {
 	LinkPairState,
 	TagLink,
 } from "../../../../../../stores/bounds/types";
-import { SystemStore } from "../../../../../../stores/system.store";
 import { PORTAL_HOST_NAME_RESET_VALUE } from "../../../utils/naming";
 import {
 	resolveActiveHandoffReceiver,
@@ -49,22 +48,22 @@ const isCompleteActiveLink = (
 export const useBoundaryContentPortalAttachment = ({
 	boundaryId,
 }: UseBoundaryContentPortalAttachmentParams) => {
-	const slotsMap = useScreenSlotStore((store) => store.slotsMap);
+	const slotsMap = useOrchestratorStore((store) => store.slotsMap);
 
-	const currentScreenKey = useDescriptorsStore(
+	const currentScreenKey = useBuilderStore(
 		(s) => s.derivations.currentScreenKey,
 	);
-	const nextScreenKey = useDescriptorsStore((s) => s.derivations.nextScreenKey);
-	const sourcePairKey = useDescriptorsStore((s) => s.derivations.sourcePairKey);
-	const destinationPairKey = useDescriptorsStore(
+	const nextScreenKey = useBuilderStore((s) => s.derivations.nextScreenKey);
+	const sourcePairKey = useBuilderStore((s) => s.derivations.sourcePairKey);
+	const destinationPairKey = useBuilderStore(
 		(s) => s.derivations.destinationPairKey,
 	);
-	const destinationSlots = useOptionalScreenSlotStore(
+	const destinationScreenReady = useOptionalBuilderStore(
 		nextScreenKey ?? currentScreenKey,
+		(store) => store.screenReady,
 	);
-	const unavailableInterpolatorReady = useSharedValue(0);
-	const interpolatorReady =
-		destinationSlots?.interpolatorReady ?? unavailableInterpolatorReady;
+	const unavailableScreenReady = useSharedValue(0);
+	const screenReady = destinationScreenReady ?? unavailableScreenReady;
 
 	const activeReceiverScreenKey = useBlankStackStore(
 		resolveActiveHandoffReceiver,
@@ -73,10 +72,15 @@ export const useBoundaryContentPortalAttachment = ({
 		resolvePreviousHandoffReceiver,
 	);
 
-	const activeReceiverAnimationProgress = SystemStore.getValue(
-		activeReceiverScreenKey ?? currentScreenKey,
-		"animationProgress",
+	const localAnimationProgress = useBuilderStore(
+		(store) => store.animationState.animationProgress,
 	);
+	const receiverAnimationProgress = useOptionalBuilderStore(
+		activeReceiverScreenKey ?? currentScreenKey,
+		(store) => store.animationState.animationProgress,
+	);
+	const activeReceiverAnimationProgress =
+		receiverAnimationProgress ?? localAnimationProgress;
 
 	const activeReceiverClosing = AnimationStore.getValue(
 		activeReceiverScreenKey ?? currentScreenKey,
@@ -167,7 +171,7 @@ export const useBoundaryContentPortalAttachment = ({
 			: null;
 		const requestedLink = requestedPair?.links[boundaryLinkKey];
 
-		const isInterpolatorReady = interpolatorReady.get();
+		const isScreenReady = screenReady.get();
 		const attachedScreenKey = attachedReceiverScreenKey.get();
 
 		const automaticReceiverScreenKey = resolveHandoffAttachmentCandidate({
@@ -175,7 +179,7 @@ export const useBoundaryContentPortalAttachment = ({
 			activeReceiverScreenKey,
 			attachedReceiverScreenKey: attachedScreenKey,
 			hasActiveCloseFinished,
-			interpolatorReady: !!isInterpolatorReady,
+			screenReady: !!isScreenReady,
 			pairChangedDuringClose,
 			pairDestinationScreenKey: pairDestination,
 			pairHasBoundaryLink: automaticLink !== undefined,
@@ -189,7 +193,7 @@ export const useBoundaryContentPortalAttachment = ({
 			automaticScreenKey: automaticReceiverScreenKey,
 			destinationReady:
 				requestedDestinationScreenKey === activeReceiverScreenKey ||
-				!!isInterpolatorReady,
+				!!isScreenReady,
 			destinationScreenKey: requestedDestinationScreenKey,
 			handoffTarget,
 			sourceScreenKey:
@@ -209,7 +213,7 @@ export const useBoundaryContentPortalAttachment = ({
 
 		const activatingPairDestination =
 			!!pairDestination &&
-			!!isInterpolatorReady &&
+			!!isScreenReady &&
 			nextReceiverScreenKey === pairDestination;
 
 		const canActivateReceiver =

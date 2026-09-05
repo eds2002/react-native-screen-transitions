@@ -1,13 +1,13 @@
 import { useLayoutEffect } from "react";
 import {
 	type BaseDescriptor,
-	useDescriptorsStore,
-} from "../../../providers/screen/descriptors";
-import type { AnimationStoreMap } from "../../../stores/animation.store";
+	useBuilderStore,
+} from "../../../providers/screen/builder";
 import {
+	type BuilderAnimationState,
 	LifecycleTransitionRequestKind,
-	type SystemStoreMap,
-} from "../../../stores/system.store";
+} from "../../../providers/screen/builder/hooks/use-builder-animation-state";
+import type { AnimationStoreMap } from "../../../stores/animation.store";
 import type { SnapPoint } from "../../../types/screen.types";
 
 /**
@@ -39,11 +39,9 @@ function getInitialProgress({
 export function useOpenTransitionIntent(
 	current: BaseDescriptor,
 	animations: AnimationStoreMap,
-	system: SystemStoreMap,
+	system: BuilderAnimationState,
 ) {
-	const isFirstKey = useDescriptorsStore(
-		(store) => store.derivations.isFirstKey,
-	);
+	const isFirstKey = useBuilderStore((store) => store.derivations.isFirstKey);
 	const { requestLifecycleTransition } = system.actions;
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Must only run once on mount

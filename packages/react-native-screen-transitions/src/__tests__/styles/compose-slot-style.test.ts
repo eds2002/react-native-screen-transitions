@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import {
 	composeSlotStyleWithLocalTransform,
 	getLocalTransformForSlotComposition,
-} from "../../providers/screen/styles/helpers/compose-slot-style";
+} from "../../providers/screen/orchestrator/styles/helpers/compose-slot-style";
 import {
 	attachBoundsLocalTransform,
 	BOUNDS_LOCAL_TRANSFORM_STYLE_KEY,

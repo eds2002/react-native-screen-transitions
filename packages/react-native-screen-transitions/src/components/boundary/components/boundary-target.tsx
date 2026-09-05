@@ -4,7 +4,7 @@ import Animated from "react-native-reanimated";
 import {
 	useComposedSlotStyles,
 	useSlotLayoutStyles,
-} from "../../../providers/screen/styles";
+} from "../../../providers/screen/orchestrator/styles";
 import { logger } from "../../../utils/logger";
 import {
 	BoundaryContentPortal,

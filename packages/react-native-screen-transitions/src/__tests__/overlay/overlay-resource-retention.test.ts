@@ -1,78 +1,64 @@
+import { makeMutable } from "react-native-reanimated";
 import { describe, expect, it } from "bun:test";
 import { retainReadyOverlayResources } from "../../components/overlay/helpers/retain-ready-overlay-resources";
 import type { BaseStackScene as StackScene } from "../../types/stack.types";
-import type { ScreenAnimationContextValue } from "../../providers/screen/animation/animation.provider";
-import type { ScreenSlotContextValue } from "../../providers/screen/styles/slot.provider";
+import type { OrchestratorState } from "../../providers/screen/orchestrator/orchestrator.provider";
 
 const createScene = (key: string) =>
 	({ route: { key, name: key } }) as StackScene;
 
 describe("overlay resource retention", () => {
+	const screenReady = makeMutable(1);
 	it("keeps a mounted overlay alive while the incoming driver registers", () => {
 		const sceneA = createScene("A");
 		const sceneB = createScene("B");
-		const animationA = {} as ScreenAnimationContextValue;
-		const animationB = {} as ScreenAnimationContextValue;
-		const slotsA = {} as ScreenSlotContextValue;
-		const slotsB = {} as ScreenSlotContextValue;
+		const animationA = {} as OrchestratorState;
+		const animationB = {} as OrchestratorState;
 		const mounted = retainReadyOverlayResources(
 			null,
 			animationA,
-			slotsA,
 			sceneA,
 			animationA,
-			slotsA,
+			screenReady,
 		);
 
 		const whileBRegisters = retainReadyOverlayResources(
 			mounted,
 			animationA,
-			slotsA,
 			sceneB,
 			null,
-			null,
+			screenReady,
 		);
 		const drivenByB = retainReadyOverlayResources(
 			whileBRegisters,
 			animationA,
-			slotsA,
 			sceneB,
 			animationB,
-			slotsB,
+			screenReady,
 		);
 
 		expect(whileBRegisters).toBe(mounted);
 		expect(drivenByB).toEqual({
 			overlayAnimationStore: animationA,
-			overlaySlots: slotsA,
 			driverScene: sceneB,
 			driverAnimationStore: animationB,
-			driverSlots: slotsB,
+			driverScreenReady: screenReady,
 		});
 	});
 
 	it("never drops mounted resources during a transient owner-store gap", () => {
 		const scene = createScene("A");
-		const animation = {} as ScreenAnimationContextValue;
-		const slots = {} as ScreenSlotContextValue;
+		const animation = {} as OrchestratorState;
 		const mounted = retainReadyOverlayResources(
 			null,
 			animation,
-			slots,
 			scene,
 			animation,
-			slots,
+			screenReady,
 		);
 
 		expect(
-			retainReadyOverlayResources(
-				mounted,
-				null,
-				null,
-				scene,
-				animation,
-				slots,
-			),
+			retainReadyOverlayResources(mounted, null, scene, animation, screenReady),
 		).toBe(mounted);
 	});
 
@@ -81,10 +67,9 @@ describe("overlay resource retention", () => {
 			retainReadyOverlayResources(
 				null,
 				null,
-				null,
 				createScene("A"),
 				null,
-				null,
+				screenReady,
 			),
 		).toBeNull();
 	});

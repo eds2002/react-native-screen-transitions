@@ -1,8 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import type { SharedValue } from "react-native-reanimated";
-import type { GestureOwnerMap } from "../../../providers/screen/gestures/types";
-import { resolvePanActivationMoveDecision } from "../../../providers/screen/gestures/pan/activation/pan-activation-decision";
-import { resolveShadowingClaimDirections } from "../../../providers/screen/gestures/ownership/shadowing-claims";
+import type { GestureOwnerMap } from "../../../providers/screen/motion/gestures/types";
+import { resolvePanActivationMoveDecision } from "../../../providers/screen/motion/gestures/pan/activation/pan-activation-decision";
+import { resolveShadowingClaimDirections } from "../../../providers/screen/motion/gestures/ownership/shadowing-claims";
 import { GestureActivationState } from "../../../types/gesture.types";
 import type { ClaimedDirections } from "../../../types/ownership.types";
 

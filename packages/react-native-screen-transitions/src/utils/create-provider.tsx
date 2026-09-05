@@ -74,7 +74,6 @@ type ResolvedOptionalProviderStoreHook<
 type ProviderFactoryResult<ContextValue, Global extends boolean> = {
 	value: ContextValue;
 	children?: ReactNode;
-	unregisterOnCleanup?: boolean;
 } & (Global extends true ? { key: string } : { key?: never });
 
 interface ProviderStoreApi<ContextValue> {
@@ -323,21 +322,17 @@ export default function createProvider<
 			children,
 			registerGlobally = true,
 			storeKey,
-			unregisterOnCleanup = true,
 			value,
 		}: {
 			children?: ReactNode;
 			registerGlobally?: boolean;
 			storeKey?: string;
-			unregisterOnCleanup?: boolean;
 			value: ContextValue;
 		}) => {
 			const storeRef = useRef<MutableProviderStoreApi<ContextValue> | null>(
 				null,
 			);
 			const pendingNotifyRef = useRef(false);
-			const unregisterOnCleanupRef = useRef(unregisterOnCleanup);
-			unregisterOnCleanupRef.current = unregisterOnCleanup;
 
 			if (storeRef.current === null) {
 				storeRef.current = createProviderStore<ContextValue>(value);
@@ -355,13 +350,7 @@ export default function createProvider<
 					);
 				}
 
-				const unregister = globalRegistry.register(storeKey, store);
-
-				return () => {
-					if (unregisterOnCleanupRef.current) {
-						unregister();
-					}
-				};
+				return globalRegistry.register(storeKey, store);
 			}, [registerGlobally, storeKey, store]);
 
 			pendingNotifyRef.current =
@@ -386,27 +375,32 @@ export default function createProvider<
 			const {
 				children = (props as { children?: ReactNode }).children,
 				key,
-				unregisterOnCleanup,
 				value,
 			} = factory(props);
 			return (
-				<StoreProvider
-					storeKey={key}
-					unregisterOnCleanup={unregisterOnCleanup}
-					value={value}
-				>
+				<StoreProvider storeKey={key} value={value}>
 					{children}
 				</StoreProvider>
 			);
 		};
 		Provider.displayName = providerDisplayName;
 
+		const getStore = (key: string): ContextValue => {
+			const value = globalRegistry?.getStore(key)?.getSnapshot();
+			if (value === null || value === undefined)
+				throw new Error(`${name}Store is unavailable for key "${key}"`);
+			return value;
+		};
+
 		return {
 			StoreProvider,
+			...(global ? { [`get${name}Store`]: getStore } : {}),
 			[`${name}Provider`]: Provider,
 			[`useOptional${name}Store`]: useOptionalStoreSelector,
 			[`use${name}Store`]: useStoreSelector,
-		} as { StoreProvider: typeof StoreProvider } & {
+		} as (Global extends true
+			? { [P in ProviderName as `get${P}Store`]: (key: string) => ContextValue }
+			: unknown) & { StoreProvider: typeof StoreProvider } & {
 			[P in ProviderName as `${P}Provider`]: React.FC<ProviderProps>;
 		} & {
 			[P in ProviderName as `useOptional${P}Store`]: ResolvedOptionalProviderStoreHook<

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { runOverlaySlotInterpolator } from "../../components/overlay/helpers/run-overlay-slot-interpolator";
-import type { ScreenInterpolatorFrame } from "../../providers/screen/animation/helpers/pipeline";
+import type { ScreenInterpolatorFrame } from "../../providers/screen/orchestrator/helpers/pipeline";
 
 describe("overlay slot interpolator", () => {
 	it("runs the destination interpolator against overlay adjacency", () => {

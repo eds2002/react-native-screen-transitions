@@ -1,0 +1,91 @@
+import { useCallback, useMemo } from "react";
+import type { SharedValue } from "react-native-reanimated";
+import { useNavigationHelpers } from "../../../../../../hooks/navigation/use-navigation-helpers";
+import type { ScreenOptionsContextValue } from "../../../options";
+import { usePinchGestureSensitivity } from "../../ownership/hooks/use-gesture-sensitivity";
+import { resolvePinchRuntime } from "../../shared/runtime";
+import type {
+	GestureCompositionOwner,
+	PinchBehavior,
+	PinchGestureEvent,
+	PinchGestureRuntime,
+} from "../../types";
+import {
+	finalizePinchRelease,
+	startPinchBase,
+	trackPinchGesture,
+} from "./pinch-lifecycle";
+import {
+	primeSnapPinchRelease,
+	resolvePinchRelease,
+	resolveSnapPinchRelease,
+} from "./pinch-release";
+
+export const usePinchBehavior = (
+	runtime: SharedValue<PinchGestureRuntime>,
+	screenOptions: ScreenOptionsContextValue,
+	gestureCompositionOwner: SharedValue<GestureCompositionOwner>,
+): PinchBehavior => {
+	const { requestDismiss } = useNavigationHelpers();
+	const { withSensitivity, resetSensitivity } =
+		usePinchGestureSensitivity(screenOptions);
+
+	const onStart = useCallback(() => {
+		"worklet";
+		const latestRuntime = resolvePinchRuntime(
+			runtime.get(),
+			screenOptions.get(),
+		);
+		if (latestRuntime.participation.effectiveSnapPoints.hasSnapPoints) {
+			primeSnapPinchRelease(latestRuntime);
+		}
+		startPinchBase(latestRuntime);
+		resetSensitivity();
+	}, [runtime, screenOptions, resetSensitivity]);
+
+	const onUpdate = useCallback(
+		(rawEvent: PinchGestureEvent) => {
+			"worklet";
+			const latestRuntime = resolvePinchRuntime(
+				runtime.get(),
+				screenOptions.get(),
+			);
+			const event = withSensitivity(rawEvent);
+			trackPinchGesture(event, rawEvent, latestRuntime.stores.gestures);
+		},
+		[runtime, screenOptions, withSensitivity],
+	);
+
+	const onEnd = useCallback(
+		(rawEvent: PinchGestureEvent) => {
+			"worklet";
+			const latestRuntime = resolvePinchRuntime(
+				runtime.get(),
+				screenOptions.get(),
+			);
+			const event = withSensitivity(rawEvent);
+			const release = latestRuntime.participation.effectiveSnapPoints
+				.hasSnapPoints
+				? resolveSnapPinchRelease(event, latestRuntime)
+				: resolvePinchRelease(event, latestRuntime);
+			finalizePinchRelease(release, latestRuntime, requestDismiss);
+			gestureCompositionOwner.set(null);
+		},
+		[
+			runtime,
+			screenOptions,
+			requestDismiss,
+			withSensitivity,
+			gestureCompositionOwner,
+		],
+	);
+
+	return useMemo(
+		() => ({
+			onStart,
+			onUpdate,
+			onEnd,
+		}),
+		[onStart, onUpdate, onEnd],
+	);
+};

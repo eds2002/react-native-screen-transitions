@@ -8,7 +8,6 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 type TestProviderProps = {
 	children?: ReactNode;
 	id: string;
-	unregisterOnCleanup?: boolean;
 	value: number;
 };
 
@@ -16,13 +15,12 @@ let injectedFactoryArgument: unknown;
 const testProviderFactory = createProvider("Test", { global: true })<
 	TestProviderProps,
 	{ value: number }
->(({ children, id, unregisterOnCleanup, value }, ...injectedArguments: unknown[]) => {
+>(({ children, id, value }, ...injectedArguments: unknown[]) => {
 	injectedFactoryArgument = injectedArguments[0];
 
 	return {
 		children,
 		key: id,
-		unregisterOnCleanup,
 		value: { value },
 	};
 });
@@ -50,6 +48,7 @@ describe("createProvider global stores", () => {
 		expect(Object.keys(testProviderFactory).sort()).toEqual([
 			"StoreProvider",
 			"TestProvider",
+			"getTestStore",
 			"useOptionalTestStore",
 			"useTestStore",
 		]);
@@ -167,7 +166,7 @@ describe("createProvider global stores", () => {
 		act(() => renderer.unmount());
 	});
 
-	it("retains a keyed store when cleanup is not a route close", () => {
+	it("releases a keyed store when its provider unmounts", () => {
 		let observed: number | null = null;
 		let renderer: ReactTestRenderer;
 
@@ -181,7 +180,6 @@ describe("createProvider global stores", () => {
 				<>
 					<TestProvider
 						id="screen-a"
-						unregisterOnCleanup={false}
 						value={1}
 					/>
 					<Reader />
@@ -191,7 +189,7 @@ describe("createProvider global stores", () => {
 
 		act(() => renderer.update(<Reader />));
 
-		expect(observed).toBe(1);
+		expect(observed).toBeNull();
 		act(() => renderer.unmount());
 	});
 

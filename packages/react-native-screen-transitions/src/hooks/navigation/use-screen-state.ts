@@ -1,7 +1,7 @@
 import type { Route } from "@react-navigation/native";
 import { useCallback, useMemo } from "react";
 import { snapDescriptorToIndex } from "../../animation/snap-to";
-import { useDescriptorsStore } from "../../providers/screen/descriptors";
+import { useBuilderStore } from "../../providers/screen/builder";
 import { useBlankStackStore } from "../../providers/stack/blank-stack.provider";
 import type { ScreenTransitionConfig } from "../../types/screen.types";
 import type { BaseStackNavigation } from "../../types/stack.types";
@@ -61,7 +61,7 @@ export function useScreenState<
 	TNavigation extends BaseStackNavigation = BaseStackNavigation,
 >(): ScreenState<TNavigation> {
 	const { routes, scenes, routeKeys, focusedIndex } = useBlankStackStore();
-	const current = useDescriptorsStore((store) => store.descriptors.current);
+	const current = useBuilderStore((store) => store.descriptors.current);
 
 	const index = useMemo(
 		() => routeKeys.indexOf(current.route.key),

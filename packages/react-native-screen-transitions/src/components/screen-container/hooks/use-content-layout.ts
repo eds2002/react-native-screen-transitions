@@ -1,26 +1,21 @@
 import { useCallback } from "react";
 import { type LayoutChangeEvent, useWindowDimensions } from "react-native";
 import { scheduleOnUI } from "react-native-worklets";
-import { useDescriptorsStore } from "../../../providers/screen/descriptors";
+import { useBuilderStore } from "../../../providers/screen/builder";
+import { LifecycleTransitionRequestKind } from "../../../providers/screen/builder/hooks/use-builder-animation-state";
 import { AnimationStore } from "../../../stores/animation.store";
-import {
-	LifecycleTransitionRequestKind,
-	SystemStore,
-} from "../../../stores/system.store";
 
 export function useContentLayout() {
-	const routeKey = useDescriptorsStore(
+	const routeKey = useBuilderStore(
 		(store) => store.derivations.currentScreenKey,
 	);
-	const isFirstKey = useDescriptorsStore(
-		(store) => store.derivations.isFirstKey,
-	);
-	const experimental_animateOnInitialMount = useDescriptorsStore(
+	const isFirstKey = useBuilderStore((store) => store.derivations.isFirstKey);
+	const experimental_animateOnInitialMount = useBuilderStore(
 		(store) => store.options.experimental_animateOnInitialMount,
 	);
 	const { height: screenHeight } = useWindowDimensions();
 	const animations = AnimationStore.getBag(routeKey);
-	const system = SystemStore.getBag(routeKey);
+	const system = useBuilderStore((store) => store.animationState);
 
 	const { targetProgress, resolvedAutoSnapPoint, measuredContentLayout } =
 		system;

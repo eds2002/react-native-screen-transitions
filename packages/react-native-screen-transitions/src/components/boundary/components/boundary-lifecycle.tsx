@@ -1,7 +1,7 @@
 import { memo } from "react";
 import type { View } from "react-native";
 import type { AnimatedRef } from "react-native-reanimated";
-import { useDescriptorsStore } from "../../../providers/screen/descriptors";
+import { useBuilderStore } from "../../../providers/screen/builder";
 import type { BoundTag } from "../../../stores/bounds/types";
 import { useBoundaryMeasurement } from "../hooks/use-boundary-measurement";
 import type {
@@ -32,7 +32,7 @@ export const BoundaryLifecycle = memo(function BoundaryLifecycle({
 	measuredRef,
 	style,
 }: BoundaryLifecycleProps) {
-	const hasConfiguredInterpolator = useDescriptorsStore(
+	const hasConfiguredInterpolator = useBuilderStore(
 		(s) => s.derivations.hasConfiguredInterpolator,
 	);
 

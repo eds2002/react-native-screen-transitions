@@ -3,8 +3,8 @@ import {
 	hasCloseTransitionFinished,
 	hasOpenTransitionStarted,
 	isOpenTransitionBlocked,
-	isScreenInterpolatorReady,
-} from "../../providers/screen/styles/helpers/transition-visual-state";
+	isScreenReady,
+} from "../../providers/screen/orchestrator/styles/helpers/transition-visual-state";
 
 describe("transition visual state", () => {
 	it("starts an opening transition only after blockers clear and progress advances", () => {
@@ -99,19 +99,19 @@ describe("transition visual state", () => {
 			animationProgress: 1,
 		};
 
-		expect(isScreenInterpolatorReady(settled)).toBe(true);
+		expect(isScreenReady(settled)).toBe(true);
 		expect(
-			isScreenInterpolatorReady({ ...settled, hasInterpolator: false }),
+			isScreenReady({ ...settled, hasInterpolator: false }),
 		).toBe(false);
 		expect(
-			isScreenInterpolatorReady({
+			isScreenReady({
 				...settled,
 				opening: true,
 				animationProgress: 0,
 			}),
 		).toBe(false);
 		expect(
-			isScreenInterpolatorReady({
+			isScreenReady({
 				...settled,
 				closing: 1,
 				animationProgress: 0,

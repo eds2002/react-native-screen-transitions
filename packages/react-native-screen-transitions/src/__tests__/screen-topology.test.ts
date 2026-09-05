@@ -1,5 +1,5 @@
 import { describe, expect, it, mock } from "bun:test";
-import { createScreenTopology } from "../providers/screen/topology/helpers/create-screen-topology";
+import { createScreenTopology } from "../providers/screen/builder/topology/helpers/create-screen-topology";
 
 describe("screen topology", () => {
 	it("resolves current, ancestor, and active descendant screen keys", () => {

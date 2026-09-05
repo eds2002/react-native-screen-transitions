@@ -2,9 +2,12 @@ import { type ComponentType, memo, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
-import { useDescriptorsStore } from "../../../providers/screen/descriptors";
-import { useScreenGestureStore } from "../../../providers/screen/gestures";
-import { useSlotProps, useSlotStyles } from "../../../providers/screen/styles";
+import { useBuilderStore } from "../../../providers/screen/builder";
+import { useMotionStore } from "../../../providers/screen/motion";
+import {
+	useSlotProps,
+	useSlotStyles,
+} from "../../../providers/screen/orchestrator/styles";
 import type { ScreenContentComponentProps } from "../../../types";
 import { ScreenFallbackHost } from "../../boundary/portal/components/boundary-portal/components/host";
 import { useContentLayout } from "../hooks/use-content-layout";
@@ -20,14 +23,14 @@ type Props = {
 
 export const ContentLayer = memo(
 	({ children, pointerEvents, isBackdropActive }: Props) => {
-		const gestureContext = useScreenGestureStore();
-		const ContentComponent = useDescriptorsStore(
+		const gestureContext = useMotionStore((store) => store.gestures);
+		const ContentComponent = useBuilderStore(
 			(store) => store.options.contentComponent,
 		);
-		const isNavigationMaskEnabled = useDescriptorsStore(
+		const isNavigationMaskEnabled = useBuilderStore(
 			(store) => !!store.options.navigationMaskEnabled,
 		);
-		const hasAutoSnapPoint = useDescriptorsStore(
+		const hasAutoSnapPoint = useBuilderStore(
 			(store) => store.options.snapPoints?.includes("auto") ?? false,
 		);
 		const contentPointerEvents = isBackdropActive ? "box-none" : pointerEvents;

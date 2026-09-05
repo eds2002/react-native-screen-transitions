@@ -3,10 +3,9 @@ import type { View } from "react-native";
 import { useWindowDimensions } from "react-native";
 import type { AnimatedRef, StyleProps } from "react-native-reanimated";
 import { applyMeasuredBoundsWrites } from "../../../providers/helpers/measured-bounds-writes";
-import { useScreenSlotStore } from "../../../providers/screen/styles";
+import { useBuilderStore } from "../../../providers/screen/builder";
 import type { BoundTag } from "../../../stores/bounds/types";
 import { ScrollStore } from "../../../stores/scroll.store";
-import { SystemStore } from "../../../stores/system.store";
 import { getVisibilityBlockOffset } from "../../../utils/visibility-block-offset";
 import type { BoundaryLocalMeasurementValue, MeasureBoundary } from "../types";
 import {
@@ -42,13 +41,10 @@ export const useMeasurer = ({
 
 	const scrollState = ScrollStore.getValue(currentScreenKey, "coordination");
 	const scrollMetadata = ScrollStore.getValue(currentScreenKey, "metadata");
-	const pendingLifecycleStartBlockCount = SystemStore.getValue(
-		currentScreenKey,
-		"pendingLifecycleStartBlockCount",
+	const pendingLifecycleStartBlockCount = useBuilderStore(
+		(store) => store.animationState.pendingLifecycleStartBlockCount,
 	);
-	const visibilityBlocked = useScreenSlotStore(
-		(store) => store.visibilityBlocked,
-	);
+	const visibilityBlocked = useBuilderStore((store) => store.visibilityBlocked);
 
 	return useCallback(
 		(target) => {

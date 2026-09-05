@@ -1,13 +1,14 @@
+import { mountBuilderAnimationState } from "./helpers/mount-builder-animation-state";
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 import React from "react";
 import { act, create } from "react-test-renderer";
 import { AnimationStore } from "../stores/animation.store";
 import {
 	LifecycleTransitionRequestKind,
-	SystemStore,
-} from "../stores/system.store";
+} from "../providers/screen/builder/hooks/use-builder-animation-state";
 import { isCloseActionReplay } from "../utils/navigation/close-action-replay";
 
+let system = mountBuilderAnimationState();
 const route = { key: "soft-dismiss-route", name: "details" };
 const current = {
 	route,
@@ -50,10 +51,12 @@ let softDismissCount: number;
 let blankCloseCount: number;
 let handleBlankClose: boolean;
 
-mock.module("../providers/screen/descriptors", () => ({
-	useDescriptorsStore: (selector: (store: any) => unknown) =>
+mock.module("../providers/screen/builder", () => ({
+	useOptionalBuilderStore: () => null,
+	useBuilderStore: (selector: (store: any) => unknown) =>
 		selector({
-			current,
+			descriptors: { current },
+			animationState: system,
 			derivations: {
 				currentScreenKey: route.key,
 			},
@@ -96,7 +99,7 @@ const { useCloseTransitionIntent } = await import(
 beforeEach(() => {
 	(globalThis as any).resetMutableRegistry();
 	AnimationStore.clearBag(route.key);
-	SystemStore.clearBag(route.key);
+	system = mountBuilderAnimationState();
 	beforeRemoveListener = undefined;
 	dispatchedActions = [];
 	dispatchedReplayFlags = [];
@@ -127,7 +130,7 @@ describe("soft dismissal", () => {
 		});
 
 		expect(
-			SystemStore.getBag(route.key).pendingLifecycleRequestKind.get(),
+			system.pendingLifecycleRequestKind.get(),
 		).toBe(LifecycleTransitionRequestKind.Close);
 	});
 
@@ -148,7 +151,7 @@ describe("soft dismissal", () => {
 		});
 
 		expect(
-			SystemStore.getBag(route.key).pendingLifecycleRequestKind.get(),
+			system.pendingLifecycleRequestKind.get(),
 		).toBe(LifecycleTransitionRequestKind.Close);
 	});
 
@@ -170,7 +173,7 @@ describe("soft dismissal", () => {
 
 		expect(softDismissCount).toBe(1);
 		expect(
-			SystemStore.getBag(route.key).pendingLifecycleRequestKind.get(),
+			system.pendingLifecycleRequestKind.get(),
 		).toBe(LifecycleTransitionRequestKind.None);
 	});
 
@@ -270,7 +273,7 @@ describe("soft dismissal", () => {
 		expect(softDismissCount).toBe(0);
 		expect(dispatchedActions).toEqual([]);
 		expect(
-			SystemStore.getBag(route.key).pendingLifecycleRequestKind.get(),
+			system.pendingLifecycleRequestKind.get(),
 		).toBe(LifecycleTransitionRequestKind.Close);
 
 		const originalRequestAnimationFrame = globalThis.requestAnimationFrame;
@@ -289,6 +292,6 @@ describe("soft dismissal", () => {
 		expect(dispatchedActions[0]).toBe(action);
 		expect(dispatchedReplayFlags).toEqual([true]);
 		expect(AnimationStore.peekBag(route.key)).toBeUndefined();
-		expect(SystemStore.peekBag(route.key)).toBeUndefined();
+		expect(system.pendingLifecycleRequestKind.get()).toBe(LifecycleTransitionRequestKind.Close);
 	});
 });

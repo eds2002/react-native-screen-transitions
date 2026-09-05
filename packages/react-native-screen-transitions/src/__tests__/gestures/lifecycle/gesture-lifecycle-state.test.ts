@@ -1,3 +1,4 @@
+import { mountBuilderAnimationState } from "../../helpers/mount-builder-animation-state";
 import { afterEach, describe, expect, it } from "bun:test";
 import React from "react";
 import { act, create } from "react-test-renderer";
@@ -6,22 +7,22 @@ import {
 	createScreenTransitionState,
 	DEFAULT_SCREEN_TRANSITION_OPTIONS,
 } from "../../../constants";
-import { hydrateTransitionState } from "../../../providers/screen/animation/helpers/hydrate-transition-state";
-import type { BuiltState } from "../../../providers/screen/animation/helpers/hydrate-transition-state/types";
+import { hydrateTransitionState } from "../../../providers/screen/motion/animation/helpers/hydrate-transition-state";
+import type { BuiltState } from "../../../providers/screen/motion/animation/helpers/hydrate-transition-state/types";
 import {
 	finalizePanRelease,
 	startPanBase,
 	trackPanGesture,
-} from "../../../providers/screen/gestures/pan/behavior/pan-lifecycle";
-import type { GestureCompositionOwner } from "../../../providers/screen/gestures/types";
+} from "../../../providers/screen/motion/gestures/pan/behavior/pan-lifecycle";
+import type { GestureCompositionOwner } from "../../../providers/screen/motion/gestures/types";
 import {
 	finalizePinchRelease,
 	startPinchBase,
-} from "../../../providers/screen/gestures/pinch/behavior/pinch-lifecycle";
+} from "../../../providers/screen/motion/gestures/pinch/behavior/pinch-lifecycle";
 import {
 	updateAbsolutePinchFocalPoint,
 	updatePinchRotation,
-} from "../../../providers/screen/gestures/pinch/activation/use-pinch-activation";
+} from "../../../providers/screen/motion/gestures/pinch/activation/use-pinch-activation";
 import { useTransitionStartController } from "../../../components/screen-lifecycle/hooks/use-transition-start-controller";
 import type { AnimationStoreMap } from "../../../stores/animation.store";
 import { AnimationStore } from "../../../stores/animation.store";
@@ -29,8 +30,7 @@ import type { GestureStoreMap } from "../../../stores/gesture.store";
 import { GestureStore } from "../../../stores/gesture.store";
 import {
 	LifecycleTransitionRequestKind,
-	SystemStore,
-} from "../../../stores/system.store";
+} from "../../../providers/screen/builder/hooks/use-builder-animation-state";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
 import { useCloseCompletion } from "../../../components/screen-lifecycle/hooks/use-close-completion";
 
@@ -160,7 +160,7 @@ const createStoredRuntime = () => {
 	const routeKey = `gesture-lifecycle-${storedRuntimeId++}`;
 	const animations = AnimationStore.getBag(routeKey);
 	const gestures = GestureStore.getBag(routeKey);
-	const system = SystemStore.getBag(routeKey);
+	const system = mountBuilderAnimationState();
 	const runtime = {
 		participation: { canDismiss: true, effectiveSnapPoints: {} },
 		policy: { gestureReleaseVelocityScale: 1 },
@@ -175,7 +175,6 @@ const createStoredRuntime = () => {
 		clear: () => {
 			AnimationStore.clearBag(routeKey);
 			GestureStore.clearBag(routeKey);
-			SystemStore.clearBag(routeKey);
 		},
 	};
 };
@@ -263,7 +262,7 @@ describe("gesture lifecycle state", () => {
 	it("does not pulse willAnimate when an entering screen starts its initial open", () => {
 		const raf = installDeferredAnimationFrame();
 		const animations = createAnimations();
-		const system = SystemStore.getBag("initial-open-contract");
+		const system = mountBuilderAnimationState();
 		animations.entering.set(1);
 		system.actions.requestLifecycleTransition(
 			LifecycleTransitionRequestKind.Open,

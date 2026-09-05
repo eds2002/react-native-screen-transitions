@@ -8,7 +8,7 @@ import {
 	type LocalStyleLayers,
 	type ResettableStyleStatesBySlot,
 	resolveSlotStyles,
-} from "../../providers/screen/styles/helpers/resolve-slot-styles";
+} from "../../providers/screen/orchestrator/styles/helpers/resolve-slot-styles";
 
 const IDENTITY_TRANSFORM = [
 	{ translateX: 0 },

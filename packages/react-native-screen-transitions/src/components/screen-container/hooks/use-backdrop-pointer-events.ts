@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useAnimatedReaction } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import { useDescriptorsStore } from "../../../providers/screen/descriptors";
-import { useScreenOptionsStore } from "../../../providers/screen/options";
+import { useBuilderStore } from "../../../providers/screen/builder";
+import { useMotionStore } from "../../../providers/screen/motion";
 import type { BackdropBehavior } from "../../../types/screen.types";
 
 interface BackdropPointerEventsResult {
@@ -19,8 +19,8 @@ interface BackdropPointerEventsResult {
  * - Otherwise defaults to 'block' (undefined = normal touch handling)
  */
 export function useBackdropPointerEvents(): BackdropPointerEventsResult {
-	const screenOptions = useScreenOptionsStore();
-	const descriptorBackdropBehavior = useDescriptorsStore(
+	const screenOptions = useMotionStore((store) => store.options);
+	const descriptorBackdropBehavior = useBuilderStore(
 		(store) => store.options.backdropBehavior,
 	);
 	const [runtimeBackdropBehavior, setRuntimeBackdropBehavior] = useState<

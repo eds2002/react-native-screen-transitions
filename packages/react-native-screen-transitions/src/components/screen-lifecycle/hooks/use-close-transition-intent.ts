@@ -1,8 +1,8 @@
 import { useLayoutEffect, useMemo, useRef } from "react";
 import { useNavigationHelpers } from "../../../hooks/navigation/use-navigation-helpers";
 import useStableCallback from "../../../hooks/use-stable-callback";
-import { hasTransitionsEnabled } from "../../../providers/screen/animation/helpers/has-transitions-enabled";
-import type { BaseDescriptor } from "../../../providers/screen/descriptors";
+import type { BaseDescriptor } from "../../../providers/screen/builder";
+import { hasTransitionsEnabled } from "../../../providers/screen/motion/animation/helpers/has-transitions-enabled";
 import { useCurrentScreenRelationships } from "../../../providers/screen/use-current-screen-relationships";
 import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
 import { useStackCoreStore } from "../../../providers/stack/core.provider";

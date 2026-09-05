@@ -1,7 +1,7 @@
-import type { ScreenInterpolatorFrame } from "../../../providers/screen/animation/helpers/pipeline";
-import { createInterpolatorScope } from "../../../providers/screen/styles/helpers/create-interpolator-scope";
-import { normalizeSlots } from "../../../providers/screen/styles/helpers/normalize-slots";
-import { selectInterpolatorFrame } from "../../../providers/screen/styles/helpers/select-interpolator-frame";
+import type { ScreenInterpolatorFrame } from "../../../providers/screen/orchestrator/helpers/pipeline";
+import { createInterpolatorScope } from "../../../providers/screen/orchestrator/styles/helpers/create-interpolator-scope";
+import { normalizeSlots } from "../../../providers/screen/orchestrator/styles/helpers/normalize-slots";
+import { selectInterpolatorFrame } from "../../../providers/screen/orchestrator/styles/helpers/select-interpolator-frame";
 import type {
 	NormalizedTransitionSlotStyle,
 	ScreenStyleInterpolator,

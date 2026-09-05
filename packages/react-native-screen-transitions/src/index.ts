@@ -41,11 +41,11 @@ export {
 export {
 	type ScreenAnimationTarget,
 	useScreenAnimation,
-} from "./providers/screen/animation";
+} from "./providers/screen/motion/animation";
 export {
 	type ScreenGestureTarget,
 	useScreenGesture,
-} from "./providers/screen/gestures/hooks/use-screen-gesture";
+} from "./providers/screen/motion/gestures/ownership/hooks/use-screen-gesture";
 
 export type {
 	AnimatedViewStyle,

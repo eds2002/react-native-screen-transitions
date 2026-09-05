@@ -2,8 +2,8 @@ import { describe, expect, it } from "bun:test";
 import { type ReactNode } from "react";
 import { act, create } from "react-test-renderer";
 import { useOverlaySlot } from "../../components/overlay/hooks/use-overlay-slot";
-import type { ScreenAnimationContextValue } from "../../providers/screen/animation/animation.provider";
-import type { ScreenInterpolatorFrame } from "../../providers/screen/animation/helpers/pipeline";
+import type { OrchestratorState } from "../../providers/screen/orchestrator/orchestrator.provider";
+import type { ScreenInterpolatorFrame } from "../../providers/screen/orchestrator/helpers/pipeline";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT =
 	true;
@@ -35,7 +35,7 @@ const createAnimationStore = (key: string) => {
 	return {
 		screenKey: key,
 		screenInterpolatorProps,
-	} as unknown as ScreenAnimationContextValue;
+	} as unknown as OrchestratorState;
 };
 
 describe("overlay slot props", () => {
@@ -58,7 +58,7 @@ describe("overlay slot props", () => {
 						},
 					};
 				},
-				interpolatorReady: shared(1) as never,
+				screenReady: shared(1) as never,
 				isIncoming: false,
 				overlayAnimationStore: store,
 				overlayInterpolator: undefined,

@@ -3,8 +3,8 @@ import type { TransitionInterpolatedStyle } from "../../types/animation.types";
 import {
 	syncScreenOptionsOverrides,
 	type ScreenOptionsContextValue,
-} from "../../providers/screen/options";
-import { stripInterpolatorOptions } from "../../providers/screen/styles/helpers/strip-interpolator-options";
+} from "../../providers/screen/motion/options";
+import { stripInterpolatorOptions } from "../../providers/screen/orchestrator/styles/helpers/strip-interpolator-options";
 
 const createSharedValue = <T>(initialValue: T) => {
 	let value = initialValue;

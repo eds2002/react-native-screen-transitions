@@ -1,14 +1,15 @@
+import { mountBuilderAnimationState } from "../helpers/mount-builder-animation-state";
 import { beforeAll, beforeEach, describe, expect, it, mock } from "bun:test";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import type { BoundTag } from "../../stores/bounds/types";
 import { BoundStore } from "../../stores/bounds";
 import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
-import { SystemStore } from "../../stores/system.store";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT =
 	true;
 
 const descriptorState = {
+	animationState: mountBuilderAnimationState(),
 	derivations: {
 		currentScreenKey: "screen-b",
 		nextScreenKey: undefined as string | undefined,
@@ -20,8 +21,9 @@ let stackState = {
 	scenes: [] as Array<{ activity: string; route: { key: string } }>,
 };
 
-mock.module("../../providers/screen/descriptors", () => ({
-	useDescriptorsStore: <T,>(selector: (state: typeof descriptorState) => T) =>
+mock.module("../../providers/screen/builder", () => ({
+	useOptionalBuilderStore: () => null,
+	useBuilderStore: <T,>(selector: (state: typeof descriptorState) => T) =>
 		selector(descriptorState),
 }));
 
@@ -118,7 +120,7 @@ describe("initial destination measurement lifecycle", () => {
 
 		expect(measurements).toEqual([`1:${pairKey}`]);
 		expect(
-			SystemStore.getValue("screen-b", "pendingLifecycleStartBlockCount").get(),
+			descriptorState.animationState.pendingLifecycleStartBlockCount.get(),
 		).toBe(0);
 	});
 });

@@ -4,11 +4,13 @@ import Animated from "react-native-reanimated";
 import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
 import { DefaultSnapSpec } from "../../../configs/specs";
 import { useNavigationHelpers } from "../../../hooks/navigation/use-navigation-helpers";
-import { useDescriptorsStore } from "../../../providers/screen/descriptors";
-import { useSlotProps, useSlotStyles } from "../../../providers/screen/styles";
+import { useBuilderStore } from "../../../providers/screen/builder";
+import {
+	useSlotProps,
+	useSlotStyles,
+} from "../../../providers/screen/orchestrator/styles";
 import { AnimationStore } from "../../../stores/animation.store";
 import { GestureStore } from "../../../stores/gesture.store";
-import { SystemStore } from "../../../stores/system.store";
 import type {
 	BackdropBehavior,
 	ScreenBackdropComponentProps,
@@ -26,25 +28,23 @@ export const BackdropLayer = memo(function BackdropLayer({
 }) {
 	const { requestDismiss } = useNavigationHelpers();
 
-	const routeKey = useDescriptorsStore(
+	const routeKey = useBuilderStore(
 		(store) => store.derivations.currentScreenKey,
 	);
-	const BackdropComponent = useDescriptorsStore(
+	const BackdropComponent = useBuilderStore(
 		(store) => store.options.backdropComponent,
 	);
-	const rawSnapPoints = useDescriptorsStore(
-		(store) => store.options.snapPoints,
-	);
-	const isGestureDismissEnabled = useDescriptorsStore(
+	const rawSnapPoints = useBuilderStore((store) => store.options.snapPoints);
+	const isGestureDismissEnabled = useBuilderStore(
 		(store) => store.options.gestureEnabled !== false,
 	);
 	const canDismiss = isGestureDismissEnabled;
-	const transitionSpec = useDescriptorsStore(
+	const transitionSpec = useBuilderStore(
 		(store) => store.options.transitionSpec,
 	);
 	const animations = AnimationStore.getBag(routeKey);
 	const { targetProgress, animationProgress, resolvedAutoSnapPoint } =
-		SystemStore.getBag(routeKey);
+		useBuilderStore((store) => store.animationState);
 
 	const AnimatedBackdropComponent = useMemo(
 		() =>

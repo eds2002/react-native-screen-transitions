@@ -1,5 +1,5 @@
 import { useAnimatedReaction } from "react-native-reanimated";
-import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
+import { useBuilderStore } from "../../../../providers/screen/builder";
 import { AnimationStore } from "../../../../stores/animation.store";
 import {
 	getPairKeyForDestination,
@@ -22,10 +22,10 @@ export const useRefreshBoundary = ({
 	measureBoundary,
 }: UseRefreshBoundaryParams) => {
 	const { linkKey, group } = boundTag;
-	const currentScreenKey = useDescriptorsStore(
+	const currentScreenKey = useBuilderStore(
 		(s) => s.derivations.currentScreenKey,
 	);
-	const nextScreenKey = useDescriptorsStore((s) => s.derivations.nextScreenKey);
+	const nextScreenKey = useBuilderStore((s) => s.derivations.nextScreenKey);
 	// Source-side boundaries refresh from the next screen's lifecycle pulse.
 	// Destination-side boundaries have no next screen, so they refresh from self.
 	const refreshScreenKey = nextScreenKey ?? currentScreenKey;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { normalizeSlots } from "../../providers/screen/styles/helpers/normalize-slots";
+import { normalizeSlots } from "../../providers/screen/orchestrator/styles/helpers/normalize-slots";
 import {
 	attachBoundsLocalTransform,
 	BOUNDS_LOCAL_TRANSFORM_STYLE_KEY,

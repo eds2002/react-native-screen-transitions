@@ -1,13 +1,13 @@
+import { mountBuilderAnimationState } from "../helpers/mount-builder-animation-state";
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { getRefreshBoundarySignal } from "../../components/boundary/utils/refresh-signals";
 import { applyMeasuredBoundsWrites } from "../../providers/helpers/measured-bounds-writes";
-import { startPanBase } from "../../providers/screen/gestures/pan/behavior/pan-lifecycle";
+import { startPanBase } from "../../providers/screen/motion/gestures/pan/behavior/pan-lifecycle";
 import { AnimationStore } from "../../stores/animation.store";
 import { BoundStore } from "../../stores/bounds";
 import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { pairs } from "../../stores/bounds/internals/state";
 import { GestureStore } from "../../stores/gesture.store";
-import { SystemStore } from "../../stores/system.store";
 
 const originalRequestAnimationFrame = globalThis.requestAnimationFrame;
 
@@ -277,7 +277,7 @@ describe("refresh boundary signals", () => {
 		const routeKey = "detail-boundary-refresh";
 		const animations = AnimationStore.getBag(routeKey);
 		const gestures = GestureStore.getBag(routeKey);
-		const system = SystemStore.getBag(routeKey);
+		const system = mountBuilderAnimationState();
 		const runtime = {
 			participation: { canDismiss: true, effectiveSnapPoints: {} },
 			policy: { gestureReleaseVelocityScale: 1 },
@@ -369,7 +369,6 @@ describe("refresh boundary signals", () => {
 		} finally {
 			AnimationStore.clearBag(routeKey);
 			GestureStore.clearBag(routeKey);
-			SystemStore.clearBag(routeKey);
 		}
 	});
 });

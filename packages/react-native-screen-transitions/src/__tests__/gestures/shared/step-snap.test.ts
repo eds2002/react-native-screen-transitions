@@ -3,7 +3,7 @@ import {
 	getStepSnapProgressVelocityScale,
 	resolveStepSnapProgress,
 	resolveStepSnapTargets,
-} from "../../../providers/screen/gestures/shared/snap-points";
+} from "../../../providers/screen/motion/gestures/shared/snap-points";
 
 describe("step snap behavior", () => {
 	it("maps a complete drag range across a narrow adjacent interval", () => {

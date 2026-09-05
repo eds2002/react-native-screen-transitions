@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { resolveInterpolatorStyleHandoff } from "../../providers/screen/styles/helpers/resolve-interpolator-style-handoff";
+import { resolveInterpolatorStyleHandoff } from "../../providers/screen/orchestrator/styles/helpers/resolve-interpolator-style-handoff";
 
 describe("resolveInterpolatorStyleHandoff", () => {
 	it("composes a settled current transform while the next interpolator animates", () => {

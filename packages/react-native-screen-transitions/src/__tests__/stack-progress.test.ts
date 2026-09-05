@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import type { SharedValue } from "react-native-reanimated";
-import { readStackProgress } from "../providers/screen/animation/helpers/stack-progress";
+import { readStackProgress } from "../providers/screen/orchestrator/helpers/stack-progress";
 
 const tracked = (value: number) => {
 	let reads = 0;

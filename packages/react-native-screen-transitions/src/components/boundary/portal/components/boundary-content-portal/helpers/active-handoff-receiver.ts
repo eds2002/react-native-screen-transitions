@@ -57,7 +57,7 @@ export const resolveHandoffAttachmentCandidate = ({
 	activeReceiverScreenKey,
 	attachedReceiverScreenKey,
 	hasActiveCloseFinished,
-	interpolatorReady,
+	screenReady,
 	pairChangedDuringClose = false,
 	pairDestinationScreenKey,
 	pairHasBoundaryLink,
@@ -67,7 +67,7 @@ export const resolveHandoffAttachmentCandidate = ({
 	activeReceiverScreenKey: string | null;
 	attachedReceiverScreenKey: string;
 	hasActiveCloseFinished: boolean;
-	interpolatorReady: boolean;
+	screenReady: boolean;
 	pairChangedDuringClose?: boolean;
 	pairDestinationScreenKey: string | null;
 	pairHasBoundaryLink?: boolean;
@@ -87,7 +87,7 @@ export const resolveHandoffAttachmentCandidate = ({
 
 	if (
 		activeReceiverClosing &&
-		interpolatorReady &&
+		screenReady &&
 		pairDestinationScreenKey &&
 		pairChangedDuringClose
 	) {
@@ -118,7 +118,7 @@ export const resolveHandoffAttachmentCandidate = ({
 	if (
 		activeReceiverClosing &&
 		attachedReceiverScreenKey !== activeReceiverScreenKey &&
-		interpolatorReady &&
+		screenReady &&
 		pairDestinationScreenKey
 	) {
 		return pairDestinationScreenKey;

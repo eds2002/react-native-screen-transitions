@@ -1,8 +1,11 @@
 import { type ComponentType, memo, useMemo } from "react";
 import { StyleSheet } from "react-native";
 import Animated from "react-native-reanimated";
-import { useDescriptorsStore } from "../../../providers/screen/descriptors";
-import { useSlotProps, useSlotStyles } from "../../../providers/screen/styles";
+import { useBuilderStore } from "../../../providers/screen/builder";
+import {
+	useSlotProps,
+	useSlotStyles,
+} from "../../../providers/screen/orchestrator/styles";
 import type { ScreenSurfaceComponentProps } from "../../../types";
 import { usesLayerRenderProps } from "./render-component";
 
@@ -12,7 +15,7 @@ type Props = {
 };
 
 export const SurfaceLayer = memo(({ children, pointerEvents }: Props) => {
-	const SurfaceComponent = useDescriptorsStore(
+	const SurfaceComponent = useBuilderStore(
 		(store) => store.options.surfaceComponent,
 	);
 

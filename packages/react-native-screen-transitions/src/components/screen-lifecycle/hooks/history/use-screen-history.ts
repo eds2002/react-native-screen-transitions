@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useAnimatedReaction } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import useStableCallback from "../../../../hooks/use-stable-callback";
-import type { BaseDescriptor } from "../../../../providers/screen/descriptors";
+import type { BaseDescriptor } from "../../../../providers/screen/builder";
 import type { AnimationStoreMap } from "../../../../stores/animation.store";
 import { HistoryStore } from "../../../../stores/history.store";
 import {

@@ -1,6 +1,5 @@
-import { useDescriptorsStore } from "../../providers/screen/descriptors";
+import { useBuilderStore } from "../../providers/screen/builder";
 import { AnimationStore } from "../../stores/animation.store";
-import { SystemStore } from "../../stores/system.store";
 import { useScreenHistory } from "./hooks/history/use-screen-history";
 import { useCloseCompletion } from "./hooks/use-close-completion";
 import { useCloseTransitionIntent } from "./hooks/use-close-transition-intent";
@@ -13,14 +12,14 @@ interface Props {
 
 /**
  * Unified lifecycle controller for all stack types.
- * Reads current/previous descriptors from DescriptorsProvider context.
+ * Reads current/previous descriptors from BuilderProvider context.
  */
 export const ScreenLifecycle = ({ children }: Props) => {
-	const current = useDescriptorsStore((store) => store.descriptors.current);
-	const previous = useDescriptorsStore((store) => store.descriptors.previous);
+	const current = useBuilderStore((store) => store.descriptors.current);
+	const previous = useBuilderStore((store) => store.descriptors.previous);
 
 	const animations = AnimationStore.getBag(current.route.key);
-	const system = SystemStore.getBag(current.route.key);
+	const system = useBuilderStore((store) => store.animationState);
 
 	const { completeClose } = useCloseTransitionIntent(current);
 

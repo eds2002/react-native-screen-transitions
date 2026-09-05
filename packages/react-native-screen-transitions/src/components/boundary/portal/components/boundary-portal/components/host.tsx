@@ -7,7 +7,7 @@ import {
 	type ViewStyle,
 } from "react-native";
 import Animated from "react-native-reanimated";
-import { useDescriptorsStore } from "../../../../../../providers/screen/descriptors";
+import { useBuilderStore } from "../../../../../../providers/screen/builder";
 import { PORTAL_POINTER_EVENTS } from "../../../teleport";
 import { useHostMeasurement } from "../hooks/use-host-measurement";
 import { registerHost, unregisterHost } from "../stores/host-registry.store";
@@ -25,7 +25,7 @@ type HostImplProps = PublicHostProps & {
 };
 
 function HostImpl({ fallback = false, style }: HostImplProps) {
-	const screenKey = useDescriptorsStore((s) => s.derivations.currentScreenKey);
+	const screenKey = useBuilderStore((s) => s.derivations.currentScreenKey);
 	const generatedHostKeyRef = useRef<string | null>(null);
 
 	if (generatedHostKeyRef.current === null) {

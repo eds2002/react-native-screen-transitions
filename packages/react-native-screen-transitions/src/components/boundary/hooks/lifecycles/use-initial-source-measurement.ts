@@ -1,5 +1,5 @@
 import { useAnimatedReaction, useSharedValue } from "react-native-reanimated";
-import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
+import { useBuilderStore } from "../../../../providers/screen/builder";
 import { getPairKeyForSource } from "../../../../stores/bounds/internals/links";
 import { pairs } from "../../../../stores/bounds/internals/state";
 import type { BoundTag } from "../../../../stores/bounds/types";
@@ -12,7 +12,7 @@ export const useInitialSourceMeasurement = (params: {
 	boundTag: BoundTag;
 }) => {
 	const { enabled, measureBoundary, boundTag } = params;
-	const currentScreenKey = useDescriptorsStore(
+	const currentScreenKey = useBuilderStore(
 		(s) => s.derivations.currentScreenKey,
 	);
 	const lastSourceCaptureSignal = useSharedValue<string | null>(null);

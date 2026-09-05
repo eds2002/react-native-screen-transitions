@@ -7,7 +7,7 @@ import {
 	withTiming,
 } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
-import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
+import { useBuilderStore } from "../../../../providers/screen/builder";
 import { useBlankStackStore } from "../../../../providers/stack/blank-stack.provider";
 import { AnimationStore } from "../../../../stores/animation.store";
 import {
@@ -21,7 +21,6 @@ import {
 import { getLink } from "../../../../stores/bounds/internals/links";
 import { pairs } from "../../../../stores/bounds/internals/state";
 import type { BoundTag } from "../../../../stores/bounds/types";
-import { SystemStore } from "../../../../stores/system.store";
 import { logger } from "../../../../utils/logger";
 import type { MeasureBoundary } from "../../types";
 import { getInitialDestinationMeasurementSignal } from "../../utils/destination-signals";
@@ -48,11 +47,11 @@ export const useInitialDestinationMeasurement = ({
 	measureBoundary,
 }: UseInitialDestinationMeasurementParams) => {
 	const { tag, linkKey, group } = boundTag;
-	const currentScreenKey = useDescriptorsStore(
+	const currentScreenKey = useBuilderStore(
 		(s) => s.derivations.currentScreenKey,
 	);
-	const nextScreenKey = useDescriptorsStore((s) => s.derivations.nextScreenKey);
-	const destinationPairKey = useDescriptorsStore(
+	const nextScreenKey = useBuilderStore((s) => s.derivations.nextScreenKey);
+	const destinationPairKey = useBuilderStore(
 		(s) => s.derivations.destinationPairKey,
 	);
 	const destinationEnabled = enabled && !nextScreenKey;
@@ -77,7 +76,7 @@ export const useInitialDestinationMeasurement = ({
 
 	const {
 		actions: { blockLifecycleStart, unblockLifecycleStart },
-	} = SystemStore.getBag(currentScreenKey);
+	} = useBuilderStore((store) => store.animationState);
 
 	const isBlockingLifecycleStart = useSharedValue(0);
 	const retryToken = useSharedValue(0);

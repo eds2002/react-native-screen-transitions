@@ -5,8 +5,8 @@ import {
 	DEFAULT_SCREEN_TRANSITION_OPTIONS,
 } from "../constants";
 import type { GestureStoreMap } from "../stores/gesture.store";
-import { buildScreenTransitionOptions } from "../providers/screen/animation/helpers/build-screen-transition-options";
-import { hydrateTransitionState } from "../providers/screen/animation/helpers/hydrate-transition-state";
+import { buildScreenTransitionOptions } from "../providers/screen/motion/animation/helpers/build-screen-transition-options";
+import { hydrateTransitionState } from "../providers/screen/motion/animation/helpers/hydrate-transition-state";
 
 const shared = <T>(initial: T): SharedValue<T> => {
 	let value = initial;

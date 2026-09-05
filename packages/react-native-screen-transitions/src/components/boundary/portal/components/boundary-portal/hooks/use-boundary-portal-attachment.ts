@@ -1,6 +1,6 @@
 import { useAnimatedProps, useSharedValue } from "react-native-reanimated";
-import { useDescriptorsStore } from "../../../../../../providers/screen/descriptors";
-import { useScreenSlotStore } from "../../../../../../providers/screen/styles";
+import { useBuilderStore } from "../../../../../../providers/screen/builder";
+import { useOrchestratorStore } from "../../../../../../providers/screen/orchestrator";
 import { useBoundaryRootStore } from "../../../../providers/boundary-root.provider";
 import { PORTAL_HOST_NAME_RESET_VALUE } from "../../../utils/naming";
 import { useActiveHostKey } from "../stores/host-registry.store";
@@ -20,10 +20,10 @@ export const useBoundaryPortalAttachment = ({
 
 		return root.localMeasurement;
 	});
-	const currentScreenKey = useDescriptorsStore(
+	const currentScreenKey = useBuilderStore(
 		(s) => s.derivations.currentScreenKey,
 	);
-	const slotsMap = useScreenSlotStore((store) => store.slotsMap);
+	const slotsMap = useOrchestratorStore((store) => store.slotsMap);
 	const portalHostName = useSharedValue<string | null>(null);
 	const portalHostReady = useSharedValue(false);
 	const escapeHostKey = useActiveHostKey(currentScreenKey);

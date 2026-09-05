@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { determineDismissal } from "../../../providers/screen/gestures/shared/targets";
+import { determineDismissal } from "../../../providers/screen/motion/gestures/shared/targets";
 
 describe("determineDismissal", () => {
 	const dimensions = { width: 320, height: 640 };

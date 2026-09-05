@@ -5,7 +5,7 @@ import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 } from "../../../constants";
-import { useSlotStyles } from "../../../providers/screen/styles";
+import { useSlotStyles } from "../../../providers/screen/orchestrator/styles";
 import { logger } from "../../../utils/logger";
 
 type Props = {

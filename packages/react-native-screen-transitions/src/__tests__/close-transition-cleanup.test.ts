@@ -5,7 +5,6 @@ import { AnimationStore } from "../stores/animation.store";
 import { BoundStore } from "../stores/bounds";
 import { createPendingPairKey } from "../stores/bounds/helpers/link-pairs.helpers";
 import { GestureStore } from "../stores/gesture.store";
-import { SystemStore } from "../stores/system.store";
 import {
 	hasBoundaryPresence,
 	registerBoundaryPresence,
@@ -36,13 +35,12 @@ beforeEach(() => {
 });
 
 describe("close transition cleanup", () => {
-	it("resets animation, gesture, system, and bounds stores for a screen", async () => {
+	it("resets animation, gesture, and bounds stores for a screen", async () => {
 		const routeKey = "cleanup-screen";
 		const bounds = createMeasured(10, 20, 120, 140);
 
 		const animationBefore = AnimationStore.getBag(routeKey);
 		const gestureBefore = GestureStore.getBag(routeKey);
-		const systemBefore = SystemStore.getBag(routeKey);
 
 		registerMeasuredEntry("card", routeKey, bounds);
 		const pairKey = createPendingPairKey(routeKey);
@@ -63,11 +61,9 @@ describe("close transition cleanup", () => {
 
 		const animationAfter = AnimationStore.getBag(routeKey);
 		const gestureAfter = GestureStore.getBag(routeKey);
-		const systemAfter = SystemStore.getBag(routeKey);
 
 		expect(animationAfter).not.toBe(animationBefore);
 		expect(gestureAfter).not.toBe(gestureBefore);
-		expect(systemAfter).not.toBe(systemBefore);
 	});
 
 	it("clears bounds for leaf screens", async () => {
@@ -81,7 +77,6 @@ describe("close transition cleanup", () => {
 
 		const animationBefore = AnimationStore.getBag(routeKey);
 		const gestureBefore = GestureStore.getBag(routeKey);
-		const systemBefore = SystemStore.getBag(routeKey);
 
 		resetStoresForScreen(routeKey);
 		await flushScheduledUI();
@@ -89,10 +84,8 @@ describe("close transition cleanup", () => {
 		// Animation and gesture stores are still cleared
 		const animationAfter = AnimationStore.getBag(routeKey);
 		const gestureAfter = GestureStore.getBag(routeKey);
-		const systemAfter = SystemStore.getBag(routeKey);
 		expect(animationAfter).not.toBe(animationBefore);
 		expect(gestureAfter).not.toBe(gestureBefore);
-		expect(systemAfter).not.toBe(systemBefore);
 
 		expect(BoundStore.entry.get("card", routeKey)).toBeNull();
 		expect(BoundStore.link.getSource(pairKey, "card")).toBeNull();

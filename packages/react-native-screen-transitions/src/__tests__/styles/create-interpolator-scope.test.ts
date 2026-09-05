@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import type { ScreenInterpolatorFrame } from "../../providers/screen/animation/helpers/pipeline";
-import { createInterpolatorScope } from "../../providers/screen/styles/helpers/create-interpolator-scope";
-import { selectInterpolatorFrame } from "../../providers/screen/styles/helpers/select-interpolator-frame";
+import type { ScreenInterpolatorFrame } from "../../providers/screen/orchestrator/helpers/pipeline";
+import { createInterpolatorScope } from "../../providers/screen/orchestrator/styles/helpers/create-interpolator-scope";
+import { selectInterpolatorFrame } from "../../providers/screen/orchestrator/styles/helpers/select-interpolator-frame";
 import { BoundStore, type Snapshot } from "../../stores/bounds";
 import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
 

@@ -6,7 +6,7 @@ import {
 	useDerivedValue,
 } from "react-native-reanimated";
 import { NO_PROPS, NO_STYLES } from "../../../constants";
-import type { ScreenAnimationContextValue } from "../../../providers/screen/animation/animation.provider";
+import type { OrchestratorState } from "../../../providers/screen/orchestrator/orchestrator.provider";
 import type {
 	NormalizedTransitionSlotStyle,
 	ScreenStyleInterpolator,
@@ -24,15 +24,15 @@ export const useOverlaySlot = ({
 	driverAnimationStore,
 	previousOverlayAnimationStore,
 	driverInterpolator,
-	interpolatorReady,
+	screenReady,
 	isIncoming,
 }: {
-	overlayAnimationStore: ScreenAnimationContextValue;
+	overlayAnimationStore: OrchestratorState;
 	overlayInterpolator: ScreenStyleInterpolator | undefined;
-	driverAnimationStore: ScreenAnimationContextValue;
-	previousOverlayAnimationStore?: ScreenAnimationContextValue;
+	driverAnimationStore: OrchestratorState;
+	previousOverlayAnimationStore?: OrchestratorState;
 	driverInterpolator: ScreenStyleInterpolator | undefined;
-	interpolatorReady: SharedValue<number>;
+	screenReady: SharedValue<number>;
 	isIncoming: boolean;
 }) => {
 	const { height } = useWindowDimensions();
@@ -67,7 +67,7 @@ export const useOverlaySlot = ({
 			return NO_STYLES;
 		}
 
-		if (isIncoming && !interpolatorReady.get()) {
+		if (isIncoming && !screenReady.get()) {
 			return {
 				transform: [{ translateY: getVisibilityBlockOffset(height) }],
 			};

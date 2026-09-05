@@ -1,47 +1,38 @@
-import type { ScreenAnimationContextValue } from "../../../providers/screen/animation/animation.provider";
-import type { ScreenSlotContextValue } from "../../../providers/screen/styles/slot.provider";
+import type { SharedValue } from "react-native-reanimated";
+import type { OrchestratorState } from "../../../providers/screen/orchestrator/orchestrator.provider";
 import type { FloatOverlayEntry } from "./get-active-overlay";
 
 export type ReadyOverlayResources = {
-	overlayAnimationStore: ScreenAnimationContextValue;
-	overlaySlots: ScreenSlotContextValue;
+	overlayAnimationStore: OrchestratorState;
 	driverScene: FloatOverlayEntry["scene"];
-	driverAnimationStore: ScreenAnimationContextValue;
-	driverSlots: ScreenSlotContextValue;
+	driverAnimationStore: OrchestratorState;
+	driverScreenReady: SharedValue<number>;
 };
 
 export function retainReadyOverlayResources(
 	previous: ReadyOverlayResources | null,
-	overlayAnimationStore: ScreenAnimationContextValue | null,
-	overlaySlots: ScreenSlotContextValue | null,
+	overlayAnimationStore: OrchestratorState | null,
 	driverScene: FloatOverlayEntry["scene"],
-	driverAnimationStore: ScreenAnimationContextValue | null,
-	driverSlots: ScreenSlotContextValue | null,
+	driverAnimationStore: OrchestratorState | null,
+	driverScreenReady: SharedValue<number> | null,
 ): ReadyOverlayResources | null {
-	if (
-		!overlayAnimationStore ||
-		!overlaySlots ||
-		!driverAnimationStore ||
-		!driverSlots
-	) {
+	if (!overlayAnimationStore || !driverAnimationStore || !driverScreenReady) {
 		return previous;
 	}
 
 	if (
 		previous?.overlayAnimationStore === overlayAnimationStore &&
-		previous.overlaySlots === overlaySlots &&
 		previous.driverScene === driverScene &&
 		previous.driverAnimationStore === driverAnimationStore &&
-		previous.driverSlots === driverSlots
+		previous.driverScreenReady === driverScreenReady
 	) {
 		return previous;
 	}
 
 	return {
 		overlayAnimationStore,
-		overlaySlots,
 		driverScene,
 		driverAnimationStore,
-		driverSlots,
+		driverScreenReady,
 	};
 }

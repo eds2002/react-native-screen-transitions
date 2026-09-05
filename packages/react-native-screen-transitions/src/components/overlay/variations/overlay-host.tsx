@@ -1,17 +1,16 @@
 import { memo, useMemo, useRef } from "react";
 import { StyleSheet, View } from "react-native";
-import Animated, { useDerivedValue } from "react-native-reanimated";
+import Animated, {
+	type SharedValue,
+	useDerivedValue,
+} from "react-native-reanimated";
 import { snapDescriptorToIndex } from "../../../animation/snap-to";
-import { useOptionalScreenAnimationStore } from "../../../providers/screen/animation";
+import { useOptionalBuilderStore } from "../../../providers/screen/builder";
+import { useOptionalOrchestratorStore } from "../../../providers/screen/orchestrator";
 import {
-	type ScreenAnimationContextValue,
-	ScreenAnimationStoreProvider,
-} from "../../../providers/screen/animation/animation.provider";
-import {
-	type ScreenSlotContextValue,
-	ScreenSlotStoreProvider,
-	useOptionalScreenSlotStore,
-} from "../../../providers/screen/styles/slot.provider";
+	type OrchestratorState,
+	OrchestratorStoreProvider,
+} from "../../../providers/screen/orchestrator/orchestrator.provider";
 import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
 import type { OverlayProps } from "../../../types/overlay.types";
 import type { FloatOverlayEntry } from "../helpers/get-active-overlay";
@@ -34,27 +33,26 @@ export const OverlayHost = memo(function OverlayHost({
 	previousOverlayScene,
 	layerIndex,
 }: OverlayHostProps) {
-	const overlayAnimationStore = useOptionalScreenAnimationStore(
-		scene.route.key,
-	);
-	const driverAnimationStore = useOptionalScreenAnimationStore(
+	const overlayAnimationStore = useOptionalOrchestratorStore(scene.route.key);
+	const driverAnimationStore = useOptionalOrchestratorStore(
 		driverScene.route.key,
 	);
-	const previousOverlayAnimationStore = useOptionalScreenAnimationStore(
+	const previousOverlayAnimationStore = useOptionalOrchestratorStore(
 		previousOverlayScene?.route.key ?? scene.route.key,
 	);
-	const overlaySlots = useOptionalScreenSlotStore(scene.route.key);
-	const driverSlots = useOptionalScreenSlotStore(driverScene.route.key);
+	const driverScreenReady = useOptionalBuilderStore(
+		driverScene.route.key,
+		(store) => store.screenReady,
+	);
 	const overlayComponentRef = useRef(scene.descriptor.options.overlay);
 	const OverlayComponent = overlayComponentRef.current;
 	const readyResourcesRef = useRef<ReadyOverlayResources | null>(null);
 	readyResourcesRef.current = retainReadyOverlayResources(
 		readyResourcesRef.current,
 		overlayAnimationStore,
-		overlaySlots,
 		driverScene,
 		driverAnimationStore,
-		driverSlots,
+		driverScreenReady,
 	);
 	const readyResources = readyResourcesRef.current;
 
@@ -68,23 +66,21 @@ export const OverlayHost = memo(function OverlayHost({
 			driverScene={readyResources.driverScene}
 			layerIndex={layerIndex}
 			overlayAnimationStore={readyResources.overlayAnimationStore}
-			overlaySlots={readyResources.overlaySlots}
 			driverAnimationStore={readyResources.driverAnimationStore}
 			previousOverlayAnimationStore={
 				previousOverlayScene ? previousOverlayAnimationStore : undefined
 			}
-			driverSlots={readyResources.driverSlots}
+			driverScreenReady={readyResources.driverScreenReady}
 			OverlayComponent={OverlayComponent}
 		/>
 	);
 });
 
 type ReadyOverlayHostProps = OverlayHostProps & {
-	overlayAnimationStore: ScreenAnimationContextValue;
-	overlaySlots: ScreenSlotContextValue;
-	driverAnimationStore: ScreenAnimationContextValue;
-	previousOverlayAnimationStore?: ScreenAnimationContextValue | null;
-	driverSlots: ScreenSlotContextValue;
+	overlayAnimationStore: OrchestratorState;
+	driverAnimationStore: OrchestratorState;
+	previousOverlayAnimationStore?: OrchestratorState | null;
+	driverScreenReady: SharedValue<number>;
 	OverlayComponent: NonNullable<
 		FloatOverlayEntry["scene"]["descriptor"]["options"]["overlay"]
 	>;
@@ -95,10 +91,9 @@ function ReadyOverlayHost({
 	driverScene,
 	layerIndex,
 	overlayAnimationStore,
-	overlaySlots,
 	driverAnimationStore,
 	previousOverlayAnimationStore,
-	driverSlots,
+	driverScreenReady,
 	OverlayComponent,
 }: ReadyOverlayHostProps) {
 	const { scenes, focusedIndex, routeKeys, routes } = useBlankStackStore();
@@ -110,7 +105,7 @@ function ReadyOverlayHost({
 		driverAnimationStore,
 		previousOverlayAnimationStore: previousOverlayAnimationStore ?? undefined,
 		driverInterpolator: driverScene.descriptor.options.screenStyleInterpolator,
-		interpolatorReady: driverSlots.interpolatorReady,
+		screenReady: driverScreenReady,
 		isIncoming: scene.route.key === driverScene.route.key,
 	});
 	const relativeProgress = useDerivedValue(() => {
@@ -155,19 +150,17 @@ function ReadyOverlayHost({
 				animatedStyle,
 			]}
 		>
-			<ScreenAnimationStoreProvider
+			<OrchestratorStoreProvider
 				registerGlobally={false}
 				value={overlayAnimationStore}
 			>
-				<ScreenSlotStoreProvider registerGlobally={false} value={overlaySlots}>
-					<View
-						pointerEvents="box-none"
-						style={[StyleSheet.absoluteFill, styles.overlay]}
-					>
-						<OverlayComponent {...overlayProps} />
-					</View>
-				</ScreenSlotStoreProvider>
-			</ScreenAnimationStoreProvider>
+				<View
+					pointerEvents="box-none"
+					style={[StyleSheet.absoluteFill, styles.overlay]}
+				>
+					<OverlayComponent {...overlayProps} />
+				</View>
+			</OrchestratorStoreProvider>
 		</Animated.View>
 	);
 }

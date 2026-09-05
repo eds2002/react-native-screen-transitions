@@ -1,7 +1,12 @@
+import { mountBuilderAnimationState } from "./helpers/mount-builder-animation-state";
 import { afterEach, beforeAll, describe, expect, it, mock } from "bun:test";
 import React from "react";
 import { act, create } from "react-test-renderer";
 import { AnimationStore } from "../stores/animation.store";
+import { GestureStore } from "../stores/gesture.store";
+import { ScrollStore } from "../stores/scroll.store";
+import type { BaseDescriptor } from "../providers/screen/builder";
+import { buildScreenTransitionOptions } from "../providers/screen/motion/animation/helpers/build-screen-transition-options";
 import type { ScreenInterpolationProps } from "../types/animation.types";
 
 const descriptors: {
@@ -28,13 +33,60 @@ mock.module("../providers/stack/blank-stack.provider", () => ({
 		selector({ routeKeys: [] }),
 }));
 
-mock.module("../providers/screen/descriptors", () => ({
-	useDescriptorsStore: (
+const currentSystem = mountBuilderAnimationState();
+const nextSystem = mountBuilderAnimationState();
+mock.module("../providers/screen/builder", () => ({
+	useOptionalBuilderStore: (
+		key: string | null,
+		selector: (state: any) => unknown,
+	) =>
+		key
+			? selector({
+					animationState: key === "home" ? currentSystem : nextSystem,
+				})
+			: null,
+	useBuilderStore: (
 		selector: (state: { descriptors: typeof descriptors }) => unknown,
-	) => selector({ descriptors }),
+	) => {
+		const value = {
+			descriptors,
+			derivations: { currentScreenKey: "home" },
+			animationState: currentSystem,
+		};
+		return selector ? selector(value) : value;
+	},
 }));
 
-let useScreenAnimationPipeline: typeof import("../providers/screen/animation/helpers/pipeline").useScreenAnimationPipeline;
+function motionForKey(key: string) {
+	const descriptor = Object.values(descriptors).find(
+		(value) => (value as BaseDescriptor | undefined)?.route.key === key,
+	) as BaseDescriptor;
+	const system = key === "home" ? currentSystem : nextSystem;
+	return {
+		animations: {
+			...AnimationStore.getBag(key),
+			gesture: GestureStore.getBag(key),
+			route: descriptor.route,
+			options: buildScreenTransitionOptions(descriptor.options),
+			targetProgress: system.targetProgress,
+			resolvedAutoSnapPoint: system.resolvedAutoSnapPoint,
+			measuredContentLayout: system.measuredContentLayout,
+			scrollMetadata: ScrollStore.getValue(key, "metadata"),
+			hasAutoSnapPoint: false,
+			sortedNumericSnapPoints: [],
+		},
+	};
+}
+mock.module("../providers/screen/motion", () => ({
+	useMotionStore: (selector: (state: any) => unknown) =>
+		selector(motionForKey("home")),
+	useOptionalMotionStore: (
+		key: string | null,
+		selector: (state: any) => unknown,
+	) => (key ? selector(motionForKey(key)) : null),
+}));
+
+let useScreenAnimationPipeline: typeof import("../providers/screen/orchestrator/helpers/pipeline").useScreenAnimationPipeline;
 
 describe("initial interpolator state", () => {
 	afterEach(() => {
@@ -44,7 +96,7 @@ describe("initial interpolator state", () => {
 
 	beforeAll(async () => {
 		({ useScreenAnimationPipeline } = await import(
-			"../providers/screen/animation/helpers/pipeline"
+			"../providers/screen/orchestrator/helpers/pipeline"
 		));
 	});
 
