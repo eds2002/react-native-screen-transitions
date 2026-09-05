@@ -11,7 +11,7 @@ import { useRegisterGestureOwnership } from "./hooks/use-register-gesture-owners
 import { useInterpolatedStylesMap } from "./styles/hooks/use-interpolated-style-maps";
 import { useResolvedStylesMap } from "./styles/hooks/use-resolved-slot-style-map";
 
-type Props = {
+export type OrchestratorProviderProps = {
 	children: ReactNode;
 };
 
@@ -29,7 +29,7 @@ export const {
 	useOrchestratorStore,
 } = createProvider("Orchestrator", {
 	global: true,
-})<Props, OrchestratorState>(() => {
+})<OrchestratorProviderProps, OrchestratorState>(() => {
 	const currentScreenKey = useBuilderStore(
 		(store) => store.derivations.currentScreenKey,
 	);

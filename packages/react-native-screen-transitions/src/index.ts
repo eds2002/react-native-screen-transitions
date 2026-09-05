@@ -39,6 +39,10 @@ export {
 	useScreenState,
 } from "./hooks/navigation/use-screen-state";
 export {
+	BuilderProvider,
+	type BuilderProviderProps,
+} from "./providers/screen/builder";
+export {
 	type ScreenAnimationTarget,
 	useScreenAnimation,
 } from "./providers/screen/motion/animation";
@@ -46,6 +50,15 @@ export {
 	type ScreenGestureTarget,
 	useScreenGesture,
 } from "./providers/screen/motion/gestures/ownership/hooks/use-screen-gesture";
+export {
+	MotionProvider,
+	type MotionProviderProps,
+	useMotionStore,
+} from "./providers/screen/motion/motion.provider";
+export {
+	OrchestratorProvider,
+	type OrchestratorProviderProps,
+} from "./providers/screen/orchestrator/orchestrator.provider";
 
 export type {
 	AnimatedViewStyle,
