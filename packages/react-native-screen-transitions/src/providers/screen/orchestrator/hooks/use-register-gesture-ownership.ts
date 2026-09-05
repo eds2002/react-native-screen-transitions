@@ -4,7 +4,7 @@ import {
 	type ClaimedDirections,
 	NO_CLAIMS,
 } from "../../../../types/ownership.types";
-import { useBlankStackStore } from "../../../stack/blank-stack.provider";
+import { useOptionalBlankStackStore } from "../../../stack/blank-stack.provider";
 import { type BaseDescriptor, useBuilderStore } from "../../builder";
 import { gestureOwnershipCoordinator } from "../../motion/gestures/ownership/gesture-ownership-coordinator";
 import { resolveShadowingClaimDirections } from "../../motion/gestures/ownership/shadowing-claims";
@@ -40,8 +40,8 @@ export const useRegisterGestureOwnership = ({
 	source: ScreenGestureSource;
 }) => {
 	const previous = useBuilderStore((store) => store.descriptors.previous);
-	const isClosing = useBlankStackStore(
-		(store) => store.scenesByKey[source.routeKey]?.activity === "closing",
+	const isClosing = useOptionalBlankStackStore(
+		(store) => store?.scenesByKey[source.routeKey]?.activity === "closing",
 	);
 	const previousClaimedDirections = useMemo(
 		() => getDescriptorClaimedDirections(previous),

@@ -25,11 +25,15 @@ mock.module("react-native-safe-area-context", () => ({
 
 mock.module("../providers/stack/core.provider", () => ({
 	useStackCoreStore: (selector: (state: any) => unknown) =>
+		selector({ flags: { TRANSITIONS_ALWAYS_ON: true } }),
+	useOptionalStackCoreStore: (selector: (state: any) => unknown) =>
 		selector({ flags: { TRANSITIONS_ALWAYS_ON: false } }),
 }));
 
 mock.module("../providers/stack/blank-stack.provider", () => ({
 	useBlankStackStore: (selector: (state: any) => unknown) =>
+		selector({ routeKeys: [], scenesByKey: {} }),
+	useOptionalBlankStackStore: (selector: (state: any) => unknown) =>
 		selector({ routeKeys: [] }),
 }));
 

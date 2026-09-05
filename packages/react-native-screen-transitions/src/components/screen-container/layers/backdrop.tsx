@@ -3,7 +3,6 @@ import { Pressable, StyleSheet } from "react-native";
 import Animated from "react-native-reanimated";
 import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
 import { DefaultSnapSpec } from "../../../configs/specs";
-import { useNavigationHelpers } from "../../../hooks/navigation/use-navigation-helpers";
 import { useBuilderStore } from "../../../providers/screen/builder";
 import {
 	useSlotProps,
@@ -22,12 +21,12 @@ import { usesLayerRenderProps } from "./render-component";
 export const BackdropLayer = memo(function BackdropLayer({
 	backdropBehavior,
 	isBackdropActive,
+	onDismissRequest,
 }: {
 	backdropBehavior: BackdropBehavior;
 	isBackdropActive: boolean;
+	onDismissRequest?: () => void;
 }) {
-	const { requestDismiss } = useNavigationHelpers();
-
 	const routeKey = useBuilderStore(
 		(store) => store.derivations.currentScreenKey,
 	);
@@ -58,14 +57,14 @@ export const BackdropLayer = memo(function BackdropLayer({
 
 	const handleBackdropPress = useCallback(() => {
 		if (backdropBehavior === "dismiss") {
-			requestDismiss();
+			onDismissRequest?.();
 			return;
 		}
 
 		if (backdropBehavior === "collapse") {
 			// No snap points → fallback to dismiss
 			if (!rawSnapPoints || rawSnapPoints.length === 0) {
-				requestDismiss();
+				onDismissRequest?.();
 				return;
 			}
 
@@ -113,7 +112,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 				});
 
 				if (shouldDismiss) {
-					scheduleOnRN(requestDismiss);
+					if (onDismissRequest) scheduleOnRN(onDismissRequest);
 				}
 			});
 		}
@@ -126,7 +125,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 		rawSnapPoints,
 		canDismiss,
 		transitionSpec,
-		requestDismiss,
+		onDismissRequest,
 		routeKey,
 	]);
 

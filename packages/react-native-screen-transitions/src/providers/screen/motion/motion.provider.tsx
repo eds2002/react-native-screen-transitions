@@ -5,6 +5,11 @@ import { useMotionAnimationPipeline } from "./animation/pipeline";
 import { useScreenGestures } from "./gestures/use-screen-gestures";
 import { useScreenOptions } from "./options/use-screen-options";
 
+export type MotionProviderProps = {
+	children: ReactNode;
+	onDismissRequest?: () => void;
+};
+
 export type MotionState = {
 	options: ReturnType<typeof useScreenOptions>;
 	gestures: ReturnType<typeof useScreenGestures>;
@@ -17,14 +22,14 @@ export const {
 	useMotionStore,
 	useOptionalMotionStore,
 } = createProvider("Motion", { global: true })<
-	{ children: ReactNode },
+	MotionProviderProps,
 	MotionState
->(() => {
+>(({ onDismissRequest }) => {
 	const screenKey = useBuilderStore(
 		(store) => store.derivations.currentScreenKey,
 	);
 	const options = useScreenOptions();
-	const gestures = useScreenGestures(options);
+	const gestures = useScreenGestures(options, onDismissRequest);
 	const animations = useMotionAnimationPipeline();
 	const value = useMemo(
 		() => ({ options, gestures, animations }),

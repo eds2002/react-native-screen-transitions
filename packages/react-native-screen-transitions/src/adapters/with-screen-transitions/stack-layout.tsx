@@ -1,7 +1,7 @@
 import type { NavigationState, Route } from "@react-navigation/native";
 import { useMemo } from "react";
 import { Overlay } from "../../components/overlay";
-import { ScreenComposer } from "../../providers/screen/screen-composer";
+import { BlankStackScreen } from "../../components/stack-view";
 import { BlankStackStoreProvider } from "../../providers/stack/blank-stack.provider";
 import { StackCoreProvider } from "../../providers/stack/core.provider";
 import type { BaseStackDescriptor, BaseStackRoute } from "../../types";
@@ -207,5 +207,7 @@ export function ScreenTransitionsScreenLayout({
 
 	const scene = scenes[sceneIndex];
 
-	return <ScreenComposer routeKey={scene.route.key}>{children}</ScreenComposer>;
+	return (
+		<BlankStackScreen routeKey={scene.route.key}>{children}</BlankStackScreen>
+	);
 }

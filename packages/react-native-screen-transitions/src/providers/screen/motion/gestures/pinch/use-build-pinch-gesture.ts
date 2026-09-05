@@ -12,12 +12,14 @@ import { usePinchActivation } from "./activation/use-pinch-activation";
 import { usePinchBehavior } from "./behavior/use-pinch-behavior";
 
 interface UseBuildPinchGestureProps {
+	onDismissRequest?: () => void;
 	screenOptions: ScreenOptionsContextValue;
 	gestureConfig: ScreenGestureConfig;
 	gestureCompositionOwner: SharedValue<GestureCompositionOwner>;
 }
 
 export const useBuildPinchGesture = ({
+	onDismissRequest,
 	screenOptions,
 	gestureConfig,
 	gestureCompositionOwner,
@@ -39,6 +41,7 @@ export const useBuildPinchGesture = ({
 		runtime,
 		screenOptions,
 		gestureCompositionOwner,
+		onDismissRequest,
 	);
 
 	const pinchGesture = useMemo(() => {

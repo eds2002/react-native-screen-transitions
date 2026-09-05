@@ -9,7 +9,10 @@ import { useBuildPanGesture } from "./pan/use-build-pan-gesture";
 import { useBuildPinchGesture } from "./pinch/use-build-pinch-gesture";
 import { type GestureCompositionOwner, NO_GESTURE_OWNERS } from "./types";
 
-export function useScreenGestures(screenOptions: ScreenOptionsContextValue) {
+export function useScreenGestures(
+	screenOptions: ScreenOptionsContextValue,
+	onDismissRequest?: () => void,
+) {
 	const currentScreenKey = useBuilderStore(
 		(store) => store.derivations.currentScreenKey,
 	);
@@ -18,6 +21,7 @@ export function useScreenGestures(screenOptions: ScreenOptionsContextValue) {
 	const gestureOwners = useSharedValue({ ...NO_GESTURE_OWNERS });
 	const gestureCompositionOwner = useSharedValue<GestureCompositionOwner>(null);
 	const panGesture = useBuildPanGesture({
+		onDismissRequest,
 		scrollState,
 		screenOptions,
 		gestureConfig,
@@ -25,6 +29,7 @@ export function useScreenGestures(screenOptions: ScreenOptionsContextValue) {
 		gestureCompositionOwner,
 	});
 	const pinchGesture = useBuildPinchGesture({
+		onDismissRequest,
 		screenOptions,
 		gestureConfig,
 		gestureCompositionOwner,

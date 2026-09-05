@@ -1,6 +1,5 @@
 import { useCallback, useMemo } from "react";
 import type { SharedValue } from "react-native-reanimated";
-import { useNavigationHelpers } from "../../../../../../hooks/navigation/use-navigation-helpers";
 import type { Direction } from "../../../../../../types/ownership.types";
 import type { ScreenOptionsContextValue } from "../../../options";
 import { usePanGestureSensitivity } from "../../ownership/hooks/use-gesture-sensitivity";
@@ -30,8 +29,8 @@ export const usePanBehavior = (
 	dimensions: GestureDimensions,
 	gestureCompositionOwner: SharedValue<GestureCompositionOwner>,
 	pendingDirection: SharedValue<Direction | null>,
+	requestDismiss?: () => void,
 ): PanBehavior => {
-	const { requestDismiss } = useNavigationHelpers();
 	const { withSensitivity, resetSensitivity } =
 		usePanGestureSensitivity(screenOptions);
 

@@ -104,3 +104,17 @@ Composer now renders Builder → ScreenLifecycle → Motion → Orchestrator →
 Removed the `unregisterOnCleanup` option from `createProvider` and the Builder/Orchestrator close-dependent retention override. Keyed providers now unregister on effect cleanup; a replacement Activity strategy remains future work.
 
 `useResolvedStylesMap` resolves its ancestor through the keyed Orchestrator store internally. `useInterpolatedStylesMap` accepts only `pipeline`, reads visibility from Builder itself, and no longer accepts an `enabled` flag.
+
+## Blank Stack supplies the screen contract
+
+Builder now receives `descriptors`, optional `navigatorKey`, and optional `isActiveScreen` alongside its route key. Its descriptor structure and derivations remain unchanged. `isActiveScreen` defaults to true for hosts rendering a standalone screen.
+
+Motion accepts `onDismissRequest`, passed to the existing pan and pinch release handlers. ScreenContainer accepts the same callback for backdrop dismissal. These callbacks run on the React thread, with gesture release calculations and animation execution unchanged. They report a dismissal request; their return value does not change the gesture release calculation.
+
+The generic ScreenComposer contains Builder → Motion → Orchestrator → ScreenContainer. ScreenLifecycle is now composed by `BlankStackScreen`, which reads Blank Stack state and wires its existing navigation handler. StackView and the native-stack adapter both consume that wrapper.
+
+Orchestrator uses optional Blank Stack and Stack Core reads. Without them, stack progress falls back to the local interpolation frame, closing-route gesture shadowing is inactive, and configured transitions are enabled by default. Normal React Native gesture, Reanimated, and safe-area setup is still provided by the host. Descriptor redesign and final public exports remain separate work.
+
+## Topology remains a Blank Stack capability
+
+Removed `navigatorKey` and `isActiveScreen` from Builder's inputs. `useScreenTopology` reads navigator identity and focused activity from optional Blank Stack context internally and only registers screens present in that stack. Custom hosts without Blank Stack state receive no topology registration; bounds integration is not part of their supported contract in this step.

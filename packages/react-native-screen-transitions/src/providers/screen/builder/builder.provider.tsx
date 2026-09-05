@@ -4,7 +4,6 @@ import { StyleSheet } from "react-native";
 import Animated, { type SharedValue } from "react-native-reanimated";
 import type { BaseStackDescriptor } from "../../../types/stack.types";
 import createProvider from "../../../utils/create-provider";
-import { useBlankStackStore } from "../../stack/blank-stack.provider";
 import type { DescriptorDerivations } from "./helpers/derive-descriptor-derivations";
 import { deriveDescriptorDerivations } from "./helpers/derive-descriptor-derivations";
 import {
@@ -35,9 +34,10 @@ interface BuilderStoreValue {
 	visibilityBlocked: SharedValue<boolean>;
 }
 
-type BuilderProviderProps = {
+export type BuilderProviderProps = {
 	children: ReactNode;
 	routeKey: string;
+	descriptors: DescriptorsContextValue;
 };
 
 const createBuilderProvider = createProvider("Builder", {
@@ -51,13 +51,11 @@ const {
 	useBuilderStore,
 	useOptionalBuilderStore,
 }: ReturnType<typeof createBuilderProvider> = createBuilderProvider(
-	({ routeKey, children }) => {
-		const scene = useBlankStackStore((s) => s.scenesByKey[routeKey]);
-
-		const currentDescriptor = scene.descriptor;
-		const previousDescriptor = scene.previousDescriptor;
-		const nextDescriptor = scene.nextDescriptor;
-		const options = scene.descriptor.options;
+	({ routeKey, children, descriptors: inputDescriptors }) => {
+		const currentDescriptor = inputDescriptors.current;
+		const previousDescriptor = inputDescriptors.previous;
+		const nextDescriptor = inputDescriptors.next;
+		const options = currentDescriptor.options;
 
 		const descriptors = useMemo(() => {
 			return {
@@ -75,24 +73,7 @@ const {
 			});
 		}, [previousDescriptor, currentDescriptor, nextDescriptor]);
 
-		const parentScreenKey = useOptionalBuilderStore(
-			(store) => store?.derivations.currentScreenKey,
-		);
-		const navigatorKey = useBlankStackStore((store) => store.navigatorKey);
-		const isActiveScreen = useBlankStackStore((store) => {
-			const focusedScene = store.scenes[store.focusedIndex];
-			return (
-				focusedScene?.route.key === routeKey &&
-				focusedScene.activity === "active"
-			);
-		});
-		useScreenTopology({
-			screenKey: derivations.currentScreenKey,
-			navigatorKey,
-			parentScreenKey,
-			transitionKey: options.transitionKey,
-			isActiveScreen,
-		});
+		useScreenTopology(routeKey);
 
 		const animationState = useBuilderAnimationState();
 		const ancestorVisibilityBlocked = useOptionalBuilderStore(

@@ -50,21 +50,11 @@ let options = {
 	gestureSensitivity: 1,
 };
 mock.module("../providers/stack/blank-stack.provider", () => ({
-	useBlankStackStore: (selector: (store: any) => unknown) => {
-		const scene = {
-			route,
-			activity: "active",
-			descriptor: { route, navigation, options },
-		};
-		return selector({
-			scenesByKey: { [key]: scene },
-			scenes: [scene],
-			focusedIndex: 0,
-			navigatorKey: "motion-test-stack",
-			requestDismiss: () => true,
-		});
+	useBlankStackStore: () => {
+		throw new Error("Motion must not read Blank Stack");
 	},
 }));
+let dismissRequest: (() => void) | undefined;
 let animationState: ReturnType<typeof useBuilderAnimationState>;
 mock.module("../providers/screen/builder", () => ({
 	useBuilderStore: (selector: (store: any) => unknown) =>
@@ -97,7 +87,7 @@ function RemoteProbe() {
 function Host() {
 	animationState = useBuilderAnimationState();
 	return (
-		<MotionProvider>
+		<MotionProvider onDismissRequest={dismissRequest}>
 			<Probe />
 		</MotionProvider>
 	);
@@ -115,7 +105,12 @@ function tree(mode: "visible" | "hidden" = "visible") {
 const originalRaf = globalThis.requestAnimationFrame;
 beforeEach(() => {
 	globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-	options = { ...options, gestureSensitivity: 1 };
+	options = {
+		...options,
+		gestureSensitivity: 1,
+		gestureDirection: "horizontal",
+	};
+	dismissRequest = undefined;
 	globalThis.requestAnimationFrame = (callback) => {
 		callback(0);
 		return 1;
@@ -216,4 +211,34 @@ it("shares current-screen motion while isolating each orchestrator's output and 
 	expect(second.layouts.screen.width).toBe(600);
 	expect(first.gesture).not.toBe(second.gesture);
 	expect(local.animations.options.gestureEnabled).toBe(true);
+});
+
+it("calls the host on a dismissing pan release, but not a cancelled drag", () => {
+	let calls = 0;
+	dismissRequest = () => {
+		calls++;
+	};
+	act(() => {
+		renderer = create(tree());
+	});
+	local.animations.transitionProgress.set(1);
+	const pan = local.gestures.panGesture as unknown as ReturnType<
+		typeof gesture
+	>;
+	const event = (translationX: number) => ({
+		translationX,
+		translationY: 0,
+		velocityX: 0,
+		velocityY: 0,
+	});
+	pan.callbacks.onStart();
+	GestureStore.getValue(key, "initiator").set("horizontal");
+	pan.callbacks.onUpdate(event(10));
+	pan.callbacks.onEnd(event(10));
+	expect(calls).toBe(0);
+	pan.callbacks.onStart();
+	GestureStore.getValue(key, "initiator").set("horizontal");
+	pan.callbacks.onUpdate(event(350));
+	pan.callbacks.onEnd(event(350));
+	expect(calls).toBe(1);
 });

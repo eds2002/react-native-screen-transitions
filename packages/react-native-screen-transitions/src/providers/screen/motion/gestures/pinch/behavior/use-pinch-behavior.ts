@@ -1,6 +1,5 @@
 import { useCallback, useMemo } from "react";
 import type { SharedValue } from "react-native-reanimated";
-import { useNavigationHelpers } from "../../../../../../hooks/navigation/use-navigation-helpers";
 import type { ScreenOptionsContextValue } from "../../../options";
 import { usePinchGestureSensitivity } from "../../ownership/hooks/use-gesture-sensitivity";
 import { resolvePinchRuntime } from "../../shared/runtime";
@@ -25,8 +24,8 @@ export const usePinchBehavior = (
 	runtime: SharedValue<PinchGestureRuntime>,
 	screenOptions: ScreenOptionsContextValue,
 	gestureCompositionOwner: SharedValue<GestureCompositionOwner>,
+	requestDismiss?: () => void,
 ): PinchBehavior => {
-	const { requestDismiss } = useNavigationHelpers();
 	const { withSensitivity, resetSensitivity } =
 		usePinchGestureSensitivity(screenOptions);
 

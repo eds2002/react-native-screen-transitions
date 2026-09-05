@@ -1,6 +1,8 @@
 export {
 	type BaseDescriptor,
 	BuilderProvider,
+	type BuilderProviderProps,
+	type DescriptorsContextValue,
 	getBuilderStore,
 	useBuilderStore,
 	useOptionalBuilderStore,

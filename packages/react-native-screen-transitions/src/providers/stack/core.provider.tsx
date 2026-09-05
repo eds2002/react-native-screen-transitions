@@ -66,23 +66,27 @@ const StackCoreRoot = memo(function StackCoreRoot({
 	);
 });
 
-export const { StackCoreProvider, useStackCoreStore } = createProvider(
-	"StackCore",
-)<StackCoreProviderProps, StackCoreContextValue>(({ config, children }) => {
-	const { TRANSITIONS_ALWAYS_ON = false } = config;
+export const {
+	StackCoreProvider,
+	useStackCoreStore,
+	useOptionalStackCoreStore,
+} = createProvider("StackCore")<StackCoreProviderProps, StackCoreContextValue>(
+	({ config, children }) => {
+		const { TRANSITIONS_ALWAYS_ON = false } = config;
 
-	const flags = useMemo(
-		() => ({
-			TRANSITIONS_ALWAYS_ON,
-		}),
-		[TRANSITIONS_ALWAYS_ON],
-	);
+		const flags = useMemo(
+			() => ({
+				TRANSITIONS_ALWAYS_ON,
+			}),
+			[TRANSITIONS_ALWAYS_ON],
+		);
 
-	return {
-		value: { flags },
-		children: <StackCoreRoot>{children}</StackCoreRoot>,
-	};
-});
+		return {
+			value: { flags },
+			children: <StackCoreRoot>{children}</StackCoreRoot>,
+		};
+	},
+);
 
 const styles = StyleSheet.create({
 	container: { flex: 1 },

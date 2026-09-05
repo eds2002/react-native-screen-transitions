@@ -15,6 +15,7 @@ import { usePanActivation } from "./activation/use-pan-activation";
 import { usePanBehavior } from "./behavior/use-pan-behavior";
 
 interface UseBuildPanGestureProps {
+	onDismissRequest?: () => void;
 	screenOptions: ScreenOptionsContextValue;
 	scrollState: SharedValue<ScrollGestureState | null>;
 	gestureConfig: ScreenGestureConfig;
@@ -23,6 +24,7 @@ interface UseBuildPanGestureProps {
 }
 
 export const useBuildPanGesture = ({
+	onDismissRequest,
 	screenOptions,
 	scrollState,
 	gestureConfig,
@@ -52,6 +54,7 @@ export const useBuildPanGesture = ({
 		dimensions,
 		gestureCompositionOwner,
 		activation.pendingDirection,
+		onDismissRequest,
 	);
 
 	const panGesture = useMemo(() => {

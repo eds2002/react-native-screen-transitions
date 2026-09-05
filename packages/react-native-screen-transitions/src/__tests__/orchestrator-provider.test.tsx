@@ -25,10 +25,14 @@ mock.module("../providers/screen/motion", () => ({
 mock.module("../providers/stack/blank-stack.provider", () => ({
 	useBlankStackStore: (selector: (state: any) => unknown) =>
 		selector({ routeKeys: [], scenesByKey: {} }),
+	useOptionalBlankStackStore: (selector: (state: any) => unknown) =>
+		selector(null),
 }));
 mock.module("../providers/stack/core.provider", () => ({
 	useStackCoreStore: (selector: (state: any) => unknown) =>
 		selector({ flags: { TRANSITIONS_ALWAYS_ON: true } }),
+	useOptionalStackCoreStore: (selector: (state: any) => unknown) =>
+		selector(null),
 }));
 mock.module("react-native-safe-area-context", () => ({
 	useSafeAreaInsets: () => ({ top: 0, left: 0, right: 0, bottom: 0 }),
@@ -148,7 +152,7 @@ afterEach(() => {
 	}
 });
 
-it("provides inherited slots, local props, and resets through Orchestrator alone", () => {
+it("provides inherited slots and resets without Blank Stack or Stack Core context", () => {
 	globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 	screenTopology.register({ screenKey: parentKey });
 	screenTopology.register({ screenKey: childKey, parentScreenKey: parentKey });

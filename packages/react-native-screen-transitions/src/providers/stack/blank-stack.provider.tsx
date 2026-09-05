@@ -27,6 +27,7 @@ const {
 	StoreProvider: BlankStackStoreProvider,
 	BlankStackProvider,
 	useBlankStackStore,
+	useOptionalBlankStackStore,
 } = createProvider("BlankStack")<
 	InternalBlankStackProviderProps,
 	BlankStackStoreValue
@@ -73,4 +74,9 @@ const {
 });
 
 export type { BlankStackProviderProps, BlankStackStoreValue };
-export { BlankStackProvider, BlankStackStoreProvider, useBlankStackStore };
+export {
+	BlankStackProvider,
+	BlankStackStoreProvider,
+	useBlankStackStore,
+	useOptionalBlankStackStore,
+};

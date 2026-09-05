@@ -17,8 +17,8 @@ import type {
 	ScreenStyleInterpolator,
 	ScreenTransitionState,
 } from "../../../../types/animation.types";
-import { useBlankStackStore } from "../../../stack/blank-stack.provider";
-import { useStackCoreStore } from "../../../stack/core.provider";
+import { useOptionalBlankStackStore } from "../../../stack/blank-stack.provider";
+import { useOptionalStackCoreStore } from "../../../stack/core.provider";
 import { type BaseDescriptor, useBuilderStore } from "../../builder";
 import { useMotionStore, useOptionalMotionStore } from "../../motion";
 import { buildScreenTransitionOptions } from "../../motion/animation/helpers/build-screen-transition-options";
@@ -33,6 +33,8 @@ import { updateDerivations } from "./derivations";
 import type { SelectedInterpolatorOptions } from "./selected-interpolator-options";
 import { readStackProgress, type StackProgressEntry } from "./stack-progress";
 import { useInterpolatorState } from "./use-interpolator-state";
+
+const NO_ROUTE_KEYS: readonly string[] = [];
 
 export type ScreenInterpolatorFrame = Omit<
 	ScreenInterpolationProps,
@@ -266,10 +268,12 @@ const hydrateInterpolatorFrame = <TFrame extends ScreenInterpolatorFrame>({
 };
 
 export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
-	const transitionsAlwaysOn = useStackCoreStore(
-		(store) => store.flags.TRANSITIONS_ALWAYS_ON,
+	const transitionsAlwaysOn = useOptionalStackCoreStore(
+		(store) => store?.flags.TRANSITIONS_ALWAYS_ON ?? true,
 	);
-	const routeKeys = useBlankStackStore((store) => store.routeKeys);
+	const routeKeys = useOptionalBlankStackStore(
+		(store) => store?.routeKeys ?? NO_ROUTE_KEYS,
+	);
 	const dimensions = useWindowDimensions();
 	const insets = useSafeAreaInsets();
 	const stackProgressEntries = useMemo(
