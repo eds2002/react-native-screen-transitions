@@ -1,5 +1,5 @@
 import { mountMotionValues } from "../helpers/mount-motion-values";
-import { mountBuilderAnimationState } from "../helpers/mount-builder-animation-state";
+import { mountMotionTransitionValues } from "../helpers/mount-transition-values";
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { getRefreshBoundarySignal } from "../../components/boundary/utils/refresh-signals";
 import { startPanBase } from "../../providers/screen/motion/gestures/pan/behavior/pan-lifecycle";
@@ -275,7 +275,7 @@ describe("refresh boundary signals", () => {
 		const routeKey = "detail-boundary-refresh";
 		const animations = mountMotionValues();
 		const gestures = animations;
-		const system = mountBuilderAnimationState();
+		const system = mountMotionTransitionValues();
 		const runtime = {
 			participation: { canDismiss: true, effectiveSnapPoints: {} },
 			policy: { gestureReleaseVelocityScale: 1 },

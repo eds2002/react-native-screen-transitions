@@ -44,13 +44,11 @@ export const hasCloseTransitionFinished = ({
 };
 
 export const isScreenReady = ({
-	hasInterpolator,
 	opening,
 	closing,
 	pendingLifecycleStartBlockCount,
 	animationProgress,
 }: {
-	hasInterpolator: boolean;
 	opening: boolean;
 	closing: number;
 	pendingLifecycleStartBlockCount: number;
@@ -59,12 +57,10 @@ export const isScreenReady = ({
 	"worklet";
 
 	return (
-		hasInterpolator &&
 		!isOpenTransitionBlocked({
 			opening,
 			pendingLifecycleStartBlockCount,
 			animationProgress,
-		}) &&
-		!hasCloseTransitionFinished({ closing, animationProgress })
+		}) && !hasCloseTransitionFinished({ closing, animationProgress })
 	);
 };

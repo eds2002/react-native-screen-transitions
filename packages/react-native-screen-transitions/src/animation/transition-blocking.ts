@@ -1,4 +1,4 @@
-import { getBuilderStore } from "../providers/screen/builder/builder.provider";
+import { getMotionStore } from "../providers/screen/motion";
 import { HistoryStore } from "../stores/history.store";
 import type { ScreenKey } from "../types/screen.types";
 import { logger } from "../utils/logger";
@@ -52,9 +52,7 @@ export function blockTransition(routeKey?: ScreenKey): void {
 		return;
 	}
 
-	getBuilderStore(
-		resolvedRouteKey,
-	).animationState.actions.blockLifecycleStart();
+	getMotionStore(resolvedRouteKey).state.actions.blockLifecycleStart();
 }
 
 /**
@@ -77,7 +75,5 @@ export function unblockTransition(routeKey?: ScreenKey): void {
 		return;
 	}
 
-	getBuilderStore(
-		resolvedRouteKey,
-	).animationState.actions.unblockLifecycleStart();
+	getMotionStore(resolvedRouteKey).state.actions.unblockLifecycleStart();
 }

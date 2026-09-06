@@ -1,10 +1,10 @@
 import { useAnimatedReaction } from "react-native-reanimated";
 import type { BaseDescriptor } from "../../../providers/screen/builder";
-import {
-	type BuilderAnimationState,
-	LifecycleTransitionRequestKind,
-} from "../../../providers/screen/builder/hooks/use-builder-animation-state";
 import { useMotionStore } from "../../../providers/screen/motion";
+import {
+	LifecycleTransitionRequestKind,
+	type MotionTransitionValues,
+} from "../../../providers/screen/motion/hooks/use-transition-values";
 import type { MotionAnimationValues } from "../../../providers/screen/motion/types";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
 
@@ -15,7 +15,7 @@ export const useTransitionStartController = ({
 }: {
 	current: BaseDescriptor;
 	animations: MotionAnimationValues;
-	system: BuilderAnimationState;
+	system: MotionTransitionValues;
 }) => {
 	const {
 		targetProgress,

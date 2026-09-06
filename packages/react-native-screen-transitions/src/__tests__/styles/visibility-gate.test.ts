@@ -1,9 +1,9 @@
 import { describe, expect, it } from "bun:test";
-import { LifecycleTransitionRequestKind } from "../../providers/screen/builder/hooks/use-builder-animation-state";
+import { LifecycleTransitionRequestKind } from "../../providers/screen/motion/hooks/use-transition-values";
 import {
 	resolveInitialDestinationStyleGate,
 	resolveScreenVisibilityGate,
-} from "../../providers/screen/orchestrator/styles/helpers/visibility-gate";
+} from "../../providers/screen/motion/helpers/visibility-gate";
 
 describe("resolveScreenVisibilityGate", () => {
 	const baseState = {

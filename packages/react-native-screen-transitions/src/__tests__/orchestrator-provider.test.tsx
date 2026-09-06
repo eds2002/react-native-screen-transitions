@@ -3,7 +3,7 @@ import { afterEach, expect, it, mock } from "bun:test";
 import { createContext, type ReactNode, useContext, useMemo } from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { useSharedValue } from "react-native-reanimated";
-import { useBuilderAnimationState } from "../providers/screen/builder/hooks/use-builder-animation-state";
+import { useTransitionValues } from "../providers/screen/motion/hooks/use-transition-values";
 import { screenTopology } from "../providers/screen/builder/topology/helpers/create-screen-topology";
 import { NO_GESTURE_OWNERS } from "../providers/screen/motion/gestures/types";
 import { NO_CLAIMS } from "../types/ownership.types";
@@ -18,7 +18,9 @@ mock.module("../providers/screen/builder", () => ({
 }));
 mock.module("../providers/screen/motion", () => ({
 	useMotionStore: (selector: ((state: any) => unknown) | readonly string[]) =>
-		Array.isArray(selector) ? [] : (selector as (state: any) => unknown)(useContext(MotionContext)),
+		Array.isArray(selector)
+			? []
+			: (selector as (state: any) => unknown)(useContext(MotionContext)),
 	useOptionalMotionStore: () => null,
 }));
 mock.module("../providers/stack/blank-stack.provider", () => ({
@@ -79,8 +81,6 @@ function Builder({
 	screenKey: string;
 	children?: ReactNode;
 }) {
-	const animationState = useBuilderAnimationState();
-	const visibilityBlocked = useSharedValue(false);
 	const descriptor = useMemo(
 		() => ({
 			route: { key: screenKey, name: screenKey },
@@ -94,8 +94,6 @@ function Builder({
 				descriptors: { current: descriptor },
 				options: descriptor.options,
 				derivations: { currentScreenKey: screenKey },
-				animationState,
-				visibilityBlocked,
 			}}
 		>
 			<Motion>{children}</Motion>
@@ -107,6 +105,7 @@ function Motion({ children }: { children?: ReactNode }) {
 		derivations: { currentScreenKey },
 	} = useContext(BuilderContext);
 	const animations = useMotionAnimationPipeline(useMotionValues());
+	const visibilityBlocked = useSharedValue(false);
 	const options = useScreenOptions();
 	const owners = useSharedValue({ ...NO_GESTURE_OWNERS });
 	const gestures = useMemo(
@@ -118,7 +117,9 @@ function Motion({ children }: { children?: ReactNode }) {
 		[currentScreenKey, owners],
 	);
 	return (
-		<MotionContext.Provider value={{ state: animations, options, gestures }}>
+		<MotionContext.Provider
+			value={{ state: animations, options, gestures, visibilityBlocked }}
+		>
 			<OrchestratorProvider>{children}</OrchestratorProvider>
 		</MotionContext.Provider>
 	);

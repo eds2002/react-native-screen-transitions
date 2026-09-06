@@ -19,7 +19,7 @@ export const ScreenLifecycle = ({ children }: Props) => {
 	const previous = useBuilderStore((store) => store.descriptors.previous);
 
 	const animations = useMotionStore((store) => store.state);
-	const system = useBuilderStore((store) => store.animationState);
+	const system = animations;
 
 	const { completeClose } = useCloseTransitionIntent(current);
 

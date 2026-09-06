@@ -10,9 +10,14 @@ import type {
 	TransitionInterpolatedStyle,
 } from "../../../../../types/animation.types";
 import { logger } from "../../../../../utils/logger";
-import { useBuilderStore, useOptionalBuilderStore } from "../../../builder";
-import { LifecycleTransitionRequestKind } from "../../../builder/hooks/use-builder-animation-state";
+import { useBuilderStore } from "../../../builder";
 import { useMotionStore, useOptionalMotionStore } from "../../../motion";
+import {
+	hasCloseTransitionFinished,
+	isOpenTransitionBlocked,
+} from "../../../motion/helpers/transition-visual-state";
+import { resolveInitialDestinationStyleGate } from "../../../motion/helpers/visibility-gate";
+import { LifecycleTransitionRequestKind } from "../../../motion/hooks/use-transition-values";
 import { syncScreenOptionsOverrides } from "../../../motion/options";
 import type {
 	ScreenAnimationPipeline,
@@ -28,11 +33,6 @@ import {
 	selectInterpolatorFrame,
 } from "../helpers/select-interpolator-frame";
 import { stripInterpolatorOptions } from "../helpers/strip-interpolator-options";
-import {
-	hasCloseTransitionFinished,
-	isOpenTransitionBlocked,
-} from "../helpers/transition-visual-state";
-import { resolveInitialDestinationStyleGate } from "../helpers/visibility-gate";
 
 const NO_STYLE_LAYERS: LocalStyleLayers = [];
 
@@ -122,10 +122,7 @@ export const useInterpolatedStylesMap = ({
 }: {
 	pipeline: ScreenAnimationPipeline;
 }) => {
-	const visibilityBlocked = useBuilderStore((store) => store.visibilityBlocked);
-	const currentScreenKey = useBuilderStore(
-		(s) => s.derivations.currentScreenKey,
-	);
+	const visibilityBlocked = useMotionStore((store) => store.visibilityBlocked);
 	const nextScreenKey = useBuilderStore((s) => s.derivations.nextScreenKey);
 	const destinationPairKey = useBuilderStore(
 		(s) => s.derivations.destinationPairKey,
@@ -138,21 +135,13 @@ export const useInterpolatedStylesMap = ({
 		currentInterpolator,
 	} = pipeline;
 
-	const currentSystem = useBuilderStore((store) => store.animationState);
-	const nextSystem = useOptionalBuilderStore(
+	const currentSystem = useMotionStore((store) => store.state);
+	const nextSystem = useOptionalMotionStore(
 		nextScreenKey ?? null,
-		(store) => store.animationState,
-	);
-	const activeScreenKey =
-		nextSystem && nextScreenKey ? nextScreenKey : currentScreenKey;
-
-	const currentMotion = useMotionStore((store) => store.state);
-	const activeMotion = useOptionalMotionStore(
-		activeScreenKey,
 		(store) => store.state,
 	);
 	const { closing: activeClosing, entering: activeEntering } =
-		activeMotion ?? currentMotion;
+		nextSystem ?? currentSystem;
 
 	const {
 		animationProgress: activeAnimationProgress,

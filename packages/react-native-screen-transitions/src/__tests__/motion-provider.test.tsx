@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, expect, it, mock } from "bun:test";
-import { Activity } from "react";
+import { Activity, useLayoutEffect } from "react";
 import { useInterpolatorState } from "../providers/screen/orchestrator/helpers/use-interpolator-state";
 import { hydrateTransitionState } from "../providers/screen/motion/animation/helpers/hydrate-transition-state";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { ScrollStore } from "../stores/scroll.store";
-import { useBuilderAnimationState } from "../providers/screen/builder/hooks/use-builder-animation-state";
+import { useTransitionValues } from "../providers/screen/motion/hooks/use-transition-values";
 
 // Capture native callbacks while running the real options and gesture hooks.
 function gesture() {
@@ -53,12 +53,11 @@ mock.module("../providers/stack/blank-stack.provider", () => ({
 	},
 }));
 let dismissRequest: (() => void) | undefined;
-let animationState: ReturnType<typeof useBuilderAnimationState>;
+let animationState: ReturnType<typeof useTransitionValues>;
 mock.module("../providers/screen/builder", () => ({
 	useBuilderStore: (selector: (store: any) => unknown) =>
 		selector({
 			options,
-			animationState,
 			derivations: { currentScreenKey: key, isFirstKey: false },
 			descriptors: { current: { route, navigation, options } },
 		}),
@@ -77,6 +76,7 @@ let readerA: NonNullable<ReturnType<typeof useInterpolatorState>>;
 let readerB: NonNullable<ReturnType<typeof useInterpolatorState>>;
 function Probe() {
 	local = useMotionStore();
+	animationState = local.state;
 	readerA = useInterpolatorState(local.state)!;
 	readerB = useInterpolatorState(local.state)!;
 	return null;
@@ -86,7 +86,6 @@ function RemoteProbe() {
 	return null;
 }
 function Host() {
-	animationState = useBuilderAnimationState();
 	return (
 		<MotionProvider onDismissRequest={dismissRequest}>
 			<Probe />
@@ -131,6 +130,7 @@ it("updates live gesture options without replacing animation values or resetting
 	const sharedOptions = local.options;
 	const animations = local.state;
 	expect(remote).toBe(local);
+	expect(local.screenReady.get()).toBe(1);
 	expect(animations.transitionProgress).toBe(remote?.state.transitionProgress);
 	expect(animations).toBe(remote?.state);
 	expect(animations.targetProgress).toBe(animationState.targetProgress);
@@ -256,4 +256,31 @@ it("releases keyed motion on unmount and creates fresh values on remount", () =>
 	expect(local.state.x).not.toBe(previous.x);
 	expect(local.state.transitionProgress.get()).toBe(0);
 	expect(local.state.x.get()).toBe(0);
+});
+
+it("derives local readiness before the Motion store is registered", () => {
+	let beforeRegistration: number | undefined;
+	function BeforeRegistration() {
+		const motion = useMotionStore();
+		useLayoutEffect(() => {
+			expect(() => getMotionStore(key)).toThrow();
+			motion.state.closing.set(1);
+			motion.state.animationProgress.set(0);
+			beforeRegistration = motion.screenReady.get();
+		}, [motion]);
+		return null;
+	}
+	options = {
+		...options,
+		screenStyleInterpolator: () => ({}),
+	} as typeof options;
+	act(() => {
+		renderer = create(
+			<MotionProvider>
+				<BeforeRegistration />
+			</MotionProvider>,
+		);
+	});
+	expect(beforeRegistration).toBe(0);
+	expect(getMotionStore(key).screenReady.get()).toBe(0);
 });

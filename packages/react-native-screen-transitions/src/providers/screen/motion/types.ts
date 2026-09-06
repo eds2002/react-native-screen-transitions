@@ -1,5 +1,6 @@
 import type { SharedValue } from "react-native-reanimated";
 import type { ActiveGesture } from "../../../types/gesture.types";
+import type { MotionTransitionValues } from "./hooks/use-transition-values";
 
 export type MotionAnimationValues = {
 	transitionProgress: SharedValue<number>;
@@ -67,4 +68,6 @@ export type MotionGestureValues = {
 	initiator: SharedValue<ActiveGesture | null>;
 };
 
-export type MotionValues = MotionAnimationValues & MotionGestureValues;
+export type MotionValues = MotionAnimationValues &
+	MotionGestureValues &
+	MotionTransitionValues;

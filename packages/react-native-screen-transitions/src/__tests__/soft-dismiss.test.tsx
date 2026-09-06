@@ -1,4 +1,4 @@
-import { mountBuilderAnimationState } from "./helpers/mount-builder-animation-state";
+import { mountMotionTransitionValues } from "./helpers/mount-transition-values";
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import React from "react";
 import { act, create } from "react-test-renderer";
@@ -7,10 +7,10 @@ let motionRenderer: ReturnType<typeof create>;
 afterEach(() => {
 	act(() => motionRenderer?.unmount());
 });
-import { LifecycleTransitionRequestKind } from "../providers/screen/builder/hooks/use-builder-animation-state";
+import { LifecycleTransitionRequestKind } from "../providers/screen/motion/hooks/use-transition-values";
 import { isCloseActionReplay } from "../utils/navigation/close-action-replay";
 
-let system = mountBuilderAnimationState();
+let system = mountMotionTransitionValues();
 const route = { key: "soft-dismiss-route", name: "details" };
 const current = {
 	route,
@@ -59,7 +59,6 @@ mock.module("../providers/screen/builder", () => ({
 		selector({
 			descriptors: { current },
 			options: current.options,
-			animationState: system,
 			derivations: {
 				currentScreenKey: route.key,
 			},
@@ -101,10 +100,10 @@ const { useCloseTransitionIntent } = await import(
 
 beforeEach(() => {
 	(globalThis as any).resetMutableRegistry();
-	system = mountBuilderAnimationState();
 	act(() => {
 		motionRenderer = create(<MotionProvider>{null}</MotionProvider>);
 	});
+	system = getMotionStore(route.key).state;
 	beforeRemoveListener = undefined;
 	dispatchedActions = [];
 	dispatchedReplayFlags = [];
@@ -128,7 +127,11 @@ describe("soft dismissal", () => {
 		};
 
 		act(() => {
-			create(React.createElement(Harness));
+			create(
+				<MotionProvider screenKey={route.key}>
+					<Harness />
+				</MotionProvider>,
+			);
 		});
 		act(() => {
 			requestDismiss?.();
@@ -149,7 +152,11 @@ describe("soft dismissal", () => {
 		};
 
 		act(() => {
-			create(React.createElement(Harness));
+			create(
+				<MotionProvider screenKey={route.key}>
+					<Harness />
+				</MotionProvider>,
+			);
 		});
 		act(() => {
 			requestDismiss?.();
@@ -170,7 +177,11 @@ describe("soft dismissal", () => {
 		};
 
 		act(() => {
-			create(React.createElement(Harness));
+			create(
+				<MotionProvider screenKey={route.key}>
+					<Harness />
+				</MotionProvider>,
+			);
 		});
 		act(() => {
 			requestDismiss?.();
@@ -194,7 +205,11 @@ describe("soft dismissal", () => {
 		};
 
 		act(() => {
-			create(React.createElement(Harness));
+			create(
+				<MotionProvider screenKey={route.key}>
+					<Harness />
+				</MotionProvider>,
+			);
 		});
 
 		const originalRequestAnimationFrame = globalThis.requestAnimationFrame;
@@ -233,7 +248,11 @@ describe("soft dismissal", () => {
 		};
 
 		act(() => {
-			create(React.createElement(Harness));
+			create(
+				<MotionProvider screenKey={route.key}>
+					<Harness />
+				</MotionProvider>,
+			);
 		});
 		act(() => {
 			beforeRemoveListener?.({
@@ -262,7 +281,11 @@ describe("soft dismissal", () => {
 		};
 
 		act(() => {
-			create(React.createElement(Harness));
+			create(
+				<MotionProvider screenKey={route.key}>
+					<Harness />
+				</MotionProvider>,
+			);
 		});
 		act(() => {
 			beforeRemoveListener?.({

@@ -4,7 +4,7 @@ import {
 	hasOpenTransitionStarted,
 	isOpenTransitionBlocked,
 	isScreenReady,
-} from "../../providers/screen/orchestrator/styles/helpers/transition-visual-state";
+} from "../../providers/screen/motion/helpers/transition-visual-state";
 
 describe("transition visual state", () => {
 	it("starts an opening transition only after blockers clear and progress advances", () => {
@@ -90,9 +90,8 @@ describe("transition visual state", () => {
 		).toBe(false);
 	});
 
-	it("reports readiness for the current screen's interpolator", () => {
+	it("reports readiness from the current screen's transition state", () => {
 		const settled = {
-			hasInterpolator: true,
 			opening: false,
 			closing: 0,
 			pendingLifecycleStartBlockCount: 0,
@@ -100,9 +99,6 @@ describe("transition visual state", () => {
 		};
 
 		expect(isScreenReady(settled)).toBe(true);
-		expect(
-			isScreenReady({ ...settled, hasInterpolator: false }),
-		).toBe(false);
 		expect(
 			isScreenReady({
 				...settled,

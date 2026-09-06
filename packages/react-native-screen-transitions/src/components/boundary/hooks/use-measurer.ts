@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import type { View } from "react-native";
 import { useWindowDimensions } from "react-native";
 import type { AnimatedRef, StyleProps } from "react-native-reanimated";
-import { useBuilderStore } from "../../../providers/screen/builder";
+import { useMotionStore } from "../../../providers/screen/motion";
 import { setEntry } from "../../../stores/bounds/internals/entries";
 import {
 	setDestination,
@@ -45,10 +45,10 @@ export const useMeasurer = ({
 
 	const scrollState = ScrollStore.getValue(currentScreenKey, "coordination");
 	const scrollMetadata = ScrollStore.getValue(currentScreenKey, "metadata");
-	const pendingLifecycleStartBlockCount = useBuilderStore(
-		(store) => store.animationState.pendingLifecycleStartBlockCount,
+	const pendingLifecycleStartBlockCount = useMotionStore(
+		(store) => store.state.pendingLifecycleStartBlockCount,
 	);
-	const visibilityBlocked = useBuilderStore((store) => store.visibilityBlocked);
+	const visibilityBlocked = useMotionStore((store) => store.visibilityBlocked);
 
 	return useCallback(
 		(target) => {

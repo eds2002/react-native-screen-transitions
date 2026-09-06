@@ -39,7 +39,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 	);
 	const animations = useMotionStore((store) => store.state);
 	const { targetProgress, animationProgress, resolvedAutoSnapPoint } =
-		useBuilderStore((store) => store.animationState);
+		animations;
 
 	const AnimatedBackdropComponent = useMemo(
 		() =>

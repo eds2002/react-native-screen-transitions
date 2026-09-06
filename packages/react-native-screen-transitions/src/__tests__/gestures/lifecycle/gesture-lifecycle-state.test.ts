@@ -7,7 +7,7 @@ import {
 	useMotionStore,
 } from "../../../providers/screen/motion";
 import { mountMotionValues } from "../../helpers/mount-motion-values";
-import { mountBuilderAnimationState } from "../../helpers/mount-builder-animation-state";
+import { mountMotionTransitionValues } from "../../helpers/mount-transition-values";
 import { afterEach, describe, expect, it } from "bun:test";
 import React from "react";
 import { act, create } from "react-test-renderer";
@@ -35,7 +35,7 @@ import {
 import { useTransitionStartController } from "../../../components/screen-lifecycle/hooks/use-transition-start-controller";
 import type { MotionAnimationValues } from "../../../providers/screen/motion/types";
 import type { MotionGestureValues } from "../../../providers/screen/motion/types";
-import { LifecycleTransitionRequestKind } from "../../../providers/screen/builder/hooks/use-builder-animation-state";
+import { LifecycleTransitionRequestKind } from "../../../providers/screen/motion/hooks/use-transition-values";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
 import { useCloseCompletion } from "../../../components/screen-lifecycle/hooks/use-close-completion";
 
@@ -165,7 +165,7 @@ const createStoredRuntime = () => {
 	const routeKey = `gesture-lifecycle-${storedRuntimeId++}`;
 	const animations = mountMotionValues();
 	const gestures = animations;
-	const system = mountBuilderAnimationState();
+	const system = mountMotionTransitionValues();
 	const runtime = {
 		participation: { canDismiss: true, effectiveSnapPoints: {} },
 		policy: { gestureReleaseVelocityScale: 1 },
@@ -275,7 +275,7 @@ describe("gesture lifecycle state", () => {
 		} as any;
 		const Harness = () => {
 			animations = useMotionStore((store) => store.state);
-			const system = useBuilderStore((store) => store.animationState);
+			const system = useMotionStore((store) => store.state);
 			useTransitionStartController({ current, animations, system });
 			React.useLayoutEffect(() => {
 				animations.entering.set(1);

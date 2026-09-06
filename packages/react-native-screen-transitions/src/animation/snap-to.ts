@@ -1,5 +1,4 @@
 import { scheduleOnUI } from "react-native-worklets";
-import { getBuilderStore } from "../providers/screen/builder/builder.provider";
 import { getMotionStore } from "../providers/screen/motion";
 import type { HistoryEntry } from "../stores/history.store";
 import { animateToProgress } from "../utils/animation/animate-to-progress";
@@ -13,10 +12,10 @@ const getSortedSnapPoints = (
 	const snapPoints = descriptor.options?.snapPoints;
 	if (!snapPoints || snapPoints.length === 0) return null;
 
-	// Resolve 'auto' to the measured fraction owned by Builder
-	const autoVal = getBuilderStore(
+	// Resolve 'auto' to the measured fraction owned by Motion
+	const autoVal = getMotionStore(
 		descriptor.route.key,
-	).animationState.resolvedAutoSnapPoint.get();
+	).state.resolvedAutoSnapPoint.get();
 
 	const resolved = snapPoints
 		.map((p) => (p === "auto" ? autoVal : p))
@@ -47,7 +46,7 @@ export function snapDescriptorToIndex(
 	const {
 		targetProgress: targetProgressValue,
 		animationProgress: animationProgressValue,
-	} = getBuilderStore(descriptor.route.key).animationState;
+	} = animations;
 
 	scheduleOnUI(() => {
 		"worklet";

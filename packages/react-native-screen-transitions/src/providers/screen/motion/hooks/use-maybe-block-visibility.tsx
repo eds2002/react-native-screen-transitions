@@ -7,35 +7,28 @@ import {
 	useSharedValue,
 } from "react-native-reanimated";
 import { getVisibilityBlockOffset } from "../../../../utils/visibility-block-offset";
-import { useOptionalMotionStore } from "../../motion";
-import { hasCloseTransitionFinished } from "../../orchestrator/styles/helpers/transition-visual-state";
-import { resolveVisibilityBlockOwnership } from "../../orchestrator/styles/helpers/visibility-block-ownership";
-import { resolveScreenVisibilityGate } from "../../orchestrator/styles/helpers/visibility-gate";
-import type { BuilderAnimationState } from "./use-builder-animation-state";
+import { hasCloseTransitionFinished } from "../helpers/transition-visual-state";
+import { resolveVisibilityBlockOwnership } from "../helpers/visibility-block-ownership";
+import { resolveScreenVisibilityGate } from "../helpers/visibility-gate";
+import type { MotionValues } from "../types";
 
 type Params = {
-	currentScreenKey: string;
-	animationState: BuilderAnimationState;
+	motion: MotionValues;
 	ancestorVisibilityBlocked: SharedValue<boolean> | null;
 	isFloatingOverlay?: boolean;
 };
 
 export const useMaybeBlockVisibility = ({
-	currentScreenKey,
-	animationState,
+	motion,
 	ancestorVisibilityBlocked,
 	isFloatingOverlay,
 }: Params) => {
 	const { height } = useWindowDimensions();
-	const motion = useOptionalMotionStore(
-		currentScreenKey,
-		(store) => store.state,
-	);
 	const {
 		animationProgress,
 		pendingLifecycleStartBlockCount,
 		pendingLifecycleRequestKind,
-	} = animationState;
+	} = motion;
 
 	const hasVisibilityGateOpened = useSharedValue(false);
 	const localVisibilityBlocked = useSharedValue(!isFloatingOverlay);
@@ -53,7 +46,7 @@ export const useMaybeBlockVisibility = ({
 						pendingLifecycleStartBlockCount.get(),
 					pendingLifecycleRequestKind: pendingLifecycleRequestKind.get(),
 					animationProgress: animationProgress.get(),
-					entering: motion?.entering.get() ?? 0,
+					entering: motion.entering.get(),
 				}),
 				ancestorBlocked: ancestorVisibilityBlocked?.get() ?? false,
 			};
@@ -80,7 +73,7 @@ export const useMaybeBlockVisibility = ({
 		// Hide the outgoing screen after its visual close while React removes its
 		// host asynchronously.
 		const shouldHideClosedScreen = hasCloseTransitionFinished({
-			closing: motion?.closing.get() ?? 0,
+			closing: motion.closing.get(),
 			animationProgress: animationProgress.get(),
 		});
 		if (shouldHideClosedScreen) {

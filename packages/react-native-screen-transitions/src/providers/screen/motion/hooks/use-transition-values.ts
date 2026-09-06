@@ -8,7 +8,7 @@ export enum LifecycleTransitionRequestKind {
 	Close = 2,
 }
 
-type BuilderAnimationValues = {
+type MotionTransitionRawValues = {
 	targetProgress: SharedValue<number>;
 
 	/**
@@ -44,7 +44,7 @@ type BuilderAnimationValues = {
 	pendingLifecycleStartBlockCount: SharedValue<number>;
 };
 
-export interface BuilderAnimationActions {
+export interface MotionTransitionActions {
 	requestLifecycleTransition(
 		kind: LifecycleTransitionRequestKind,
 		target: number,
@@ -55,11 +55,11 @@ export interface BuilderAnimationActions {
 	drainLifecycleStartBlocks(): void;
 }
 
-export type BuilderAnimationState = BuilderAnimationValues & {
-	actions: BuilderAnimationActions;
+export type MotionTransitionValues = MotionTransitionRawValues & {
+	actions: MotionTransitionActions;
 };
 
-export function useBuilderAnimationState(): BuilderAnimationState {
+export function useTransitionValues(): MotionTransitionValues {
 	const targetProgress = useSharedValue(1);
 	const animationProgress = useSharedValue(0);
 	const resolvedAutoSnapPoint = useSharedValue(-1);

@@ -6,6 +6,7 @@ import type {
 	MotionGestureValues,
 	MotionValues,
 } from "../types";
+import { useTransitionValues } from "./use-transition-values";
 
 function useAnimationValues(): MotionAnimationValues {
 	const values = {
@@ -99,5 +100,10 @@ function useGestureValues(): MotionGestureValues {
 export function useMotionValues(): MotionValues {
 	const animations = useAnimationValues();
 	const gesture = useGestureValues();
-	return useMemo(() => ({ ...animations, ...gesture }), [animations, gesture]);
+	const transition = useTransitionValues();
+
+	return useMemo(
+		() => ({ ...animations, ...gesture, ...transition }),
+		[animations, gesture, transition],
+	);
 }

@@ -1,10 +1,15 @@
-import { MotionProvider, getMotionStore } from "../../providers/screen/motion";
+import {
+	MotionProvider,
+	getMotionStore,
+	useMotionStore,
+	useOptionalMotionStore,
+} from "../../providers/screen/motion";
 import { screenTopology } from "../../providers/screen/builder/topology/helpers/create-screen-topology";
 import { snapDescriptorToIndex } from "../../animation/snap-to";
 import { Activity, useLayoutEffect } from "react";
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
-import { LifecycleTransitionRequestKind } from "../../providers/screen/builder/hooks/use-builder-animation-state";
+import { LifecycleTransitionRequestKind } from "../../providers/screen/motion/hooks/use-transition-values";
 
 const scenes = Object.fromEntries(
 	["builder-parent", "builder-child"].map((key) => [
@@ -38,10 +43,11 @@ mock.module("../../providers/stack/blank-stack.provider", () => ({
 		),
 }));
 beforeEach(() => {
+	globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 	hasStack = true;
 });
 
-// Exercise Builder readiness with Motion, without mounting slots.
+// Exercise Builder topology and Motion readiness together, without slots.
 const {
 	BuilderProvider: PrimitiveBuilderProvider,
 	useBuilderStore,
@@ -64,23 +70,25 @@ function BuilderProvider({
 		</PrimitiveBuilderProvider>
 	);
 }
-const readBuilder = () => useBuilderStore();
+const readBuilder = () => ({ ...useMotionStore(), ...useBuilderStore() });
 type BuilderState = ReturnType<typeof readBuilder>;
 let renderer: ReactTestRenderer | undefined;
 let local: BuilderState;
 let remote: BuilderState | null;
 
 function LocalProbe() {
-	local = useBuilderStore();
+	local = { ...useMotionStore(), ...useBuilderStore() };
 	return null;
 }
 function RemoteProbe() {
-	remote = useOptionalBuilderStore("builder-child");
+	const builder = useOptionalBuilderStore("builder-child");
+	const motion = useOptionalMotionStore("builder-child");
+	remote = builder && motion ? { ...motion, ...builder } : null;
 	return null;
 }
 
 function BlockParent() {
-	const state = useBuilderStore((store) => store.animationState);
+	const state = useMotionStore((store) => store.state);
 	useLayoutEffect(() => {
 		state.actions.requestLifecycleTransition(
 			LifecycleTransitionRequestKind.Open,
@@ -96,7 +104,7 @@ afterEach(() => {
 	renderer = undefined;
 });
 
-describe("BuilderProvider", () => {
+describe("Builder and Motion composition", () => {
 	it("skips topology registration without Blank Stack while keeping Builder state available", () => {
 		hasStack = false;
 		act(() => {
@@ -109,9 +117,7 @@ describe("BuilderProvider", () => {
 			);
 		});
 		expect(local.derivations.currentScreenKey).toBe("builder-child");
-		expect(getBuilderStore("builder-child").animationState).toBe(
-			local.animationState,
-		);
+		expect(getMotionStore("builder-child").state).toBe(local.state);
 		expect(
 			screenTopology.getRelationships("builder-child").parentScreenKey,
 		).toBeNull();
@@ -132,7 +138,7 @@ describe("BuilderProvider", () => {
 			);
 		});
 
-		const system = local.animationState;
+		const system = local.state;
 		system.actions.requestLifecycleTransition(
 			LifecycleTransitionRequestKind.Open,
 			1,
@@ -183,13 +189,13 @@ describe("BuilderProvider", () => {
 		act(() => {
 			renderer = create(render());
 		});
-		const state = local.animationState;
+		const state = local.state;
 		state.targetProgress.set(0.4);
 		act(() => {
 			renderer!.update(render());
 		});
-		expect(local.animationState).toBe(state);
-		expect(getBuilderStore("builder-child").animationState).toBe(state);
+		expect(local.state).toBe(state);
+		expect(getMotionStore("builder-child").state).toBe(state);
 		expect(state.targetProgress.get()).toBe(0.4);
 		act(() => {
 			renderer!.unmount();
@@ -199,8 +205,8 @@ describe("BuilderProvider", () => {
 		act(() => {
 			renderer = create(render());
 		});
-		expect(local.animationState).not.toBe(state);
-		expect(local.animationState.targetProgress.get()).toBe(1);
+		expect(local.state).not.toBe(state);
+		expect(local.state.targetProgress.get()).toBe(1);
 	});
 
 	it("preserves values across React Activity hiding and showing", () => {
@@ -214,7 +220,7 @@ describe("BuilderProvider", () => {
 		act(() => {
 			renderer = create(render("visible"));
 		});
-		const state = local.animationState;
+		const state = local.state;
 		state.targetProgress.set(0.6);
 		state.measuredContentLayout.set({ width: 200, height: 300 });
 		act(() => {
@@ -223,8 +229,8 @@ describe("BuilderProvider", () => {
 		act(() => {
 			renderer!.update(render("visible"));
 		});
-		expect(local.animationState).toBe(state);
-		expect(getBuilderStore("builder-child").animationState).toBe(state);
+		expect(local.state).toBe(state);
+		expect(getMotionStore("builder-child").state).toBe(state);
 		expect(state.targetProgress.get()).toBe(0.6);
 		expect(state.measuredContentLayout.get()).toEqual({
 			width: 200,
@@ -232,7 +238,7 @@ describe("BuilderProvider", () => {
 		});
 	});
 
-	it("snaps using the mounted builder's measured auto point and animation values", () => {
+	it("snaps using the mounted Motion provider's measured auto point and animation values", () => {
 		act(() => {
 			renderer = create(
 				<BuilderProvider routeKey="builder-child">
@@ -240,7 +246,7 @@ describe("BuilderProvider", () => {
 				</BuilderProvider>,
 			);
 		});
-		const state = local.animationState;
+		const state = local.state;
 		state.resolvedAutoSnapPoint.set(0.6);
 		const originalRaf = globalThis.requestAnimationFrame;
 		globalThis.requestAnimationFrame = (callback) => {

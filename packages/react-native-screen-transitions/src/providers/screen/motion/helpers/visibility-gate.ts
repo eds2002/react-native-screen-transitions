@@ -1,4 +1,4 @@
-import { LifecycleTransitionRequestKind } from "../../../builder/hooks/use-builder-animation-state";
+import { LifecycleTransitionRequestKind } from "../hooks/use-transition-values";
 import {
 	hasOpenTransitionStarted,
 	isOpenTransitionBlocked,

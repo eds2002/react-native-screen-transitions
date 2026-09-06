@@ -1,11 +1,11 @@
 import { useAnimatedProps, useSharedValue } from "react-native-reanimated";
+import { useBuilderStore } from "../../../../../../providers/screen/builder";
 import {
-	useBuilderStore,
-	useOptionalBuilderStore,
-} from "../../../../../../providers/screen/builder";
-import { useOptionalMotionStore } from "../../../../../../providers/screen/motion";
+	useMotionStore,
+	useOptionalMotionStore,
+} from "../../../../../../providers/screen/motion";
+import { hasCloseTransitionFinished } from "../../../../../../providers/screen/motion/helpers/transition-visual-state";
 import { useOrchestratorStore } from "../../../../../../providers/screen/orchestrator";
-import { hasCloseTransitionFinished } from "../../../../../../providers/screen/orchestrator/styles/helpers/transition-visual-state";
 import { useBlankStackStore } from "../../../../../../providers/stack/blank-stack.provider";
 import { getLinkKeyFromTag } from "../../../../../../stores/bounds/helpers/link-pairs.helpers";
 import { getEntry } from "../../../../../../stores/bounds/internals/entries";
@@ -58,7 +58,7 @@ export const useBoundaryContentPortalAttachment = ({
 	const destinationPairKey = useBuilderStore(
 		(s) => s.derivations.destinationPairKey,
 	);
-	const destinationScreenReady = useOptionalBuilderStore(
+	const destinationScreenReady = useOptionalMotionStore(
 		nextScreenKey ?? currentScreenKey,
 		(store) => store.screenReady,
 	);
@@ -72,12 +72,12 @@ export const useBoundaryContentPortalAttachment = ({
 		resolvePreviousHandoffReceiver,
 	);
 
-	const localAnimationProgress = useBuilderStore(
-		(store) => store.animationState.animationProgress,
+	const localAnimationProgress = useMotionStore(
+		(store) => store.state.animationProgress,
 	);
-	const receiverAnimationProgress = useOptionalBuilderStore(
+	const receiverAnimationProgress = useOptionalMotionStore(
 		activeReceiverScreenKey ?? currentScreenKey,
-		(store) => store.animationState.animationProgress,
+		(store) => store.state.animationProgress,
 	);
 	const activeReceiverAnimationProgress =
 		receiverAnimationProgress ?? localAnimationProgress;

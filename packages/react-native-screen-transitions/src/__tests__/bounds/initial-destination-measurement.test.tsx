@@ -1,5 +1,4 @@
-import { MotionProvider } from "../../providers/screen/motion";
-import { mountBuilderAnimationState } from "../helpers/mount-builder-animation-state";
+import { MotionProvider, getMotionStore } from "../../providers/screen/motion";
 import { beforeAll, beforeEach, describe, expect, it, mock } from "bun:test";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import type { BoundTag } from "../../stores/bounds/types";
@@ -16,7 +15,6 @@ const descriptorState = {
 	descriptors: {
 		current: { route: { key: "screen-b", name: "screen-b" }, options },
 	},
-	animationState: mountBuilderAnimationState(),
 	derivations: {
 		currentScreenKey: "screen-b",
 		nextScreenKey: undefined as string | undefined,
@@ -123,7 +121,8 @@ describe("initial destination measurement lifecycle", () => {
 
 		expect(measurements).toEqual([`1:${pairKey}`]);
 		expect(
-			descriptorState.animationState.pendingLifecycleStartBlockCount.get(),
+			getMotionStore("screen-b").state.pendingLifecycleStartBlockCount.get(),
 		).toBe(0);
+		act(() => renderer.unmount());
 	});
 });

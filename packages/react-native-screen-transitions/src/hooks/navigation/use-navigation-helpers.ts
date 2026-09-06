@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useBuilderStore } from "../../providers/screen/builder";
-import { LifecycleTransitionRequestKind } from "../../providers/screen/builder/hooks/use-builder-animation-state";
 import { getMotionStore } from "../../providers/screen/motion";
+import { LifecycleTransitionRequestKind } from "../../providers/screen/motion/hooks/use-transition-values";
 import { useBlankStackStore } from "../../providers/stack/blank-stack.provider";
 import { dispatchCloseAction } from "../../utils/navigation/close-action-replay";
 
@@ -10,7 +10,6 @@ export function useNavigationHelpers() {
 	const navigation = useBuilderStore(
 		(store) => store.descriptors.current.navigation,
 	);
-	const system = useBuilderStore((store) => store.animationState);
 	const requestStackDismiss = useBlankStackStore(
 		(stack) => stack.requestDismiss,
 	);
@@ -46,14 +45,15 @@ export function useNavigationHelpers() {
 			if (routeIndex <= 0) return false;
 		}
 
-		if (!getMotionStore(route.key).state.closing.get()) {
-			system.actions.requestLifecycleTransition(
+		const motion = getMotionStore(route.key).state;
+		if (!motion.closing.get()) {
+			motion.actions.requestLifecycleTransition(
 				LifecycleTransitionRequestKind.Close,
 				0,
 			);
 		}
 		return true;
-	}, [navigation, route, requestStackDismiss, system]);
+	}, [navigation, route, requestStackDismiss]);
 
 	return { dismissScreen, requestDismiss };
 }

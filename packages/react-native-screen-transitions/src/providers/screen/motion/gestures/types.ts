@@ -25,7 +25,7 @@ import type {
 	Direction,
 } from "../../../../types/ownership.types";
 import type { ScreenTransitionConfig } from "../../../../types/screen.types";
-import type { BuilderAnimationState } from "../../builder/hooks/use-builder-animation-state";
+import type { MotionTransitionValues } from "../hooks/use-transition-values";
 import type { MotionAnimationValues, MotionGestureValues } from "../types";
 import type { EffectiveSnapPointsResult } from "./shared/snap-points";
 
@@ -122,7 +122,7 @@ export interface PinchGesturePolicy {
 export interface GestureRuntimeStores {
 	gestures: MotionGestureValues;
 	animations: MotionAnimationValues;
-	system: BuilderAnimationState;
+	system: MotionTransitionValues;
 }
 
 export type GesturePolicy = PanGesturePolicy | PinchGesturePolicy;

@@ -1,5 +1,5 @@
 import { mountMotionValues } from "./helpers/mount-motion-values";
-import { mountBuilderAnimationState } from "./helpers/mount-builder-animation-state";
+import { mountMotionTransitionValues } from "./helpers/mount-transition-values";
 import { beforeAll, describe, expect, it, mock } from "bun:test";
 import React from "react";
 import { act, create } from "react-test-renderer";
@@ -38,25 +38,15 @@ mock.module("../providers/stack/blank-stack.provider", () => ({
 
 const currentMotion = mountMotionValues();
 const nextMotion = mountMotionValues();
-const currentSystem = mountBuilderAnimationState();
-const nextSystem = mountBuilderAnimationState();
+const currentSystem = mountMotionTransitionValues();
+const nextSystem = mountMotionTransitionValues();
 mock.module("../providers/screen/builder", () => ({
-	useOptionalBuilderStore: (
-		key: string | null,
-		selector: (state: any) => unknown,
-	) =>
-		key
-			? selector({
-					animationState: key === "home" ? currentSystem : nextSystem,
-				})
-			: null,
 	useBuilderStore: (
 		selector: (state: { descriptors: typeof descriptors }) => unknown,
 	) => {
 		const value = {
 			descriptors,
 			derivations: { currentScreenKey: "home" },
-			animationState: currentSystem,
 		};
 		return selector ? selector(value) : value;
 	},
@@ -83,7 +73,9 @@ function motionForKey(key: string) {
 }
 mock.module("../providers/screen/motion", () => ({
 	useMotionStore: (selector: ((state: any) => unknown) | readonly string[]) =>
-		Array.isArray(selector) ? [] : (selector as (state: any) => unknown)(motionForKey("home")),
+		Array.isArray(selector)
+			? []
+			: (selector as (state: any) => unknown)(motionForKey("home")),
 	useOptionalMotionStore: (
 		key: string | null,
 		selector: (state: any) => unknown,

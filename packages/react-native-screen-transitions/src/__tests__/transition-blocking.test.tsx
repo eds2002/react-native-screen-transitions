@@ -1,14 +1,21 @@
-import { mountBuilderAnimationState } from "./helpers/mount-builder-animation-state";
+import { mountMotionTransitionValues } from "./helpers/mount-transition-values";
 import { createElement } from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
-import { BuilderStoreProvider } from "../providers/screen/builder/builder.provider";
+import { BuilderProvider } from "../providers/screen/builder";
+import { MotionProvider, getMotionStore } from "../providers/screen/motion";
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
-import { blockTransition, unblockTransition } from "../animation/transition-blocking";
+import {
+	blockTransition,
+	unblockTransition,
+} from "../animation/transition-blocking";
 import { HistoryStore } from "../stores/history.store";
 import type { BaseStackDescriptor } from "../types/stack.types";
 
 let renderer: ReactTestRenderer;
-const states = new Map<string, ReturnType<typeof mountBuilderAnimationState>>();
+const states = new Map<
+	string,
+	ReturnType<typeof mountMotionTransitionValues>
+>();
 const ROUTE_KEYS = ["route-a", "route-b", "route-explicit"];
 
 const createDescriptor = (routeKey: string): BaseStackDescriptor =>
@@ -20,20 +27,42 @@ const createDescriptor = (routeKey: string): BaseStackDescriptor =>
 	}) as BaseStackDescriptor;
 
 beforeEach(() => {
+	globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 	globalThis.resetMutableRegistry();
 	HistoryStore._reset();
 
-	for (const routeKey of ROUTE_KEYS) {
-		states.set(routeKey, mountBuilderAnimationState());
-	}
-	act(() => { renderer = create(createElement("View", {}, ...ROUTE_KEYS.map((key) => createElement(BuilderStoreProvider, { key, storeKey: key, value: { animationState: states.get(key)! } as never })))); });
+	act(() => {
+		renderer = create(
+			<>
+				{ROUTE_KEYS.map((key) => (
+					<BuilderProvider
+						key={key}
+						routeKey={key}
+						descriptors={{
+							current: {
+								route: { key, name: key },
+								options: {},
+								navigation: { getState: () => ({ routes: [{ key }] }) },
+							} as BaseStackDescriptor,
+						}}
+					>
+						<MotionProvider>{null}</MotionProvider>
+					</BuilderProvider>
+				))}
+			</>,
+		);
+	});
+	for (const key of ROUTE_KEYS) states.set(key, getMotionStore(key).state);
 });
 
-afterEach(() => { act(() => renderer.unmount()); });
+afterEach(() => {
+	act(() => renderer.unmount());
+});
 
 describe("transition blocking", () => {
 	it("reference-counts explicit route blocks", () => {
-		const blockCount = states.get("route-explicit")!.pendingLifecycleStartBlockCount;
+		const blockCount =
+			states.get("route-explicit")!.pendingLifecycleStartBlockCount;
 
 		blockTransition("route-explicit");
 		blockTransition("route-explicit");
@@ -48,7 +77,8 @@ describe("transition blocking", () => {
 	});
 
 	it("keeps reference-count updates atomic when JS writes are deferred", () => {
-		const blockCount = states.get("route-explicit")!.pendingLifecycleStartBlockCount;
+		const blockCount =
+			states.get("route-explicit")!.pendingLifecycleStartBlockCount;
 		const originalSet = blockCount.set.bind(blockCount);
 		const deferredWrites: number[] = [];
 
@@ -85,16 +115,16 @@ describe("transition blocking", () => {
 
 		blockTransition();
 
-		expect(
-			states.get("route-a")!.pendingLifecycleStartBlockCount.get(),
-		).toBe(0);
-		expect(
-			states.get("route-b")!.pendingLifecycleStartBlockCount.get(),
-		).toBe(1);
+		expect(states.get("route-a")!.pendingLifecycleStartBlockCount.get()).toBe(
+			0,
+		);
+		expect(states.get("route-b")!.pendingLifecycleStartBlockCount.get()).toBe(
+			1,
+		);
 
 		unblockTransition();
-		expect(
-			states.get("route-b")!.pendingLifecycleStartBlockCount.get(),
-		).toBe(0);
+		expect(states.get("route-b")!.pendingLifecycleStartBlockCount.get()).toBe(
+			0,
+		);
 	});
 });

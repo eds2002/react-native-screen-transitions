@@ -1,38 +1,25 @@
 import { useDerivedValue } from "react-native-reanimated";
-import { useOptionalMotionStore } from "../../motion";
-import { isScreenReady } from "../../orchestrator/styles/helpers/transition-visual-state";
-import {
-	type BuilderAnimationState,
-	LifecycleTransitionRequestKind,
-} from "./use-builder-animation-state";
+import { isScreenReady } from "../helpers/transition-visual-state";
+import type { MotionValues } from "../types";
+import { LifecycleTransitionRequestKind } from "./use-transition-values";
 
-export const useScreenReady = (
-	currentScreenKey: string,
-	hasCurrentInterpolator: boolean,
-	animationState: BuilderAnimationState,
-) => {
-	const motion = useOptionalMotionStore(
-		currentScreenKey,
-		(store) => store.state,
-	);
-
+export const useScreenReady = (motion: MotionValues) => {
 	const {
 		animationProgress: currentAnimationProgress,
 		pendingLifecycleRequestKind: currentPendingLifecycleRequestKind,
 		pendingLifecycleStartBlockCount: currentPendingLifecycleStartBlockCount,
-	} = animationState;
+	} = motion;
 
 	const screenReady = useDerivedValue<number>(() => {
 		"worklet";
 		const isPendingOpen =
 			currentPendingLifecycleRequestKind.get() ===
 			LifecycleTransitionRequestKind.Open;
-		const opening = isPendingOpen || !!(motion?.entering.get() ?? 0);
+		const opening = isPendingOpen || !!motion.entering.get();
 
 		return isScreenReady({
-			hasInterpolator: hasCurrentInterpolator,
 			opening,
-			closing: motion?.closing.get() ?? 0,
+			closing: motion.closing.get(),
 			pendingLifecycleStartBlockCount:
 				currentPendingLifecycleStartBlockCount.get(),
 			animationProgress: currentAnimationProgress.get(),

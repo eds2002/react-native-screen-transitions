@@ -5,7 +5,7 @@ import Animated, {
 	useDerivedValue,
 } from "react-native-reanimated";
 import { snapDescriptorToIndex } from "../../../animation/snap-to";
-import { useOptionalBuilderStore } from "../../../providers/screen/builder";
+import { useOptionalMotionStore } from "../../../providers/screen/motion";
 import { useOptionalOrchestratorStore } from "../../../providers/screen/orchestrator";
 import {
 	OrchestratorProvider,
@@ -40,7 +40,7 @@ export const OverlayHost = memo(function OverlayHost({
 	const previousOverlayAnimationStore = useOptionalOrchestratorStore(
 		previousOverlayScene?.route.key ?? scene.route.key,
 	);
-	const driverScreenReady = useOptionalBuilderStore(
+	const driverScreenReady = useOptionalMotionStore(
 		driverScene.route.key,
 		(store) => store.screenReady,
 	);

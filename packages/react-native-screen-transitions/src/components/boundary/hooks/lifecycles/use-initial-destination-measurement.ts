@@ -73,7 +73,7 @@ export const useInitialDestinationMeasurement = ({
 
 	const {
 		actions: { blockLifecycleStart, unblockLifecycleStart },
-	} = useBuilderStore((store) => store.animationState);
+	} = useMotionStore((store) => store.state);
 
 	const isBlockingLifecycleStart = useSharedValue(0);
 	const retryToken = useSharedValue(0);

@@ -16,7 +16,7 @@ import type { OrchestratorState } from "../../providers/screen/orchestrator/orch
 ).IS_REACT_ACT_ENVIRONMENT = true;
 
 const animationStores = new Map<string, OrchestratorState>();
-const builderStores = new Map<
+const motionStores = new Map<
 	string,
 	{ screenReady: ReturnType<typeof shared<number>> }
 >();
@@ -48,21 +48,14 @@ mock.module("../../providers/screen/motion", () => ({
 	getMotionStore: () => {
 		throw new Error("Overlay rendering should not request a snap");
 	},
-	useOptionalMotionStore: () => null,
-}));
-
-mock.module("../../providers/screen/builder", () => ({
-	useBuilderStore: () => {
-		throw new Error("Overlay uses keyed Builder reads");
-	},
-	useOptionalBuilderStore: (
+	useOptionalMotionStore: (
 		keyOrSelector: string | ((store: null) => unknown),
 		selector?: (store: {
 			screenReady: ReturnType<typeof shared<number>>;
 		}) => unknown,
 	) => {
 		if (typeof keyOrSelector === "function") return keyOrSelector(null);
-		const store = builderStores.get(keyOrSelector);
+		const store = motionStores.get(keyOrSelector);
 		return store ? (selector ? selector(store) : store) : null;
 	},
 }));
@@ -167,7 +160,7 @@ const createScene = (key: string, overlay?: (props: never) => ReactNode) => {
 describe("OverlayHost lifecycle", () => {
 	it("keeps the owner component mounted while its driver registers", () => {
 		animationStores.clear();
-		builderStores.clear();
+		motionStores.clear();
 
 		let mounts = 0;
 		let unmounts = 0;
@@ -202,7 +195,7 @@ describe("OverlayHost lifecycle", () => {
 		const sceneA = createScene("A", StatefulOverlay as never);
 		const sceneB = createScene("B");
 		animationStores.set("A", createAnimationStore("A"));
-		builderStores.set("A", { screenReady: shared(1) });
+		motionStores.set("A", { screenReady: shared(1) });
 		stackState = {
 			scenes: [sceneA],
 			focusedIndex: 0,
@@ -253,7 +246,7 @@ describe("OverlayHost lifecycle", () => {
 		).toBe(1);
 
 		animationStores.set("B", createAnimationStore("B", 0.9));
-		builderStores.set("B", { screenReady: shared(1) });
+		motionStores.set("B", { screenReady: shared(1) });
 		act(() => {
 			renderer!.update(
 				<OverlayHost
@@ -279,11 +272,11 @@ describe("OverlayHost lifecycle", () => {
 
 	it("defaults the host to pointer-event pass-through", () => {
 		animationStores.clear();
-		builderStores.clear();
+		motionStores.clear();
 
 		const scene = createScene("A", (() => null) as never);
 		animationStores.set("A", createAnimationStore("A"));
-		builderStores.set("A", { screenReady: shared(1) });
+		motionStores.set("A", { screenReady: shared(1) });
 		stackState = {
 			scenes: [scene],
 			focusedIndex: 0,

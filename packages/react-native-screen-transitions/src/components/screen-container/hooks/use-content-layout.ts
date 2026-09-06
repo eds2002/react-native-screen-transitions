@@ -2,8 +2,8 @@ import { useCallback } from "react";
 import { type LayoutChangeEvent, useWindowDimensions } from "react-native";
 import { scheduleOnUI } from "react-native-worklets";
 import { useBuilderStore } from "../../../providers/screen/builder";
-import { LifecycleTransitionRequestKind } from "../../../providers/screen/builder/hooks/use-builder-animation-state";
 import { useMotionStore } from "../../../providers/screen/motion";
+import { LifecycleTransitionRequestKind } from "../../../providers/screen/motion/hooks/use-transition-values";
 
 export function useContentLayout() {
 	const isFirstKey = useBuilderStore((store) => store.derivations.isFirstKey);
@@ -12,11 +12,10 @@ export function useContentLayout() {
 	);
 	const { height: screenHeight } = useWindowDimensions();
 	const animations = useMotionStore((store) => store.state);
-	const system = useBuilderStore((store) => store.animationState);
 
 	const { targetProgress, resolvedAutoSnapPoint, measuredContentLayout } =
-		system;
-	const { requestLifecycleTransition } = system.actions;
+		animations;
+	const { requestLifecycleTransition } = animations.actions;
 
 	return useCallback(
 		(event: LayoutChangeEvent) => {

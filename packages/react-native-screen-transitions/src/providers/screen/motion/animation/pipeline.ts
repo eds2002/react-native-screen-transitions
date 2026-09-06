@@ -10,7 +10,6 @@ export function useMotionAnimationPipeline(
 	values: MotionValues,
 ): MotionAnimationState {
 	const descriptor = useBuilderStore((store) => store.descriptors.current);
-	const system = useBuilderStore((store) => store.animationState);
 	const route = descriptor.route;
 	const key = route.key;
 	const meta = descriptor.options.meta;
@@ -29,9 +28,6 @@ export function useMotionAnimationPipeline(
 
 		return {
 			...values,
-			targetProgress: system.targetProgress,
-			resolvedAutoSnapPoint: system.resolvedAutoSnapPoint,
-			measuredContentLayout: system.measuredContentLayout,
 			scrollMetadata: ScrollStore.getValue(key, "metadata"),
 			hasAutoSnapPoint: snapPoints?.includes("auto") ?? false,
 			sortedNumericSnapPoints,
@@ -39,5 +35,5 @@ export function useMotionAnimationPipeline(
 			meta: plainMeta,
 			options: transitionOptions,
 		};
-	}, [key, meta, route, snapPoints, descriptor.options, system, values]);
+	}, [key, meta, route, snapPoints, descriptor.options, values]);
 }
