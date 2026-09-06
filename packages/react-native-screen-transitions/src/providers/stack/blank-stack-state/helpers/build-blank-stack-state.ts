@@ -8,7 +8,6 @@ import type {
 	BaseStackScene,
 	StackSceneActivity,
 } from "../../../../types/stack.types";
-import { isOverlayVisible } from "../../../../utils/overlay/visibility";
 import { resolveSceneNeighbors } from "./navigation/resolve-scene-neighbors";
 import {
 	areDescriptorSourcesEquivalent,
@@ -204,7 +203,9 @@ const buildBaseScenes = ({
 		blankStackDescriptors[route.key] = descriptor;
 
 		if (!shouldShowFloatOverlay) {
-			shouldShowFloatOverlay = isOverlayVisible(sourceDescriptor?.options);
+			const options = sourceDescriptor?.options;
+			shouldShowFloatOverlay =
+				Boolean(options?.overlay) && options?.overlayShown !== false;
 		}
 
 		scenes.push({

@@ -2,8 +2,6 @@ import type { BaseStackScene } from "../../../types/stack.types";
 
 type StackScene = BaseStackScene;
 
-import { isOverlayVisible } from "../../../utils/overlay/visibility";
-
 export type FloatOverlayEntry = {
 	scene: StackScene;
 	overlayIndex: number;
@@ -31,7 +29,7 @@ export function getFloatOverlayStack(
 			continue;
 		}
 
-		if (isOverlayVisible(options)) {
+		if (options?.overlay && options?.overlayShown !== false) {
 			candidates.push({ scene, overlayIndex: index });
 		}
 	}

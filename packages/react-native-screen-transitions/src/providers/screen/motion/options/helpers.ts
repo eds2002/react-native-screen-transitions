@@ -17,7 +17,6 @@ import type {
 	TransitionInterpolatedStyle,
 } from "../../../../types";
 import type { BackdropBehavior } from "../../../../types/screen.types";
-import { resolveSheetScrollGestureBehavior } from "../../../../utils/resolve-screen-transition-options";
 import type {
 	RequiredScreenOption,
 	ScreenOptionsContextValue,
@@ -264,7 +263,7 @@ export const resolveBaseScreenOptions = (
 			DEFAULT_SHEET_SNAP_BEHAVIOR,
 		),
 		sheetScrollGestureBehavior: resolveSheetScrollGestureBehaviorOption(
-			resolveSheetScrollGestureBehavior(options),
+			options.sheetScrollGestureBehavior,
 			DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR,
 		),
 		backdropBehavior: resolveBackdropBehaviorOption(

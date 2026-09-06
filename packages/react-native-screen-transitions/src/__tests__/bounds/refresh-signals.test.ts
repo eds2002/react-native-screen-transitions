@@ -1,7 +1,6 @@
 import { mountBuilderAnimationState } from "../helpers/mount-builder-animation-state";
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { getRefreshBoundarySignal } from "../../components/boundary/utils/refresh-signals";
-import { applyMeasuredBoundsWrites } from "../../providers/helpers/measured-bounds-writes";
 import { startPanBase } from "../../providers/screen/motion/gestures/pan/behavior/pan-lifecycle";
 import { AnimationStore } from "../../stores/animation.store";
 import { BoundStore } from "../../stores/bounds";
@@ -309,11 +308,7 @@ describe("refresh boundary signals", () => {
 				{},
 				"colors",
 			);
-			BoundStore.link.setActiveGroupId(
-				pairKey,
-				"colors",
-				"electric-violet",
-			);
+			BoundStore.link.setActiveGroupId(pairKey, "colors", "electric-violet");
 			BoundStore.link.setActiveGroupId(pairKey, "colors", "hot-coral");
 
 			expect(
@@ -349,15 +344,16 @@ describe("refresh boundary signals", () => {
 				throw new Error("Expected a source refresh signal for Hot Coral");
 			}
 
-			applyMeasuredBoundsWrites({
-				entryTag: "colors:hot-coral",
-				linkId: "hot-coral",
-				group: "colors",
-				currentScreenKey: "palette",
-				measured: hotCoral,
-				preparedStyles: {},
-				linkWrite: signal,
-			});
+			BoundStore.entry.set("colors:hot-coral", "palette", { bounds: hotCoral });
+			BoundStore.link.setSource(
+				signal.pairKey,
+				"hot-coral",
+				"palette",
+				hotCoral,
+				{},
+				"colors",
+				{},
+			);
 
 			expect(
 				BoundStore.link.getPair("colors:hot-coral", {

@@ -4,7 +4,6 @@ import { getInitialDestinationMeasurementSignal } from "../../components/boundar
 import { getRefreshBoundarySignal } from "../../components/boundary/utils/refresh-signals";
 import { getInitialSourceCaptureSignal } from "../../components/boundary/utils/source-signals";
 import { NAVIGATION_MASK_ELEMENT_STYLE_ID } from "../../constants";
-import { applyMeasuredBoundsWrites } from "../../providers/helpers/measured-bounds-writes";
 import { AnimationStore } from "../../stores/animation.store";
 import { BoundStore } from "../../stores/bounds";
 import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
@@ -36,13 +35,9 @@ const DESTINATION_BOUNDS = {
 };
 
 const registerSource = () => {
-	BoundStore.link.setSource(
-		PAIR_KEY,
-		"card",
-		"screen-a",
-		SOURCE_BOUNDS,
-		{ borderRadius: 14 },
-	);
+	BoundStore.link.setSource(PAIR_KEY, "card", "screen-a", SOURCE_BOUNDS, {
+		borderRadius: 14,
+	});
 };
 
 const registerDestination = () => {
@@ -346,14 +341,16 @@ describe("zoom bound target", () => {
 		});
 
 		expect(signal).toEqual({ pairKey: PAIR_KEY, action: "measure" });
-		applyMeasuredBoundsWrites({
-			entryTag: "card",
-			linkId: "card",
-			currentScreenKey: "screen-b",
-			measured: staleDestination,
-			preparedStyles: {},
-			linkWrite: { type: "destination", pairKey: PAIR_KEY },
-		});
+		BoundStore.entry.set("card", "screen-b", { bounds: staleDestination });
+		BoundStore.link.setDestination(
+			PAIR_KEY,
+			"card",
+			"screen-b",
+			staleDestination,
+			{},
+			undefined,
+			{},
+		);
 
 		const staleStyles = buildZoomStyles({
 			tag: "card",
@@ -364,14 +361,16 @@ describe("zoom bound target", () => {
 		const staleMask = staleStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID]
 			?.style as any;
 
-		applyMeasuredBoundsWrites({
-			entryTag: "card",
-			linkId: "card",
-			currentScreenKey: "screen-b",
-			measured: DESTINATION_BOUNDS,
-			preparedStyles: {},
-			linkWrite: { type: "destination", pairKey: PAIR_KEY },
-		});
+		BoundStore.entry.set("card", "screen-b", { bounds: DESTINATION_BOUNDS });
+		BoundStore.link.setDestination(
+			PAIR_KEY,
+			"card",
+			"screen-b",
+			DESTINATION_BOUNDS,
+			{},
+			undefined,
+			{},
+		);
 
 		const measuredStyles = buildZoomStyles({
 			tag: "card",
@@ -440,12 +439,10 @@ describe("zoom bound target", () => {
 		const sourceCenterY = SOURCE_BOUNDS.pageY + SOURCE_BOUNDS.height / 2;
 		const trackedSourceCenterX =
 			screenCenterX +
-			(sourceCenterX + sourceTranslateX - screenCenterX) *
-				unfocusedParentScale;
+			(sourceCenterX + sourceTranslateX - screenCenterX) * unfocusedParentScale;
 		const trackedSourceCenterY =
 			screenCenterY +
-			(sourceCenterY + sourceTranslateY - screenCenterY) *
-				unfocusedParentScale;
+			(sourceCenterY + sourceTranslateY - screenCenterY) * unfocusedParentScale;
 
 		expect(focusedScale).toBeCloseTo(0.7, 10);
 		expect(trackedSourceCenterX).toBeCloseTo(focusedCenterX, 8);
@@ -504,9 +501,7 @@ describe("zoom source-only target", () => {
 });
 
 describe("zoom focused visibility", () => {
-	const buildFocusedContentStyle = (
-		keepFocusedVisible?: boolean,
-	) => {
+	const buildFocusedContentStyle = (keepFocusedVisible?: boolean) => {
 		registerSource();
 		registerDestination();
 

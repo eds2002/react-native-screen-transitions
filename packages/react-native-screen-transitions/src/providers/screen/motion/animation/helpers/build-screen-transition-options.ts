@@ -2,7 +2,6 @@ import type {
 	ScreenTransitionConfig,
 	ScreenTransitionOptions,
 } from "../../../../../types";
-import { resolveSheetScrollGestureBehavior } from "../../../../../utils/resolve-screen-transition-options";
 
 export const buildScreenTransitionOptions = (
 	options: ScreenTransitionConfig,
@@ -18,10 +17,7 @@ export const buildScreenTransitionOptions = (
 		gestureReleaseVelocityScale: options.gestureReleaseVelocityScale,
 		gestureSnapLocked: options.gestureSnapLocked,
 		sheetSnapBehavior: options.sheetSnapBehavior,
-		sheetScrollGestureBehavior:
-			options.sheetScrollGestureBehavior !== undefined
-				? resolveSheetScrollGestureBehavior(options)
-				: undefined,
+		sheetScrollGestureBehavior: options.sheetScrollGestureBehavior,
 		backdropBehavior: options.backdropBehavior,
 	};
 };

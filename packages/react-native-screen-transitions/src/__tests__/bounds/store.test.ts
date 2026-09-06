@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { applyMeasuredBoundsWrites } from "../../providers/helpers/measured-bounds-writes";
 import { resolvePortalOffsetStyle } from "../../components/boundary/portal/components/boundary-portal/helpers/offset-style";
 import { BoundStore, type Snapshot } from "../../stores/bounds";
 import {
@@ -82,9 +81,9 @@ describe("BoundStore.entry", () => {
 		registerBoundaryPresence("card", "screen-b");
 		registerBoundaryPresence("card", "screen-c");
 
-		expect(
-			getMatchingSourceScreenKey("card", "screen-c", "screen-b"),
-		).toBe("screen-b");
+		expect(getMatchingSourceScreenKey("card", "screen-c", "screen-b")).toBe(
+			"screen-b",
+		);
 	});
 
 	it("completes A to C without linking through retained closing B", () => {
@@ -171,9 +170,7 @@ describe("BoundStore.entry", () => {
 		);
 
 		expect(BoundStore.entry.get("card", "screen-a")?.handoff).toBe(true);
-		expect(BoundStore.entry.get("card", "screen-a")?.escapeClipping).toBe(
-			true,
-		);
+		expect(BoundStore.entry.get("card", "screen-a")?.escapeClipping).toBe(true);
 
 		BoundStore.entry.set("card", "screen-a", {
 			handoff: null,
@@ -187,19 +184,13 @@ describe("BoundStore.entry", () => {
 	});
 });
 
-describe("applyMeasuredBoundsWrites", () => {
+describe("measured bounds store writes", () => {
 	it("always writes measured bounds to the entry registry", () => {
 		const bounds = createBounds(10, 20, 120, 140);
 
 		registerBoundaryPresence("card", "screen-a");
 
-		applyMeasuredBoundsWrites({
-			entryTag: "card",
-			linkId: "card",
-			currentScreenKey: "screen-a",
-			measured: bounds,
-			preparedStyles: { borderRadius: 12 },
-		});
+		BoundStore.entry.set("card", "screen-a", { bounds });
 
 		const snapshot = BoundStore.entry.get("card", "screen-a");
 		expect(snapshot?.bounds).toEqual(bounds);
@@ -211,32 +202,26 @@ describe("applyMeasuredBoundsWrites", () => {
 		const source = createBounds(25, 35, 150, 160);
 		const destination = createBounds(200, 220, 180, 190);
 
-		applyMeasuredBoundsWrites({
-			entryTag: "card",
-			linkId: "card",
-			currentScreenKey: "screen-a",
-			measured: source,
-			preparedStyles: { borderRadius: 16 },
-			handoff: true,
-			escapeClipping: true,
-			linkWrite: {
-				type: "source",
-				pairKey,
-			},
-		});
-		applyMeasuredBoundsWrites({
-			entryTag: "card",
-			linkId: "card",
-			currentScreenKey: "screen-b",
-			measured: destination,
-			preparedStyles: { borderRadius: 20 },
-			handoff: true,
-			escapeClipping: true,
-			linkWrite: {
-				type: "destination",
-				pairKey,
-			},
-		});
+		BoundStore.entry.set("card", "screen-a", { bounds: source });
+		BoundStore.link.setSource(
+			pairKey,
+			"card",
+			"screen-a",
+			source,
+			{ borderRadius: 16 },
+			undefined,
+			{ handoff: true, escapeClipping: true },
+		);
+		BoundStore.entry.set("card", "screen-b", { bounds: destination });
+		BoundStore.link.setDestination(
+			pairKey,
+			"card",
+			"screen-b",
+			destination,
+			{ borderRadius: 20 },
+			undefined,
+			{ handoff: true },
+		);
 
 		const link = BoundStore.link.getLink(pairKey, "card");
 		expect(link?.source.bounds).toEqual(source);
@@ -253,17 +238,18 @@ describe("applyMeasuredBoundsWrites", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 		const scale = createSharedValue(0.58);
 
-		applyMeasuredBoundsWrites({
-			entryTag: "card",
-			linkId: "card",
-			currentScreenKey: "screen-a",
-			measured: createBounds(25, 35, 150, 160),
-			preparedStyles: { transform: [{ scale }] },
-			linkWrite: {
-				type: "source",
-				pairKey,
-			},
+		BoundStore.entry.set("card", "screen-a", {
+			bounds: createBounds(25, 35, 150, 160),
 		});
+		BoundStore.link.setSource(
+			pairKey,
+			"card",
+			"screen-a",
+			createBounds(25, 35, 150, 160),
+			{ transform: [{ scale }] },
+			undefined,
+			{},
+		);
 
 		scale.value = 1.1;
 
@@ -275,20 +261,21 @@ describe("applyMeasuredBoundsWrites", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 		const matrix = [1, 0, 0, 1, 24, 32];
 
-		applyMeasuredBoundsWrites({
-			entryTag: "card",
-			linkId: "card",
-			currentScreenKey: "screen-a",
-			measured: createBounds(25, 35, 150, 160),
-			preparedStyles: {
+		BoundStore.entry.set("card", "screen-a", {
+			bounds: createBounds(25, 35, 150, 160),
+		});
+		BoundStore.link.setSource(
+			pairKey,
+			"card",
+			"screen-a",
+			createBounds(25, 35, 150, 160),
+			{
 				shadowOffset: { width: 2, height: 3 },
 				transform: [{ matrix }],
 			},
-			linkWrite: {
-				type: "source",
-				pairKey,
-			},
-		});
+			undefined,
+			{},
+		);
 
 		const link = BoundStore.link.getLink(pairKey, "card");
 		expect(link?.source.styles).toEqual({
@@ -346,12 +333,7 @@ describe("BoundStore.link pair writes", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 		const destination = createBounds(200, 200);
 
-		BoundStore.link.setDestination(
-			pairKey,
-			"card",
-			"screen-b",
-			destination,
-		);
+		BoundStore.link.setDestination(pairKey, "card", "screen-b", destination);
 
 		const link = BoundStore.link.getLink(pairKey, "card");
 		expect(link?.source).toBeNull();
@@ -452,7 +434,12 @@ describe("BoundStore.link pair writes", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 
 		BoundStore.link.setSource(pairKey, "card", "screen-a", createBounds());
-		BoundStore.link.setSource(pairKey, "title", "screen-a", createBounds(10, 10));
+		BoundStore.link.setSource(
+			pairKey,
+			"title",
+			"screen-a",
+			createBounds(10, 10),
+		);
 		BoundStore.link.setDestination(pairKey, "card", "screen-b", createBounds());
 		BoundStore.link.setDestination(
 			pairKey,
@@ -577,9 +564,9 @@ describe("BoundStore.link pair writes", () => {
 		);
 		BoundStore.link.setSource(pairKey, "card", "screen-a", createBounds(2, 2));
 
-		expect(BoundStore.link.getSource(pendingPairKey, "card")?.bounds.pageX).toBe(
-			1,
-		);
+		expect(
+			BoundStore.link.getSource(pendingPairKey, "card")?.bounds.pageX,
+		).toBe(1);
 		expect(BoundStore.link.getSource(pairKey, "card")?.bounds.pageX).toBe(2);
 	});
 });
@@ -592,14 +579,7 @@ describe("BoundStore.link.getPair", () => {
 
 		BoundStore.entry.set("colors:ember", "tray-a", {});
 		BoundStore.entry.set("colors:ember", "palette", {});
-		BoundStore.link.setSource(
-			pairKey,
-			"ember",
-			"tray-a",
-			source,
-			{},
-			"colors",
-		);
+		BoundStore.link.setSource(pairKey, "ember", "tray-a", source, {}, "colors");
 		BoundStore.link.setDestination(
 			pairKey,
 			"ember",
@@ -924,7 +904,12 @@ describe("BoundStore.cleanup.byScreen", () => {
 
 		registerMeasuredEntry("card", "screen-a", createBounds());
 		registerMeasuredEntry("card", "screen-c", createBounds());
-		BoundStore.link.setSource(removedPairKey, "card", "screen-a", createBounds());
+		BoundStore.link.setSource(
+			removedPairKey,
+			"card",
+			"screen-a",
+			createBounds(),
+		);
 		BoundStore.link.setDestination(
 			removedPairKey,
 			"card",
@@ -947,7 +932,12 @@ describe("BoundStore.cleanup.byScreen", () => {
 		BoundStore.link.setSource(pairKey, "card", "screen-a", createBounds());
 		BoundStore.link.setDestination(pairKey, "card", "screen-b", createBounds());
 		BoundStore.link.setSource(pairKey, "title", "screen-a", createBounds());
-		BoundStore.link.setDestination(pairKey, "title", "screen-b", createBounds());
+		BoundStore.link.setDestination(
+			pairKey,
+			"title",
+			"screen-b",
+			createBounds(),
+		);
 
 		BoundStore.cleanup.byScreen("screen-b");
 

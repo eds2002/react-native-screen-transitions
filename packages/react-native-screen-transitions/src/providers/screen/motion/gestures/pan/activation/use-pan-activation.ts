@@ -8,7 +8,7 @@ import { GestureStore } from "../../../../../../stores/gesture.store";
 import { GestureActivationState } from "../../../../../../types/gesture.types";
 import type { Direction } from "../../../../../../types/ownership.types";
 import { useBuilderStore } from "../../../../builder";
-import { useCurrentScreenRelationships } from "../../../../use-current-screen-relationships";
+import { useScreenRelationships } from "../../../../builder/topology";
 import type { ScreenOptionsContextValue } from "../../../options";
 import { resolvePanRuntime } from "../../shared/runtime";
 import type {
@@ -40,7 +40,7 @@ export const usePanActivation = ({
 	const currentScreenKey = useBuilderStore(
 		(store) => store.derivations.currentScreenKey,
 	);
-	const { parentScreenKey } = useCurrentScreenRelationships();
+	const { parentScreenKey } = useScreenRelationships();
 
 	const ancestorDismissing = useMemo(() => {
 		if (!parentScreenKey) return null;

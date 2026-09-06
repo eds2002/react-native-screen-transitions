@@ -5,7 +5,6 @@ import { BlankStackScreen } from "../../components/stack-view";
 import { BlankStackStoreProvider } from "../../providers/stack/blank-stack.provider";
 import { StackCoreProvider } from "../../providers/stack/core.provider";
 import type { BaseStackDescriptor, BaseStackRoute } from "../../types";
-import { isOverlayVisible } from "../../utils/overlay/visibility";
 import {
 	ScreenTransitionsAdapterProvider,
 	type ScreenTransitionsAdapterScene,
@@ -111,7 +110,8 @@ function buildTransitionStackState({
 			!shouldShowFloatOverlay &&
 			(normalizedDescriptor.options as AdapterDescriptorOptions)
 				.enableTransitions &&
-			isOverlayVisible(normalizedDescriptor.options)
+			normalizedDescriptor.options.overlay &&
+			normalizedDescriptor.options.overlayShown !== false
 		) {
 			shouldShowFloatOverlay = true;
 		}

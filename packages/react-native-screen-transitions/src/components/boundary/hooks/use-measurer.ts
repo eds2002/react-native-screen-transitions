@@ -2,8 +2,12 @@ import { useCallback } from "react";
 import type { View } from "react-native";
 import { useWindowDimensions } from "react-native";
 import type { AnimatedRef, StyleProps } from "react-native-reanimated";
-import { applyMeasuredBoundsWrites } from "../../../providers/helpers/measured-bounds-writes";
 import { useBuilderStore } from "../../../providers/screen/builder";
+import { setEntry } from "../../../stores/bounds/internals/entries";
+import {
+	setDestination,
+	setSource,
+} from "../../../stores/bounds/internals/links";
 import type { BoundTag } from "../../../stores/bounds/types";
 import { ScrollStore } from "../../../stores/scroll.store";
 import { getVisibilityBlockOffset } from "../../../utils/visibility-block-offset";
@@ -99,17 +103,32 @@ export const useMeasurer = ({
 				scrollMetadata.get(),
 			);
 
-			applyMeasuredBoundsWrites({
-				entryTag: boundTag.tag,
-				linkId: boundTag.linkKey,
-				group: boundTag.group,
-				currentScreenKey,
-				measured: measuredWithScroll,
-				preparedStyles,
-				linkWrite: target,
-				handoff,
-				escapeClipping,
-			});
+			// Refresh the public bounds entry on every accepted measurement.
+			setEntry(boundTag.tag, currentScreenKey, { bounds: measuredWithScroll });
+
+			if (target.type === "source") {
+				setSource(
+					target.pairKey,
+					boundTag.linkKey,
+					currentScreenKey,
+					measuredWithScroll,
+					preparedStyles,
+					boundTag.group,
+					{ handoff, escapeClipping },
+				);
+			}
+
+			if (target.type === "destination") {
+				setDestination(
+					target.pairKey,
+					boundTag.linkKey,
+					currentScreenKey,
+					measuredWithScroll,
+					preparedStyles,
+					boundTag.group,
+					{ handoff },
+				);
+			}
 		},
 		[
 			enabled,

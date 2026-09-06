@@ -5,7 +5,7 @@ import {
 } from "react-native-reanimated";
 import { NO_PROPS, NO_STYLES } from "../../../../../constants";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../../../types/animation.types";
-import { useCurrentScreenRelationships } from "../../../use-current-screen-relationships";
+import { useScreenRelationships } from "../../../builder/topology";
 import { useOptionalOrchestratorStore } from "../../orchestrator.provider";
 import {
 	areResettableStatesBySlotEqual,
@@ -22,7 +22,7 @@ interface UseResolvedStylesMapParams {
 export const useResolvedStylesMap = ({
 	localStylesMaps,
 }: UseResolvedStylesMapParams) => {
-	const { parentScreenKey } = useCurrentScreenRelationships();
+	const { parentScreenKey } = useScreenRelationships();
 	const ancestorStylesMap = useOptionalOrchestratorStore(
 		parentScreenKey,
 		(store) => store.slotsMap,
