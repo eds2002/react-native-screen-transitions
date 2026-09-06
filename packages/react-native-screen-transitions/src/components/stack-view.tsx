@@ -26,15 +26,15 @@ interface RouteKeyProps {
 const BlankSceneMotion = ({ children }: { children: ReactNode }) => {
 	const { requestDismiss } = useNavigationHelpers();
 	return (
-		<ScreenLifecycle>
-			<MotionProvider onDismissRequest={requestDismiss}>
+		<MotionProvider onDismissRequest={requestDismiss}>
+			<ScreenLifecycle>
 				<OrchestratorProvider>
 					<ScreenContainer onDismissRequest={requestDismiss}>
 						{children}
 					</ScreenContainer>
 				</OrchestratorProvider>
-			</MotionProvider>
-		</ScreenLifecycle>
+			</ScreenLifecycle>
+		</MotionProvider>
 	);
 };
 

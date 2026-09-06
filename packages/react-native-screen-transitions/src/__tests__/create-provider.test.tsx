@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import createProvider from "../utils/create-provider";
 
@@ -34,14 +34,12 @@ const {
 const parentObservations: Record<string, number | null> = {};
 const { PathProvider, useOptionalPathStore } = createProvider("Path", {
 	global: true,
-})<TestProviderProps, { value: number }>(
-	({ children, id, value }) => {
-		parentObservations[id] = useOptionalPathStore(
-			(store) => store?.value ?? null,
-		);
-		return { children, key: id, value: { value } };
-	},
-);
+})<TestProviderProps, { value: number }>(({ children, id, value }) => {
+	parentObservations[id] = useOptionalPathStore(
+		(store) => store?.value ?? null,
+	);
+	return { children, key: id, value: { value } };
+});
 
 describe("createProvider global stores", () => {
 	it("returns the provider plus strict and optional store hooks", () => {
@@ -131,12 +129,12 @@ describe("createProvider global stores", () => {
 
 		act(() => {
 			renderer = create(
-			<>
-				<Reader />
-				<TestProvider id="parent" value={7}>
+				<>
 					<Reader />
-				</TestProvider>
-			</>,
+					<TestProvider id="parent" value={7}>
+						<Reader />
+					</TestProvider>
+				</>,
 			);
 		});
 
@@ -178,10 +176,7 @@ describe("createProvider global stores", () => {
 		act(() => {
 			renderer = create(
 				<>
-					<TestProvider
-						id="screen-a"
-						value={1}
-					/>
+					<TestProvider id="screen-a" value={1} />
 					<Reader />
 				</>,
 			);
@@ -228,7 +223,7 @@ describe("createProvider global stores", () => {
 					</TestProvider>,
 				);
 			});
-		}).toThrow("TestStore is unavailable for key \"screen-b\"");
+		}).toThrow('TestStore is unavailable for key "screen-b"');
 	});
 
 	it("isolates keyed stores and subscribes to provider updates", () => {
@@ -277,4 +272,106 @@ describe("createProvider global stores", () => {
 		expect(parentObservations).toMatchObject({ parent: null, child: 7 });
 		act(() => renderer.unmount());
 	});
+});
+
+it("subscribes to multiple keyed providers as they mount, update, and unmount", () => {
+	const keys = ["multi-a", "multi-b"];
+	let values: readonly ({ value: number } | null)[] = [];
+	let selected: readonly (number | null)[] = [];
+	function Reader() {
+		values = testProviderFactory.useTestStore(keys);
+		selected = testProviderFactory.useTestStore(keys, (store) => store.value);
+		return null;
+	}
+	let renderer: ReactTestRenderer;
+	const tree = (showB: boolean, value: number) => (
+		<>
+			<Reader />
+			<TestProvider id="multi-a" value={value} />
+			{showB && <TestProvider id="multi-b" value={2} />}
+		</>
+	);
+	act(() => {
+		renderer = create(tree(false, 1));
+	});
+	expect(values).toEqual([{ value: 1 }, null]);
+	expect(selected).toEqual([1, null]);
+	act(() => {
+		renderer.update(tree(true, 3));
+	});
+	expect(values).toEqual([{ value: 3 }, { value: 2 }]);
+	expect(selected).toEqual([3, 2]);
+	act(() => {
+		renderer.update(tree(false, 3));
+	});
+	expect(values).toEqual([{ value: 3 }, null]);
+	expect(selected).toEqual([3, null]);
+	act(() => {
+		renderer.unmount();
+	});
+});
+
+it("reuses the original store without rebuilding, and retains it until its consumer leaves", () => {
+	let builds = 0;
+	let mounts = 0;
+	let observed: { value: number } | null = null;
+	const { ReuseProvider, useReuseStore, getReuseStore } = createProvider(
+		"Reuse",
+		{ global: true },
+	)<TestProviderProps, { value: number }>((props) => {
+		builds++;
+		return { key: props.id, value: { value: props.value } };
+	});
+	function Reader() {
+		observed = useReuseStore();
+		useEffect(() => {
+			mounts++;
+		}, []);
+		return null;
+	}
+	let owner: ReactTestRenderer;
+	let consumer: ReactTestRenderer;
+	act(() => {
+		consumer = create(
+			<ReuseProvider screenKey="owner">
+				<Reader />
+			</ReuseProvider>,
+		);
+	});
+	expect(builds).toBe(0);
+	expect(mounts).toBe(0);
+	act(() => {
+		owner = create(<ReuseProvider id="owner" value={1} />);
+	});
+	expect(builds).toBe(1);
+	expect(observed).toBe(getReuseStore("owner"));
+	expect(mounts).toBe(1);
+	act(() => {
+		owner.update(<ReuseProvider id="owner" value={2} />);
+	});
+	expect(builds).toBe(2);
+	expect(observed).toBe(getReuseStore("owner"));
+	expect(observed?.value).toBe(2);
+	act(() => {
+		owner.unmount();
+	});
+	expect(observed?.value).toBe(2);
+	expect(mounts).toBe(1);
+	expect(() => getReuseStore("owner")).toThrow();
+	act(() => {
+		consumer.update(
+			<ReuseProvider screenKey="other">
+				<Reader />
+			</ReuseProvider>,
+		);
+	});
+	expect(mounts).toBe(1);
+	act(() => {
+		owner = create(<ReuseProvider id="other" value={3} />);
+	});
+	expect(observed).toBe(getReuseStore("other"));
+	expect(mounts).toBe(2);
+	act(() => consumer.unmount());
+	expect(getReuseStore("other").value).toBe(3);
+	act(() => owner.unmount());
 });

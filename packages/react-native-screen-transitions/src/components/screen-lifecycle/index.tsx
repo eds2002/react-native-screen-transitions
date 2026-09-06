@@ -1,5 +1,5 @@
 import { useBuilderStore } from "../../providers/screen/builder";
-import { AnimationStore } from "../../stores/animation.store";
+import { useMotionStore } from "../../providers/screen/motion";
 import { useScreenHistory } from "./hooks/history/use-screen-history";
 import { useCloseCompletion } from "./hooks/use-close-completion";
 import { useCloseTransitionIntent } from "./hooks/use-close-transition-intent";
@@ -18,7 +18,7 @@ export const ScreenLifecycle = ({ children }: Props) => {
 	const current = useBuilderStore((store) => store.descriptors.current);
 	const previous = useBuilderStore((store) => store.descriptors.previous);
 
-	const animations = AnimationStore.getBag(current.route.key);
+	const animations = useMotionStore((store) => store.state);
 	const system = useBuilderStore((store) => store.animationState);
 
 	const { completeClose } = useCloseTransitionIntent(current);

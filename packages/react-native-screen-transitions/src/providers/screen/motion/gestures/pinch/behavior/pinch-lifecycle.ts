@@ -1,8 +1,8 @@
 import { clamp } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { EPSILON, TRUE } from "../../../../../../constants";
-import { emitMotionStart } from "../../../../../../stores/animation.store";
 import { animateToProgress } from "../../../../../../utils/animation/animate-to-progress";
+import { emitMotionStart } from "../../../animation/emit-motion-start";
 import { normalizePinchScale } from "../../shared/physics";
 import { snapshotGestureHandoff } from "../../shared/snapshot";
 import { clearTransformTrackingValues } from "../../shared/values";

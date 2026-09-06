@@ -19,7 +19,8 @@
  *
  * Providers created with `global: true` return a `key` from their factory.
  * Both generated store hooks accept that key to subscribe to the original
- * provider store from outside its React context.
+ * provider store from outside its React context. Arrays of keys return ordered
+ * snapshots (null for unmounted keys) and apply the selector to each store.
  */
 import {
 	createContext,
@@ -37,6 +38,11 @@ type ProviderStoreHook<ContextValue> = {
 };
 
 type GlobalProviderStoreHook<ContextValue> = {
+	(keys: readonly string[]): readonly (ContextValue | null)[];
+	<Selected>(
+		keys: readonly string[],
+		selector: (value: ContextValue) => Selected,
+	): readonly (Selected | null)[];
 	(key: string): ContextValue;
 	<Selected>(
 		key: string,
@@ -50,6 +56,11 @@ type OptionalProviderStoreHook<ContextValue> = {
 };
 
 type OptionalGlobalProviderStoreHook<ContextValue> = {
+	(keys: readonly string[]): readonly (ContextValue | null)[];
+	<Selected>(
+		keys: readonly string[],
+		selector: (value: ContextValue) => Selected,
+	): readonly (Selected | null)[];
 	(key: string | null): ContextValue | null;
 	<Selected>(
 		key: string | null,
@@ -226,54 +237,96 @@ export default function createProvider<
 			required: boolean,
 			selectorOrKey?:
 				| string
+				| readonly string[]
 				| null
 				| ((value: ContextValue | null) => Selected),
 			globalSelector?: (value: ContextValue) => Selected,
-		): Selected | ContextValue | null => {
+		):
+			| Selected
+			| ContextValue
+			| null
+			| readonly (Selected | ContextValue | null)[] => {
+			const keys =
+				global && Array.isArray(selectorOrKey)
+					? (selectorOrKey as readonly string[])
+					: null;
 			const isGlobalLookup =
-				global && (typeof selectorOrKey === "string" || selectorOrKey === null);
-			const key = isGlobalLookup ? selectorOrKey : null;
+				global &&
+				(keys !== null ||
+					typeof selectorOrKey === "string" ||
+					selectorOrKey === null);
+			const key =
+				isGlobalLookup && typeof selectorOrKey === "string"
+					? selectorOrKey
+					: null;
 			const selector = (isGlobalLookup ? globalSelector : selectorOrKey) as
 				| ((value: ContextValue | null) => Selected)
 				| undefined;
 			const contextStore = useContext(StoreContext);
+			const selectionCache = useRef<
+				readonly (Selected | ContextValue | null)[]
+			>([]);
 			const selectorRef = useRef(selector);
 			selectorRef.current = selector;
-			const getStore = useCallback(() => {
-				if (isGlobalLookup) {
-					return key !== null && globalRegistry
-						? globalRegistry.getStore(key)
-						: null;
-				}
+			const getStore = useCallback(
+				(lookupKey: string | null = key) => {
+					if (isGlobalLookup) {
+						return lookupKey !== null && globalRegistry
+							? globalRegistry.getStore(lookupKey)
+							: null;
+					}
 
-				return contextStore;
-			}, [contextStore, isGlobalLookup, key]);
+					return contextStore;
+				},
+				[contextStore, isGlobalLookup, key],
+			);
 			const subscribe = useCallback(
 				(listener: () => void) => {
-					let unsubscribeStore = (
-						getStore() ?? (NullProviderStore as ProviderStoreApi<ContextValue>)
-					).subscribe(listener);
-					const unsubscribeRegistry =
-						isGlobalLookup && key !== null && globalRegistry
-							? globalRegistry.subscribe(key, () => {
-									unsubscribeStore();
-									unsubscribeStore = (
-										getStore() ??
-										(NullProviderStore as ProviderStoreApi<ContextValue>)
-									).subscribe(listener);
-									listener();
-								})
-							: () => {};
-
+					const cleanups = (keys ?? [key]).map((lookupKey) => {
+						let unsubscribeStore = (
+							getStore(lookupKey) ?? NullProviderStore
+						).subscribe(listener);
+						const unsubscribeRegistry =
+							isGlobalLookup && lookupKey !== null && globalRegistry
+								? globalRegistry.subscribe(lookupKey, () => {
+										unsubscribeStore();
+										unsubscribeStore = (
+											getStore(lookupKey) ?? NullProviderStore
+										).subscribe(listener);
+										listener();
+									})
+								: undefined;
+						return () => {
+							unsubscribeRegistry?.();
+							unsubscribeStore();
+						};
+					});
 					return () => {
-						unsubscribeRegistry();
-						unsubscribeStore();
+						for (const cleanup of cleanups) cleanup();
 					};
 				},
-				[getStore, isGlobalLookup, key],
+				[getStore, isGlobalLookup, key, keys],
 			);
 
 			const getSelectedSnapshot = useCallback(() => {
+				if (keys) {
+					const selected = keys.map((lookupKey) => {
+						const snapshot = getStore(lookupKey)?.getSnapshot() ?? null;
+						return snapshot !== null && selectorRef.current
+							? selectorRef.current(snapshot)
+							: snapshot;
+					});
+					if (
+						selected.length !== selectionCache.current.length ||
+						selected.some(
+							(value, index) =>
+								!Object.is(value, selectionCache.current[index]),
+						)
+					) {
+						selectionCache.current = selected;
+					}
+					return selectionCache.current;
+				}
 				const snapshot = getStore()?.getSnapshot() ?? null;
 
 				if (required && snapshot === null) {
@@ -291,7 +344,7 @@ export default function createProvider<
 				return typeof selectorRef.current === "function"
 					? selectorRef.current(snapshot)
 					: snapshot;
-			}, [getStore, isGlobalLookup, key, required]);
+			}, [getStore, isGlobalLookup, key, keys, required]);
 
 			return useSyncExternalStore(
 				subscribe,
@@ -302,18 +355,23 @@ export default function createProvider<
 		const useOptionalStoreSelector = <Selected,>(
 			selectorOrKey?:
 				| string
+				| readonly string[]
 				| null
 				| ((value: ContextValue | null) => Selected),
 			globalSelector?: (value: ContextValue) => Selected,
 		) => useStoreSelection(false, selectorOrKey, globalSelector);
 		const useStoreSelector = <Selected,>(
-			selectorOrKey?: string | ((value: ContextValue) => Selected),
+			selectorOrKey?:
+				| string
+				| readonly string[]
+				| ((value: ContextValue) => Selected),
 			globalSelector?: (value: ContextValue) => Selected,
 		) =>
 			useStoreSelection(
 				true,
 				selectorOrKey as
 					| string
+					| readonly string[]
 					| ((value: ContextValue | null) => Selected)
 					| undefined,
 				globalSelector,
@@ -371,7 +429,7 @@ export default function createProvider<
 		};
 		StoreProvider.displayName = `${name}StoreProvider`;
 
-		const Provider: React.FC<ProviderProps> = (props) => {
+		const OwnedProvider: React.FC<ProviderProps> = (props) => {
 			const {
 				children = (props as { children?: ReactNode }).children,
 				key,
@@ -382,6 +440,46 @@ export default function createProvider<
 					{children}
 				</StoreProvider>
 			);
+		};
+		type ReuseProps = { screenKey: string; children?: ReactNode };
+		const ReusedProvider = ({ screenKey, children }: ReuseProps) => {
+			const retainedStore = useRef<ProviderStoreApi<ContextValue> | null>(null);
+			const subscribe = useCallback(
+				(listener: () => void) =>
+					globalRegistry?.subscribe(screenKey, listener) ??
+					NullProviderStore.subscribe(listener),
+				[screenKey],
+			);
+			const getSnapshot = useCallback(
+				() => globalRegistry?.getStore(screenKey) ?? null,
+				[screenKey],
+			);
+			const registeredStore = useSyncExternalStore(
+				subscribe,
+				getSnapshot,
+				getSnapshot,
+			);
+			// Keep the same context alive while a departing screen's overlay finishes.
+			if (registeredStore) retainedStore.current = registeredStore;
+			const store = registeredStore ?? retainedStore.current;
+			return store ? (
+				<StoreContext.Provider value={store}>{children}</StoreContext.Provider>
+			) : null;
+		};
+		type Props = ProviderProps | (Global extends true ? ReuseProps : never);
+		const Provider: React.FC<Props> = (props) => {
+			if (
+				global &&
+				"screenKey" in props &&
+				typeof props.screenKey === "string"
+			) {
+				return (
+					<ReusedProvider key={props.screenKey} screenKey={props.screenKey}>
+						{(props as ReuseProps).children}
+					</ReusedProvider>
+				);
+			}
+			return <OwnedProvider {...(props as ProviderProps)} />;
 		};
 		Provider.displayName = providerDisplayName;
 
@@ -399,9 +497,11 @@ export default function createProvider<
 			[`useOptional${name}Store`]: useOptionalStoreSelector,
 			[`use${name}Store`]: useStoreSelector,
 		} as (Global extends true
-			? { [P in ProviderName as `get${P}Store`]: (key: string) => ContextValue }
+			? {
+					[P in ProviderName as `get${P}Store`]: (key: string) => ContextValue;
+				}
 			: unknown) & { StoreProvider: typeof StoreProvider } & {
-			[P in ProviderName as `${P}Provider`]: React.FC<ProviderProps>;
+			[P in ProviderName as `${P}Provider`]: React.FC<Props>;
 		} & {
 			[P in ProviderName as `useOptional${P}Store`]: ResolvedOptionalProviderStoreHook<
 				ContextValue,

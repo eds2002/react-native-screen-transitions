@@ -1,6 +1,8 @@
 import { FALSE, TRUE } from "../../../../../../constants";
-import type { AnimationStoreMap } from "../../../../../../stores/animation.store";
-import type { GestureStoreMap } from "../../../../../../stores/gesture.store";
+import type {
+	MotionAnimationValues,
+	MotionGestureValues,
+} from "../../../types";
 import { animateMany } from "../../shared/reset";
 import {
 	clearPanProgressDeltaValues,
@@ -10,8 +12,8 @@ import type { PanReleasePlan } from "../../types";
 
 interface ResetPanGestureValuesProps {
 	plan: PanReleasePlan;
-	gestures: GestureStoreMap;
-	animations?: AnimationStoreMap;
+	gestures: MotionGestureValues;
+	animations?: MotionAnimationValues;
 	completeMotion?: boolean;
 	updateLifecycle?: boolean;
 }

@@ -3,6 +3,7 @@ import createProvider from "../../../utils/create-provider";
 import { useBuilderStore } from "../builder";
 import { useMotionAnimationPipeline } from "./animation/pipeline";
 import { useScreenGestures } from "./gestures/use-screen-gestures";
+import { useMotionValues } from "./hooks/use-motion-values";
 import { useScreenOptions } from "./options/use-screen-options";
 
 export type MotionProviderProps = {
@@ -13,12 +14,12 @@ export type MotionProviderProps = {
 export type MotionState = {
 	options: ReturnType<typeof useScreenOptions>;
 	gestures: ReturnType<typeof useScreenGestures>;
-	animations: ReturnType<typeof useMotionAnimationPipeline>;
+	state: ReturnType<typeof useMotionAnimationPipeline>;
 };
 
 export const {
 	MotionProvider,
-	StoreProvider: MotionStoreProvider,
+	getMotionStore,
 	useMotionStore,
 	useOptionalMotionStore,
 } = createProvider("Motion", { global: true })<
@@ -28,12 +29,15 @@ export const {
 	const screenKey = useBuilderStore(
 		(store) => store.derivations.currentScreenKey,
 	);
+	const values = useMotionValues();
 	const options = useScreenOptions();
-	const gestures = useScreenGestures(options, onDismissRequest);
-	const animations = useMotionAnimationPipeline();
+
+	const gestures = useScreenGestures(options, values, onDismissRequest);
+
+	const state = useMotionAnimationPipeline(values);
 	const value = useMemo(
-		() => ({ options, gestures, animations }),
-		[options, gestures, animations],
+		() => ({ options, gestures, state }),
+		[options, gestures, state],
 	);
 	return { key: screenKey, value };
 });

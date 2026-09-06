@@ -7,7 +7,7 @@ import {
 	type BuilderAnimationState,
 	LifecycleTransitionRequestKind,
 } from "../../../providers/screen/builder/hooks/use-builder-animation-state";
-import type { AnimationStoreMap } from "../../../stores/animation.store";
+import type { MotionAnimationValues } from "../../../providers/screen/motion/types";
 import type { SnapPoint } from "../../../types/screen.types";
 
 /**
@@ -38,7 +38,7 @@ function getInitialProgress({
  */
 export function useOpenTransitionIntent(
 	current: BaseDescriptor,
-	animations: AnimationStoreMap,
+	animations: MotionAnimationValues,
 	system: BuilderAnimationState,
 ) {
 	const isFirstKey = useBuilderStore((store) => store.derivations.isFirstKey);

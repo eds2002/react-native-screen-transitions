@@ -1,5 +1,4 @@
 import type { SharedValue } from "react-native-reanimated";
-import type { GestureStoreMap } from "../../../../../../stores/gesture.store";
 import type {
 	ScreenTransitionOptions,
 	ScreenTransitionState,
@@ -7,16 +6,9 @@ import type {
 import type { ScrollMetadataState } from "../../../../../../types/gesture.types";
 import type { Layout } from "../../../../../../types/screen.types";
 import type { BaseStackRoute } from "../../../../../../types/stack.types";
+import type { MotionGestureValues, MotionValues } from "../../../types";
 
-export type MotionAnimationState = {
-	transitionProgress: SharedValue<number>;
-	visualProgress: SharedValue<number>;
-	willAnimate: SharedValue<number>;
-	closing: SharedValue<number>;
-	progressAnimating: SharedValue<number>;
-	progressSettled: SharedValue<number>;
-	entering: SharedValue<number>;
-	gesture: GestureStoreMap;
+export type MotionAnimationState = MotionValues & {
 	route: BaseStackRoute;
 	meta?: Record<string, unknown>;
 	options: ScreenTransitionOptions;
@@ -29,7 +21,11 @@ export type MotionAnimationState = {
 };
 
 // Each interpolator reader owns its mutable output and option overrides.
-export type BuiltState = MotionAnimationState & {
+export type BuiltState = Omit<
+	MotionAnimationState,
+	keyof MotionGestureValues
+> & {
+	gesture: MotionGestureValues;
 	optionsSlot: ScreenTransitionOptions;
 	contentLayoutSlot: Layout;
 	unwrapped: ScreenTransitionState;

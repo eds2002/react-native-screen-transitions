@@ -11,7 +11,6 @@ import {
 	createScreenTransitionState,
 	DEFAULT_SCREEN_TRANSITION_STATE,
 } from "../../../../constants";
-import { AnimationStore } from "../../../../stores/animation.store";
 import type {
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
@@ -276,26 +275,29 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 	);
 	const dimensions = useWindowDimensions();
 	const insets = useSafeAreaInsets();
+	const stackMotions = useMotionStore(routeKeys);
 	const stackProgressEntries = useMemo(
 		() =>
-			routeKeys.map((routeKey) => ({
-				routeKey,
-				visualProgress: AnimationStore.getValue(routeKey, "visualProgress"),
-			})),
-		[routeKeys],
+			routeKeys.flatMap((routeKey, index) => {
+				const motion = stackMotions[index];
+				return motion
+					? [{ routeKey, visualProgress: motion.state.visualProgress }]
+					: [];
+			}),
+		[routeKeys, stackMotions],
 	);
 
 	const currDescriptor = useBuilderStore((store) => store.descriptors.current);
 	const nextDescriptor = useBuilderStore((store) => store.descriptors.next);
 	const prevDescriptor = useBuilderStore((store) => store.descriptors.previous);
-	const currentMotion = useMotionStore((store) => store.animations);
+	const currentMotion = useMotionStore((store) => store.state);
 	const nextMotion = useOptionalMotionStore(
 		nextDescriptor?.route.key ?? null,
-		(store) => store.animations,
+		(store) => store.state,
 	);
 	const previousMotion = useOptionalMotionStore(
 		prevDescriptor?.route.key ?? null,
-		(store) => store.animations,
+		(store) => store.state,
 	);
 	const currentAnimation = useInterpolatorState(currentMotion);
 	const nextAnimation = useInterpolatorState(nextMotion);

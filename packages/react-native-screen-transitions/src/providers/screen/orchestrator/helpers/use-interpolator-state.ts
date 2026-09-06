@@ -15,6 +15,7 @@ export function useInterpolatorState(
 			motion
 				? {
 						...motion,
+						gesture: motion,
 						optionsSlot: {},
 						contentLayoutSlot: { width: 0, height: 0 },
 						unwrapped: createScreenTransitionState(

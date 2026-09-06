@@ -70,9 +70,32 @@ mock.module("react-native", () => ({
 		create: <T>(styles: T) => styles,
 	},
 }));
+function createTestGesture() {
+	const gesture: Record<string, any> = { config: {} };
+	for (const name of [
+		"enabled",
+		"manualActivation",
+		"averageTouches",
+		"onTouchesDown",
+		"onTouchesMove",
+		"onStart",
+		"onUpdate",
+		"onEnd",
+	]) {
+		gesture[name] = (value: unknown) => {
+			gesture.config[name] = value;
+			return gesture;
+		};
+	}
+	return gesture;
+}
+
 mock.module("react-native-gesture-handler", () => ({
 	GestureDetector: ({ children }: { children: React.ReactNode }) => children,
 	Gesture: {
+		Pan: createTestGesture,
+		Pinch: createTestGesture,
+		Simultaneous: (...gestures: unknown[]) => gestures,
 		Native: () => ({
 			config: { enabled: true } as Record<string, unknown>,
 			enabled(value: boolean) {

@@ -44,7 +44,17 @@ const useOrchestratorStore = <Selected,>(
 	return resolvedSelector ? resolvedSelector(store) : store;
 };
 
+mock.module("../../providers/screen/motion", () => ({
+	getMotionStore: () => {
+		throw new Error("Overlay rendering should not request a snap");
+	},
+	useOptionalMotionStore: () => null,
+}));
+
 mock.module("../../providers/screen/builder", () => ({
+	useBuilderStore: () => {
+		throw new Error("Overlay uses keyed Builder reads");
+	},
 	useOptionalBuilderStore: (
 		keyOrSelector: string | ((store: null) => unknown),
 		selector?: (store: {
@@ -58,20 +68,24 @@ mock.module("../../providers/screen/builder", () => ({
 }));
 
 mock.module("../../providers/stack/blank-stack.provider", () => ({
+	useOptionalBlankStackStore: (selector: (store: null) => unknown) =>
+		selector(null),
 	useBlankStackStore: () => stackState,
 }));
 
 mock.module(
 	"../../providers/screen/orchestrator/orchestrator.provider",
 	() => ({
-		OrchestratorStoreProvider: ({
+		OrchestratorProvider: ({
 			children,
-			value,
+			screenKey,
 		}: {
 			children: ReactNode;
-			value: OrchestratorState;
+			screenKey: string;
 		}) => (
-			<ScreenAnimationContext.Provider value={value}>
+			<ScreenAnimationContext.Provider
+				value={animationStores.get(screenKey) ?? null}
+			>
 				{children}
 			</ScreenAnimationContext.Provider>
 		),
@@ -81,14 +95,16 @@ mock.module(
 );
 
 mock.module("../../providers/screen/orchestrator", () => ({
-	OrchestratorStoreProvider: ({
+	OrchestratorProvider: ({
 		children,
-		value,
+		screenKey,
 	}: {
 		children: ReactNode;
-		value: OrchestratorState;
+		screenKey: string;
 	}) => (
-		<ScreenAnimationContext.Provider value={value}>
+		<ScreenAnimationContext.Provider
+			value={animationStores.get(screenKey) ?? null}
+		>
 			{children}
 		</ScreenAnimationContext.Provider>
 	),

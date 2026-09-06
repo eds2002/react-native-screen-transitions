@@ -1,9 +1,8 @@
+import { mountMotionValues } from "./helpers/mount-motion-values";
 import { mountBuilderAnimationState } from "./helpers/mount-builder-animation-state";
-import { afterEach, beforeAll, describe, expect, it, mock } from "bun:test";
+import { beforeAll, describe, expect, it, mock } from "bun:test";
 import React from "react";
 import { act, create } from "react-test-renderer";
-import { AnimationStore } from "../stores/animation.store";
-import { GestureStore } from "../stores/gesture.store";
 import { ScrollStore } from "../stores/scroll.store";
 import type { BaseDescriptor } from "../providers/screen/builder";
 import { buildScreenTransitionOptions } from "../providers/screen/motion/animation/helpers/build-screen-transition-options";
@@ -37,6 +36,8 @@ mock.module("../providers/stack/blank-stack.provider", () => ({
 		selector({ routeKeys: [] }),
 }));
 
+const currentMotion = mountMotionValues();
+const nextMotion = mountMotionValues();
 const currentSystem = mountBuilderAnimationState();
 const nextSystem = mountBuilderAnimationState();
 mock.module("../providers/screen/builder", () => ({
@@ -67,9 +68,8 @@ function motionForKey(key: string) {
 	) as BaseDescriptor;
 	const system = key === "home" ? currentSystem : nextSystem;
 	return {
-		animations: {
-			...AnimationStore.getBag(key),
-			gesture: GestureStore.getBag(key),
+		state: {
+			...(key === "home" ? currentMotion : nextMotion),
 			route: descriptor.route,
 			options: buildScreenTransitionOptions(descriptor.options),
 			targetProgress: system.targetProgress,
@@ -82,8 +82,8 @@ function motionForKey(key: string) {
 	};
 }
 mock.module("../providers/screen/motion", () => ({
-	useMotionStore: (selector: (state: any) => unknown) =>
-		selector(motionForKey("home")),
+	useMotionStore: (selector: ((state: any) => unknown) | readonly string[]) =>
+		Array.isArray(selector) ? [] : (selector as (state: any) => unknown)(motionForKey("home")),
 	useOptionalMotionStore: (
 		key: string | null,
 		selector: (state: any) => unknown,
@@ -93,11 +93,6 @@ mock.module("../providers/screen/motion", () => ({
 let useScreenAnimationPipeline: typeof import("../providers/screen/orchestrator/helpers/pipeline").useScreenAnimationPipeline;
 
 describe("initial interpolator state", () => {
-	afterEach(() => {
-		AnimationStore.clearBag("home");
-		AnimationStore.clearBag("details");
-	});
-
 	beforeAll(async () => {
 		({ useScreenAnimationPipeline } = await import(
 			"../providers/screen/orchestrator/helpers/pipeline"
@@ -123,7 +118,7 @@ describe("initial interpolator state", () => {
 			},
 		};
 		descriptors.previous = undefined;
-		const nextAnimation = AnimationStore.getBag("details");
+		const nextAnimation = nextMotion;
 		nextAnimation.entering.set(1);
 		nextAnimation.progressAnimating.set(1);
 		nextAnimation.progressSettled.set(0);

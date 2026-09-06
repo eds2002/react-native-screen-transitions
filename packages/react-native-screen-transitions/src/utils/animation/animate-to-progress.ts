@@ -1,9 +1,7 @@
 import type { SharedValue } from "react-native-reanimated";
 import { FALSE, TRUE } from "../../constants";
-import {
-	type AnimationStoreMap,
-	emitMotionStart,
-} from "../../stores/animation.store";
+import { emitMotionStart } from "../../providers/screen/motion/animation/emit-motion-start";
+import type { MotionAnimationValues } from "../../providers/screen/motion/types";
 import type { TransitionSpec } from "../../types/animation.types";
 import { animate, isSpringAnimationConfig } from "./animate";
 
@@ -16,7 +14,7 @@ interface AnimateToProgressProps {
 	 */
 	target: "open" | "close" | number;
 	spec?: TransitionSpec;
-	animations: AnimationStoreMap;
+	animations: MotionAnimationValues;
 	targetProgress: SharedValue<number>;
 	animationProgress: SharedValue<number>;
 	emitWillAnimate?: boolean;
@@ -27,7 +25,7 @@ interface AnimateToProgressProps {
 }
 
 const setTransitionLifecycleFlags = (
-	animations: AnimationStoreMap,
+	animations: MotionAnimationValues,
 	isClosing: boolean,
 	markEntering: boolean,
 ) => {

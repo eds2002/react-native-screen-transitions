@@ -1,22 +1,16 @@
+import { mountMotionValues } from "./helpers/mount-motion-values";
 import { beforeEach, describe, expect, it } from "bun:test";
 
 import { resetStoresForScreen } from "../components/screen-lifecycle/hooks/helpers/reset-stores-for-screen";
-import { AnimationStore } from "../stores/animation.store";
 import { BoundStore } from "../stores/bounds";
 import { createPendingPairKey } from "../stores/bounds/helpers/link-pairs.helpers";
-import { GestureStore } from "../stores/gesture.store";
 import {
 	hasBoundaryPresence,
 	registerBoundaryPresence,
 	registerMeasuredEntry,
 } from "./bounds/helpers/bounds-behavior-fixtures";
 
-const createMeasured = (
-	x = 0,
-	y = 0,
-	width = 100,
-	height = 100,
-) => ({
+const createMeasured = (x = 0, y = 0, width = 100, height = 100) => ({
 	x,
 	y,
 	pageX: x,
@@ -35,12 +29,13 @@ beforeEach(() => {
 });
 
 describe("close transition cleanup", () => {
-	it("resets animation, gesture, and bounds stores for a screen", async () => {
+	it("clears bounds without resetting provider-owned motion", async () => {
 		const routeKey = "cleanup-screen";
 		const bounds = createMeasured(10, 20, 120, 140);
 
-		const animationBefore = AnimationStore.getBag(routeKey);
-		const gestureBefore = GestureStore.getBag(routeKey);
+		const motion = mountMotionValues();
+		motion.transitionProgress.set(0.5);
+		motion.x.set(20);
 
 		registerMeasuredEntry("card", routeKey, bounds);
 		const pairKey = createPendingPairKey(routeKey);
@@ -59,11 +54,8 @@ describe("close transition cleanup", () => {
 		expect(BoundStore.link.getSource(pairKey, "card")).toBeNull();
 		expect(hasBoundaryPresence("card", routeKey)).toBe(false);
 
-		const animationAfter = AnimationStore.getBag(routeKey);
-		const gestureAfter = GestureStore.getBag(routeKey);
-
-		expect(animationAfter).not.toBe(animationBefore);
-		expect(gestureAfter).not.toBe(gestureBefore);
+		expect(motion.transitionProgress.get()).toBe(0.5);
+		expect(motion.x.get()).toBe(20);
 	});
 
 	it("clears bounds for leaf screens", async () => {
@@ -75,17 +67,17 @@ describe("close transition cleanup", () => {
 		BoundStore.link.setSource(pairKey, "card", routeKey, bounds);
 		registerBoundaryPresence("card", routeKey);
 
-		const animationBefore = AnimationStore.getBag(routeKey);
-		const gestureBefore = GestureStore.getBag(routeKey);
+		const motion = mountMotionValues();
+		motion.transitionProgress.set(0.5);
+		motion.x.set(20);
 
 		resetStoresForScreen(routeKey);
 		await flushScheduledUI();
 
-		// Animation and gesture stores are still cleared
-		const animationAfter = AnimationStore.getBag(routeKey);
-		const gestureAfter = GestureStore.getBag(routeKey);
-		expect(animationAfter).not.toBe(animationBefore);
-		expect(gestureAfter).not.toBe(gestureBefore);
+		// Motion belongs to the mounted provider.
+
+		expect(motion.transitionProgress.get()).toBe(0.5);
+		expect(motion.x.get()).toBe(20);
 
 		expect(BoundStore.entry.get("card", routeKey)).toBeNull();
 		expect(BoundStore.link.getSource(pairKey, "card")).toBeNull();
@@ -118,21 +110,11 @@ describe("close transition cleanup", () => {
 		const unrelatedPairKey = createPendingPairKey(unrelatedRoute);
 
 		registerMeasuredEntry("card", routeKey, bounds);
-		BoundStore.link.setSource(routePairKey,
-			"card",
-			routeKey,
-			bounds,
-			{},
-		);
+		BoundStore.link.setSource(routePairKey, "card", routeKey, bounds, {});
 		registerBoundaryPresence("card", routeKey);
 
 		registerMeasuredEntry("card", nestedRoute, bounds);
-		BoundStore.link.setSource(nestedPairKey,
-			"card",
-			nestedRoute,
-			bounds,
-			{},
-		);
+		BoundStore.link.setSource(nestedPairKey, "card", nestedRoute, bounds, {});
 		registerBoundaryPresence("card", nestedRoute);
 
 		registerMeasuredEntry("card", unrelatedRoute, bounds);

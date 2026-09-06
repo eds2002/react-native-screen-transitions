@@ -1,12 +1,12 @@
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { useNavigationHelpers } from "../../../hooks/navigation/use-navigation-helpers";
 import useStableCallback from "../../../hooks/use-stable-callback";
 import type { BaseDescriptor } from "../../../providers/screen/builder";
 import { useScreenRelationships } from "../../../providers/screen/builder/topology";
+import { useOptionalMotionStore } from "../../../providers/screen/motion";
 import { hasTransitionsEnabled } from "../../../providers/screen/motion/animation/helpers/has-transitions-enabled";
 import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
 import { useStackCoreStore } from "../../../providers/stack/core.provider";
-import { GestureStore } from "../../../stores/gesture.store";
 import {
 	dispatchCloseAction,
 	isCloseActionReplay,
@@ -34,11 +34,10 @@ export function useCloseTransitionIntent(current: BaseDescriptor): {
 	const { dismissScreen, requestDismiss } = useNavigationHelpers();
 	const pendingActionRef = useRef<any>(null);
 
-	const nearestAncestorDismissing = useMemo(() => {
-		if (!parentScreenKey) return null;
-
-		return GestureStore.peekBag(parentScreenKey)?.dismissing ?? null;
-	}, [parentScreenKey]);
+	const nearestAncestorDismissing = useOptionalMotionStore(
+		parentScreenKey ?? null,
+		(store) => store.state.dismissing,
+	);
 
 	useLayoutEffect(() => {
 		if (isBlankStackClosing) {

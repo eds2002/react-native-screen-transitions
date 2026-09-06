@@ -6,8 +6,6 @@ import type {
 	PinchGestureHandlerEventPayload,
 } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
-import type { AnimationStoreMap } from "../../../../stores/animation.store";
-import type { GestureStoreMap } from "../../../../stores/gesture.store";
 import type {
 	AnimationConfig,
 	TransitionSpec,
@@ -28,6 +26,7 @@ import type {
 } from "../../../../types/ownership.types";
 import type { ScreenTransitionConfig } from "../../../../types/screen.types";
 import type { BuilderAnimationState } from "../../builder/hooks/use-builder-animation-state";
+import type { MotionAnimationValues, MotionGestureValues } from "../types";
 import type { EffectiveSnapPointsResult } from "./shared/snap-points";
 
 export type PanGesture = ReturnType<typeof Gesture.Pan>;
@@ -121,8 +120,8 @@ export interface PinchGesturePolicy {
 }
 
 export interface GestureRuntimeStores {
-	gestures: GestureStoreMap;
-	animations: AnimationStoreMap;
+	gestures: MotionGestureValues;
+	animations: MotionAnimationValues;
 	system: BuilderAnimationState;
 }
 

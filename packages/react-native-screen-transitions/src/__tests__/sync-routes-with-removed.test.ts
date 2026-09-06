@@ -1,31 +1,9 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { syncRoutesWithRemoved } from "../providers/stack/blank-stack-state/helpers/navigation/sync-routes-with-removed";
-import { AnimationStore } from "../stores/animation.store";
-import { GestureStore } from "../stores/gesture.store";
 
 const createRoute = (key: string) => ({ key });
 
 const createClosingRouteKeys = () => new Set<string>();
-
-// Helper to set up a route's animation state
-const setRouteState = (
-	routeKey: string,
-	state: {
-		progress?: number;
-		closing?: number;
-		dragging?: number;
-		dismissing?: number;
-	},
-) => {
-	const animations = AnimationStore.getBag(routeKey);
-	const gestures = GestureStore.getBag(routeKey);
-
-	if (state.progress !== undefined) animations.transitionProgress.set(state.progress);
-	if (state.closing !== undefined) animations.closing.set(state.closing);
-	if (state.dragging !== undefined) gestures.dragging.set(state.dragging);
-	if (state.dismissing !== undefined)
-		gestures.dismissing.set(state.dismissing);
-};
 
 // Reset stores before each test
 beforeEach(() => {
@@ -50,8 +28,6 @@ describe("syncRoutesWithRemoved", () => {
 			const closingRouteKeys = createClosingRouteKeys();
 
 			// Both routes fully visible
-			setRouteState("a", { progress: 1 });
-			setRouteState("b", { progress: 1 });
 
 			const result = syncRoutesWithRemoved({
 				prevRoutes: [createRoute("a")],
@@ -65,10 +41,6 @@ describe("syncRoutesWithRemoved", () => {
 
 		it("returns nextRoutes unchanged for normal stack (A -> B -> C)", () => {
 			const closingRouteKeys = createClosingRouteKeys();
-
-			setRouteState("a", { progress: 1 });
-			setRouteState("b", { progress: 1 });
-			setRouteState("c", { progress: 1 });
 
 			const result = syncRoutesWithRemoved({
 				prevRoutes: [createRoute("a"), createRoute("b")],
@@ -84,10 +56,6 @@ describe("syncRoutesWithRemoved", () => {
 	describe("normal back navigation", () => {
 		it("keeps closing route at end for normal back (C -> B)", () => {
 			const closingRouteKeys = createClosingRouteKeys();
-
-			setRouteState("a", { progress: 1 });
-			setRouteState("b", { progress: 1 });
-			setRouteState("c", { progress: 1 });
 
 			const result = syncRoutesWithRemoved({
 				prevRoutes: [createRoute("a"), createRoute("b"), createRoute("c")],

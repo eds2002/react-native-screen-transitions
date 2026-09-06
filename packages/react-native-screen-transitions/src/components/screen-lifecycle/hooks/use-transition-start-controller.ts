@@ -4,8 +4,8 @@ import {
 	type BuilderAnimationState,
 	LifecycleTransitionRequestKind,
 } from "../../../providers/screen/builder/hooks/use-builder-animation-state";
-import type { AnimationStoreMap } from "../../../stores/animation.store";
-import { GestureStore } from "../../../stores/gesture.store";
+import { useMotionStore } from "../../../providers/screen/motion";
+import type { MotionAnimationValues } from "../../../providers/screen/motion/types";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
 
 export const useTransitionStartController = ({
@@ -14,7 +14,7 @@ export const useTransitionStartController = ({
 	system,
 }: {
 	current: BaseDescriptor;
-	animations: AnimationStoreMap;
+	animations: MotionAnimationValues;
 	system: BuilderAnimationState;
 }) => {
 	const {
@@ -26,7 +26,7 @@ export const useTransitionStartController = ({
 	} = system;
 	const { clearLifecycleTransitionRequest } = system.actions;
 	const transitionSpec = current.options.transitionSpec;
-	const isDragging = GestureStore.getValue(current.route.key, "dragging");
+	const isDragging = useMotionStore((store) => store.state.dragging);
 
 	useAnimatedReaction(
 		() => {

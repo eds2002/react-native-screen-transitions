@@ -13,6 +13,8 @@ import { useResolvedStylesMap } from "./styles/hooks/use-resolved-slot-style-map
 
 export type OrchestratorProviderProps = {
 	children: ReactNode;
+	/** Reuse an existing screen’s orchestration without rebuilding it. */
+	screenKey?: string;
 };
 
 export type OrchestratorState = ReturnType<
@@ -23,7 +25,6 @@ export type OrchestratorState = ReturnType<
 };
 
 export const {
-	StoreProvider: OrchestratorStoreProvider,
 	OrchestratorProvider,
 	useOptionalOrchestratorStore,
 	useOrchestratorStore,

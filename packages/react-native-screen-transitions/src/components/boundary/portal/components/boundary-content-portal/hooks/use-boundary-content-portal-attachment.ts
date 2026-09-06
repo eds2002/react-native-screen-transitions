@@ -3,10 +3,10 @@ import {
 	useBuilderStore,
 	useOptionalBuilderStore,
 } from "../../../../../../providers/screen/builder";
+import { useOptionalMotionStore } from "../../../../../../providers/screen/motion";
 import { useOrchestratorStore } from "../../../../../../providers/screen/orchestrator";
 import { hasCloseTransitionFinished } from "../../../../../../providers/screen/orchestrator/styles/helpers/transition-visual-state";
 import { useBlankStackStore } from "../../../../../../providers/stack/blank-stack.provider";
-import { AnimationStore } from "../../../../../../stores/animation.store";
 import { getLinkKeyFromTag } from "../../../../../../stores/bounds/helpers/link-pairs.helpers";
 import { getEntry } from "../../../../../../stores/bounds/internals/entries";
 import {
@@ -82,9 +82,9 @@ export const useBoundaryContentPortalAttachment = ({
 	const activeReceiverAnimationProgress =
 		receiverAnimationProgress ?? localAnimationProgress;
 
-	const activeReceiverClosing = AnimationStore.getValue(
+	const activeReceiverClosing = useOptionalMotionStore(
 		activeReceiverScreenKey ?? currentScreenKey,
-		"closing",
+		(store) => store.state.closing,
 	);
 
 	const attachedReceiverScreenKey = useSharedValue(currentScreenKey);
@@ -99,7 +99,7 @@ export const useBoundaryContentPortalAttachment = ({
 			handoffTarget,
 			...slotProps
 		} = slot?.props ?? {};
-		const closing = activeReceiverClosing.get();
+		const closing = activeReceiverClosing?.get() ?? 0;
 		const animationProgress = activeReceiverAnimationProgress.get();
 
 		if (!closing) {

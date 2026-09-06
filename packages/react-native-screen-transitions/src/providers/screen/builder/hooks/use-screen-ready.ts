@@ -1,5 +1,5 @@
 import { useDerivedValue } from "react-native-reanimated";
-import { AnimationStore } from "../../../../stores/animation.store";
+import { useOptionalMotionStore } from "../../motion";
 import { isScreenReady } from "../../orchestrator/styles/helpers/transition-visual-state";
 import {
 	type BuilderAnimationState,
@@ -11,8 +11,10 @@ export const useScreenReady = (
 	hasCurrentInterpolator: boolean,
 	animationState: BuilderAnimationState,
 ) => {
-	const { closing: currentClosing, entering: currentEntering } =
-		AnimationStore.getBag(currentScreenKey);
+	const motion = useOptionalMotionStore(
+		currentScreenKey,
+		(store) => store.state,
+	);
 
 	const {
 		animationProgress: currentAnimationProgress,
@@ -25,12 +27,12 @@ export const useScreenReady = (
 		const isPendingOpen =
 			currentPendingLifecycleRequestKind.get() ===
 			LifecycleTransitionRequestKind.Open;
-		const opening = isPendingOpen || !!currentEntering.get();
+		const opening = isPendingOpen || !!(motion?.entering.get() ?? 0);
 
 		return isScreenReady({
 			hasInterpolator: hasCurrentInterpolator,
 			opening,
-			closing: currentClosing.get(),
+			closing: motion?.closing.get() ?? 0,
 			pendingLifecycleStartBlockCount:
 				currentPendingLifecycleStartBlockCount.get(),
 			animationProgress: currentAnimationProgress.get(),

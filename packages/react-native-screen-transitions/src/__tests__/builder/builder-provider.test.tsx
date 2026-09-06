@@ -1,9 +1,9 @@
+import { MotionProvider, getMotionStore } from "../../providers/screen/motion";
 import { screenTopology } from "../../providers/screen/builder/topology/helpers/create-screen-topology";
 import { snapDescriptorToIndex } from "../../animation/snap-to";
 import { Activity, useLayoutEffect } from "react";
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
-import { AnimationStore } from "../../stores/animation.store";
 import { LifecycleTransitionRequestKind } from "../../providers/screen/builder/hooks/use-builder-animation-state";
 
 const scenes = Object.fromEntries(
@@ -25,13 +25,23 @@ const scenes = Object.fromEntries(
 
 let hasStack = true;
 mock.module("../../providers/stack/blank-stack.provider", () => ({
- useOptionalBlankStackStore: (selector: (store: any) => unknown) => selector(hasStack ? {
-  navigatorKey: "builder-test-navigator", scenesByKey: scenes, scenes: Object.values(scenes), focusedIndex: 1,
- } : null),
+	useOptionalBlankStackStore: (selector: (store: any) => unknown) =>
+		selector(
+			hasStack
+				? {
+						navigatorKey: "builder-test-navigator",
+						scenesByKey: scenes,
+						scenes: Object.values(scenes),
+						focusedIndex: 1,
+					}
+				: null,
+		),
 }));
-beforeEach(() => { hasStack = true; });
+beforeEach(() => {
+	hasStack = true;
+});
 
-// Exercise Builder without mounting motion or slots.
+// Exercise Builder readiness with Motion, without mounting slots.
 const {
 	BuilderProvider: PrimitiveBuilderProvider,
 	useBuilderStore,
@@ -50,7 +60,7 @@ function BuilderProvider({
 			routeKey={routeKey}
 			descriptors={{ current: scenes[routeKey].descriptor as never }}
 		>
-			{children}
+			<MotionProvider>{children}</MotionProvider>
 		</PrimitiveBuilderProvider>
 	);
 }
@@ -84,20 +94,31 @@ function BlockParent() {
 afterEach(() => {
 	act(() => renderer?.unmount());
 	renderer = undefined;
-	for (const key of Object.keys(scenes)) {
-		AnimationStore.clearBag(key);
-	}
 });
 
 describe("BuilderProvider", () => {
- it("skips topology registration without Blank Stack while keeping Builder state available", () => {
-  hasStack = false;
-  act(() => { renderer = create(<BuilderProvider routeKey="builder-parent"><BuilderProvider routeKey="builder-child"><LocalProbe /></BuilderProvider></BuilderProvider>); });
-  expect(local.derivations.currentScreenKey).toBe("builder-child");
-  expect(getBuilderStore("builder-child").animationState).toBe(local.animationState);
-  expect(screenTopology.getRelationships("builder-child").parentScreenKey).toBeNull();
-  expect(screenTopology.getRelationships("builder-parent").activeChildScreenKey).toBeNull();
- });
+	it("skips topology registration without Blank Stack while keeping Builder state available", () => {
+		hasStack = false;
+		act(() => {
+			renderer = create(
+				<BuilderProvider routeKey="builder-parent">
+					<BuilderProvider routeKey="builder-child">
+						<LocalProbe />
+					</BuilderProvider>
+				</BuilderProvider>,
+			);
+		});
+		expect(local.derivations.currentScreenKey).toBe("builder-child");
+		expect(getBuilderStore("builder-child").animationState).toBe(
+			local.animationState,
+		);
+		expect(
+			screenTopology.getRelationships("builder-child").parentScreenKey,
+		).toBeNull();
+		expect(
+			screenTopology.getRelationships("builder-parent").activeChildScreenKey,
+		).toBeNull();
+	});
 
 	it("exposes the same readiness through context and key lookup before slots exist", () => {
 		act(() => {
@@ -128,7 +149,7 @@ describe("BuilderProvider", () => {
 		expect(local.screenReady.get()).toBe(0);
 		system.animationProgress.set(0.01);
 		expect(remote?.screenReady.get()).toBe(1);
-		AnimationStore.getValue("builder-child", "closing").set(1);
+		getMotionStore("builder-child").state.closing.set(1);
 		system.animationProgress.set(0);
 		expect(remote?.screenReady.get()).toBe(0);
 	});

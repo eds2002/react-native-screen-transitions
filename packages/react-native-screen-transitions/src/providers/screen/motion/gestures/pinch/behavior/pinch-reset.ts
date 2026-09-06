@@ -1,7 +1,9 @@
 import { FALSE, TRUE } from "../../../../../../constants";
-import type { AnimationStoreMap } from "../../../../../../stores/animation.store";
-import type { GestureStoreMap } from "../../../../../../stores/gesture.store";
 import type { AnimationConfig } from "../../../../../../types/animation.types";
+import type {
+	MotionAnimationValues,
+	MotionGestureValues,
+} from "../../../types";
 import { animateMany } from "../../shared/reset";
 import {
 	clearFocalPoint,
@@ -11,8 +13,8 @@ import {
 
 interface ResetPinchGestureValuesProps {
 	spec?: AnimationConfig;
-	gestures: GestureStoreMap;
-	animations?: AnimationStoreMap;
+	gestures: MotionGestureValues;
+	animations?: MotionAnimationValues;
 	shouldDismiss: boolean;
 	resetValuesImmediately?: boolean;
 }

@@ -4,11 +4,11 @@ import type {
 	GestureTouchEvent,
 } from "react-native-gesture-handler";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
-import { GestureStore } from "../../../../../../stores/gesture.store";
 import { GestureActivationState } from "../../../../../../types/gesture.types";
 import type { Direction } from "../../../../../../types/ownership.types";
 import { useBuilderStore } from "../../../../builder";
 import { useScreenRelationships } from "../../../../builder/topology";
+import { useOptionalMotionStore } from "../../..";
 import type { ScreenOptionsContextValue } from "../../../options";
 import { resolvePanRuntime } from "../../shared/runtime";
 import type {
@@ -42,10 +42,10 @@ export const usePanActivation = ({
 	);
 	const { parentScreenKey } = useScreenRelationships();
 
-	const ancestorDismissing = useMemo(() => {
-		if (!parentScreenKey) return null;
-		return GestureStore.peekBag(parentScreenKey)?.dismissing ?? null;
-	}, [parentScreenKey]);
+	const ancestorDismissing = useOptionalMotionStore(
+		parentScreenKey ?? null,
+		(store) => store.state.dismissing,
+	);
 
 	const initialTouch = useSharedValue({ x: 0, y: 0 });
 

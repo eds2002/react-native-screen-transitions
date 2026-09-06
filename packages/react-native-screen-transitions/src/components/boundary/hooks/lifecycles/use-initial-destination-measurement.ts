@@ -8,8 +8,8 @@ import {
 } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
 import { useBuilderStore } from "../../../../providers/screen/builder";
+import { useMotionStore } from "../../../../providers/screen/motion";
 import { useBlankStackStore } from "../../../../providers/stack/blank-stack.provider";
-import { AnimationStore } from "../../../../stores/animation.store";
 import {
 	createScreenPairKey,
 	getSourceScreenKeyFromPairKey,
@@ -69,10 +69,7 @@ export const useInitialDestinationMeasurement = ({
 				.map((scene) => scene.route.key),
 		[stackScenes],
 	);
-	const progress = AnimationStore.getValue(
-		currentScreenKey,
-		"transitionProgress",
-	);
+	const progress = useMotionStore((store) => store.state.transitionProgress);
 
 	const {
 		actions: { blockLifecycleStart, unblockLifecycleStart },

@@ -1,10 +1,10 @@
+import { mountMotionValues } from "../helpers/mount-motion-values";
 import { beforeEach, describe, expect, it } from "bun:test";
 import { makeMutable } from "react-native-reanimated";
 import { getInitialDestinationMeasurementSignal } from "../../components/boundary/utils/destination-signals";
 import { getRefreshBoundarySignal } from "../../components/boundary/utils/refresh-signals";
 import { getInitialSourceCaptureSignal } from "../../components/boundary/utils/source-signals";
 import { NAVIGATION_MASK_ELEMENT_STYLE_ID } from "../../constants";
-import { AnimationStore } from "../../stores/animation.store";
 import { BoundStore } from "../../stores/bounds";
 import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { pairs } from "../../stores/bounds/internals/state";
@@ -144,7 +144,7 @@ describe("zoom bound target", () => {
 	it("does not refresh completed target bounds during an initial entrance", () => {
 		registerSource();
 		registerDestination();
-		const animations = AnimationStore.getBag("screen-b");
+		const animations = mountMotionValues();
 
 		animateToProgress({
 			target: "open",

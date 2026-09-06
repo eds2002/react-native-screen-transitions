@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Gesture } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import type { ScreenOptionsContextValue } from "../../options/types";
+import type { MotionValues } from "../../types";
 import { useStableRuntimeConfig } from "../ownership/hooks/use-stable-runtime-config";
 import type {
 	GestureCompositionOwner,
@@ -12,6 +13,7 @@ import { usePinchActivation } from "./activation/use-pinch-activation";
 import { usePinchBehavior } from "./behavior/use-pinch-behavior";
 
 interface UseBuildPinchGestureProps {
+	values: MotionValues;
 	onDismissRequest?: () => void;
 	screenOptions: ScreenOptionsContextValue;
 	gestureConfig: ScreenGestureConfig;
@@ -19,6 +21,7 @@ interface UseBuildPinchGestureProps {
 }
 
 export const useBuildPinchGesture = ({
+	values,
 	onDismissRequest,
 	screenOptions,
 	gestureConfig,
@@ -26,10 +29,13 @@ export const useBuildPinchGesture = ({
 }: UseBuildPinchGestureProps): PinchGesture => {
 	const { participation, pinch: policy } = gestureConfig;
 
-	const runtime = useStableRuntimeConfig({
-		participation,
-		policy,
-	});
+	const runtime = useStableRuntimeConfig(
+		{
+			participation,
+			policy,
+		},
+		values,
+	);
 
 	const activation = usePinchActivation({
 		runtime,

@@ -1,3 +1,4 @@
+import { useMotionValues } from "../providers/screen/motion/hooks/use-motion-values";
 import { afterEach, expect, it, mock } from "bun:test";
 import { createContext, type ReactNode, useContext, useMemo } from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
@@ -6,8 +7,6 @@ import { useBuilderAnimationState } from "../providers/screen/builder/hooks/use-
 import { screenTopology } from "../providers/screen/builder/topology/helpers/create-screen-topology";
 import { NO_GESTURE_OWNERS } from "../providers/screen/motion/gestures/types";
 import { NO_CLAIMS } from "../types/ownership.types";
-import { AnimationStore } from "../stores/animation.store";
-import { GestureStore } from "../stores/gesture.store";
 import { ScrollStore } from "../stores/scroll.store";
 
 const BuilderContext = createContext<any>(null);
@@ -18,8 +17,8 @@ mock.module("../providers/screen/builder", () => ({
 	useOptionalBuilderStore: () => null,
 }));
 mock.module("../providers/screen/motion", () => ({
-	useMotionStore: (selector: (state: any) => unknown) =>
-		selector(useContext(MotionContext)),
+	useMotionStore: (selector: ((state: any) => unknown) | readonly string[]) =>
+		Array.isArray(selector) ? [] : (selector as (state: any) => unknown)(useContext(MotionContext)),
 	useOptionalMotionStore: () => null,
 }));
 mock.module("../providers/stack/blank-stack.provider", () => ({
@@ -107,7 +106,7 @@ function Motion({ children }: { children?: ReactNode }) {
 	const {
 		derivations: { currentScreenKey },
 	} = useContext(BuilderContext);
-	const animations = useMotionAnimationPipeline();
+	const animations = useMotionAnimationPipeline(useMotionValues());
 	const options = useScreenOptions();
 	const owners = useSharedValue({ ...NO_GESTURE_OWNERS });
 	const gestures = useMemo(
@@ -119,7 +118,7 @@ function Motion({ children }: { children?: ReactNode }) {
 		[currentScreenKey, owners],
 	);
 	return (
-		<MotionContext.Provider value={{ animations, options, gestures }}>
+		<MotionContext.Provider value={{ state: animations, options, gestures }}>
 			<OrchestratorProvider>{children}</OrchestratorProvider>
 		</MotionContext.Provider>
 	);
@@ -146,8 +145,6 @@ afterEach(() => {
 	renderer = undefined;
 	for (const key of [parentKey, childKey]) {
 		screenTopology.unregister(key);
-		AnimationStore.clearBag(key);
-		GestureStore.clearBag(key);
 		ScrollStore.clearBag(key);
 	}
 });

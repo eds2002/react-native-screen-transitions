@@ -1,11 +1,11 @@
-import type { GestureStoreMap } from "../../../../../stores/gesture.store";
+import type { MotionGestureValues } from "../../types";
 
 type SnapshotGestureHandoffOptions = {
 	velocity?: number;
 };
 
 export const snapshotGestureHandoff = (
-	gestures: GestureStoreMap,
+	gestures: MotionGestureValues,
 	options?: SnapshotGestureHandoffOptions,
 ) => {
 	"worklet";

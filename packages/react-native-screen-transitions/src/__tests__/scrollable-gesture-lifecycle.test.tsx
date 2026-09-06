@@ -12,7 +12,6 @@ import { GestureDetector } from "react-native-gesture-handler";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import type { ScrollGestureCoordination } from "../providers/screen/motion/gestures/ownership/gesture-ownership-coordinator";
-import { AnimationStore } from "../stores/animation.store";
 import { ScrollStore } from "../stores/scroll.store";
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -29,7 +28,9 @@ let gestureContext: { routeKey: string } | null = { routeKey: ROUTE_KEY };
 let coordination = EMPTY_COORDINATION;
 
 mock.module("../providers/screen/motion", () => ({
-	useOptionalMotionStore: (selector: (store: unknown) => unknown) => selector(gestureContext ? { gestures: gestureContext } : null),
+	useMotionStore: () => [],
+	useOptionalMotionStore: (selector: (store: unknown) => unknown) =>
+		selector(gestureContext ? { gestures: gestureContext } : null),
 }));
 mock.module(
 	"../providers/screen/motion/gestures/ownership/use-gesture-scroll-coordination",
@@ -70,8 +71,6 @@ beforeEach(() => {
 afterEach(() => {
 	act(() => renderer?.unmount());
 	renderer = undefined;
-	AnimationStore.clearBag(ROUTE_KEY);
-	AnimationStore.clearBag(ANCESTOR_ROUTE_KEY);
 	ScrollStore.clearBag(ROUTE_KEY);
 	ScrollStore.clearBag(ANCESTOR_ROUTE_KEY);
 });

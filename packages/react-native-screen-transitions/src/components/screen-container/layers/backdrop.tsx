@@ -4,12 +4,11 @@ import Animated from "react-native-reanimated";
 import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
 import { DefaultSnapSpec } from "../../../configs/specs";
 import { useBuilderStore } from "../../../providers/screen/builder";
+import { useMotionStore } from "../../../providers/screen/motion";
 import {
 	useSlotProps,
 	useSlotStyles,
 } from "../../../providers/screen/orchestrator/styles";
-import { AnimationStore } from "../../../stores/animation.store";
-import { GestureStore } from "../../../stores/gesture.store";
 import type {
 	BackdropBehavior,
 	ScreenBackdropComponentProps,
@@ -27,9 +26,6 @@ export const BackdropLayer = memo(function BackdropLayer({
 	isBackdropActive: boolean;
 	onDismissRequest?: () => void;
 }) {
-	const routeKey = useBuilderStore(
-		(store) => store.derivations.currentScreenKey,
-	);
 	const BackdropComponent = useBuilderStore(
 		(store) => store.options.backdropComponent,
 	);
@@ -41,7 +37,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 	const transitionSpec = useBuilderStore(
 		(store) => store.options.transitionSpec,
 	);
-	const animations = AnimationStore.getBag(routeKey);
+	const animations = useMotionStore((store) => store.state);
 	const { targetProgress, animationProgress, resolvedAutoSnapPoint } =
 		useBuilderStore((store) => store.animationState);
 
@@ -68,7 +64,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 				return;
 			}
 
-			const gestures = GestureStore.getBag(routeKey);
+			const gestures = animations;
 
 			scheduleOnUI(() => {
 				"worklet";
@@ -126,7 +122,6 @@ export const BackdropLayer = memo(function BackdropLayer({
 		canDismiss,
 		transitionSpec,
 		onDismissRequest,
-		routeKey,
 	]);
 
 	const animatedBackdropStyle = useSlotStyles("backdrop");

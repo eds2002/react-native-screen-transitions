@@ -1,6 +1,6 @@
 import { scheduleOnUI } from "react-native-worklets";
 import { getBuilderStore } from "../providers/screen/builder/builder.provider";
-import { AnimationStore } from "../stores/animation.store";
+import { getMotionStore } from "../providers/screen/motion";
 import type { HistoryEntry } from "../stores/history.store";
 import { animateToProgress } from "../utils/animation/animate-to-progress";
 import { resolveSnapTransitionSpec } from "../utils/animation/resolve-snap-transition-spec";
@@ -43,7 +43,7 @@ export function snapDescriptorToIndex(
 	}
 
 	const targetProgress = sorted[index];
-	const animations = AnimationStore.getBag(descriptor.route.key);
+	const animations = getMotionStore(descriptor.route.key).state;
 	const {
 		targetProgress: targetProgressValue,
 		animationProgress: animationProgressValue,

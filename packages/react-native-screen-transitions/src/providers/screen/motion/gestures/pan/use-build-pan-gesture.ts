@@ -3,6 +3,7 @@ import { useWindowDimensions } from "react-native";
 import { Gesture } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import type { ScreenOptionsContextValue } from "../../options/types";
+import type { MotionValues } from "../../types";
 import { useStableRuntimeConfig } from "../ownership/hooks/use-stable-runtime-config";
 import type {
 	GestureCompositionOwner,
@@ -15,6 +16,7 @@ import { usePanActivation } from "./activation/use-pan-activation";
 import { usePanBehavior } from "./behavior/use-pan-behavior";
 
 interface UseBuildPanGestureProps {
+	values: MotionValues;
 	onDismissRequest?: () => void;
 	screenOptions: ScreenOptionsContextValue;
 	scrollState: SharedValue<ScrollGestureState | null>;
@@ -24,6 +26,7 @@ interface UseBuildPanGestureProps {
 }
 
 export const useBuildPanGesture = ({
+	values,
 	onDismissRequest,
 	screenOptions,
 	scrollState,
@@ -34,10 +37,13 @@ export const useBuildPanGesture = ({
 	const dimensions = useWindowDimensions();
 	const { participation, pan: policy } = gestureConfig;
 
-	const runtime = useStableRuntimeConfig({
-		participation,
-		policy,
-	});
+	const runtime = useStableRuntimeConfig(
+		{
+			participation,
+			policy,
+		},
+		values,
+	);
 
 	const activation = usePanActivation({
 		scrollState,

@@ -4,7 +4,7 @@ import {
 	createScreenTransitionState,
 	DEFAULT_SCREEN_TRANSITION_OPTIONS,
 } from "../constants";
-import type { GestureStoreMap } from "../stores/gesture.store";
+import type { MotionGestureValues } from "../providers/screen/motion/types";
 import { buildScreenTransitionOptions } from "../providers/screen/motion/animation/helpers/build-screen-transition-options";
 import { hydrateTransitionState } from "../providers/screen/motion/animation/helpers/hydrate-transition-state";
 
@@ -44,7 +44,7 @@ const createGestureSnapshotStore = () => ({
 	active: shared(null),
 });
 
-const createGestureStore = (): GestureStoreMap => ({
+const createGestureStore = (): MotionGestureValues => ({
 	x: shared(0),
 	y: shared(0),
 	normX: shared(0),
@@ -204,10 +204,10 @@ describe("hydrateTransitionState snap indices", () => {
 		});
 
 		const hydrated = hydrateTransitionState(
-				{
-					transitionProgress: shared(0.5),
-					visualProgress: shared(0.5),
-					stackProgress: shared(0.5),
+			{
+				transitionProgress: shared(0.5),
+				visualProgress: shared(0.5),
+				stackProgress: shared(0.5),
 				willAnimate: shared(0),
 				closing: shared(0),
 				progressAnimating: shared(0),
@@ -240,10 +240,10 @@ describe("hydrateTransitionState snap indices", () => {
 		});
 
 		const hydrated = hydrateTransitionState(
-				{
-					transitionProgress: shared(0.45),
-					visualProgress: shared(0.45),
-					stackProgress: shared(0.45),
+			{
+				transitionProgress: shared(0.45),
+				visualProgress: shared(0.45),
+				stackProgress: shared(0.45),
 				willAnimate: shared(0),
 				closing: shared(0),
 				progressAnimating: shared(0),
@@ -332,10 +332,10 @@ describe("hydrateTransitionState snap indices", () => {
 			},
 			horizontal: null,
 		};
-			const builtState = {
-				transitionProgress: shared(1),
-				visualProgress: shared(1),
-				stackProgress: shared(1),
+		const builtState = {
+			transitionProgress: shared(1),
+			visualProgress: shared(1),
+			stackProgress: shared(1),
 			willAnimate: shared(0),
 			closing: shared(0),
 			progressAnimating: shared(0),

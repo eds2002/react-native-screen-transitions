@@ -1,11 +1,13 @@
 import { mountBuilderAnimationState } from "./helpers/mount-builder-animation-state";
-import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import React from "react";
 import { act, create } from "react-test-renderer";
-import { AnimationStore } from "../stores/animation.store";
-import {
-	LifecycleTransitionRequestKind,
-} from "../providers/screen/builder/hooks/use-builder-animation-state";
+import { MotionProvider, getMotionStore } from "../providers/screen/motion";
+let motionRenderer: ReturnType<typeof create>;
+afterEach(() => {
+	act(() => motionRenderer?.unmount());
+});
+import { LifecycleTransitionRequestKind } from "../providers/screen/builder/hooks/use-builder-animation-state";
 import { isCloseActionReplay } from "../utils/navigation/close-action-replay";
 
 let system = mountBuilderAnimationState();
@@ -56,6 +58,7 @@ mock.module("../providers/screen/builder", () => ({
 	useBuilderStore: (selector: (store: any) => unknown) =>
 		selector({
 			descriptors: { current },
+			options: current.options,
 			animationState: system,
 			derivations: {
 				currentScreenKey: route.key,
@@ -98,8 +101,10 @@ const { useCloseTransitionIntent } = await import(
 
 beforeEach(() => {
 	(globalThis as any).resetMutableRegistry();
-	AnimationStore.clearBag(route.key);
 	system = mountBuilderAnimationState();
+	act(() => {
+		motionRenderer = create(<MotionProvider>{null}</MotionProvider>);
+	});
 	beforeRemoveListener = undefined;
 	dispatchedActions = [];
 	dispatchedReplayFlags = [];
@@ -129,9 +134,9 @@ describe("soft dismissal", () => {
 			requestDismiss?.();
 		});
 
-		expect(
-			system.pendingLifecycleRequestKind.get(),
-		).toBe(LifecycleTransitionRequestKind.Close);
+		expect(system.pendingLifecycleRequestKind.get()).toBe(
+			LifecycleTransitionRequestKind.Close,
+		);
 	});
 
 	it("starts native lifecycle motion through the same soft-dismiss gate", () => {
@@ -150,14 +155,14 @@ describe("soft dismissal", () => {
 			requestDismiss?.();
 		});
 
-		expect(
-			system.pendingLifecycleRequestKind.get(),
-		).toBe(LifecycleTransitionRequestKind.Close);
+		expect(system.pendingLifecycleRequestKind.get()).toBe(
+			LifecycleTransitionRequestKind.Close,
+		);
 	});
 
 	it("keeps gesture-owned motion when requesting the soft dismiss", () => {
 		let requestDismiss: (() => boolean) | undefined;
-		AnimationStore.getValue(route.key, "closing").set(1);
+		getMotionStore(route.key).state.closing.set(1);
 
 		const Harness = () => {
 			requestDismiss = useNavigationHelpers().requestDismiss;
@@ -172,11 +177,10 @@ describe("soft dismissal", () => {
 		});
 
 		expect(softDismissCount).toBe(1);
-		expect(
-			system.pendingLifecycleRequestKind.get(),
-		).toBe(LifecycleTransitionRequestKind.None);
+		expect(system.pendingLifecycleRequestKind.get()).toBe(
+			LifecycleTransitionRequestKind.None,
+		);
 	});
-
 
 	it("uses the current native stack for terminal gesture removal", () => {
 		let completeClose: (() => void) | undefined;
@@ -272,9 +276,9 @@ describe("soft dismissal", () => {
 		expect(prevented).toBe(true);
 		expect(softDismissCount).toBe(0);
 		expect(dispatchedActions).toEqual([]);
-		expect(
-			system.pendingLifecycleRequestKind.get(),
-		).toBe(LifecycleTransitionRequestKind.Close);
+		expect(system.pendingLifecycleRequestKind.get()).toBe(
+			LifecycleTransitionRequestKind.Close,
+		);
 
 		const originalRequestAnimationFrame = globalThis.requestAnimationFrame;
 		globalThis.requestAnimationFrame = (callback) => {
@@ -291,7 +295,9 @@ describe("soft dismissal", () => {
 		expect(dispatchedActions).toHaveLength(1);
 		expect(dispatchedActions[0]).toBe(action);
 		expect(dispatchedReplayFlags).toEqual([true]);
-		expect(AnimationStore.peekBag(route.key)).toBeUndefined();
-		expect(system.pendingLifecycleRequestKind.get()).toBe(LifecycleTransitionRequestKind.Close);
+		expect(getMotionStore(route.key).state).toBeDefined();
+		expect(system.pendingLifecycleRequestKind.get()).toBe(
+			LifecycleTransitionRequestKind.Close,
+		);
 	});
 });

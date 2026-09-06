@@ -3,8 +3,6 @@ import { Activity } from "react";
 import { useInterpolatorState } from "../providers/screen/orchestrator/helpers/use-interpolator-state";
 import { hydrateTransitionState } from "../providers/screen/motion/animation/helpers/hydrate-transition-state";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
-import { AnimationStore } from "../stores/animation.store";
-import { GestureStore } from "../stores/gesture.store";
 import { ScrollStore } from "../stores/scroll.store";
 import { useBuilderAnimationState } from "../providers/screen/builder/hooks/use-builder-animation-state";
 
@@ -65,9 +63,12 @@ mock.module("../providers/screen/builder", () => ({
 			descriptors: { current: { route, navigation, options } },
 		}),
 }));
-const { MotionProvider, useMotionStore, useOptionalMotionStore } = await import(
-	"../providers/screen/motion/motion.provider"
-);
+const {
+	MotionProvider,
+	useMotionStore,
+	useOptionalMotionStore,
+	getMotionStore,
+} = await import("../providers/screen/motion/motion.provider");
 type Motion = ReturnType<typeof useMotionStore>;
 let local: Motion;
 let remote: Motion | null;
@@ -76,8 +77,8 @@ let readerA: NonNullable<ReturnType<typeof useInterpolatorState>>;
 let readerB: NonNullable<ReturnType<typeof useInterpolatorState>>;
 function Probe() {
 	local = useMotionStore();
-	readerA = useInterpolatorState(local.animations)!;
-	readerB = useInterpolatorState(local.animations)!;
+	readerA = useInterpolatorState(local.state)!;
+	readerB = useInterpolatorState(local.state)!;
 	return null;
 }
 function RemoteProbe() {
@@ -119,8 +120,6 @@ beforeEach(() => {
 afterEach(() => {
 	act(() => renderer?.unmount());
 	renderer = undefined;
-	AnimationStore.clearBag(key);
-	GestureStore.clearBag(key);
 	ScrollStore.clearBag(key);
 	globalThis.requestAnimationFrame = originalRaf;
 });
@@ -130,12 +129,10 @@ it("updates live gesture options without replacing animation values or resetting
 		renderer = create(tree());
 	});
 	const sharedOptions = local.options;
-	const animations = local.animations;
+	const animations = local.state;
 	expect(remote).toBe(local);
-	expect(animations.transitionProgress).toBe(
-		AnimationStore.getValue(key, "transitionProgress"),
-	);
-	expect(animations.gesture).toBe(GestureStore.getBag(key));
+	expect(animations.transitionProgress).toBe(remote?.state.transitionProgress);
+	expect(animations).toBe(remote?.state);
 	expect(animations.targetProgress).toBe(animationState.targetProgress);
 	expect(animations.route).toEqual(route);
 	expect(animations.options.gestureSensitivity).toBe(1);
@@ -150,7 +147,7 @@ it("updates live gesture options without replacing animation values or resetting
 		velocityX: 0,
 		velocityY: 0,
 	});
-	expect(GestureStore.getValue(key, "x").get()).toBe(10);
+	expect(local.state.x.get()).toBe(10);
 
 	options = { ...options, gestureSensitivity: 2 };
 	act(() => {
@@ -158,11 +155,9 @@ it("updates live gesture options without replacing animation values or resetting
 	});
 	expect(local.options).toBe(sharedOptions);
 	expect(sharedOptions.get().gestureSensitivity).toBe(2);
-	expect(local.animations.options.gestureSensitivity).toBe(2);
-	expect(remote?.animations).toBe(local.animations);
-	expect(local.animations.transitionProgress).toBe(
-		animations.transitionProgress,
-	);
+	expect(local.state.options.gestureSensitivity).toBe(2);
+	expect(remote?.state).toBe(local.state);
+	expect(local.state.transitionProgress).toBe(animations.transitionProgress);
 	expect(animations.transitionProgress.get()).toBe(0.7);
 	// A callback retained by the native recognizer must see the latest options.
 	pan.callbacks.onUpdate({
@@ -171,7 +166,7 @@ it("updates live gesture options without replacing animation values or resetting
 		velocityX: 0,
 		velocityY: 0,
 	});
-	expect(GestureStore.getValue(key, "x").get()).toBe(30);
+	expect(local.state.x.get()).toBe(30);
 
 	act(() => {
 		renderer!.update(tree("hidden"));
@@ -181,9 +176,7 @@ it("updates live gesture options without replacing animation values or resetting
 		renderer!.update(tree());
 	});
 	expect(local.options).toBe(sharedOptions);
-	expect(local.animations.transitionProgress).toBe(
-		animations.transitionProgress,
-	);
+	expect(local.state.transitionProgress).toBe(animations.transitionProgress);
 	expect(remote).toBe(local);
 	expect(animations.transitionProgress.get()).toBe(0.7);
 });
@@ -210,7 +203,7 @@ it("shares current-screen motion while isolating each orchestrator's output and 
 	expect(first.layouts.screen.width).toBe(390);
 	expect(second.layouts.screen.width).toBe(600);
 	expect(first.gesture).not.toBe(second.gesture);
-	expect(local.animations.options.gestureEnabled).toBe(true);
+	expect(local.state.options.gestureEnabled).toBe(true);
 });
 
 it("calls the host on a dismissing pan release, but not a cancelled drag", () => {
@@ -221,7 +214,7 @@ it("calls the host on a dismissing pan release, but not a cancelled drag", () =>
 	act(() => {
 		renderer = create(tree());
 	});
-	local.animations.transitionProgress.set(1);
+	local.state.transitionProgress.set(1);
 	const pan = local.gestures.panGesture as unknown as ReturnType<
 		typeof gesture
 	>;
@@ -232,13 +225,35 @@ it("calls the host on a dismissing pan release, but not a cancelled drag", () =>
 		velocityY: 0,
 	});
 	pan.callbacks.onStart();
-	GestureStore.getValue(key, "initiator").set("horizontal");
+	local.state.initiator.set("horizontal");
 	pan.callbacks.onUpdate(event(10));
 	pan.callbacks.onEnd(event(10));
 	expect(calls).toBe(0);
 	pan.callbacks.onStart();
-	GestureStore.getValue(key, "initiator").set("horizontal");
+	local.state.initiator.set("horizontal");
 	pan.callbacks.onUpdate(event(350));
 	pan.callbacks.onEnd(event(350));
 	expect(calls).toBe(1);
+});
+
+it("releases keyed motion on unmount and creates fresh values on remount", () => {
+	act(() => {
+		renderer = create(tree());
+	});
+	const previous = local.state;
+	previous.transitionProgress.set(0.8);
+	previous.x.set(42);
+	expect(getMotionStore(key).state).toBe(previous);
+	act(() => {
+		renderer!.update(<RemoteProbe />);
+	});
+	expect(remote).toBeNull();
+	expect(() => getMotionStore(key)).toThrow();
+	act(() => {
+		renderer!.update(tree());
+	});
+	expect(local.state.transitionProgress).not.toBe(previous.transitionProgress);
+	expect(local.state.x).not.toBe(previous.x);
+	expect(local.state.transitionProgress.get()).toBe(0);
+	expect(local.state.x.get()).toBe(0);
 });

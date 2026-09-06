@@ -4,7 +4,6 @@ import {
 	useSharedValue,
 } from "react-native-reanimated";
 import { NO_STYLES } from "../../../../../constants";
-import { AnimationStore } from "../../../../../stores/animation.store";
 import type {
 	NormalizedTransitionInterpolatedStyle,
 	ScreenStyleInterpolator,
@@ -13,7 +12,7 @@ import type {
 import { logger } from "../../../../../utils/logger";
 import { useBuilderStore, useOptionalBuilderStore } from "../../../builder";
 import { LifecycleTransitionRequestKind } from "../../../builder/hooks/use-builder-animation-state";
-import { useMotionStore } from "../../../motion";
+import { useMotionStore, useOptionalMotionStore } from "../../../motion";
 import { syncScreenOptionsOverrides } from "../../../motion/options";
 import type {
 	ScreenAnimationPipeline,
@@ -146,8 +145,15 @@ export const useInterpolatedStylesMap = ({
 	);
 	const activeScreenKey =
 		nextSystem && nextScreenKey ? nextScreenKey : currentScreenKey;
+
+	const currentMotion = useMotionStore((store) => store.state);
+	const activeMotion = useOptionalMotionStore(
+		activeScreenKey,
+		(store) => store.state,
+	);
 	const { closing: activeClosing, entering: activeEntering } =
-		AnimationStore.getBag(activeScreenKey);
+		activeMotion ?? currentMotion;
+
 	const {
 		animationProgress: activeAnimationProgress,
 		pendingLifecycleRequestKind: activePendingLifecycleRequestKind,

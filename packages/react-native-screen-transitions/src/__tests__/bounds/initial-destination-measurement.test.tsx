@@ -1,3 +1,4 @@
+import { MotionProvider } from "../../providers/screen/motion";
 import { mountBuilderAnimationState } from "../helpers/mount-builder-animation-state";
 import { beforeAll, beforeEach, describe, expect, it, mock } from "bun:test";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
@@ -5,10 +6,16 @@ import type { BoundTag } from "../../stores/bounds/types";
 import { BoundStore } from "../../stores/bounds";
 import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
 
-(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT =
-	true;
+(
+	globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
+).IS_REACT_ACT_ENVIRONMENT = true;
 
+const options = {};
 const descriptorState = {
+	options,
+	descriptors: {
+		current: { route: { key: "screen-b", name: "screen-b" }, options },
+	},
 	animationState: mountBuilderAnimationState(),
 	derivations: {
 		currentScreenKey: "screen-b",
@@ -28,9 +35,8 @@ mock.module("../../providers/screen/builder", () => ({
 }));
 
 mock.module("../../providers/stack/blank-stack.provider", () => ({
-	useBlankStackStore: <T,>(
-		selector: (state: typeof stackState) => T,
-	) => selector(stackState),
+	useBlankStackStore: <T,>(selector: (state: typeof stackState) => T) =>
+		selector(stackState),
 }));
 
 let useInitialDestinationMeasurement: typeof import("../../components/boundary/hooks/lifecycles/use-initial-destination-measurement").useInitialDestinationMeasurement;
@@ -66,7 +72,7 @@ describe("initial destination measurement lifecycle", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 		const measurements: string[] = [];
 
-		function Fixture({
+		function Measurement({
 			boundTag,
 			revision,
 		}: {
@@ -78,31 +84,31 @@ describe("initial destination measurement lifecycle", () => {
 				enabled: true,
 				measureBoundary: ({ pairKey: measuredPairKey }) => {
 					measurements.push(`${revision}:${measuredPairKey}`);
-					BoundStore.link.setDestination(
-						measuredPairKey,
-						"card",
-						"screen-b",
-						{
-							x: 30,
-							y: 40,
-							pageX: 30,
-							pageY: 40,
-							width: 200,
-							height: 200,
-						},
-					);
+					BoundStore.link.setDestination(measuredPairKey, "card", "screen-b", {
+						x: 30,
+						y: 40,
+						pageX: 30,
+						pageY: 40,
+						width: 200,
+						height: 200,
+					});
 				},
 			});
 			return null;
 		}
 
+		function Fixture(props: Parameters<typeof Measurement>[0]) {
+			return (
+				<MotionProvider>
+					<Measurement {...props} />
+				</MotionProvider>
+			);
+		}
+
 		let renderer: ReactTestRenderer;
 		act(() => {
 			renderer = create(
-				<Fixture
-					boundTag={{ tag: "card", linkKey: "card" }}
-					revision={1}
-				/>,
+				<Fixture boundTag={{ tag: "card", linkKey: "card" }} revision={1} />,
 			);
 		});
 
@@ -111,10 +117,7 @@ describe("initial destination measurement lifecycle", () => {
 		};
 		act(() => {
 			renderer!.update(
-				<Fixture
-					boundTag={{ tag: "card", linkKey: "card" }}
-					revision={2}
-				/>,
+				<Fixture boundTag={{ tag: "card", linkKey: "card" }} revision={2} />,
 			);
 		});
 

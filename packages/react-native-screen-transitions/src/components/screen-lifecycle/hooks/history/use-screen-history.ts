@@ -3,7 +3,7 @@ import { useAnimatedReaction } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import useStableCallback from "../../../../hooks/use-stable-callback";
 import type { BaseDescriptor } from "../../../../providers/screen/builder";
-import type { AnimationStoreMap } from "../../../../stores/animation.store";
+import type { MotionAnimationValues } from "../../../../providers/screen/motion/types";
 import { HistoryStore } from "../../../../stores/history.store";
 import {
 	registerMountedRoute,
@@ -37,7 +37,7 @@ function shouldTrackInHistory(descriptor: BaseDescriptor): boolean {
 export function useScreenHistory(
 	current: BaseDescriptor,
 	previous: BaseDescriptor | undefined,
-	animations: AnimationStoreMap,
+	animations: MotionAnimationValues,
 ) {
 	const navigatorKey = current.navigation.getState()?.key ?? "";
 	const routeKey = current.route.key;

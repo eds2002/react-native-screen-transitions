@@ -8,8 +8,8 @@ import { snapDescriptorToIndex } from "../../../animation/snap-to";
 import { useOptionalBuilderStore } from "../../../providers/screen/builder";
 import { useOptionalOrchestratorStore } from "../../../providers/screen/orchestrator";
 import {
+	OrchestratorProvider,
 	type OrchestratorState,
-	OrchestratorStoreProvider,
 } from "../../../providers/screen/orchestrator/orchestrator.provider";
 import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
 import type { OverlayProps } from "../../../types/overlay.types";
@@ -150,17 +150,14 @@ function ReadyOverlayHost({
 				animatedStyle,
 			]}
 		>
-			<OrchestratorStoreProvider
-				registerGlobally={false}
-				value={overlayAnimationStore}
-			>
+			<OrchestratorProvider screenKey={scene.route.key}>
 				<View
 					pointerEvents="box-none"
 					style={[StyleSheet.absoluteFill, styles.overlay]}
 				>
 					<OverlayComponent {...overlayProps} />
 				</View>
-			</OrchestratorStoreProvider>
+			</OrchestratorProvider>
 		</Animated.View>
 	);
 }

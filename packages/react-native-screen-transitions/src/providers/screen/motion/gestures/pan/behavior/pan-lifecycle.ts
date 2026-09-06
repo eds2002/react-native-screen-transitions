@@ -1,8 +1,8 @@
 import { clamp, type SharedValue } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { EPSILON, TRUE } from "../../../../../../constants";
-import { emitMotionStart } from "../../../../../../stores/animation.store";
 import { animateToProgress } from "../../../../../../utils/animation/animate-to-progress";
+import { emitMotionStart } from "../../../animation/emit-motion-start";
 import {
 	normalizeGestureTranslation,
 	resolveGestureVelocity,

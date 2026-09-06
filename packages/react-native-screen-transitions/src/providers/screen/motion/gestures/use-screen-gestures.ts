@@ -4,6 +4,7 @@ import { useSharedValue } from "react-native-reanimated";
 import { ScrollStore } from "../../../../stores/scroll.store";
 import { useBuilderStore } from "../../builder";
 import type { ScreenOptionsContextValue } from "../options/types";
+import type { MotionValues } from "../types";
 import { useScreenGestureConfig } from "./ownership/hooks/use-screen-gesture-config";
 import { useBuildPanGesture } from "./pan/use-build-pan-gesture";
 import { useBuildPinchGesture } from "./pinch/use-build-pinch-gesture";
@@ -11,6 +12,7 @@ import { type GestureCompositionOwner, NO_GESTURE_OWNERS } from "./types";
 
 export function useScreenGestures(
 	screenOptions: ScreenOptionsContextValue,
+	values: MotionValues,
 	onDismissRequest?: () => void,
 ) {
 	const currentScreenKey = useBuilderStore(
@@ -21,6 +23,7 @@ export function useScreenGestures(
 	const gestureOwners = useSharedValue({ ...NO_GESTURE_OWNERS });
 	const gestureCompositionOwner = useSharedValue<GestureCompositionOwner>(null);
 	const panGesture = useBuildPanGesture({
+		values,
 		onDismissRequest,
 		scrollState,
 		screenOptions,
@@ -29,6 +32,7 @@ export function useScreenGestures(
 		gestureCompositionOwner,
 	});
 	const pinchGesture = useBuildPinchGesture({
+		values,
 		onDismissRequest,
 		screenOptions,
 		gestureConfig,

@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import { useBuilderStore } from "../../providers/screen/builder";
 import { LifecycleTransitionRequestKind } from "../../providers/screen/builder/hooks/use-builder-animation-state";
+import { getMotionStore } from "../../providers/screen/motion";
 import { useBlankStackStore } from "../../providers/stack/blank-stack.provider";
-import { AnimationStore } from "../../stores/animation.store";
 import { dispatchCloseAction } from "../../utils/navigation/close-action-replay";
 
 export function useNavigationHelpers() {
@@ -46,7 +46,7 @@ export function useNavigationHelpers() {
 			if (routeIndex <= 0) return false;
 		}
 
-		if (!AnimationStore.getValue(route.key, "closing").get()) {
+		if (!getMotionStore(route.key).state.closing.get()) {
 			system.actions.requestLifecycleTransition(
 				LifecycleTransitionRequestKind.Close,
 				0,

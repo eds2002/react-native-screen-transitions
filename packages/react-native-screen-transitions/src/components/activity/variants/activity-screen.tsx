@@ -3,8 +3,8 @@ import { memo } from "react";
 import { StyleSheet, View, type ViewProps } from "react-native";
 import { useDerivedValue } from "react-native-reanimated";
 import { useSharedValueState } from "../../../hooks/reanimated/use-shared-value-state";
+import { useOptionalMotionStore } from "../../../providers/screen/motion";
 import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
-import { AnimationStore } from "../../../stores/animation.store";
 import type { StackSceneActivity } from "../../../types/stack.types";
 import { ActivityView, type ActivityViewMode } from "../activity-view";
 import { DEFAULT_INACTIVE_BEHAVIOR, type InactiveBehavior } from "../helpers";
@@ -43,9 +43,10 @@ export const ActivityScreen = memo(function ActivityScreen({
 	const resolvedPaintDriverRouteKey =
 		paintDriverRouteKey ?? stackPaintDriverRouteKey;
 	const resolvedHasNestedState = hasNestedState ?? "state" in scene.route;
-	const paintDriverAnimations = resolvedPaintDriverRouteKey
-		? AnimationStore.getBag(resolvedPaintDriverRouteKey)
-		: undefined;
+	const paintDriverAnimations = useOptionalMotionStore(
+		resolvedPaintDriverRouteKey ?? null,
+		(store) => store.state,
+	);
 
 	/**
 	 * Avoid hiding inactive content until the screen that exposes it has settled.

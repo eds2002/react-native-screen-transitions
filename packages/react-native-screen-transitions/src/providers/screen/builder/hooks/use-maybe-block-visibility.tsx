@@ -6,8 +6,8 @@ import {
 	useAnimatedStyle,
 	useSharedValue,
 } from "react-native-reanimated";
-import { AnimationStore } from "../../../../stores/animation.store";
 import { getVisibilityBlockOffset } from "../../../../utils/visibility-block-offset";
+import { useOptionalMotionStore } from "../../motion";
 import { hasCloseTransitionFinished } from "../../orchestrator/styles/helpers/transition-visual-state";
 import { resolveVisibilityBlockOwnership } from "../../orchestrator/styles/helpers/visibility-block-ownership";
 import { resolveScreenVisibilityGate } from "../../orchestrator/styles/helpers/visibility-gate";
@@ -27,7 +27,10 @@ export const useMaybeBlockVisibility = ({
 	isFloatingOverlay,
 }: Params) => {
 	const { height } = useWindowDimensions();
-	const { closing, entering } = AnimationStore.getBag(currentScreenKey);
+	const motion = useOptionalMotionStore(
+		currentScreenKey,
+		(store) => store.state,
+	);
 	const {
 		animationProgress,
 		pendingLifecycleStartBlockCount,
@@ -50,7 +53,7 @@ export const useMaybeBlockVisibility = ({
 						pendingLifecycleStartBlockCount.get(),
 					pendingLifecycleRequestKind: pendingLifecycleRequestKind.get(),
 					animationProgress: animationProgress.get(),
-					entering: entering.get(),
+					entering: motion?.entering.get() ?? 0,
 				}),
 				ancestorBlocked: ancestorVisibilityBlocked?.get() ?? false,
 			};
@@ -77,7 +80,7 @@ export const useMaybeBlockVisibility = ({
 		// Hide the outgoing screen after its visual close while React removes its
 		// host asynchronously.
 		const shouldHideClosedScreen = hasCloseTransitionFinished({
-			closing: closing.get(),
+			closing: motion?.closing.get() ?? 0,
 			animationProgress: animationProgress.get(),
 		});
 		if (shouldHideClosedScreen) {

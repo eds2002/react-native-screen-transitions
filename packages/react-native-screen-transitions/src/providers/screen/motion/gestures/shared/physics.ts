@@ -1,11 +1,11 @@
 import { clamp } from "react-native-reanimated";
 import { EPSILON } from "../../../../../constants";
-import type { AnimationStoreMap } from "../../../../../stores/animation.store";
 import type { GestureDirections } from "../../../../../types/gesture.types";
+import type { MotionAnimationValues } from "../../types";
 import type { PanGestureEvent } from "../types";
 
 interface CalculateProgressProps {
-	animations: AnimationStoreMap;
+	animations: MotionAnimationValues;
 	shouldDismiss: boolean;
 	event: PanGestureEvent;
 	dimensions: { width: number; height: number };

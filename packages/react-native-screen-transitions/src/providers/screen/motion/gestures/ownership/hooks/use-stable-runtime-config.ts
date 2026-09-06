@@ -1,8 +1,7 @@
 import { useLayoutEffect, useMemo } from "react";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
-import { AnimationStore } from "../../../../../../stores/animation.store";
-import { GestureStore } from "../../../../../../stores/gesture.store";
 import { useBuilderStore } from "../../../../builder";
+import type { MotionValues } from "../../../types";
 import type { GesturePolicy, GestureRuntime } from "../../types";
 
 type RuntimeConfigInput<TPolicy extends GesturePolicy> = Omit<
@@ -12,20 +11,18 @@ type RuntimeConfigInput<TPolicy extends GesturePolicy> = Omit<
 
 export function useStableRuntimeConfig<TPolicy extends GesturePolicy>(
 	runtimeConfigInput: RuntimeConfigInput<TPolicy>,
+	values: MotionValues,
 ): SharedValue<GestureRuntime<TPolicy>> {
-	const currentScreenKey = useBuilderStore(
-		(store) => store.derivations.currentScreenKey,
-	);
 	const system = useBuilderStore((store) => store.animationState);
 	const { participation, policy } = runtimeConfigInput;
 
 	const stores = useMemo(() => {
 		return {
-			gestures: GestureStore.getBag(currentScreenKey),
-			animations: AnimationStore.getBag(currentScreenKey),
+			gestures: values,
+			animations: values,
 			system,
 		};
-	}, [currentScreenKey, system]);
+	}, [values, system]);
 
 	const runtimeConfig = useMemo<GestureRuntime<TPolicy>>(() => {
 		return {

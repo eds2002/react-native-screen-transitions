@@ -4,14 +4,14 @@ import type {
 	GestureTouchEvent,
 } from "react-native-gesture-handler";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
-import type { GestureStoreMap } from "../../../../../../stores/gesture.store";
 import type { ScreenOptionsContextValue } from "../../../options";
+import type { MotionGestureValues } from "../../../types";
 import { resolvePinchRuntime } from "../../shared/runtime";
 import type { GestureCompositionOwner, PinchGestureRuntime } from "../../types";
 
 export const updateAbsolutePinchFocalPoint = (
 	event: GestureTouchEvent,
-	gestures: GestureStoreMap,
+	gestures: MotionGestureValues,
 	captureOrigin: boolean,
 ) => {
 	"worklet";
@@ -36,7 +36,7 @@ export const updateAbsolutePinchFocalPoint = (
 
 export const updatePinchRotation = (
 	event: GestureTouchEvent,
-	gestures: GestureStoreMap,
+	gestures: MotionGestureValues,
 	lastAngle: SharedValue<number>,
 	accumulatedRotation: SharedValue<number>,
 	captureOrigin: boolean,
