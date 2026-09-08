@@ -117,6 +117,27 @@ export const createBlankStackController = (
 		emit();
 	};
 
+	const handleOpenRoute = ({ route }: { route: BaseStackRoute }) => {
+		const current = snapshot.state;
+		const openedIndex = current.routes.findIndex(
+			(candidate) => candidate.key === route.key,
+		);
+		const navigationKeys = new Set(
+			props.state.routes.map((candidate) => candidate.key),
+		);
+		if (!navigationKeys.has(route.key)) return;
+
+		// Retained replacements stay under the incoming screen until it opens.
+		for (const candidate of current.routes.slice(0, Math.max(openedIndex, 0))) {
+			if (
+				!navigationKeys.has(candidate.key) &&
+				!closingRouteKeys.has(candidate.key)
+			) {
+				handleCloseRoute({ route: candidate });
+			}
+		}
+	};
+
 	const requestDismiss = ({ route }: { route: BaseStackRoute }): boolean => {
 		const current = snapshot.state;
 		const routeIndex = current.routes.findIndex(
@@ -150,6 +171,7 @@ export const createBlankStackController = (
 		getSnapshot,
 		update,
 		handleCloseRoute,
+		handleOpenRoute,
 		requestDismiss,
 	};
 };

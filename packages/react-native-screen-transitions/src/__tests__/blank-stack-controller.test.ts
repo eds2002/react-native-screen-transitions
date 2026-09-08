@@ -62,6 +62,67 @@ beforeEach(() => {
 });
 
 describe("createBlankStackController", () => {
+	it("keeps B under C during replacement, then reveals A when C is dismissed", () => {
+		const navigation = createNavigation();
+		const routeA = createRoute("a");
+		const routeB = createRoute("b");
+		const routeC = createRoute("c");
+		const descriptorA = createDescriptor(routeA, navigation);
+		const descriptorB = createDescriptor(routeB, navigation);
+		const descriptorC = createDescriptor(routeC, navigation);
+		const controller = createBlankStackController(
+			createProps([routeA], { a: descriptorA }, navigation),
+		);
+
+		controller.update(
+			createProps([routeA, routeB], { a: descriptorA, b: descriptorB }, navigation),
+		);
+		const replacedProps = createProps(
+			[routeA, routeC],
+			{ a: descriptorA, c: descriptorC },
+			navigation,
+		);
+		controller.update(replacedProps);
+
+		const replacing = controller.getSnapshot().state;
+		expect(
+			replacing.scenes.find((scene) => scene.route.key === "c")
+				?.previousDescriptor?.route,
+		).toBe(routeB);
+		expect(
+			replacing.scenes.find((scene) => scene.route.key === "b")?.activity,
+		).toBe("inert");
+
+		// A parent render must not lose the pending replacement cleanup.
+		controller.update(replacedProps);
+		expect(controller.getSnapshot().state.routeKeys).toEqual(["a", "b", "c"]);
+		controller.handleOpenRoute({ route: routeA });
+		expect(controller.getSnapshot().state.routeKeys).toEqual(["a", "b", "c"]);
+		controller.handleOpenRoute({ route: routeC });
+		const settled = controller.getSnapshot().state;
+		expect(settled.routeKeys).toEqual(["a", "c"]);
+		expect(settled.descriptors.b).toBeUndefined();
+		expect(settled.closingRouteKeys.size).toBe(0);
+		expect(navigation.actions).toEqual([]);
+
+		expect(controller.requestDismiss({ route: routeC })).toBe(true);
+		const dismissing = controller.getSnapshot().state;
+		expect(
+			dismissing.scenes.find((scene) => scene.route.key === "c")
+				?.previousDescriptor?.route,
+		).toBe(routeA);
+		expect(dismissing.scenes.map((scene) => scene.activity)).toEqual([
+			"inert",
+			"closing",
+		]);
+		controller.handleCloseRoute({ route: routeC });
+		expect(navigation.actions).toEqual([
+			{ type: "POP", payload: { count: 1 }, source: "c", target: "stack" },
+		]);
+		controller.update(createProps([routeA], { a: descriptorA }, navigation));
+		expect(controller.getSnapshot().state.routeKeys).toEqual(["a"]);
+	});
+
 	it("retains a removed focused route with its previous descriptor synchronously", () => {
 		const navigation = createNavigation();
 		const routeA = createRoute("a");

@@ -32,10 +32,11 @@ const {
 	InternalBlankStackProviderProps,
 	BlankStackStoreValue
 >(({ state: stackState, children, ...props }) => {
-	const { state, handleCloseRoute, requestDismiss } = useBlankStackState({
-		...props,
-		state: stackState,
-	});
+	const { state, handleCloseRoute, handleOpenRoute, requestDismiss } =
+		useBlankStackState({
+			...props,
+			state: stackState,
+		});
 	const navigatorKey = stackState.key;
 	const focusedIndex = resolvePresentedIndex(
 		state.routes,
@@ -68,6 +69,7 @@ const {
 			requestDismiss,
 			shouldShowFloatOverlay: state.shouldShowFloatOverlay,
 			handleCloseRoute,
+			handleOpenRoute,
 		},
 		children,
 	};

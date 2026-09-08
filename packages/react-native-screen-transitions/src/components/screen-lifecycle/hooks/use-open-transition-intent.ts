@@ -1,4 +1,8 @@
 import { useLayoutEffect } from "react";
+import { useAnimatedReaction } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
+import { AnimationProgress } from "../../../constants";
+import useStableCallback from "../../../hooks/use-stable-callback";
 import {
 	type BaseDescriptor,
 	useBuilderStore,
@@ -8,6 +12,7 @@ import {
 	type MotionTransitionValues,
 } from "../../../providers/screen/motion/hooks/use-transition-values";
 import type { MotionAnimationValues } from "../../../providers/screen/motion/types";
+import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
 import type { SnapPoint } from "../../../types/screen.types";
 
 /**
@@ -43,6 +48,27 @@ export function useOpenTransitionIntent(
 ) {
 	const isFirstKey = useBuilderStore((store) => store.derivations.isFirstKey);
 	const { requestLifecycleTransition } = system.actions;
+	const handleOpenRoute = useBlankStackStore((store) => store.handleOpenRoute);
+	const completeOpen = useStableCallback(() => {
+		handleOpenRoute?.({ route: current.route });
+	});
+	const { animationProgress } = system;
+	const { closing } = animations;
+
+	useAnimatedReaction(
+		() => {
+			"worklet";
+			return (
+				!closing.get() && animationProgress.get() === AnimationProgress.Visible
+			);
+		},
+		(complete, previouslyComplete) => {
+			"worklet";
+			if (complete && !previouslyComplete) {
+				scheduleOnRN(completeOpen);
+			}
+		},
+	);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Must only run once on mount
 	useLayoutEffect(() => {
@@ -62,7 +88,7 @@ export function useOpenTransitionIntent(
 				system.targetProgress.set(0);
 				animations.transitionProgress.set(0);
 			} else {
-				const target = initialProgress ?? 1;
+				const target = initialProgress ?? AnimationProgress.Visible;
 				system.targetProgress.set(target);
 				animations.transitionProgress.set(target);
 			}
@@ -81,7 +107,7 @@ export function useOpenTransitionIntent(
 		animations.entering.set(1);
 		requestLifecycleTransition(
 			LifecycleTransitionRequestKind.Open,
-			initialProgress ?? 1,
+			initialProgress ?? AnimationProgress.Visible,
 		);
 	}, []);
 }

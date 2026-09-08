@@ -34,6 +34,7 @@ export type BlankStackController = {
 	subscribe: (listener: () => void) => () => void;
 	getSnapshot: () => BlankStackControllerSnapshot;
 	update: (props: BlankStackProviderProps) => void;
+	handleOpenRoute: (payload: { route: BaseStackRoute }) => void;
 	handleCloseRoute: (payload: { route: BaseStackRoute }) => void;
 	requestDismiss: (payload: { route: BaseStackRoute }) => boolean;
 };

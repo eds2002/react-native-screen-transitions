@@ -178,6 +178,11 @@ export const IS_WEB = Platform.OS === "web";
 export const TRUE = 1;
 export const FALSE = 0;
 
+export const AnimationProgress = {
+	Hidden: 0,
+	Visible: 1,
+} as const;
+
 /**
  * Small value for floating-point comparisons to handle animation/interpolation imprecision
  */

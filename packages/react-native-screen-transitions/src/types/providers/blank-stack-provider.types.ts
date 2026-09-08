@@ -32,5 +32,6 @@ export interface BlankStackStoreValue {
 	focusedIndex: number;
 	requestDismiss?: (payload: { route: BaseStackRoute }) => boolean;
 	shouldShowFloatOverlay: boolean;
+	handleOpenRoute?: (payload: { route: BaseStackRoute }) => void;
 	handleCloseRoute?: (payload: { route: BaseStackRoute }) => void;
 }

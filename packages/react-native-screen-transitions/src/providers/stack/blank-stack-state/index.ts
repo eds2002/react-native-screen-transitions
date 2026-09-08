@@ -24,6 +24,7 @@ export const useBlankStackState = (props: BlankStackProviderProps) => {
 	return {
 		state: snapshot.state,
 		handleCloseRoute: controller.handleCloseRoute,
+		handleOpenRoute: controller.handleOpenRoute,
 		requestDismiss: controller.requestDismiss,
 	};
 };

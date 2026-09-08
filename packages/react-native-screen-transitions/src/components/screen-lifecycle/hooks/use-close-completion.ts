@@ -1,5 +1,6 @@
 import { type SharedValue, useAnimatedReaction } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
+import { AnimationProgress } from "../../../constants";
 
 export const useCloseCompletion = ({
 	closing,
@@ -13,7 +14,9 @@ export const useCloseCompletion = ({
 	useAnimatedReaction(
 		() => {
 			"worklet";
-			return !!closing.get() && animationProgress.get() <= 0;
+			return (
+				!!closing.get() && animationProgress.get() <= AnimationProgress.Hidden
+			);
 		},
 		(complete, previouslyComplete) => {
 			"worklet";

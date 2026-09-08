@@ -70,6 +70,12 @@ const STACK_GROUP_OPTIONS = [
 
 const RECIPE_OPTIONS = [
 	{
+		id: "replace-back",
+		title: "#151 Replace + Back Gesture",
+		description: "Blank Stack: push B, replace with C, then swipe back to A",
+		route: "/replace-back" as const,
+	},
+	{
 		id: "observer",
 		title: "Transition Key Observer",
 		description:
