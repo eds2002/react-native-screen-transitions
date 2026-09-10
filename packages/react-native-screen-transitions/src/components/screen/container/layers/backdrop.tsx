@@ -73,7 +73,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 				for (let i = 0; i < rawSnapPoints.length; i++) {
 					const point = rawSnapPoints[i];
 					const resolvedPoint =
-						point === "auto" ? resolvedAutoSnapPoint.get() : point;
+						typeof point === "string" ? resolvedAutoSnapPoint.get() : point;
 
 					if (typeof resolvedPoint === "number") {
 						resolvedSnaps.push(resolvedPoint);

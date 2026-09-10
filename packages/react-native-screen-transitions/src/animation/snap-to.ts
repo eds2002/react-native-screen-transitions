@@ -18,7 +18,7 @@ const getSortedSnapPoints = (
 	).state.resolvedAutoSnapPoint.get();
 
 	const resolved = snapPoints
-		.map((p) => (p === "auto" ? autoVal : p))
+		.map((p) => (typeof p === "string" ? autoVal : p))
 		.filter((p): p is number => typeof p === "number" && p > 0);
 
 	return resolved.length > 0 ? resolved.sort((a, b) => a - b) : null;

@@ -57,7 +57,7 @@ export type GestureTracking = "auto" | "never" | "always";
  * A single snap point value. Either a fraction of screen height (0–1) or
  * `'auto'` to snap to the intrinsic height of the screen content.
  */
-export type SnapPoint = number | "auto";
+export type SnapPoint = number | "auto" | (string & {});
 
 export type BackdropBehavior = "block" | "passthrough" | "dismiss" | "collapse";
 

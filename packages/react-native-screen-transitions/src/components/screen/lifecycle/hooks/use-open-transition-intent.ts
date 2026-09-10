@@ -25,7 +25,7 @@ function getInitialProgress({
 }: {
 	snapPoints?: SnapPoint[];
 	initialSnapIndex: number;
-}): number | "auto" | undefined {
+}): SnapPoint | undefined {
 	if (!snapPoints) {
 		return undefined;
 	}
@@ -83,7 +83,7 @@ export function useOpenTransitionIntent(
 		});
 
 		if (isFirstKey && !experimental_animateOnInitialMount) {
-			if (initialProgress === "auto") {
+			if (typeof initialProgress === "string") {
 				system.targetProgress.set(0);
 				animations.transitionProgress.set(0);
 			} else {
@@ -99,7 +99,7 @@ export function useOpenTransitionIntent(
 
 		// When the initial snap point is 'auto', defer the opening animation until
 		// ScreenContainer has measured the content and set resolvedAutoSnapPoint.
-		if (initialProgress === "auto") {
+		if (typeof initialProgress === "string") {
 			return;
 		}
 

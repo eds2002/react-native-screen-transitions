@@ -43,7 +43,7 @@ export const ContentLayer = memo(
 				: null;
 		}, [ContentComponent]);
 
-		const handleContentLayout = useContentLayout();
+		const handleContentLayout = useContentLayout("content");
 
 		const animatedContentStyle = useSlotStyles("content");
 		const animatedContentProps = useSlotProps("content");

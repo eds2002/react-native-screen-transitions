@@ -10,6 +10,7 @@ import { Activity, useLayoutEffect } from "react";
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { LifecycleTransitionRequestKind } from "../../providers/screen/motion/hooks/use-transition-values";
+import { useContentLayout } from "../../components/screen/container/hooks/use-content-layout";
 
 const scenes = Object.fromEntries(
 	["builder-parent", "builder-child"].map((key) => [
@@ -105,6 +106,70 @@ afterEach(() => {
 });
 
 describe("Builder and Motion composition", () => {
+	it("keeps whole-content auto sizing when no measurement target is configured", () => {
+		const key = "builder-child";
+		const originalOptions = scenes[key].descriptor.options;
+		let measure: ReturnType<typeof useContentLayout>;
+		function MeasurementProbe() {
+			measure = useContentLayout("content");
+			return <LocalProbe />;
+		}
+		try {
+			scenes[key].descriptor.options = { ...originalOptions, snapPoints: ["auto", 1] } as typeof originalOptions;
+			act(() => {
+				renderer = create(<BuilderProvider routeKey={key}><MeasurementProbe /></BuilderProvider>);
+			});
+			act(() => measure?.({ nativeEvent: { layout: { width: 390, height: 500 } } } as never));
+			expect(local.state.resolvedAutoSnapPoint.get()).toBeCloseTo(500 / 844);
+			expect(local.state.targetProgress.get()).toBeCloseTo(500 / 844);
+		} finally {
+			scenes[key].descriptor.options = originalOptions;
+		}
+	});
+
+	it("sizes auto from the tagged container height while retaining the full content layout", () => {
+		const key = "builder-child";
+		const originalOptions = scenes[key].descriptor.options;
+		let measureContent: ReturnType<typeof useContentLayout>;
+		let measureTarget: ReturnType<typeof useContentLayout>;
+		let measureOther: ReturnType<typeof useContentLayout>;
+		function MeasurementProbe() {
+			measureContent = useContentLayout("content");
+			measureTarget = useContentLayout("profile-header");
+			measureOther = useContentLayout("other");
+			return <LocalProbe />;
+		}
+		const layout = (height: number) => ({
+			nativeEvent: { layout: { x: 0, y: 200, width: 390, height } },
+		});
+		try {
+			scenes[key].descriptor.options = {
+				...originalOptions,
+				snapPoints: ["profile-header", 1],
+			} as typeof originalOptions;
+			act(() => {
+				renderer = create(<BuilderProvider routeKey={key}><MeasurementProbe /></BuilderProvider>);
+			});
+			act(() => measureContent(layout(700) as never));
+			expect(local.state.measuredContentLayout.get()).toEqual({ width: 390, height: 700 });
+			expect(local.state.resolvedAutoSnapPoint.get()).toBe(-1);
+			act(() => measureOther?.(layout(500) as never));
+			expect(local.state.resolvedAutoSnapPoint.get()).toBe(-1);
+			act(() => measureTarget(layout(300) as never));
+			expect(local.state.resolvedAutoSnapPoint.get()).toBeCloseTo(300 / 844);
+			expect(local.state.targetProgress.get()).toBeCloseTo(300 / 844);
+			expect(local.state.measuredContentLayout.get()?.height).toBe(700);
+			act(() => measureTarget(layout(400) as never));
+			expect(local.state.resolvedAutoSnapPoint.get()).toBeCloseTo(400 / 844);
+			act(() => measureTarget(layout(1000) as never));
+			expect(local.state.resolvedAutoSnapPoint.get()).toBe(1);
+			act(() => measureTarget(layout(0) as never));
+			expect(local.state.resolvedAutoSnapPoint.get()).toBe(1);
+		} finally {
+			scenes[key].descriptor.options = originalOptions;
+		}
+	});
+
 	it("skips topology registration without Blank Stack while keeping Builder state available", () => {
 		hasStack = false;
 		act(() => {

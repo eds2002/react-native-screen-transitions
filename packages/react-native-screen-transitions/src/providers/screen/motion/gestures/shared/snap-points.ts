@@ -137,7 +137,7 @@ export const validateSnapPoints = ({
 		return createEmptySnapPoints();
 	}
 
-	const hasAuto = snapPoints.includes("auto");
+	const hasAuto = snapPoints.some((point) => typeof point === "string");
 	const normalizedSnaps = sanitizeSnapPoints(snapPoints, canDismiss ?? false);
 
 	if (!hasResolvedSnapPoints(normalizedSnaps, hasAuto)) {

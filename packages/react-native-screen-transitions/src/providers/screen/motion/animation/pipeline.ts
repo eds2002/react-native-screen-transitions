@@ -29,7 +29,8 @@ export function useMotionAnimationPipeline(
 		return {
 			...values,
 			scrollMetadata: ScrollStore.getValue(key, "metadata"),
-			hasAutoSnapPoint: snapPoints?.includes("auto") ?? false,
+			hasAutoSnapPoint:
+				snapPoints?.some((point) => typeof point === "string") ?? false,
 			sortedNumericSnapPoints,
 			route: plainRoute,
 			meta: plainMeta,

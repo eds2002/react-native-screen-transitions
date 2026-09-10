@@ -1,24 +1,36 @@
 import { useCallback } from "react";
 import { type LayoutChangeEvent, useWindowDimensions } from "react-native";
 import { scheduleOnUI } from "react-native-worklets";
-import { useBuilderStore } from "../../../../providers/screen/builder";
-import { useMotionStore } from "../../../../providers/screen/motion";
+import { useOptionalBuilderStore } from "../../../../providers/screen/builder";
+import { useOptionalMotionStore } from "../../../../providers/screen/motion";
 import { LifecycleTransitionRequestKind } from "../../../../providers/screen/motion/hooks/use-transition-values";
 
-export function useContentLayout() {
-	const isFirstKey = useBuilderStore((store) => store.derivations.isFirstKey);
-	const experimental_animateOnInitialMount = useBuilderStore(
-		(store) => store.options.experimental_animateOnInitialMount,
+/** "content" identifies the full content wrapper and is reserved internally. */
+export function useContentLayout(styleId: string | undefined) {
+	const isContent = styleId === "content";
+	const builder = useOptionalBuilderStore((store) =>
+		isContent ||
+		(styleId !== undefined && store?.options.snapPoints?.includes(styleId))
+			? store
+			: null,
 	);
 	const { height: screenHeight } = useWindowDimensions();
-	const animations = useMotionStore((store) => store.state);
+	const animations = useOptionalMotionStore((store) =>
+		builder ? store?.state : undefined,
+	);
+	const isFirstKey = builder?.derivations.isFirstKey;
+	const experimental_animateOnInitialMount =
+		builder?.options.experimental_animateOnInitialMount;
+	const snapPoint = isContent ? "auto" : styleId;
+	const measureSnap =
+		snapPoint !== undefined && builder?.options.snapPoints?.includes(snapPoint);
 
-	const { targetProgress, resolvedAutoSnapPoint, measuredContentLayout } =
-		animations;
-	const { requestLifecycleTransition } = animations.actions;
-
-	return useCallback(
+	const handleLayout = useCallback(
 		(event: LayoutChangeEvent) => {
+			if (!animations) return;
+			const { targetProgress, resolvedAutoSnapPoint, measuredContentLayout } =
+				animations;
+			const { requestLifecycleTransition } = animations.actions;
 			const { width, height } = event.nativeEvent.layout;
 			if (width <= 0 || height <= 0) return;
 
@@ -27,10 +39,10 @@ export function useContentLayout() {
 			scheduleOnUI(
 				(nextWidth: number, nextHeight: number, nextFraction: number) => {
 					"worklet";
-					measuredContentLayout.set({
-						width: nextWidth,
-						height: nextHeight,
-					});
+					if (isContent) {
+						measuredContentLayout.set({ width: nextWidth, height: nextHeight });
+					}
+					if (!measureSnap) return;
 
 					const isFirstMeasurement = resolvedAutoSnapPoint.get() <= 0;
 					resolvedAutoSnapPoint.set(nextFraction);
@@ -61,13 +73,12 @@ export function useContentLayout() {
 		},
 		[
 			animations,
-			targetProgress,
-			resolvedAutoSnapPoint,
-			measuredContentLayout,
+			isContent,
+			measureSnap,
 			isFirstKey,
 			screenHeight,
 			experimental_animateOnInitialMount,
-			requestLifecycleTransition,
 		],
 	);
+	return isContent || measureSnap ? handleLayout : undefined;
 }
