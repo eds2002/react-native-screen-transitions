@@ -29,19 +29,27 @@ export const useRefreshBoundary = ({
 	// Source-side boundaries refresh from the next screen's lifecycle pulse.
 	// Destination-side boundaries have no next screen, so they refresh from self.
 	const refreshScreenKey = nextScreenKey ?? currentScreenKey;
-	const refreshMotion = useOptionalMotionStore(
+	const willAnimate = useOptionalMotionStore(
 		refreshScreenKey,
-		(store) => store.state,
+		(store) => store.state.willAnimate,
+	);
+	const progressSettled = useOptionalMotionStore(
+		refreshScreenKey,
+		(store) => store.state.progressSettled,
+	);
+	const closing = useOptionalMotionStore(
+		refreshScreenKey,
+		(store) => store.state.closing,
 	);
 
 	useAnimatedReaction(
 		() => {
 			"worklet";
 
-			if (!enabled || !refreshMotion) return null;
+			if (!enabled || !willAnimate || !progressSettled || !closing) return null;
 
-			const shouldRefresh = !!refreshMotion.willAnimate.get();
-			const settled = !!refreshMotion.progressSettled.get();
+			const shouldRefresh = !!willAnimate.get();
+			const settled = !!progressSettled.get();
 			// A group's active member can change while the transition is settled
 			// (for example, paging a destination gallery). Let that member publish
 			// fresh bounds even though there is no willAnimate lifecycle pulse yet.
@@ -62,7 +70,7 @@ export const useRefreshBoundary = ({
 				group,
 				shouldRefresh,
 				settled,
-				closing: !!refreshMotion.closing.get(),
+				closing: !!closing.get(),
 				linkState: pairs.get(),
 			});
 		},

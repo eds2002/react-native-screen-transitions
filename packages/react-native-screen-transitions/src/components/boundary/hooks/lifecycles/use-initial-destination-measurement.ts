@@ -34,6 +34,7 @@ const HANDSHAKE_RETRY_DELAY_MS = 16;
  * so the open proceeds without that boundary.
  */
 const MAX_HANDSHAKE_RETRIES = 20;
+const EMPTY_SCENES: never[] = [];
 
 interface UseInitialDestinationMeasurementParams {
 	boundTag: BoundTag;
@@ -59,7 +60,9 @@ export const useInitialDestinationMeasurement = ({
 	const preferredSourceScreenKey = destinationPairKey
 		? getSourceScreenKeyFromPairKey(destinationPairKey)
 		: undefined;
-	const stackScenes = useBlankStackStore((store) => store.scenes);
+	const stackScenes = useBlankStackStore((store) =>
+		canReceiveDestination ? store.scenes : EMPTY_SCENES,
+	);
 	// A retained closing screen can still have registered boundaries, but it
 	// cannot own a new transition link.
 	const closingSourceScreenKeys = useMemo(
@@ -71,9 +74,9 @@ export const useInitialDestinationMeasurement = ({
 	);
 	const progress = useMotionStore((store) => store.state.transitionProgress);
 
-	const {
-		actions: { blockLifecycleStart, unblockLifecycleStart },
-	} = useMotionStore((store) => store.state);
+	const { blockLifecycleStart, unblockLifecycleStart } = useMotionStore(
+		(store) => store.state.actions,
+	);
 
 	const isBlockingLifecycleStart = useSharedValue(0);
 	const retryToken = useSharedValue(0);

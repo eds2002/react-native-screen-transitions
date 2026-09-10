@@ -26,6 +26,7 @@ import {
 	resolveRequestedHandoffPairKey,
 	resolveRequestedHandoffReceiver,
 } from "../helpers/active-handoff-receiver";
+import { canActivateHandoffReceiver } from "../helpers/handoff-visibility";
 import { createBoundaryContentPortalHostName } from "../helpers/host-name";
 
 interface UseBoundaryContentPortalAttachmentParams {
@@ -85,6 +86,11 @@ export const useBoundaryContentPortalAttachment = ({
 	const activeReceiverClosing = useOptionalMotionStore(
 		activeReceiverScreenKey ?? currentScreenKey,
 		(store) => store.state.closing,
+	);
+
+	const activeReceiverVisibilityBlocked = useOptionalMotionStore(
+		activeReceiverScreenKey ?? currentScreenKey,
+		(store) => store.visibilityBlocked,
 	);
 
 	const attachedReceiverScreenKey = useSharedValue(currentScreenKey);
@@ -216,10 +222,15 @@ export const useBoundaryContentPortalAttachment = ({
 			!!isScreenReady &&
 			nextReceiverScreenKey === pairDestination;
 
-		const canActivateReceiver =
-			returningFromActiveClose ||
-			activatingPairDestination ||
-			animationProgress > 0;
+		const canActivateReceiver = canActivateHandoffReceiver({
+			returningFromActiveClose,
+			activatingPairDestination,
+			animationProgress,
+			receiverIsActiveDestination:
+				!returningFromActiveClose &&
+				nextReceiverScreenKey === activeReceiverScreenKey,
+			destinationVisibilityBlocked: activeReceiverVisibilityBlocked?.get(),
+		});
 
 		if (nextReceiverScreenKey && receiverReady && canActivateReceiver) {
 			attachedReceiverScreenKey.set(nextReceiverScreenKey);
