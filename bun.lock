@@ -44,7 +44,7 @@
         "react-native": "0.85.3",
         "react-native-fast-squircle": "^1.1.1",
         "react-native-gesture-handler": "~2.31.1",
-        "react-native-reanimated": "4.3.1",
+        "react-native-reanimated": "4.3.3",
         "react-native-safe-area-context": "~5.7.0",
         "react-native-screen-transitions": "workspace:*",
         "react-native-screens": "4.25.2",
@@ -89,7 +89,7 @@
     },
     "packages/react-native-screen-transitions": {
       "name": "react-native-screen-transitions",
-      "version": "4.0.0",
+      "version": "4.1.0-alpha.0",
       "dependencies": {
         "standard-navigation": "^0.0.7",
       },
@@ -2856,7 +2856,7 @@
 
     "react-native-monorepo-config": ["react-native-monorepo-config@0.3.5", "", { "dependencies": { "escape-string-regexp": "^5.0.0", "fast-glob": "^3.3.3" } }, "sha512-Xdu7k0s4V2FHn2OGnlr3D22Dgt5ij0ek9yzloPoLkHh3rL/jUQbPrawieKsAbkqoenv/7pfPJwMlPT27bvN1fg=="],
 
-    "react-native-reanimated": ["react-native-reanimated@4.3.1", "", { "dependencies": { "react-native-is-edge-to-edge": "^1.3.1", "semver": "^7.7.3" }, "peerDependencies": { "react": "*", "react-native": "0.81 - 0.85", "react-native-worklets": "0.8.x" } }, "sha512-KhGsS0YkCA+gusgyzlf9hnqzVPIR398KTpqXyqq/+yYJJPAvyEEPKcxlB0xtOOXSMrR2A9uRKVARVQhZwrOh+Q=="],
+    "react-native-reanimated": ["react-native-reanimated@4.3.3", "", { "dependencies": { "react-native-is-edge-to-edge": "^1.3.1", "semver": "^7.7.3" }, "peerDependencies": { "react": "*", "react-native": "0.81 - 0.85", "react-native-worklets": "0.8.x" } }, "sha512-Er2rbjdE8z/E+vgWEEE5xKwxfE3TRQCot5yU+5aVjM1wgC5umOrRGLFSv2aW12xDPUj80qEsHLPWQ6MZJBkvAQ=="],
 
     "react-native-safe-area-context": ["react-native-safe-area-context@5.7.0", "", { "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-/9/MtQz8ODphjsLdZ+GZAIcC/RtoqW9EeShf7Uvnfgm/pzYrJ75y3PV/J1wuAV1T5Dye5ygq4EAW20RoBq0ABQ=="],
 

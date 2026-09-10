@@ -45,7 +45,7 @@
 		"react-native": "0.85.3",
 		"react-native-fast-squircle": "^1.1.1",
 		"react-native-gesture-handler": "~2.31.1",
-		"react-native-reanimated": "4.3.1",
+		"react-native-reanimated": "4.3.3",
 		"react-native-safe-area-context": "~5.7.0",
 		"react-native-screen-transitions": "workspace:*",
 		"react-native-screens": "4.25.2",
