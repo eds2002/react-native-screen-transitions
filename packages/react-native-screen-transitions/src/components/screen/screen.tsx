@@ -11,18 +11,17 @@ const SceneMotion = ({
 	lifecycle: Lifecycle,
 }: {
 	children: ReactNode;
-	lifecycle: ComponentType<{ children: ReactNode }>;
+	lifecycle: ComponentType;
 }) => {
 	const { requestDismiss } = useNavigationHelpers();
 	return (
 		<MotionProvider onDismissRequest={requestDismiss}>
-			<Lifecycle>
-				<OrchestratorProvider>
-					<ScreenContainer onDismissRequest={requestDismiss}>
-						{children}
-					</ScreenContainer>
-				</OrchestratorProvider>
-			</Lifecycle>
+			<OrchestratorProvider>
+				<ScreenContainer onDismissRequest={requestDismiss}>
+					{children}
+				</ScreenContainer>
+			</OrchestratorProvider>
+			<Lifecycle />
 		</MotionProvider>
 	);
 };
@@ -34,7 +33,7 @@ export const Screen = memo(function Screen({
 }: {
 	routeKey: string;
 	children: ReactNode;
-	lifecycle: ComponentType<{ children: ReactNode }>;
+	lifecycle: ComponentType;
 }) {
 	const scene = useBlankStackStore((store) => store.scenesByKey[routeKey]);
 	const descriptors = useMemo(

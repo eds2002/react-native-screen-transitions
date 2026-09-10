@@ -18,33 +18,23 @@ const PointerEventsByActivity = {
 
 interface ActivityScreenProps {
 	children: React.ReactNode;
-	inactiveBehavior?: InactiveBehavior;
-	paintDriverRouteKey?: string;
-	hasNestedState?: boolean;
 	routeKey: string;
 }
 
 export const ActivityScreen = memo(function ActivityScreen({
 	children,
-	inactiveBehavior,
-	paintDriverRouteKey,
-	hasNestedState,
 	routeKey,
 }: ActivityScreenProps) {
 	const scene = useBlankStackStore((store) => store.scenesByKey[routeKey]);
-	const stackPaintDriverRouteKey = useBlankStackStore((store) =>
+	const paintDriverRouteKey = useBlankStackStore((store) =>
 		store.paintDriverRouteKeyByRouteKey.get(routeKey),
 	);
-	const stackInactiveBehavior = (
-		scene.descriptor.options as { inactiveBehavior?: InactiveBehavior }
-	).inactiveBehavior;
-	const resolvedInactiveBehavior =
-		inactiveBehavior ?? stackInactiveBehavior ?? DEFAULT_INACTIVE_BEHAVIOR;
-	const resolvedPaintDriverRouteKey =
-		paintDriverRouteKey ?? stackPaintDriverRouteKey;
-	const resolvedHasNestedState = hasNestedState ?? "state" in scene.route;
+	const inactiveBehavior =
+		(scene.descriptor.options as { inactiveBehavior?: InactiveBehavior })
+			.inactiveBehavior ?? DEFAULT_INACTIVE_BEHAVIOR;
+	const hasNestedState = "state" in scene.route;
 	const paintDriverAnimations = useOptionalMotionStore(
-		resolvedPaintDriverRouteKey ?? null,
+		paintDriverRouteKey ?? null,
 		(store) => store.state,
 	);
 
@@ -72,9 +62,9 @@ export const ActivityScreen = memo(function ActivityScreen({
 	let visible = scene.activity !== "inactive";
 
 	if (scene.activity === "inactive") {
-		if (resolvedInactiveBehavior === "keep" || !isPaintDriverSettledOnJS) {
+		if (inactiveBehavior === "keep" || !isPaintDriverSettledOnJS) {
 			visible = true;
-		} else if (resolvedInactiveBehavior === "pause") {
+		} else if (inactiveBehavior === "pause") {
 			activityViewMode = "paused";
 			visible = true;
 		} else {
@@ -84,9 +74,9 @@ export const ActivityScreen = memo(function ActivityScreen({
 	}
 
 	const shouldUnmount =
-		resolvedInactiveBehavior === "unmount" &&
+		inactiveBehavior === "unmount" &&
 		scene.activity === "inactive" &&
-		!resolvedHasNestedState &&
+		!hasNestedState &&
 		isPaintDriverSettledOnJS;
 
 	if (shouldUnmount) {
