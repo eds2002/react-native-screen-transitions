@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import {
 	type DerivedValue,
@@ -21,10 +21,7 @@ import { type BaseDescriptor, useBuilderStore } from "../../builder";
 import { useMotionStore, useOptionalMotionStore } from "../../motion";
 import { buildScreenTransitionOptions } from "../../motion/animation/helpers/build-screen-transition-options";
 import { hydrateTransitionState } from "../../motion/animation/helpers/hydrate-transition-state";
-import type {
-	BuiltState,
-	MotionAnimationState,
-} from "../../motion/animation/helpers/hydrate-transition-state/types";
+import type { BuiltState } from "../../motion/animation/helpers/hydrate-transition-state/types";
 import {
 	toPlainRoute,
 	toPlainValue,
@@ -46,7 +43,6 @@ export interface ScreenAnimationPipeline {
 	selectedInterpolatorOptions: SharedValue<SelectedInterpolatorOptions>;
 	nextInterpolator: ScreenStyleInterpolator | undefined;
 	currentInterpolator: ScreenStyleInterpolator | undefined;
-	nextMotion: MotionAnimationState | null;
 }
 
 const getInitialSettledProgress = (descriptor: BaseDescriptor) => {
@@ -270,59 +266,30 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 	);
 	const dimensions = useWindowDimensions();
 	const insets = useSafeAreaInsets();
-	const stackMotions = useMotionStore(routeKeys, (store) => store.state);
-	const [retainedMotions, setRetainedMotions] = useState(
-		() => new Map<string, MotionAnimationState | null>(),
-	);
-	// Pausing or unmounting a screen removes its provider, not its route.
-	// Retain its motion inputs until that route leaves the stack, and replace
-	// them when its provider registers again after resuming or remounting.
-	const stackMotionByKey = useMemo(() => {
-		const motions = new Map(
-			routeKeys.map((key, index) => [
-				key,
-				stackMotions[index] ?? retainedMotions.get(key) ?? null,
-			]),
-		);
-		return motions.size === retainedMotions.size &&
-			[...motions].every(([key, motion]) => retainedMotions.get(key) === motion)
-			? retainedMotions
-			: motions;
-	}, [routeKeys, stackMotions, retainedMotions]);
-	if (stackMotionByKey !== retainedMotions) {
-		setRetainedMotions(stackMotionByKey);
-	}
+	const stackMotions = useMotionStore(routeKeys);
 	const stackProgressEntries = useMemo(
 		() =>
-			routeKeys.flatMap((routeKey) => {
-				const motion = stackMotionByKey.get(routeKey);
+			routeKeys.flatMap((routeKey, index) => {
+				const motion = stackMotions[index];
 				return motion
-					? [{ routeKey, visualProgress: motion.visualProgress }]
+					? [{ routeKey, visualProgress: motion.state.visualProgress }]
 					: [];
 			}),
-		[routeKeys, stackMotionByKey],
+		[routeKeys, stackMotions],
 	);
 
 	const currDescriptor = useBuilderStore((store) => store.descriptors.current);
 	const nextDescriptor = useBuilderStore((store) => store.descriptors.next);
 	const prevDescriptor = useBuilderStore((store) => store.descriptors.previous);
 	const currentMotion = useMotionStore((store) => store.state);
-	const registeredNextMotion = useOptionalMotionStore(
+	const nextMotion = useOptionalMotionStore(
 		nextDescriptor?.route.key ?? null,
 		(store) => store.state,
 	);
-	const registeredPreviousMotion = useOptionalMotionStore(
+	const previousMotion = useOptionalMotionStore(
 		prevDescriptor?.route.key ?? null,
 		(store) => store.state,
 	);
-	const nextMotion =
-		registeredNextMotion ??
-		stackMotionByKey.get(nextDescriptor?.route.key ?? "") ??
-		null;
-	const previousMotion =
-		registeredPreviousMotion ??
-		stackMotionByKey.get(prevDescriptor?.route.key ?? "") ??
-		null;
 	const currentAnimation = useInterpolatorState(currentMotion);
 	const nextAnimation = useInterpolatorState(nextMotion);
 	const prevAnimation = useInterpolatorState(previousMotion);
@@ -370,6 +337,5 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 		selectedInterpolatorOptions,
 		nextInterpolator,
 		currentInterpolator,
-		nextMotion,
 	};
 }
