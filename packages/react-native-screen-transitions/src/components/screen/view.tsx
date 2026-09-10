@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import {
 	BlankStackProvider,
 	useBlankStackStore,
@@ -15,6 +16,8 @@ import { Screen } from "./screen";
 interface RouteKeyProps {
 	routeKey: string;
 }
+
+// Keep the render subscription inside the activity boundary so it can be paused.
 const BlankSceneContent = memo(function BlankSceneContent({
 	routeKey,
 }: RouteKeyProps) {
@@ -23,6 +26,7 @@ const BlankSceneContent = memo(function BlankSceneContent({
 	);
 	return render?.();
 });
+
 const BlankSceneRow = memo(function BlankSceneRow({ routeKey }: RouteKeyProps) {
 	return (
 		<ActivityScreen routeKey={routeKey}>
@@ -32,6 +36,7 @@ const BlankSceneRow = memo(function BlankSceneRow({ routeKey }: RouteKeyProps) {
 		</ActivityScreen>
 	);
 });
+
 const StackViewContent = memo(function StackViewContent() {
 	const routeKeys = useBlankStackStore((store) => store?.routeKeys);
 	return (
@@ -45,21 +50,23 @@ const StackViewContent = memo(function StackViewContent() {
 		</PortalProvider>
 	);
 });
-type BlankStackViewProps = BlankStackProviderProps;
+
 export const BlankStackView = memo(function BlankStackView({
 	state,
 	navigation,
 	descriptors,
-}: BlankStackViewProps) {
+}: BlankStackProviderProps) {
 	return (
 		<GestureHandlerRootView style={styles.container}>
-			<BlankStackProvider
-				state={state}
-				navigation={navigation}
-				descriptors={descriptors}
-			>
-				<StackViewContent />
-			</BlankStackProvider>
+			<SafeAreaProvider>
+				<BlankStackProvider
+					state={state}
+					navigation={navigation}
+					descriptors={descriptors}
+				>
+					<StackViewContent />
+				</BlankStackProvider>
+			</SafeAreaProvider>
 		</GestureHandlerRootView>
 	);
 });
