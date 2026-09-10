@@ -48,7 +48,7 @@ export const useMeasurer = ({
 	const pendingLifecycleStartBlockCount = useMotionStore(
 		(store) => store.state.pendingLifecycleStartBlockCount,
 	);
-	const visibilityBlocked = useMotionStore((store) => store.visibilityBlocked);
+	const isScreenReady = useMotionStore((store) => store.isScreenReady);
 
 	return useCallback(
 		(target) => {
@@ -64,7 +64,7 @@ export const useMeasurer = ({
 
 			const correctedMeasured = correctMeasuredBoundsForVisibilityGate({
 				measured,
-				visibilityBlocked: visibilityBlocked.get(),
+				isScreenReady: isScreenReady.get(),
 				visibilityBlockOffset: getVisibilityBlockOffset(viewportHeight),
 				viewportWidth,
 				viewportHeight,
@@ -144,7 +144,7 @@ export const useMeasurer = ({
 			scrollState,
 			scrollMetadata,
 			pendingLifecycleStartBlockCount,
-			visibilityBlocked,
+			isScreenReady,
 		],
 	);
 };

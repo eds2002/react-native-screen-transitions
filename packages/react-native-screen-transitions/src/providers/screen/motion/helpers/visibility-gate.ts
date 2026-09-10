@@ -20,7 +20,7 @@ type ScreenVisibilityGateDecision = {
 
 type InitialDestinationStyleGateState = {
 	shouldPrepareStyles: boolean;
-	isVisibilityBlocked: boolean;
+	isScreenReady: boolean;
 	stylesReady: boolean;
 };
 
@@ -31,14 +31,14 @@ type InitialDestinationStyleGateDecision = {
 
 export const resolveInitialDestinationStyleGate = ({
 	shouldPrepareStyles,
-	isVisibilityBlocked,
+	isScreenReady,
 	stylesReady,
 }: InitialDestinationStyleGateState): InitialDestinationStyleGateDecision => {
 	"worklet";
 
 	return {
 		shouldMarkStylesReady:
-			shouldPrepareStyles && isVisibilityBlocked && !stylesReady,
+			shouldPrepareStyles && !isScreenReady && !stylesReady,
 		shouldWithholdStyles: shouldPrepareStyles && !stylesReady,
 	};
 };

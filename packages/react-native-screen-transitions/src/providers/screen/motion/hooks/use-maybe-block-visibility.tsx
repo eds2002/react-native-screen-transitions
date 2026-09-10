@@ -4,23 +4,27 @@ import {
 	useAnimatedProps,
 	useAnimatedReaction,
 	useAnimatedStyle,
+	useDerivedValue,
 	useSharedValue,
 } from "react-native-reanimated";
 import { getVisibilityBlockOffset } from "../../../../utils/visibility-block-offset";
-import { hasCloseTransitionFinished } from "../helpers/transition-visual-state";
-import { resolveVisibilityBlockOwnership } from "../helpers/visibility-block-ownership";
+import {
+	hasCloseTransitionFinished,
+	isScreenReady as resolveScreenReady,
+} from "../helpers/transition-visual-state";
 import { resolveScreenVisibilityGate } from "../helpers/visibility-gate";
 import type { MotionValues } from "../types";
+import { LifecycleTransitionRequestKind } from "./use-transition-values";
 
 type Params = {
 	motion: MotionValues;
-	ancestorVisibilityBlocked: SharedValue<boolean> | null;
+	ancestorIsScreenReady: SharedValue<boolean> | null;
 	isFloatingOverlay?: boolean;
 };
 
 export const useMaybeBlockVisibility = ({
 	motion,
-	ancestorVisibilityBlocked,
+	ancestorIsScreenReady,
 	isFloatingOverlay,
 }: Params) => {
 	const { height } = useWindowDimensions();
@@ -32,40 +36,47 @@ export const useMaybeBlockVisibility = ({
 
 	const hasVisibilityGateOpened = useSharedValue(false);
 	const localVisibilityBlocked = useSharedValue(!isFloatingOverlay);
-	const effectiveVisibilityBlocked = useSharedValue(!isFloatingOverlay);
 
 	useAnimatedReaction(
 		() => {
 			"worklet";
 
-			return {
-				gate: resolveScreenVisibilityGate({
-					isFloatingOverlay,
-					hasVisibilityGateOpened: hasVisibilityGateOpened.get(),
-					pendingLifecycleStartBlockCount:
-						pendingLifecycleStartBlockCount.get(),
-					pendingLifecycleRequestKind: pendingLifecycleRequestKind.get(),
-					animationProgress: animationProgress.get(),
-					entering: motion.entering.get(),
-				}),
-				ancestorBlocked: ancestorVisibilityBlocked?.get() ?? false,
-			};
+			return resolveScreenVisibilityGate({
+				isFloatingOverlay,
+				hasVisibilityGateOpened: hasVisibilityGateOpened.get(),
+				pendingLifecycleStartBlockCount: pendingLifecycleStartBlockCount.get(),
+				pendingLifecycleRequestKind: pendingLifecycleRequestKind.get(),
+				animationProgress: animationProgress.get(),
+				entering: motion.entering.get(),
+			});
 		},
-		({ gate, ancestorBlocked }) => {
+		(gate) => {
 			"worklet";
 
 			if (gate.shouldOpenGate) {
 				hasVisibilityGateOpened.set(true);
 			}
 
-			const ownership = resolveVisibilityBlockOwnership({
-				localBlocked: gate.shouldBlock,
-				ancestorBlocked,
-			});
 			localVisibilityBlocked.set(gate.shouldBlock);
-			effectiveVisibilityBlocked.set(ownership.effectiveBlocked);
 		},
 	);
+
+	const isScreenReady = useDerivedValue(() => {
+		"worklet";
+		const isPendingOpen =
+			pendingLifecycleRequestKind.get() === LifecycleTransitionRequestKind.Open;
+
+		return (
+			!localVisibilityBlocked.get() &&
+			(ancestorIsScreenReady?.get() ?? true) &&
+			resolveScreenReady({
+				opening: isPendingOpen || !!motion.entering.get(),
+				closing: motion.closing.get(),
+				pendingLifecycleStartBlockCount: pendingLifecycleStartBlockCount.get(),
+				animationProgress: animationProgress.get(),
+			})
+		);
+	});
 
 	const animatedStyle = useAnimatedStyle(() => {
 		"worklet";
@@ -76,21 +87,16 @@ export const useMaybeBlockVisibility = ({
 			closing: motion.closing.get(),
 			animationProgress: animationProgress.get(),
 		});
-		if (shouldHideClosedScreen) {
-			return {
-				opacity: 0,
-			};
-		}
-
-		const ownership = resolveVisibilityBlockOwnership({
-			localBlocked: localVisibilityBlocked.get(),
-			ancestorBlocked: ancestorVisibilityBlocked?.get() ?? false,
-		});
+		// Only the first unready ancestor applies the offset, including after close.
+		// Measurements can therefore use !isScreenReady to correct that one offset.
+		const appliesOffset =
+			!isScreenReady.get() && (ancestorIsScreenReady?.get() ?? true);
 
 		return {
+			opacity: shouldHideClosedScreen ? 0 : 1,
 			transform: [
 				{
-					translateY: ownership.appliesOffset ? offset : 0,
+					translateY: appliesOffset ? offset : 0,
 				},
 			],
 		};
@@ -99,15 +105,15 @@ export const useMaybeBlockVisibility = ({
 	const animatedProps = useAnimatedProps(() => {
 		"worklet";
 		return {
-			pointerEvents: effectiveVisibilityBlocked.get()
-				? ("none" as const)
-				: ("box-none" as const),
+			pointerEvents: isScreenReady.get()
+				? ("box-none" as const)
+				: ("none" as const),
 		};
 	});
 
 	return {
 		animatedStyle,
 		animatedProps,
-		visibilityBlocked: effectiveVisibilityBlocked,
+		isScreenReady,
 	};
 };

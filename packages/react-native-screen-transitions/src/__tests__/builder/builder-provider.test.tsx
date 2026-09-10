@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { LifecycleTransitionRequestKind } from "../../providers/screen/motion/hooks/use-transition-values";
 import { useContentLayout } from "../../components/screen/container/hooks/use-content-layout";
+import { getVisibilityBlockOffset } from "../../utils/visibility-block-offset";
 
 const scenes = Object.fromEntries(
 	["builder-parent", "builder-child"].map((key) => [
@@ -212,20 +213,20 @@ describe("Builder and Motion composition", () => {
 		expect(local.descriptors.current).toBe(scenes["builder-child"].descriptor);
 		expect(local.options).toBe(scenes["builder-child"].descriptor.options);
 		expect(local.derivations.currentScreenKey).toBe("builder-child");
-		expect(remote?.screenReady).toBe(local.screenReady);
-		expect(remote?.screenReady.get()).toBe(0);
+		expect(remote?.isScreenReady).toBe(local.isScreenReady);
+		expect(remote?.isScreenReady.get()).toBe(false);
 		expect(renderer!.root.findAllByType("AnimatedView")).toHaveLength(1);
 
 		system.pendingLifecycleStartBlockCount.set(0);
-		expect(local.screenReady.get()).toBe(0);
+		expect(local.isScreenReady.get()).toBe(false);
 		system.animationProgress.set(0.01);
-		expect(remote?.screenReady.get()).toBe(1);
+		expect(remote?.isScreenReady.get()).toBe(true);
 		getMotionStore("builder-child").state.closing.set(1);
 		system.animationProgress.set(0);
-		expect(remote?.screenReady.get()).toBe(0);
+		expect(remote?.isScreenReady.get()).toBe(false);
 	});
 
-	it("inherits a parent's visibility block while remaining ready itself", () => {
+	it("remains unready while its parent is blocked without applying a second offset", () => {
 		act(() => {
 			renderer = create(
 				<BuilderProvider routeKey="builder-parent">
@@ -237,14 +238,102 @@ describe("Builder and Motion composition", () => {
 			);
 		});
 
-		expect(local.screenReady.get()).toBe(1);
-		expect(local.visibilityBlocked.get()).toBe(true);
+		expect(local.isScreenReady.get()).toBe(false);
 		const wrappers = renderer!.root.findAllByType("AnimatedView");
 		expect(wrappers).toHaveLength(2);
 		expect(wrappers[1].props.style[1]).toEqual({
+			opacity: 1,
 			transform: [{ translateY: 0 }],
 		});
+
+		const parent = getMotionStore("builder-parent").state;
+		parent.pendingLifecycleStartBlockCount.set(0);
+		expect(local.isScreenReady.get()).toBe(false);
+		parent.animationProgress.set(0.01);
+		act(() => {
+			renderer!.update(
+				<BuilderProvider routeKey="builder-parent">
+					<BuilderProvider routeKey="builder-child">
+						<LocalProbe />
+					</BuilderProvider>
+				</BuilderProvider>,
+			);
+		});
+		expect(local.isScreenReady.get()).toBe(true);
 	});
+
+	it("keeps local opening checks after the visibility gate has already opened", () => {
+		const tree = () => (
+			<BuilderProvider routeKey="builder-child">
+				<LocalProbe />
+			</BuilderProvider>
+		);
+		act(() => {
+			renderer = create(tree());
+		});
+		local.state.animationProgress.set(1);
+		act(() => {
+			renderer!.update(tree());
+		});
+		expect(local.isScreenReady.get()).toBe(true);
+
+		local.state.actions.requestLifecycleTransition(
+			LifecycleTransitionRequestKind.Open,
+			1,
+		);
+		local.state.animationProgress.set(0);
+		act(() => {
+			renderer!.update(tree());
+		});
+		expect(local.isScreenReady.get()).toBe(false);
+		expect(
+			renderer!.root.findByType("AnimatedView").props.style[1].transform,
+		).toEqual([{ translateY: getVisibilityBlockOffset(844) }]);
+
+		local.state.actions.blockLifecycleStart();
+		local.state.animationProgress.set(0.01);
+		expect(local.isScreenReady.get()).toBe(false);
+		local.state.actions.unblockLifecycleStart();
+		expect(local.isScreenReady.get()).toBe(true);
+	});
+
+	it.each([
+		"builder-parent",
+		"builder-child",
+	])("becomes unready after %s closes and applies only one offset", (closingKey) => {
+		const tree = () => (
+			<BuilderProvider routeKey="builder-parent">
+				<BuilderProvider routeKey="builder-child">
+					<LocalProbe />
+				</BuilderProvider>
+			</BuilderProvider>
+		);
+		act(() => {
+			renderer = create(tree());
+		});
+		const closing = getMotionStore(closingKey).state;
+		closing.closing.set(1);
+		closing.animationProgress.set(0.01);
+		expect(local.isScreenReady.get()).toBe(true);
+		closing.animationProgress.set(0);
+		expect(local.isScreenReady.get()).toBe(false);
+		act(() => {
+			renderer!.update(tree());
+		});
+
+		const wrappers = renderer!.root.findAllByType("AnimatedView");
+		const closedIndex = closingKey === "builder-parent" ? 0 : 1;
+		expect(wrappers[closedIndex].props.style[1]).toEqual({
+			opacity: 0,
+			transform: [{ translateY: getVisibilityBlockOffset(844) }],
+		});
+		expect(wrappers[1 - closedIndex].props.style[1]).toEqual({
+			opacity: 1,
+			transform: [{ translateY: 0 }],
+		});
+		expect(wrappers[1].props.animatedProps.pointerEvents).toBe("none");
+	});
+
 	it("keeps values on rerender and releases the registered state on unmount", () => {
 		const render = () => (
 			<BuilderProvider routeKey="builder-child">

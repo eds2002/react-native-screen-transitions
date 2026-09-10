@@ -99,7 +99,7 @@ function Motion({ children }: { children?: ReactNode }) {
 		derivations: { currentScreenKey },
 	} = useContext(BuilderContext);
 	const animations = useMotionAnimationPipeline(useMotionValues());
-	const visibilityBlocked = useSharedValue(false);
+	const isScreenReady = useSharedValue(true);
 	const options = useScreenOptions();
 	const owners = useSharedValue({ ...NO_GESTURE_OWNERS });
 	const gestures = useMemo(
@@ -112,7 +112,7 @@ function Motion({ children }: { children?: ReactNode }) {
 	);
 	return (
 		<MotionContext.Provider
-			value={{ state: animations, options, gestures, visibilityBlocked }}
+			value={{ state: animations, options, gestures, isScreenReady }}
 		>
 			<OrchestratorProvider>{children}</OrchestratorProvider>
 		</MotionContext.Provider>

@@ -7,14 +7,14 @@ describe("handoff receiver visibility", () => {
 		activatingPairDestination: true,
 		animationProgress: 0.01,
 		receiverIsActiveDestination: true,
-		destinationVisibilityBlocked: true,
+		destinationIsScreenReady: false,
 	};
 	it("retains the source while the linked destination is hidden", () => {
 		expect(canActivateHandoffReceiver(opening)).toBe(false);
 		expect(
 			canActivateHandoffReceiver({
 				...opening,
-				destinationVisibilityBlocked: false,
+				destinationIsScreenReady: true,
 			}),
 		).toBe(true);
 	});
@@ -22,7 +22,7 @@ describe("handoff receiver visibility", () => {
 		expect(
 			canActivateHandoffReceiver({
 				...opening,
-				destinationVisibilityBlocked: undefined,
+				destinationIsScreenReady: undefined,
 			}),
 		).toBe(false);
 	});
@@ -50,7 +50,7 @@ describe("handoff receiver visibility", () => {
 		expect(
 			canActivateHandoffReceiver({
 				...opening,
-				destinationVisibilityBlocked: false,
+				destinationIsScreenReady: true,
 				activatingPairDestination: false,
 				animationProgress: 0,
 			}),

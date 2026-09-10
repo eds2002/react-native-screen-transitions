@@ -6,7 +6,7 @@ export type ReadyOverlayResources = {
 	overlayAnimationStore: OrchestratorState;
 	driverScene: FloatOverlayEntry["scene"];
 	driverAnimationStore: OrchestratorState;
-	driverScreenReady: SharedValue<number>;
+	driverIsScreenReady: SharedValue<boolean>;
 };
 
 export function retainReadyOverlayResources(
@@ -14,9 +14,9 @@ export function retainReadyOverlayResources(
 	overlayAnimationStore: OrchestratorState | null,
 	driverScene: FloatOverlayEntry["scene"],
 	driverAnimationStore: OrchestratorState | null,
-	driverScreenReady: SharedValue<number> | null,
+	driverIsScreenReady: SharedValue<boolean> | null,
 ): ReadyOverlayResources | null {
-	if (!overlayAnimationStore || !driverAnimationStore || !driverScreenReady) {
+	if (!overlayAnimationStore || !driverAnimationStore || !driverIsScreenReady) {
 		return previous;
 	}
 
@@ -24,7 +24,7 @@ export function retainReadyOverlayResources(
 		previous?.overlayAnimationStore === overlayAnimationStore &&
 		previous.driverScene === driverScene &&
 		previous.driverAnimationStore === driverAnimationStore &&
-		previous.driverScreenReady === driverScreenReady
+		previous.driverIsScreenReady === driverIsScreenReady
 	) {
 		return previous;
 	}
@@ -33,6 +33,6 @@ export function retainReadyOverlayResources(
 		overlayAnimationStore,
 		driverScene,
 		driverAnimationStore,
-		driverScreenReady,
+		driverIsScreenReady,
 	};
 }

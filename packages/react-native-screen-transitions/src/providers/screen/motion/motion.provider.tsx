@@ -7,7 +7,6 @@ import { useMotionAnimationPipeline } from "./animation/pipeline";
 import { useScreenGestures } from "./gestures/use-screen-gestures";
 import { useMaybeBlockVisibility } from "./hooks/use-maybe-block-visibility";
 import { useMotionValues } from "./hooks/use-motion-values";
-import { useScreenReady } from "./hooks/use-screen-ready";
 import { useScreenOptions } from "./options/use-screen-options";
 
 export type MotionProviderProps = {
@@ -19,8 +18,8 @@ export type MotionState = {
 	options: ReturnType<typeof useScreenOptions>;
 	gestures: ReturnType<typeof useScreenGestures>;
 	state: ReturnType<typeof useMotionAnimationPipeline>;
-	screenReady: SharedValue<number>;
-	visibilityBlocked: SharedValue<boolean>;
+	/** False until this screen and its ancestors are ready, or after visual close. */
+	isScreenReady: SharedValue<boolean>;
 };
 
 export const {
@@ -35,8 +34,8 @@ export const {
 	const screenKey = useBuilderStore(
 		(store) => store.derivations.currentScreenKey,
 	);
-	const ancestorVisibilityBlocked = useOptionalMotionStore(
-		(store) => store?.visibilityBlocked ?? null,
+	const ancestorIsScreenReady = useOptionalMotionStore(
+		(store) => store?.isScreenReady ?? null,
 	);
 	const values = useMotionValues();
 	const options = useScreenOptions();
@@ -44,14 +43,13 @@ export const {
 	const gestures = useScreenGestures(options, values, onDismissRequest);
 
 	const state = useMotionAnimationPipeline(values);
-	const screenReady = useScreenReady(values);
 
-	const { animatedStyle, animatedProps, visibilityBlocked } =
-		useMaybeBlockVisibility({ motion: values, ancestorVisibilityBlocked });
+	const { animatedStyle, animatedProps, isScreenReady } =
+		useMaybeBlockVisibility({ motion: values, ancestorIsScreenReady });
 
 	const value = useMemo(
-		() => ({ options, gestures, state, screenReady, visibilityBlocked }),
-		[options, gestures, state, screenReady, visibilityBlocked],
+		() => ({ options, gestures, state, isScreenReady }),
+		[options, gestures, state, isScreenReady],
 	);
 
 	return {

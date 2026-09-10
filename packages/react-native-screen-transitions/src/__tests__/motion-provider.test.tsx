@@ -130,7 +130,7 @@ it("updates live gesture options without replacing animation values or resetting
 	const sharedOptions = local.options;
 	const animations = local.state;
 	expect(remote).toBe(local);
-	expect(local.screenReady.get()).toBe(1);
+	expect(local.isScreenReady.get()).toBe(true);
 	expect(animations.transitionProgress).toBe(remote?.state.transitionProgress);
 	expect(animations).toBe(remote?.state);
 	expect(animations.targetProgress).toBe(animationState.targetProgress);
@@ -259,14 +259,14 @@ it("releases keyed motion on unmount and creates fresh values on remount", () =>
 });
 
 it("derives local readiness before the Motion store is registered", () => {
-	let beforeRegistration: number | undefined;
+	let beforeRegistration: boolean | undefined;
 	function BeforeRegistration() {
 		const motion = useMotionStore();
 		useLayoutEffect(() => {
 			expect(() => getMotionStore(key)).toThrow();
 			motion.state.closing.set(1);
 			motion.state.animationProgress.set(0);
-			beforeRegistration = motion.screenReady.get();
+			beforeRegistration = motion.isScreenReady.get();
 		}, [motion]);
 		return null;
 	}
@@ -281,6 +281,6 @@ it("derives local readiness before the Motion store is registered", () => {
 			</MotionProvider>,
 		);
 	});
-	expect(beforeRegistration).toBe(0);
-	expect(getMotionStore(key).screenReady.get()).toBe(0);
+	expect(beforeRegistration).toBe(false);
+	expect(getMotionStore(key).isScreenReady.get()).toBe(false);
 });

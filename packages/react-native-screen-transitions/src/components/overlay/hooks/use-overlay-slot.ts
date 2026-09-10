@@ -24,7 +24,8 @@ export const useOverlaySlot = ({
 	driverAnimationStore,
 	previousOverlayAnimationStore,
 	driverInterpolator,
-	screenReady,
+	isScreenReady,
+	ancestorIsScreenReady,
 	isIncoming,
 }: {
 	overlayAnimationStore: OrchestratorState;
@@ -32,7 +33,8 @@ export const useOverlaySlot = ({
 	driverAnimationStore: OrchestratorState;
 	previousOverlayAnimationStore?: OrchestratorState;
 	driverInterpolator: ScreenStyleInterpolator | undefined;
-	screenReady: SharedValue<number>;
+	isScreenReady: SharedValue<boolean>;
+	ancestorIsScreenReady: SharedValue<boolean> | null;
 	isIncoming: boolean;
 }) => {
 	const { height } = useWindowDimensions();
@@ -67,7 +69,11 @@ export const useOverlaySlot = ({
 			return NO_STYLES;
 		}
 
-		if (isIncoming && !screenReady.get()) {
+		if (
+			isIncoming &&
+			!isScreenReady.get() &&
+			(ancestorIsScreenReady?.get() ?? true)
+		) {
 			return {
 				transform: [{ translateY: getVisibilityBlockOffset(height) }],
 			};

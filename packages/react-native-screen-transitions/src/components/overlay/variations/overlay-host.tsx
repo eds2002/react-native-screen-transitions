@@ -40,9 +40,9 @@ export const OverlayHost = memo(function OverlayHost({
 	const previousOverlayAnimationStore = useOptionalOrchestratorStore(
 		previousOverlayScene?.route.key ?? scene.route.key,
 	);
-	const driverScreenReady = useOptionalMotionStore(
+	const driverIsScreenReady = useOptionalMotionStore(
 		driverScene.route.key,
-		(store) => store.screenReady,
+		(store) => store.isScreenReady,
 	);
 	const overlayComponentRef = useRef(scene.descriptor.options.overlay);
 	const OverlayComponent = overlayComponentRef.current;
@@ -52,7 +52,7 @@ export const OverlayHost = memo(function OverlayHost({
 		overlayAnimationStore,
 		driverScene,
 		driverAnimationStore,
-		driverScreenReady,
+		driverIsScreenReady,
 	);
 	const readyResources = readyResourcesRef.current;
 
@@ -70,7 +70,7 @@ export const OverlayHost = memo(function OverlayHost({
 			previousOverlayAnimationStore={
 				previousOverlayScene ? previousOverlayAnimationStore : undefined
 			}
-			driverScreenReady={readyResources.driverScreenReady}
+			driverIsScreenReady={readyResources.driverIsScreenReady}
 			OverlayComponent={OverlayComponent}
 		/>
 	);
@@ -80,7 +80,7 @@ type ReadyOverlayHostProps = OverlayHostProps & {
 	overlayAnimationStore: OrchestratorState;
 	driverAnimationStore: OrchestratorState;
 	previousOverlayAnimationStore?: OrchestratorState | null;
-	driverScreenReady: SharedValue<number>;
+	driverIsScreenReady: SharedValue<boolean>;
 	OverlayComponent: NonNullable<
 		FloatOverlayEntry["scene"]["descriptor"]["options"]["overlay"]
 	>;
@@ -93,19 +93,23 @@ function ReadyOverlayHost({
 	overlayAnimationStore,
 	driverAnimationStore,
 	previousOverlayAnimationStore,
-	driverScreenReady,
+	driverIsScreenReady,
 	OverlayComponent,
 }: ReadyOverlayHostProps) {
 	const { scenes, focusedIndex, routeKeys, routes } = useBlankStackStore();
 	const focusedScene = scenes[focusedIndex] ?? scenes[scenes.length - 1];
 	const focusedDescriptor = focusedScene?.descriptor;
+	const ancestorIsScreenReady = useOptionalMotionStore(
+		(store) => store?.isScreenReady ?? null,
+	);
 	const { animatedProps, animatedStyle } = useOverlaySlot({
 		overlayAnimationStore,
 		overlayInterpolator: scene.descriptor.options.screenStyleInterpolator,
 		driverAnimationStore,
 		previousOverlayAnimationStore: previousOverlayAnimationStore ?? undefined,
 		driverInterpolator: driverScene.descriptor.options.screenStyleInterpolator,
-		screenReady: driverScreenReady,
+		isScreenReady: driverIsScreenReady,
+		ancestorIsScreenReady,
 		isIncoming: scene.route.key === driverScene.route.key,
 	});
 	const relativeProgress = useDerivedValue(() => {

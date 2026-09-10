@@ -8,7 +8,7 @@ const createScene = (key: string) =>
 	({ route: { key, name: key } }) as StackScene;
 
 describe("overlay resource retention", () => {
-	const screenReady = makeMutable(1);
+	const isScreenReady = makeMutable(true);
 	it("keeps a mounted overlay alive while the incoming driver registers", () => {
 		const sceneA = createScene("A");
 		const sceneB = createScene("B");
@@ -19,7 +19,7 @@ describe("overlay resource retention", () => {
 			animationA,
 			sceneA,
 			animationA,
-			screenReady,
+			isScreenReady,
 		);
 
 		const whileBRegisters = retainReadyOverlayResources(
@@ -27,14 +27,14 @@ describe("overlay resource retention", () => {
 			animationA,
 			sceneB,
 			null,
-			screenReady,
+			isScreenReady,
 		);
 		const drivenByB = retainReadyOverlayResources(
 			whileBRegisters,
 			animationA,
 			sceneB,
 			animationB,
-			screenReady,
+			isScreenReady,
 		);
 
 		expect(whileBRegisters).toBe(mounted);
@@ -42,7 +42,7 @@ describe("overlay resource retention", () => {
 			overlayAnimationStore: animationA,
 			driverScene: sceneB,
 			driverAnimationStore: animationB,
-			driverScreenReady: screenReady,
+			driverIsScreenReady: isScreenReady,
 		});
 	});
 
@@ -54,11 +54,11 @@ describe("overlay resource retention", () => {
 			animation,
 			scene,
 			animation,
-			screenReady,
+			isScreenReady,
 		);
 
 		expect(
-			retainReadyOverlayResources(mounted, null, scene, animation, screenReady),
+			retainReadyOverlayResources(mounted, null, scene, animation, isScreenReady),
 		).toBe(mounted);
 	});
 
@@ -69,7 +69,7 @@ describe("overlay resource retention", () => {
 				null,
 				createScene("A"),
 				null,
-				screenReady,
+				isScreenReady,
 			),
 		).toBeNull();
 	});

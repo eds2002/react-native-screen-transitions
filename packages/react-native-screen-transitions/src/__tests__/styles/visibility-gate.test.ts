@@ -74,7 +74,7 @@ describe("resolveInitialDestinationStyleGate", () => {
 	it("withholds progress-zero styles until the destination is confirmed hidden", () => {
 		const beforeVisibilityBlock = resolveInitialDestinationStyleGate({
 			shouldPrepareStyles: true,
-			isVisibilityBlocked: false,
+			isScreenReady: true,
 			stylesReady: false,
 		});
 
@@ -85,7 +85,7 @@ describe("resolveInitialDestinationStyleGate", () => {
 
 		const visibilityBlockObserved = resolveInitialDestinationStyleGate({
 			shouldPrepareStyles: true,
-			isVisibilityBlocked: true,
+			isScreenReady: false,
 			stylesReady: false,
 		});
 
@@ -96,7 +96,7 @@ describe("resolveInitialDestinationStyleGate", () => {
 
 		const destinationReady = resolveInitialDestinationStyleGate({
 			shouldPrepareStyles: true,
-			isVisibilityBlocked: true,
+			isScreenReady: false,
 			stylesReady: visibilityBlockObserved.shouldMarkStylesReady,
 		});
 

@@ -18,7 +18,7 @@ import type { OrchestratorState } from "../../providers/screen/orchestrator/orch
 const animationStores = new Map<string, OrchestratorState>();
 const motionStores = new Map<
 	string,
-	{ screenReady: ReturnType<typeof shared<number>> }
+	{ isScreenReady: ReturnType<typeof shared<boolean>> }
 >();
 const ScreenAnimationContext = createContext<OrchestratorState | null>(null);
 let stackState: {
@@ -51,7 +51,7 @@ mock.module("../../providers/screen/motion", () => ({
 	useOptionalMotionStore: (
 		keyOrSelector: string | ((store: null) => unknown),
 		selector?: (store: {
-			screenReady: ReturnType<typeof shared<number>>;
+			isScreenReady: ReturnType<typeof shared<boolean>>;
 		}) => unknown,
 	) => {
 		if (typeof keyOrSelector === "function") return keyOrSelector(null);
@@ -195,7 +195,7 @@ describe("OverlayHost lifecycle", () => {
 		const sceneA = createScene("A", StatefulOverlay as never);
 		const sceneB = createScene("B");
 		animationStores.set("A", createAnimationStore("A"));
-		motionStores.set("A", { screenReady: shared(1) });
+		motionStores.set("A", { isScreenReady: shared(true) });
 		stackState = {
 			scenes: [sceneA],
 			focusedIndex: 0,
@@ -246,7 +246,7 @@ describe("OverlayHost lifecycle", () => {
 		).toBe(1);
 
 		animationStores.set("B", createAnimationStore("B", 0.9));
-		motionStores.set("B", { screenReady: shared(1) });
+		motionStores.set("B", { isScreenReady: shared(true) });
 		act(() => {
 			renderer!.update(
 				<OverlayHost
@@ -276,7 +276,7 @@ describe("OverlayHost lifecycle", () => {
 
 		const scene = createScene("A", (() => null) as never);
 		animationStores.set("A", createAnimationStore("A"));
-		motionStores.set("A", { screenReady: shared(1) });
+		motionStores.set("A", { isScreenReady: shared(true) });
 		stackState = {
 			scenes: [scene],
 			focusedIndex: 0,

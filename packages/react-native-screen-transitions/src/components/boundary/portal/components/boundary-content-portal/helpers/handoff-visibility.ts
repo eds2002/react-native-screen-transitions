@@ -3,17 +3,17 @@ export function canActivateHandoffReceiver({
 	activatingPairDestination,
 	animationProgress,
 	receiverIsActiveDestination,
-	destinationVisibilityBlocked,
+	destinationIsScreenReady,
 }: {
 	returningFromActiveClose: boolean;
 	activatingPairDestination: boolean;
 	animationProgress: number;
 	receiverIsActiveDestination: boolean;
-	destinationVisibilityBlocked: boolean | undefined;
+	destinationIsScreenReady: boolean | undefined;
 }) {
 	"worklet";
 	// Keep the loaded source in place until its receiving screen is visible.
-	if (receiverIsActiveDestination && destinationVisibilityBlocked !== false)
+	if (receiverIsActiveDestination && destinationIsScreenReady !== true)
 		return false;
 	return (
 		returningFromActiveClose ||

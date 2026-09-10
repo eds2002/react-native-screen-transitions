@@ -122,7 +122,7 @@ export const useInterpolatedStylesMap = ({
 }: {
 	pipeline: ScreenAnimationPipeline;
 }) => {
-	const visibilityBlocked = useMotionStore((store) => store.visibilityBlocked);
+	const isScreenReady = useMotionStore((store) => store.isScreenReady);
 	const nextScreenKey = useBuilderStore((s) => s.derivations.nextScreenKey);
 	const destinationPairKey = useBuilderStore(
 		(s) => s.derivations.destinationPairKey,
@@ -157,13 +157,13 @@ export const useInterpolatedStylesMap = ({
 	useAnimatedReaction(
 		() => {
 			"worklet";
-			return visibilityBlocked.get();
+			return isScreenReady.get();
 		},
-		(isVisibilityBlocked) => {
+		(isScreenReady) => {
 			"worklet";
 			const styleGate = resolveInitialDestinationStyleGate({
 				shouldPrepareStyles: shouldPrepareInitialDestinationStyles,
-				isVisibilityBlocked,
+				isScreenReady,
 				stylesReady: !!initialDestinationStylesReady.get(),
 			});
 
@@ -239,7 +239,7 @@ export const useInterpolatedStylesMap = ({
 
 		const initialDestinationStyleGate = resolveInitialDestinationStyleGate({
 			shouldPrepareStyles: shouldPrepareInitialDestinationStyles,
-			isVisibilityBlocked: visibilityBlocked.get(),
+			isScreenReady: isScreenReady.get(),
 			stylesReady: !!initialDestinationStylesReady.get(),
 		});
 

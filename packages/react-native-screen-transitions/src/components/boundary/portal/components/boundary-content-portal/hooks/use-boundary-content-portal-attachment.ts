@@ -59,12 +59,12 @@ export const useBoundaryContentPortalAttachment = ({
 	const destinationPairKey = useBuilderStore(
 		(s) => s.derivations.destinationPairKey,
 	);
-	const destinationScreenReady = useOptionalMotionStore(
+	const destinationIsScreenReady = useOptionalMotionStore(
 		nextScreenKey ?? currentScreenKey,
-		(store) => store.screenReady,
+		(store) => store.isScreenReady,
 	);
-	const unavailableScreenReady = useSharedValue(0);
-	const screenReady = destinationScreenReady ?? unavailableScreenReady;
+	const unavailableIsScreenReady = useSharedValue(false);
+	const screenReadiness = destinationIsScreenReady ?? unavailableIsScreenReady;
 
 	const activeReceiverScreenKey = useBlankStackStore(
 		resolveActiveHandoffReceiver,
@@ -88,9 +88,9 @@ export const useBoundaryContentPortalAttachment = ({
 		(store) => store.state.closing,
 	);
 
-	const activeReceiverVisibilityBlocked = useOptionalMotionStore(
+	const activeReceiverIsScreenReady = useOptionalMotionStore(
 		activeReceiverScreenKey ?? currentScreenKey,
-		(store) => store.visibilityBlocked,
+		(store) => store.isScreenReady,
 	);
 
 	const attachedReceiverScreenKey = useSharedValue(currentScreenKey);
@@ -177,7 +177,7 @@ export const useBoundaryContentPortalAttachment = ({
 			: null;
 		const requestedLink = requestedPair?.links[boundaryLinkKey];
 
-		const isScreenReady = screenReady.get();
+		const isScreenReady = screenReadiness.get();
 		const attachedScreenKey = attachedReceiverScreenKey.get();
 
 		const automaticReceiverScreenKey = resolveHandoffAttachmentCandidate({
@@ -185,7 +185,7 @@ export const useBoundaryContentPortalAttachment = ({
 			activeReceiverScreenKey,
 			attachedReceiverScreenKey: attachedScreenKey,
 			hasActiveCloseFinished,
-			screenReady: !!isScreenReady,
+			isScreenReady,
 			pairChangedDuringClose,
 			pairDestinationScreenKey: pairDestination,
 			pairHasBoundaryLink: automaticLink !== undefined,
@@ -199,7 +199,7 @@ export const useBoundaryContentPortalAttachment = ({
 			automaticScreenKey: automaticReceiverScreenKey,
 			destinationReady:
 				requestedDestinationScreenKey === activeReceiverScreenKey ||
-				!!isScreenReady,
+				isScreenReady,
 			destinationScreenKey: requestedDestinationScreenKey,
 			handoffTarget,
 			sourceScreenKey:
@@ -219,7 +219,7 @@ export const useBoundaryContentPortalAttachment = ({
 
 		const activatingPairDestination =
 			!!pairDestination &&
-			!!isScreenReady &&
+			isScreenReady &&
 			nextReceiverScreenKey === pairDestination;
 
 		const canActivateReceiver = canActivateHandoffReceiver({
@@ -229,7 +229,7 @@ export const useBoundaryContentPortalAttachment = ({
 			receiverIsActiveDestination:
 				!returningFromActiveClose &&
 				nextReceiverScreenKey === activeReceiverScreenKey,
-			destinationVisibilityBlocked: activeReceiverVisibilityBlocked?.get(),
+			destinationIsScreenReady: activeReceiverIsScreenReady?.get(),
 		});
 
 		if (nextReceiverScreenKey && receiverReady && canActivateReceiver) {
