@@ -10,8 +10,6 @@ export const SlideFromTop = (
 	config: Partial<ScreenTransitionConfig> = {},
 ): ScreenTransitionConfig => {
 	return {
-		//@ts-expect-error - Should not lead to any issues
-		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: "vertical-inverted",
 		screenStyleInterpolator: ({
@@ -45,8 +43,6 @@ export const ZoomIn = (
 	config: Partial<ScreenTransitionConfig> = {},
 ): ScreenTransitionConfig => {
 	return {
-		//@ts-expect-error - Should not lead to any issues
-		enableTransitions: true,
 		gestureEnabled: false,
 		screenStyleInterpolator: ({ progress }) => {
 			"worklet";
@@ -86,8 +82,6 @@ export const SlideFromBottom = (
 	config: Partial<ScreenTransitionConfig> = {},
 ): ScreenTransitionConfig => {
 	return {
-		//@ts-expect-error - Should not lead to any issues
-		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: "vertical",
 		screenStyleInterpolator: ({
@@ -120,8 +114,6 @@ export const DraggableCard = (
 	config: Partial<ScreenTransitionConfig> = {},
 ): ScreenTransitionConfig => {
 	return {
-		//@ts-expect-error - Should not lead to any issues
-		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: ["horizontal", "vertical"],
 		screenStyleInterpolator: ({ current, progress, layouts: { screen } }) => {
@@ -166,8 +158,6 @@ export const ElasticCard = (
 	} = { elasticFactor: 0.5 },
 ): ScreenTransitionConfig => {
 	return {
-		//@ts-expect-error - Should not lead to any issues
-		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: "bidirectional",
 		screenStyleInterpolator: ({

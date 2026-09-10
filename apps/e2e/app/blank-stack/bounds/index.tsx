@@ -1,0 +1,55 @@
+import { router } from "expo-router";
+import { buildStackPath } from "@/components/stack-examples/stack-routing";
+import { ListScreen } from "@/components/ui";
+
+const BOUNDS_EXAMPLES = [
+	{
+		id: "style-id",
+		title: ".reveal()",
+		description:
+			"Custom bounds styles for the navigation mask and content container",
+	},
+	{
+		id: "zoom",
+		title: ".zoom()",
+		description:
+			"bounds({ id, group }).navigation.zoom() with grouped source/destination",
+	},
+	{
+		id: "sync",
+		title: "Bounds API examples",
+		description:
+			"Shared element cases for bounds, anchors, scale modes, and targets",
+	},
+	{
+		id: "matched-screen",
+		title: "Handoff ownership overlap",
+		description:
+			"Spam same- and different-ID handoffs in auto or explicit mode",
+	},
+	{
+		id: "handoff-multiflow",
+		title: "Handoff multiflow",
+		description: "One payload handed across a multi-screen push and pop flow",
+	},
+	{
+		id: "stacking",
+		title: "Repeated route stacking",
+		description:
+			"Alternating route pushes with independently selectable card and button sources",
+	},
+];
+
+export default function BoundsHubIndex() {
+	const testPrefix = "blank";
+
+	return (
+		<ListScreen
+			title="Bounds"
+			subtitle="Stack-scoped bounds examples"
+			items={BOUNDS_EXAMPLES}
+			testIdPrefix={`${testPrefix}-bounds`}
+			onPress={(id) => router.push(buildStackPath(`bounds/${id}`) as never)}
+		/>
+	);
+}

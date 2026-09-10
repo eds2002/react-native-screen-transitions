@@ -1,5 +1,4 @@
 import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
-import { useStackCoreStore } from "../../../providers/stack/core.provider";
 
 import {
 	getFloatOverlayStack,
@@ -13,11 +12,9 @@ import { OverlayHost } from "./overlay-host";
  */
 export function FloatOverlay() {
 	const scenes = useBlankStackStore((store) => store.scenes);
-	const transitionsAlwaysOn = useStackCoreStore(
-		(store) => store.flags.TRANSITIONS_ALWAYS_ON,
-	);
 
-	const overlayStack = getFloatOverlayStack(scenes, transitionsAlwaysOn);
+	const overlayStack = getFloatOverlayStack(scenes);
+
 	if (overlayStack.length === 0) {
 		return null;
 	}

@@ -17,11 +17,9 @@ import type {
 	ScreenTransitionState,
 } from "../../../../types/animation.types";
 import { useOptionalBlankStackStore } from "../../../stack/blank-stack.provider";
-import { useOptionalStackCoreStore } from "../../../stack/core.provider";
 import { type BaseDescriptor, useBuilderStore } from "../../builder";
 import { useMotionStore, useOptionalMotionStore } from "../../motion";
 import { buildScreenTransitionOptions } from "../../motion/animation/helpers/build-screen-transition-options";
-import { hasTransitionsEnabled } from "../../motion/animation/helpers/has-transitions-enabled";
 import { hydrateTransitionState } from "../../motion/animation/helpers/hydrate-transition-state";
 import type { BuiltState } from "../../motion/animation/helpers/hydrate-transition-state/types";
 import {
@@ -209,7 +207,6 @@ const hydrateInterpolatorFrame = <TFrame extends ScreenInterpolatorFrame>({
 	currentAnimation,
 	nextAnimation,
 	prevAnimation,
-	nextHasTransitions,
 	interpolatorOptions,
 	stackProgressEntries,
 	currentRouteKey,
@@ -220,7 +217,6 @@ const hydrateInterpolatorFrame = <TFrame extends ScreenInterpolatorFrame>({
 	currentAnimation: BuiltState | undefined;
 	nextAnimation: BuiltState | undefined;
 	prevAnimation: BuiltState | undefined;
-	nextHasTransitions: boolean;
 	interpolatorOptions: SelectedInterpolatorOptions;
 	stackProgressEntries: readonly StackProgressEntry[];
 	currentRouteKey: string;
@@ -228,9 +224,8 @@ const hydrateInterpolatorFrame = <TFrame extends ScreenInterpolatorFrame>({
 	"worklet";
 	const shouldApplyOptionsToCurrent = interpolatorOptions.owner === "current";
 	const shouldApplyOptionsToNext =
-		interpolatorOptions.owner === "next" &&
-		!!nextAnimation &&
-		nextHasTransitions;
+		interpolatorOptions.owner === "next" && !!nextAnimation;
+
 	frame.previous = prevAnimation
 		? hydrateTransitionState(prevAnimation, dimensions)
 		: undefined;
@@ -243,14 +238,13 @@ const hydrateInterpolatorFrame = <TFrame extends ScreenInterpolatorFrame>({
 			)
 		: DEFAULT_SCREEN_TRANSITION_STATE;
 
-	frame.next =
-		nextAnimation && nextHasTransitions
-			? hydrateTransitionState(
-					nextAnimation,
-					dimensions,
-					shouldApplyOptionsToNext ? interpolatorOptions.options : undefined,
-				)
-			: undefined;
+	frame.next = nextAnimation
+		? hydrateTransitionState(
+				nextAnimation,
+				dimensions,
+				shouldApplyOptionsToNext ? interpolatorOptions.options : undefined,
+			)
+		: undefined;
 
 	frame.layouts = frame.current.layouts;
 	frame.insets = insets;
@@ -267,9 +261,6 @@ const hydrateInterpolatorFrame = <TFrame extends ScreenInterpolatorFrame>({
 };
 
 export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
-	const transitionsAlwaysOn = useOptionalStackCoreStore(
-		(store) => store?.flags.TRANSITIONS_ALWAYS_ON ?? true,
-	);
 	const routeKeys = useOptionalBlankStackStore(
 		(store) => store?.routeKeys ?? NO_ROUTE_KEYS,
 	);
@@ -304,11 +295,6 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 	const prevAnimation = useInterpolatorState(previousMotion);
 	const currentRouteKey = currDescriptor.route.key;
 
-	const nextRouteKey = nextDescriptor?.route?.key;
-	const nextHasTransitions =
-		!!nextRouteKey &&
-		hasTransitionsEnabled(nextDescriptor?.options, transitionsAlwaysOn);
-
 	const initialInterpolatorProps = useMemo(
 		() =>
 			createInitialInterpolatorProps({
@@ -336,7 +322,6 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 				currentAnimation,
 				nextAnimation,
 				prevAnimation,
-				nextHasTransitions,
 				interpolatorOptions,
 				stackProgressEntries,
 				currentRouteKey,

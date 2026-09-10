@@ -1,7 +1,7 @@
 import { mountMotionValues } from "./helpers/mount-motion-values";
 import { beforeEach, describe, expect, it } from "bun:test";
 
-import { resetStoresForScreen } from "../components/screen-lifecycle/hooks/helpers/reset-stores-for-screen";
+import { resetStoresForScreen } from "../components/screen/lifecycle/hooks/helpers/reset-stores-for-screen";
 import { BoundStore } from "../stores/bounds";
 import { createPendingPairKey } from "../stores/bounds/helpers/link-pairs.helpers";
 import {

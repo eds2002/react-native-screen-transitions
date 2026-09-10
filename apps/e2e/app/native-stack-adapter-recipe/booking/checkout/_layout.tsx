@@ -15,6 +15,7 @@ export default function CheckoutLayout() {
 			<NativeStackAdapter.Screen
 				name="review"
 				options={{
+					enableTransitions: true,
 					...Transition.Presets.SlideFromBottom(),
 				}}
 			/>

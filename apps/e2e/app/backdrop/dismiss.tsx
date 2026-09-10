@@ -1,1 +1,1 @@
-export { default } from "../[stackType]/backdrop/dismiss";
+export { default } from "../blank-stack/backdrop/dismiss";

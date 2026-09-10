@@ -1,0 +1,50 @@
+import { interpolate } from "react-native-reanimated";
+import Transition from "react-native-screen-transitions";
+import { BlankStack } from "@/layouts/blank-stack";
+
+export default function StackProgressLayout() {
+	return (
+		<BlankStack>
+			<BlankStack.Screen name="index" options={{ inactiveBehavior: "keep" }} />
+			<BlankStack.Screen
+				name="pushed"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "vertical",
+					inactiveBehavior: "unmount",
+					screenStyleInterpolator: ({ stackProgress, current }) => {
+						"worklet";
+
+						if (current.route.name !== "index") return {};
+						const translateY = interpolate(
+							stackProgress,
+							[1, 2, 3, 4],
+							[0, 100, 180, 240],
+						);
+						const scale = interpolate(
+							stackProgress,
+							[1, 2, 3, 4],
+							[1, 0.92, 0.85, 0.8],
+						);
+						const borderRadius = interpolate(
+							stackProgress,
+							[1, 2, 3, 4],
+							[0, 16, 24, 32],
+						);
+
+						return {
+							content: {
+								transform: [{ translateY }, { scale }],
+								borderRadius,
+							},
+						};
+					},
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
+		</BlankStack>
+	);
+}

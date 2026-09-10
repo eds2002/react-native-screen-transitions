@@ -3,14 +3,16 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { interpolate } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";
 import Transition from "react-native-screen-transitions";
-import {
-	buildStackPath,
-	useResolvedStackType,
-} from "@/components/stack-examples/stack-routing";
+import { buildStackPath } from "@/components/stack-examples/stack-routing";
 
 type OverlayScreenName = "A" | "B" | "C" | "D" | "E";
 
-const nextRoute: Partial<Record<OverlayScreenName, string>> = {
+const nextRoute: Partial<
+	Record<
+		OverlayScreenName,
+		"overlay/second" | "overlay/third" | "overlay/fourth" | "overlay/fifth"
+	>
+> = {
 	A: "overlay/second",
 	B: "overlay/third",
 	C: "overlay/fourth",
@@ -109,7 +111,6 @@ export function OverlayPlaygroundScreen({
 }: {
 	screen: OverlayScreenName;
 }) {
-	const stackType = useResolvedStackType();
 	const next = nextRoute[screen];
 
 	return (
@@ -123,7 +124,7 @@ export function OverlayPlaygroundScreen({
 					<Pressable
 						testID={`overlay-playground-push-${screen}`}
 						style={styles.button}
-						onPress={() => router.push(buildStackPath(stackType, next))}
+						onPress={() => router.push(buildStackPath(next))}
 					>
 						<Text style={styles.buttonText}>
 							Push Screen {String.fromCharCode(screen.charCodeAt(0) + 1)}

@@ -2,10 +2,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import type { InactiveBehavior } from "react-native-screen-transitions";
-import {
-	buildStackPath,
-	useResolvedStackType,
-} from "@/components/stack-examples/stack-routing";
+import { buildStackPath } from "@/components/stack-examples/stack-routing";
 import { ActionButton, DemoScreen, InfoCard } from "@/components/ui";
 import { useTheme } from "@/theme";
 import { ScreenHeader } from "./screen-header";
@@ -84,7 +81,6 @@ export function InactiveBehaviorProbe({
 	behavior: InactiveBehavior;
 }) {
 	const theme = useTheme();
-	const stackType = useResolvedStackType();
 	const params = useLocalSearchParams<{ depth?: string }>();
 	const depth = Number(params.depth ?? "1");
 	const renderCount = useRef(0);
@@ -139,10 +135,7 @@ export function InactiveBehaviorProbe({
 		instanceHint: number,
 	) => {
 		router.push({
-			pathname: buildStackPath(
-				stackType,
-				`inactive-behavior/${behavior}`,
-			) as never,
+			pathname: buildStackPath(`inactive-behavior/${behavior}`) as never,
 			params: {
 				depth: String(nextDepth),
 				instance: String(instanceHint),
@@ -195,11 +188,7 @@ export function InactiveBehaviorProbe({
 		<DemoScreen>
 			<ScreenHeader
 				title={`${getBehaviorLabel(behavior)} Retention`}
-				subtitle={
-					stackType === "blank-stack"
-						? "BlankStack inactiveBehavior probe"
-						: "Native stack path renders for comparison only"
-				}
+				subtitle={"BlankStack inactiveBehavior probe"}
 			/>
 			<ScrollView contentContainerStyle={styles.content}>
 				<View style={styles.actions}>

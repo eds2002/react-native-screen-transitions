@@ -29,12 +29,6 @@ mock.module("../providers/stack/blank-stack.provider", () => ({
 	useOptionalBlankStackStore: (selector: (state: any) => unknown) =>
 		selector(null),
 }));
-mock.module("../providers/stack/core.provider", () => ({
-	useStackCoreStore: (selector: (state: any) => unknown) =>
-		selector({ flags: { TRANSITIONS_ALWAYS_ON: true } }),
-	useOptionalStackCoreStore: (selector: (state: any) => unknown) =>
-		selector(null),
-}));
 mock.module("react-native-safe-area-context", () => ({
 	useSafeAreaInsets: () => ({ top: 0, left: 0, right: 0, bottom: 0 }),
 }));

@@ -1,24 +1,21 @@
 // @ts-nocheck
-import { useState } from "react";
+
 import { LogBox } from "react-native";
 import SquircleView from "react-native-fast-squircle";
 import { interpolate } from "react-native-reanimated";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
-import type { StackType } from "@/components/stack-examples/stack-routing";
-import { StackSelectionContext } from "@/components/stack-examples/stack-selection";
 import { BlankStack } from "@/layouts/blank-stack";
 import { IOSSlide } from "@/lib/screen-transitions/ios-slide";
 import { observerRootInterpolator } from "./observer/interpolators";
 
 LogBox.ignoreAllLogs();
 
-const stackScreen = (name: string) => `[stackType]/${name}`;
+const stackScreen = (name: string) => `blank-stack/${name}`;
 
 export default function RootLayout() {
 	return (
-		<StackSelectionContext.Provider
-			value={{ stackType: "blank-stack", setStackType: () => {} }}
-		>
+		<SafeAreaProvider>
 			<BlankStack>
 				<BlankStack.Screen name="index" />
 				<BlankStack.Screen
@@ -128,7 +125,6 @@ export default function RootLayout() {
 					name="observer"
 					options={{
 						transitionKey: "observer-root",
-						// enableTransitions: true,
 						gestureEnabled: true,
 						gestureDirection: "horizontal",
 						screenStyleInterpolator: observerRootInterpolator,
@@ -148,6 +144,6 @@ export default function RootLayout() {
 				/>
 				<BlankStack.Screen name="gestures" />
 			</BlankStack>
-		</StackSelectionContext.Provider>
+		</SafeAreaProvider>
 	);
 }

@@ -38,3 +38,11 @@ Enable Screen Transitions on each participating screen:
 ```
 
 Use this adapter when a flow must keep native-stack headers, options, or navigator behavior. For new flows, [Blank Stack](/react-navigation) gives Screen Transitions full control over the transition lifecycle.
+
+## Lifecycle ownership
+
+`enableTransitions` controls the adapter's native options and interception of native back actions. Shared animation state, next-screen participation, and floating overlays do not depend on this option. A next screen drives its previous screen using the same contract as Blank Stack.
+
+Presets configure transition motion only; they do not enable the native adapter implicitly. Set `enableTransitions: true` explicitly on the native screen where custom presentation is wanted.
+
+Blank Stack composes its own route lifecycle. The native adapter composes its native dismissal lifecycle. Both reuse the same animation mechanics; no core provider or runtime adapter flag is required.

@@ -1,0 +1,90 @@
+import { useEffect } from "react";
+import { useAnimatedReaction } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
+import useStableCallback from "../../../../../hooks/use-stable-callback";
+import type { BaseDescriptor } from "../../../../../providers/screen/builder";
+import type { MotionAnimationValues } from "../../../../../providers/screen/motion/types";
+import { HistoryStore } from "../../../../../stores/history.store";
+import {
+	registerMountedRoute,
+	unregisterMountedRoute,
+} from "./navigator-route-registry";
+
+function hasSnapPoints(descriptor: BaseDescriptor): boolean {
+	const snapPoints = descriptor.options?.snapPoints;
+	return Boolean(snapPoints && snapPoints.length > 0);
+}
+
+/**
+ * Check if a screen is a leaf (renders visible content) vs a navigator container.
+ * Navigator containers have nested state with routes.
+ */
+function isLeafScreen(navigation: BaseDescriptor["navigation"]): boolean {
+	const state = navigation.getState();
+	const index = state?.index ?? -1;
+	const currentRoute = state?.routes?.[index];
+	if (!currentRoute) return false;
+	return !("state" in currentRoute);
+}
+
+function shouldTrackInHistory(descriptor: BaseDescriptor): boolean {
+	return hasSnapPoints(descriptor) || isLeafScreen(descriptor.navigation);
+}
+
+/**
+ * Keeps navigator route registration and screen history in sync.
+ */
+export function useScreenHistory(
+	current: BaseDescriptor,
+	previous: BaseDescriptor | undefined,
+	animations: MotionAnimationValues,
+) {
+	const navigatorKey = current.navigation.getState()?.key ?? "";
+	const routeKey = current.route.key;
+
+	useEffect(() => {
+		registerMountedRoute(navigatorKey, routeKey);
+
+		return () => {
+			const shouldClearNavigator = unregisterMountedRoute(
+				navigatorKey,
+				routeKey,
+			);
+			if (shouldClearNavigator) {
+				HistoryStore.clearNavigator(navigatorKey);
+			}
+		};
+	}, [navigatorKey, routeKey]);
+
+	// Track history via focus listener - waits for nested navigators to initialize
+	// biome-ignore lint/correctness/useExhaustiveDependencies: Must only run once on mount
+	useEffect(() => {
+		if (shouldTrackInHistory(current)) {
+			HistoryStore.focus(current, navigatorKey);
+		}
+
+		const unsubscribe = current.navigation.addListener?.("focus", () => {
+			if (shouldTrackInHistory(current)) {
+				HistoryStore.focus(current, navigatorKey);
+			}
+		});
+
+		return () => unsubscribe?.();
+	}, []);
+
+	const handleBlur = useStableCallback(() => {
+		if (previous && shouldTrackInHistory(previous)) {
+			const prevNavigatorKey = previous.navigation.getState()?.key ?? "";
+			HistoryStore.focus(previous, prevNavigatorKey);
+		}
+	});
+
+	useAnimatedReaction(
+		() => animations.closing.get(),
+		(closing, prevClosing) => {
+			if (closing && !prevClosing) {
+				scheduleOnRN(handleBlur);
+			}
+		},
+	);
+}

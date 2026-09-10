@@ -1,4 +1,4 @@
-import { ScreenContainer } from "../../components/screen-container";
+import { ScreenContainer } from "../../components/screen/container";
 import { BuilderProvider, type BuilderProviderProps } from "./builder";
 import { MotionProvider } from "./motion";
 import { OrchestratorProvider } from "./orchestrator";

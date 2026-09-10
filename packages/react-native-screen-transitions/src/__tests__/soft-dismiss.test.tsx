@@ -14,7 +14,7 @@ let system = mountMotionTransitionValues();
 const route = { key: "soft-dismiss-route", name: "details" };
 const current = {
 	route,
-	options: {},
+	options: {enableTransitions: true},
 	navigation: null as any,
 };
 let beforeRemoveListener: ((event: any) => void) | undefined;
@@ -82,23 +82,18 @@ mock.module("../providers/stack/blank-stack.provider", () => ({
 		}),
 }));
 
-mock.module("../providers/stack/core.provider", () => ({
-	useStackCoreStore: (selector: (store: any) => unknown) =>
-		selector({
-			flags: {
-				TRANSITIONS_ALWAYS_ON: true,
-			},
-		}),
-}));
+
+const { useNativeCloseTransitionIntent } = await import("../adapters/with-screen-transitions/lifecycle/use-native-close-transition-intent");
 
 const { useNavigationHelpers } = await import(
 	"../hooks/navigation/use-navigation-helpers"
 );
 const { useCloseTransitionIntent } = await import(
-	"../components/screen-lifecycle/hooks/use-close-transition-intent"
+	"../components/screen/lifecycle/hooks/use-close-transition-intent"
 );
 
 beforeEach(() => {
+ current.options.enableTransitions = true;
 	(globalThis as any).resetMutableRegistry();
 	act(() => {
 		motionRenderer = create(<MotionProvider>{null}</MotionProvider>);
@@ -200,7 +195,7 @@ describe("soft dismissal", () => {
 		emitBeforeRemoveOnDispatch = true;
 
 		const Harness = () => {
-			completeClose = useCloseTransitionIntent(current as any).completeClose;
+			completeClose = useNativeCloseTransitionIntent(current as any).completeClose;
 			return null;
 		};
 
@@ -268,6 +263,28 @@ describe("soft dismissal", () => {
 		expect(dispatchedActions).toEqual([]);
 	});
 
+ it("leaves native removal alone without adapter opt-in", () => {
+  current.options.enableTransitions = false;
+  requestStackDismiss = null;
+  let prevented = false;
+  const Harness = () => { useNativeCloseTransitionIntent(current as any); return null; };
+  act(() => { create(<MotionProvider screenKey={route.key}><Harness /></MotionProvider>); });
+  act(() => { beforeRemoveListener?.({data: {action: {type: "POP", payload: {count: 1}}}, preventDefault: () => {prevented = true;}}); });
+  expect(beforeRemoveListener).toBeDefined();
+  expect(prevented).toBe(false);
+  expect(system.pendingLifecycleRequestKind.get()).toBe(LifecycleTransitionRequestKind.None);
+ });
+
+ it("completes Blank Stack removal through its owner without a native pop", () => {
+  let completeClose: (() => void) | undefined;
+  const Harness = () => { completeClose = useCloseTransitionIntent(current as any).completeClose; return null; };
+  act(() => { create(<MotionProvider screenKey={route.key}><Harness /></MotionProvider>); });
+  act(() => { completeClose?.(); });
+  expect(blankCloseCount).toBe(1);
+  expect(dispatchedActions).toEqual([]);
+  expect(beforeRemoveListener).toBeUndefined();
+ });
+
 	it("converts an adapter programmatic removal into a soft dismiss", () => {
 		const action = { type: "POP", payload: { count: 1 } };
 		let prevented = false;
@@ -276,7 +293,7 @@ describe("soft dismissal", () => {
 		requestStackDismiss = null;
 
 		const Harness = () => {
-			completeClose = useCloseTransitionIntent(current as any).completeClose;
+			completeClose = useNativeCloseTransitionIntent(current as any).completeClose;
 			return null;
 		};
 

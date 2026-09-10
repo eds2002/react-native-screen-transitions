@@ -80,6 +80,8 @@ For bare React Native projects:
 
 Follow the Reanimated and Gesture Handler setup instructions for your React Native version. Bare iOS projects must also install pods after changing native dependencies. Expo Router apps already install Expo Router as part of their app setup.
 
+Wrap the app in `SafeAreaProvider` from `react-native-safe-area-context` (or use the provider already supplied by your host). Screen Transitions reads the host's safe-area values; it does not create a fallback provider or synthetic insets. Blank Stack and the native adapter each provide their own gesture-handler root.
+
 Continue with [React Navigation](/react-navigation) or the Alpha [Expo Router integration](/expo-router).
 
 ## Optional packages

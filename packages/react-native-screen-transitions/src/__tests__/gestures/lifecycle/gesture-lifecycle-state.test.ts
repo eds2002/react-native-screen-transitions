@@ -32,12 +32,12 @@ import {
 	updateAbsolutePinchFocalPoint,
 	updatePinchRotation,
 } from "../../../providers/screen/motion/gestures/pinch/activation/use-pinch-activation";
-import { useTransitionStartController } from "../../../components/screen-lifecycle/hooks/use-transition-start-controller";
+import { useTransitionStartController } from "../../../components/screen/lifecycle/hooks/use-transition-start-controller";
 import type { MotionAnimationValues } from "../../../providers/screen/motion/types";
 import type { MotionGestureValues } from "../../../providers/screen/motion/types";
 import { LifecycleTransitionRequestKind } from "../../../providers/screen/motion/hooks/use-transition-values";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
-import { useCloseCompletion } from "../../../components/screen-lifecycle/hooks/use-close-completion";
+import { useCloseCompletion } from "../../../components/screen/lifecycle/hooks/use-close-completion";
 
 const originalRequestAnimationFrame = globalThis.requestAnimationFrame;
 

@@ -4,7 +4,6 @@ import { interpolate, makeMutable } from "react-native-reanimated";
 import type {
 	OverlayProps,
 	ScreenTransitionConfig,
-	SnapPoint,
 } from "react-native-screen-transitions";
 import Transition from "react-native-screen-transitions";
 
@@ -33,7 +32,6 @@ export function slideOptions(
 		direction === "horizontal-inverted" || direction === "vertical-inverted";
 
 	return {
-		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: direction,
 		screenStyleInterpolator: ({
@@ -72,7 +70,6 @@ export function pinchOptions(
 	direction: "pinch-in" | "pinch-out",
 ): ScreenTransitionConfig {
 	return {
-		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: direction,
 		screenStyleInterpolator: ({ progress }) => {
@@ -113,7 +110,7 @@ export function sheetOptions({
 		| "vertical-inverted"
 		| "horizontal"
 		| "horizontal-inverted";
-	snapPoints?: SnapPoint[];
+	snapPoints?: ScreenTransitionConfig["snapPoints"];
 	initialSnapIndex?: number;
 	backdropBehavior?: ScreenTransitionConfig["backdropBehavior"];
 	customBackdrop?: boolean;
@@ -128,7 +125,6 @@ export function sheetOptions({
 		direction === "horizontal-inverted" || direction === "vertical-inverted";
 
 	return {
-		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: gestureDirection ?? direction,
 		snapPoints,
@@ -171,7 +167,6 @@ export function sheetOptions({
 }
 
 export const multiAxisSnapOptions: ScreenTransitionConfig = {
-	enableTransitions: true,
 	gestureEnabled: true,
 	gestureDirection: ["horizontal", "vertical-inverted"],
 	gestureReleaseVelocityScale: 0,
@@ -203,7 +198,6 @@ export const multiAxisSnapOptions: ScreenTransitionConfig = {
 };
 
 export const boundsOptions: ScreenTransitionConfig = {
-	enableTransitions: true,
 	gestureEnabled: true,
 	gestureDirection: ["vertical", "vertical-inverted"],
 	screenStyleInterpolator: ({ bounds, progress, focused }) => {
@@ -224,7 +218,6 @@ export const boundsOptions: ScreenTransitionConfig = {
 };
 
 export const styleResetSourceOptions: ScreenTransitionConfig = {
-	enableTransitions: true,
 	gestureEnabled: false,
 	screenStyleInterpolator: () => {
 		"worklet";
@@ -276,7 +269,6 @@ export const styleResetSourceOptions: ScreenTransitionConfig = {
 };
 
 export const styleResetDestinationOptions: ScreenTransitionConfig = {
-	enableTransitions: true,
 	gestureEnabled: false,
 	screenStyleInterpolator: ({ progress }) => {
 		"worklet";

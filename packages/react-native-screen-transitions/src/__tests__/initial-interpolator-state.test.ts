@@ -22,12 +22,6 @@ mock.module("react-native-safe-area-context", () => ({
 	useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }),
 }));
 
-mock.module("../providers/stack/core.provider", () => ({
-	useStackCoreStore: (selector: (state: any) => unknown) =>
-		selector({ flags: { TRANSITIONS_ALWAYS_ON: true } }),
-	useOptionalStackCoreStore: (selector: (state: any) => unknown) =>
-		selector({ flags: { TRANSITIONS_ALWAYS_ON: false } }),
-}));
 
 mock.module("../providers/stack/blank-stack.provider", () => ({
 	useBlankStackStore: (selector: (state: any) => unknown) =>
@@ -91,7 +85,7 @@ describe("initial interpolator state", () => {
 		));
 	});
 
-	it("exposes an entering pushed screen to the public interpolator", () => {
+	it.each([true, false, undefined])("exposes the next screen independently of adapter opt-in (%s)", (enableTransitions) => {
 		let observedNext: ScreenInterpolationProps["next"];
 		let pipeline: ReturnType<typeof useScreenAnimationPipeline> | undefined;
 
@@ -102,7 +96,7 @@ describe("initial interpolator state", () => {
 		descriptors.next = {
 			route: { key: "details", name: "Details" },
 			options: {
-				enableTransitions: true,
+				enableTransitions,
 				screenStyleInterpolator: ({ next }: ScreenInterpolationProps) => {
 					observedNext = next;
 					return null;

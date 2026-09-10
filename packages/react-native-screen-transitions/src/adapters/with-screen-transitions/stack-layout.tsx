@@ -1,15 +1,17 @@
 import type { NavigationState, Route } from "@react-navigation/native";
 import { useMemo } from "react";
+import { StyleSheet } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Overlay } from "../../components/overlay";
-import { BlankStackScreen } from "../../components/stack-view";
+import { Screen } from "../../components/screen/screen";
 import { BlankStackStoreProvider } from "../../providers/stack/blank-stack.provider";
-import { StackCoreProvider } from "../../providers/stack/core.provider";
 import type { BaseStackDescriptor, BaseStackRoute } from "../../types";
 import {
 	ScreenTransitionsAdapterProvider,
 	type ScreenTransitionsAdapterScene,
 	useScreenTransitionsAdapterContext,
 } from "./context";
+import { NativeStackLifecycle } from "./lifecycle";
 import {
 	type AdapterDescriptorOptions,
 	resolveAdapterTransitionOptions,
@@ -108,8 +110,6 @@ function buildTransitionStackState({
 
 		if (
 			!shouldShowFloatOverlay &&
-			(normalizedDescriptor.options as AdapterDescriptorOptions)
-				.enableTransitions &&
 			normalizedDescriptor.options.overlay &&
 			normalizedDescriptor.options.overlayShown !== false
 		) {
@@ -182,9 +182,9 @@ export function ScreenTransitionsStackLayout(
 	props: ScreenTransitionsStackContentProps,
 ) {
 	return (
-		<StackCoreProvider config={{ TRANSITIONS_ALWAYS_ON: false }}>
+		<GestureHandlerRootView style={styles.container}>
 			<ScreenTransitionsStackContent {...props} />
-		</StackCoreProvider>
+		</GestureHandlerRootView>
 	);
 }
 
@@ -208,6 +208,10 @@ export function ScreenTransitionsScreenLayout({
 	const scene = scenes[sceneIndex];
 
 	return (
-		<BlankStackScreen routeKey={scene.route.key}>{children}</BlankStackScreen>
+		<Screen routeKey={scene.route.key} lifecycle={NativeStackLifecycle}>
+			{children}
+		</Screen>
 	);
 }
+
+const styles = StyleSheet.create({ container: { flex: 1 } });

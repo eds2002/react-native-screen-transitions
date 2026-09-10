@@ -1,1 +1,1 @@
-export { default } from "../[stackType]/backdrop/collapse";
+export { default } from "../blank-stack/backdrop/collapse";

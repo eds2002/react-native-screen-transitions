@@ -17,17 +17,12 @@ export type FloatOverlayTransitionEntry = FloatOverlayEntry & {
  */
 export function getFloatOverlayStack(
 	scenes: StackScene[],
-	transitionsAlwaysOn: boolean,
 ): FloatOverlayEntry[] {
 	const candidates: FloatOverlayEntry[] = [];
 
 	for (let index = 0; index < scenes.length; index += 1) {
 		const scene = scenes[index];
 		const options = scene?.descriptor?.options;
-
-		if (!transitionsAlwaysOn && !options?.enableTransitions) {
-			continue;
-		}
 
 		if (options?.overlay && options?.overlayShown !== false) {
 			candidates.push({ scene, overlayIndex: index });

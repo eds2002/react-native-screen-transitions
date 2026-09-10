@@ -1,1 +1,1 @@
-export { default } from "../[stackType]/backdrop/block";
+export { default } from "../blank-stack/backdrop/block";

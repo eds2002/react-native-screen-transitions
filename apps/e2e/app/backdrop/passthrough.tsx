@@ -1,1 +1,1 @@
-export { default } from "../[stackType]/backdrop/passthrough";
+export { default } from "../blank-stack/backdrop/passthrough";

@@ -35,7 +35,7 @@ describe("floating overlay presentation", () => {
 		];
 
 		const transitions = getFloatOverlayTransitions(
-			getFloatOverlayStack(scenes, true),
+			getFloatOverlayStack(scenes),
 			scenes,
 		);
 
@@ -54,7 +54,7 @@ describe("floating overlay presentation", () => {
 	it("lets a plain top screen drive the last overlay", () => {
 		const scenes = [createScene("A", OverlayA), createScene("B")];
 		const transitions = getFloatOverlayTransitions(
-			getFloatOverlayStack(scenes, true),
+			getFloatOverlayStack(scenes),
 			scenes,
 		);
 
@@ -64,7 +64,7 @@ describe("floating overlay presentation", () => {
 	it("keeps declared overlays in route order", () => {
 		const scenes = [createScene("A", OverlayA), createScene("B")];
 
-		expect(getFloatOverlayStack(scenes, true)).toEqual([
+		expect(getFloatOverlayStack(scenes)).toEqual([
 			{ scene: scenes[0], overlayIndex: 0 },
 		]);
 	});
@@ -72,7 +72,7 @@ describe("floating overlay presentation", () => {
 	it("keeps every declared overlay when another overlay is pushed", () => {
 		const scenes = [createScene("A", OverlayA), createScene("B", OverlayB)];
 
-		expect(getFloatOverlayStack(scenes, true)).toEqual([
+		expect(getFloatOverlayStack(scenes)).toEqual([
 			{ scene: scenes[0], overlayIndex: 0 },
 			{ scene: scenes[1], overlayIndex: 1 },
 		]);
@@ -85,7 +85,7 @@ describe("floating overlay presentation", () => {
 			createScene("C", OverlayC),
 		];
 
-		expect(getFloatOverlayStack(scenes, true)).toEqual([
+		expect(getFloatOverlayStack(scenes)).toEqual([
 			{ scene: scenes[0], overlayIndex: 0 },
 			{ scene: scenes[1], overlayIndex: 1 },
 			{ scene: scenes[2], overlayIndex: 2 },
@@ -100,12 +100,12 @@ describe("floating overlay presentation", () => {
 		];
 		scenes[2].activity = "closing";
 
-		expect(getFloatOverlayStack(scenes, true)).toEqual([
+		expect(getFloatOverlayStack(scenes)).toEqual([
 			{ scene: scenes[0], overlayIndex: 0 },
 			{ scene: scenes[1], overlayIndex: 1 },
 			{ scene: scenes[2], overlayIndex: 2 },
 		]);
-		expect(getFloatOverlayStack(scenes.slice(0, 2), true)).toEqual([
+		expect(getFloatOverlayStack(scenes.slice(0, 2))).toEqual([
 			{ scene: scenes[0], overlayIndex: 0 },
 			{ scene: scenes[1], overlayIndex: 1 },
 		]);
@@ -115,7 +115,7 @@ describe("floating overlay presentation", () => {
 		const scenes = [createScene("A", OverlayA), createScene("B", OverlayB)];
 		scenes[1].descriptor.options.overlayShown = false;
 
-		expect(getFloatOverlayStack(scenes, true)).toEqual([
+		expect(getFloatOverlayStack(scenes)).toEqual([
 			{ scene: scenes[0], overlayIndex: 0 },
 		]);
 	});
@@ -130,7 +130,7 @@ describe("floating overlay presentation", () => {
 		scenes[2].activity = "closing";
 
 		const transitions = getFloatOverlayTransitions(
-			getFloatOverlayStack(scenes, true),
+			getFloatOverlayStack(scenes),
 			scenes,
 		);
 
@@ -155,7 +155,7 @@ describe("floating overlay presentation", () => {
 			createScene("E", OverlayE),
 		];
 
-		expect(getFloatOverlayStack(scenes, true)).toEqual([
+		expect(getFloatOverlayStack(scenes)).toEqual([
 			{ scene: scenes[0], overlayIndex: 0 },
 			{ scene: scenes[1], overlayIndex: 1 },
 			{ scene: scenes[2], overlayIndex: 2 },
@@ -163,4 +163,9 @@ describe("floating overlay presentation", () => {
 			{ scene: scenes[4], overlayIndex: 4 },
 		]);
 	});
+});
+
+it("does not require adapter opt-in to select overlays", () => {
+ const scene = createScene("plain", OverlayA);
+ expect(getFloatOverlayStack([scene])).toHaveLength(1);
 });

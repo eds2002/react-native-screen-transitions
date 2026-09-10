@@ -1,8 +1,6 @@
 import type { ScreenTransitionConfig } from "./screen.types";
 
-export type StackTransitionOptions = ScreenTransitionConfig & {
-	enableTransitions?: boolean;
-};
+export type StackTransitionOptions = ScreenTransitionConfig;
 
 /**
  * Minimal route shape for navigation utilities.

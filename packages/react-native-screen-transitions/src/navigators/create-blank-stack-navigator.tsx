@@ -1,5 +1,5 @@
 import { createStandardNavigator } from "standard-navigation";
-import { StackView } from "../components/stack-view";
+import { BlankStackView } from "../components/screen/view";
 import type { BlankStackNavigationOptions } from "../types/blank-stack.types";
 import type {
 	BaseStackNavigation,
@@ -26,7 +26,7 @@ export const BlankStackNavigator = createStandardNavigator<
 	}
 
 	return (
-		<StackView
+		<BlankStackView
 			state={navigationState}
 			navigation={navigation}
 			descriptors={descriptors}
