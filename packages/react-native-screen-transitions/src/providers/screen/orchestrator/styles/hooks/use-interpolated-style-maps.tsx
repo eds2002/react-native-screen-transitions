@@ -11,7 +11,7 @@ import type {
 } from "../../../../../types/animation.types";
 import { logger } from "../../../../../utils/logger";
 import { useBuilderStore } from "../../../builder";
-import { useMotionStore, useOptionalMotionStore } from "../../../motion";
+import { useMotionStore } from "../../../motion";
 import {
 	hasCloseTransitionFinished,
 	isOpenTransitionBlocked,
@@ -133,13 +133,10 @@ export const useInterpolatedStylesMap = ({
 		selectedInterpolatorOptions,
 		nextInterpolator,
 		currentInterpolator,
+		nextMotion: nextSystem,
 	} = pipeline;
 
 	const currentSystem = useMotionStore((store) => store.state);
-	const nextSystem = useOptionalMotionStore(
-		nextScreenKey ?? null,
-		(store) => store.state,
-	);
 	const { closing: activeClosing, entering: activeEntering } =
 		nextSystem ?? currentSystem;
 
