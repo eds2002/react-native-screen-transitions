@@ -137,7 +137,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 	return (
 		<Pressable
 			style={StyleSheet.absoluteFill}
-			pointerEvents={isBackdropActive ? "auto" : "none"}
+			pointerEvents={backdropBehavior === "passthrough" ? "none" : "auto"}
 			onPress={isBackdropActive ? handleBackdropPress : undefined}
 		>
 			{AnimatedBackdropComponent ? (

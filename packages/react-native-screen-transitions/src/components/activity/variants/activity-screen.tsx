@@ -9,9 +9,10 @@ import type { StackSceneActivity } from "../../../types/stack.types";
 import { ActivityView, type ActivityViewMode } from "../activity-view";
 import { DEFAULT_INACTIVE_BEHAVIOR, type InactiveBehavior } from "../helpers";
 
+// Let the content and backdrop layers decide whether to capture touches.
 const PointerEventsByActivity = {
-	active: "auto",
-	inert: "auto",
+	active: "box-none",
+	inert: "box-none",
 	inactive: "none",
 	closing: "none",
 } satisfies Record<StackSceneActivity, ViewProps["pointerEvents"]>;
