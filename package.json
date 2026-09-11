@@ -10,6 +10,7 @@
 		}
 	},
 	"scripts": {
+		"test": "bun scripts/test.ts",
 		"clean": "find . -name node_modules -type d -prune -exec rm -rf {} + && rm -f bun.lock bun.lockb && bun install --force",
 		"example:dev": "bun run --cwd apps/e2e bunx expo prebuild --clean && bun run --cwd apps/e2e bunx expo run ios -d",
 
