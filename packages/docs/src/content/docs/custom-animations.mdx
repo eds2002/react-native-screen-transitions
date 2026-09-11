@@ -82,7 +82,6 @@ In practice:
 | `stackProgress` | Accumulated progress from this screen upward through the stack |
 | `focused` | `true` when there is no `next` screen above `current` |
 | `bounds` | Bounds accessor for shared-element and navigation zoom helpers |
-| `transition` | Worklet-safe accessor for the current, ancestor, or descendant transition scope |
 | `insets` | Safe-area insets |
 | `layouts` | Layout measurements for the current screen |
 
@@ -90,28 +89,24 @@ In practice:
 
 ## Related Transition Scopes
 
-Use `transition()` when an interpolator needs animation state from another screen transition scope:
+Use [`useScreenAnimation`](/api/use-screen-animation) inside a component to read another transition scope:
 
 ```tsx
-screenStyleInterpolator: ({ transition }) => {
-  "worklet";
+const parentAnimation = useScreenAnimation({ depth: -1 });
 
-  const parent = transition({ depth: -1 });
-  const parentProgress = parent?.progress ?? 1;
-
-  return {
-    content: {
-      style: {
-        opacity: interpolate(parentProgress, [0, 1], [0.8, 1], "clamp"),
-      },
-    },
-  };
-};
+const style = useAnimatedStyle(() => ({
+  opacity: interpolate(
+    parentAnimation.get()?.progress ?? 1,
+    [0, 1],
+    [0.8, 1],
+    "clamp",
+  ),
+}));
 ```
 
-Calling `transition()` without a target, or with `depth: 0`, returns the current scope. Negative depths resolve ancestors and positive depths resolve descendants. The accessor returns `null` when the requested scope is unavailable.
+Negative depths resolve ancestors and positive depths resolve descendants. You can also pass a screen's unique `transitionKey`, such as `useScreenAnimation("feed")`. Non-current targets can return `null`.
 
-Returned scopes expose the same interpolation state, including `current`, `previous`, `next`, `active`, `inactive`, `progress`, `stackProgress`, `bounds`, and another relative `transition()` accessor.
+The interpolator's `transition()` accessor was removed in 4.1. Call the hook in a component under a transition scope, not inside `screenStyleInterpolator`. See the [4.1 migration note](/changelog/updating-to-4-1).
 
 Each screen state object contains the same fields:
 

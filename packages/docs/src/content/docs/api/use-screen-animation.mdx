@@ -37,3 +37,17 @@ const childAnimation = useScreenAnimation({ depth: 1 });
 `depth: 0` resolves the current transition. Negative values resolve ancestors. Positive values resolve descendants.
 
 Non-current targets can return `null`, so check `animation.value` before reading it.
+
+## Named targets
+
+Set `transitionKey` in a screen's options, then pass that key to the hook:
+
+```tsx
+// Screen options
+{ transitionKey: "feed" }
+
+// Inside a component under a transition scope
+const feedAnimation = useScreenAnimation("feed");
+```
+
+The key must be unique among mounted screens. The derived value is `null` while the target is unavailable. Call this hook from a component, not from `screenStyleInterpolator` or another worklet.

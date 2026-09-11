@@ -4,7 +4,25 @@
 
 ### Features
 
-* **native-stack adapter:** accept navigator factories in `withScreenTransitions` for dynamic and static configuration, with inferred route params and transition options. Existing navigator-object usage remains supported.
+* **Custom hosts:** export `BuilderProvider`, `MotionProvider`, `OrchestratorProvider`, their prop types, and `useMotionStore`. Hosts can compose screen motion and styles while supplying their own descriptors and navigation lifecycle.
+* **Animation lookup:** add `transitionKey` to screen options and support `useScreenAnimation("key")` for observing a named mounted screen. Keys must be unique among mounted screens; unavailable targets return `null`.
+* **Native-stack adapter:** accept navigator factories in `withScreenTransitions` for dynamic and static configuration, with inferred route params and transition options. Existing navigator-object usage remains supported.
+* **Snap points:** accept a transition component's `styleId` as a measured snap point, so a sheet can size itself to a specific container instead of its entire content.
+
+### Fixes
+
+* Remove retained replacement routes after the incoming screen finishes opening.
+* Keep inactive screens paused as stacks grow and preserve their paint driver's progress while its provider is disconnected.
+* Preserve scroll state across screen activity changes.
+* Retain visible Boundary handoff content and reduce repeated lifecycle updates.
+* Coordinate readiness and visibility across nested screens, including measurement blocking and completed close animations.
+* Provide safe-area context within Blank Stack using the host's inset values.
+* Restore backdrop touch passthrough.
+
+### Migration notes
+
+* Remove `ScreenInterpolationProps.transition` and the exported `ScreenTransitionAccessor` type. Read another screen's animation from a component with `useScreenAnimation({ depth: -1 })`, `useScreenAnimation({ depth: 1 })`, or `useScreenAnimation("key")`. These hooks cannot be called inside `screenStyleInterpolator` or another worklet. Code using the removed accessor needs updating.
+* The native-stack factory overload is additive. `withScreenTransitions(createNativeStackNavigator())` continues to work; static configuration uses `withScreenTransitions(createNativeStackNavigator)({ screens: ... })`.
 
 ## [4.0.0](https://github.com/eds2002/react-native-screen-transitions/compare/v4.0.0-alpha.10...v4.0.0) (2026-08-27)
 

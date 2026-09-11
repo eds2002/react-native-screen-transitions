@@ -1,0 +1,136 @@
+---
+title: "New in 4.1"
+pageTitle: "New in 4.1"
+summary: "Compose screen motion with public providers, observe named transitions, and use native-stack static configuration."
+description: "New provider exports, keyed animation lookup, static navigator support, measured snap points, and lifecycle fixes in 4.1."
+eyebrow: "Changelogs"
+group: "Changelogs"
+version: "v4"
+hidden: true
+changelogDate: "Unreleased"
+order: -2
+to: /changelog/updating-to-4-1
+---
+
+Version 4.1 exposes the providers behind screen transitions, adds named animation lookup, and supports native-stack factories with dynamic or static configuration. It also improves retained-screen behavior, Boundary handoffs, and sheet sizing.
+
+These notes cover the upcoming 4.1 release. If you use the interpolator's `transition()` accessor, see the migration note below.
+
+## Public motion providers
+
+Advanced hosts can now import `BuilderProvider`, `MotionProvider`, `OrchestratorProvider`, their prop types, and `useMotionStore` from the package root.
+
+The composition follows the same order used internally:
+
+```tsx
+<BuilderProvider routeKey={route.key} descriptors={descriptors}>
+  <MotionProvider onDismissRequest={requestDismiss}>
+    <OrchestratorProvider>
+      <ScreenContent />
+    </OrchestratorProvider>
+  </MotionProvider>
+</BuilderProvider>
+```
+
+Builder receives screen identity, descriptors, and options. Motion owns gesture and animation state, readiness, and visibility. Orchestrator coordinates interpolation and the named styles and props consumed by transition components.
+
+These are composition primitives. The host still supplies screen relationships and handles navigation and transition lifecycle requests. Existing Blank Stack and native-stack adapter users do not need to assemble these providers themselves.
+
+## Observe a named transition
+
+Assign a unique `transitionKey` to a screen:
+
+```tsx
+<Stack.Screen
+  name="Feed"
+  component={FeedScreen}
+  options={{ transitionKey: "feed" }}
+/>
+```
+
+A component inside a transition scope can observe it by name:
+
+```tsx
+const feedAnimation = useScreenAnimation("feed");
+
+const style = useAnimatedStyle(() => ({
+  opacity: feedAnimation.get()?.progress ?? 1,
+}));
+```
+
+Keys must be unique among mounted screens. A target that is not currently available resolves to `null`. Relative lookup with `{ depth: -1 }` or `{ depth: 1 }` remains available.
+
+## Native-stack static configuration
+
+`withScreenTransitions` now accepts the navigator factory itself:
+
+```tsx
+import { createStaticNavigation } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import Transition, { withScreenTransitions } from "react-native-screen-transitions";
+
+const createStack = withScreenTransitions(createNativeStackNavigator);
+const RootStack = createStack({
+  screens: {
+    Home: HomeScreen,
+    Detail: {
+      screen: DetailScreen,
+      options: {
+        enableTransitions: true,
+        ...Transition.Presets.SlideFromBottom(),
+      },
+    },
+  },
+});
+
+const Navigation = createStaticNavigation(RootStack);
+```
+
+Call `createStack()` without a config for the dynamic JSX API. Existing `withScreenTransitions(createNativeStackNavigator())` usage also continues to work.
+
+Static configs retain route-param inference, groups, auth conditions, linking, and `getId`. The adapter uses the supplied factory without adding runtime imports from React Navigation or Expo Router. See [Native Stack Adapter](/native-stack-adapter).
+
+## Size a sheet to a named container
+
+A string in `snapPoints` can now identify a transition component's `styleId`:
+
+```tsx
+// Screen options
+{ snapPoints: ["profile-header", 1] }
+
+// Screen content
+<Transition.View styleId="profile-header">
+  <ProfileHeader />
+</Transition.View>
+```
+
+The container's measured height defines the detent. Use one measured entry per snap-point list and mount the matching container during initial layout. `"auto"` still measures the whole content. See [Snap Points](/snap-points).
+
+## Lifecycle fixes
+
+- Retained replacement routes are removed after the incoming screen opens.
+- Inactive screens stay paused as stacks grow, retaining their paint driver's progress while its provider is disconnected.
+- Scroll state survives screen activity changes.
+- Boundary handoffs retain visible content with fewer repeated lifecycle updates.
+- Nested screens coordinate readiness and visibility during measurement and close animations.
+- Blank Stack supplies safe-area context from the host's inset values.
+- Backdrop touch passthrough works again.
+
+## Migration: the transition accessor
+
+`ScreenInterpolationProps.transition` and the exported `ScreenTransitionAccessor` type have been removed. Interpolators that call `transition(...)` need updating.
+
+Read the target with `useScreenAnimation` inside a component, then consume its derived value in an animated style:
+
+```tsx
+function ParentAwareContent() {
+  const parentAnimation = useScreenAnimation({ depth: -1 });
+  const style = useAnimatedStyle(() => ({
+    opacity: parentAnimation.get()?.progress ?? 1,
+  }));
+
+  return <Animated.View style={style} />;
+}
+```
+
+Import `useScreenAnimation` from `react-native-screen-transitions` and `Animated` / `useAnimatedStyle` from `react-native-reanimated`. Call the hook under a transition scope, never inside `screenStyleInterpolator` or another worklet.
