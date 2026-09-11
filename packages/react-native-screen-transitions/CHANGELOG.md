@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.1.0 (Unreleased)
+
+### Features
+
+* **native-stack adapter:** accept navigator factories in `withScreenTransitions` for dynamic and static configuration, with inferred route params and transition options. Existing navigator-object usage remains supported.
+
 ## [4.0.0](https://github.com/eds2002/react-native-screen-transitions/compare/v4.0.0-alpha.10...v4.0.0) (2026-08-27)
 
 ## [3.8.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.8.0-beta.1...v3.8.0) (2026-06-21)

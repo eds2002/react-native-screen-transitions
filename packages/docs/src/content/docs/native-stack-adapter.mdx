@@ -39,6 +39,80 @@ Enable Screen Transitions on each participating screen:
 
 Use this adapter when a flow must keep native-stack headers, options, or navigator behavior. For new flows, [Blank Stack](/react-navigation) gives Screen Transitions full control over the transition lifecycle.
 
+## Adapt a factory
+
+Pass the factory itself to use either dynamic or static configuration:
+
+```tsx
+const createTransitionStack = withScreenTransitions(createNativeStackNavigator);
+```
+
+For dynamic configuration, call it without a config and declare screens in JSX:
+
+```tsx
+const Stack = createTransitionStack<{
+  Home: undefined;
+  Detail: { id: string };
+}>();
+
+function App() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen
+          name="Detail"
+          component={DetailScreen}
+          options={{
+            enableTransitions: true,
+            ...Transition.Presets.SlideFromBottom(),
+          }}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
+```
+
+Import `NavigationContainer` from `@react-navigation/native` in your app. The existing `withScreenTransitions(createNativeStackNavigator())` form remains supported.
+
+For static configuration, pass the config to the adapted factory:
+
+```tsx
+import { createStaticNavigation, type StaticParamList } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import Transition, { withScreenTransitions } from "react-native-screen-transitions";
+
+const createTransitionStack = withScreenTransitions(createNativeStackNavigator);
+
+const RootStack = createTransitionStack({
+  screens: {
+    Home: HomeScreen,
+    Detail: {
+      screen: DetailScreen,
+      linking: "detail/:id",
+      options: {
+        enableTransitions: true,
+        ...Transition.Presets.SlideFromBottom(),
+      },
+    },
+  },
+});
+
+type RootStackParamList = StaticParamList<typeof RootStack>;
+const Navigation = createStaticNavigation(RootStack);
+
+export default function App() {
+  return <Navigation />;
+}
+```
+
+Static screen params are inferred from the screen components. Groups, `if` conditions, linking, and `getId` stay under the host navigator's control. The adapter composes navigator, group, and screen layouts with its transition providers and adapts their transition options. Nested navigators keep their own configuration; adapt each native-stack factory that needs custom transitions.
+
+Wrap the factory **before** applying static config. `withScreenTransitions(createNativeStackNavigator({ screens: ... }))` is not supported because the configured static result does not expose the underlying `Navigator` component.
+
+The adapter calls the factory supplied by your app and adds no runtime imports from React Navigation or Expo Router.
+
 ## Lifecycle ownership
 
 `enableTransitions` controls the adapter's native options and interception of native back actions. Shared animation state, next-screen participation, and floating overlays do not depend on this option. A next screen drives its previous screen using the same contract as Blank Stack.
