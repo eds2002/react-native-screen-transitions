@@ -70,7 +70,6 @@ export default function MatchedScreenLayout() {
 				options={{
 					gestureEnabled: true,
 					gestureDirection: ["bidirectional", "pinch-in"],
-					navigationMaskEnabled: true,
 					screenStyleInterpolator: navigationZoomInterpolator,
 					transitionSpec: Transition.Specs.Zoom,
 				}}

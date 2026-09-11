@@ -7,7 +7,6 @@ export default function StyleIdBoundsLayout() {
 			<BlankStack.Screen
 				name="[id]"
 				options={{
-					navigationMaskEnabled: true,
 					gestureEnabled: true,
 					gestureDirection: ["vertical", "horizontal", "vertical-inverted"],
 					screenStyleInterpolator: ({ bounds, focused, active }) => {

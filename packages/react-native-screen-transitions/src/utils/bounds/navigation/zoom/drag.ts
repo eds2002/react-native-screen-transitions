@@ -20,7 +20,7 @@ const ZOOM_PINCH_VELOCITY_DEPTH_MULTIPLIER = 2;
 type ZoomGesture = BoundsInterpolationProps["active"]["gesture"];
 
 export type ZoomDragState = {
-	collapsesMask: boolean;
+	collapsesClip: boolean;
 	dismissContentScale: number;
 	dismissNorm: number;
 	dismissProgress: number;
@@ -274,7 +274,7 @@ export function resolveZoomDragState({
 	}
 
 	return {
-		collapsesMask: isVertical,
+		collapsesClip: isVertical,
 		dismissContentScale,
 		dismissNorm,
 		dismissProgress: isDismissing ? 1 - activeTransitionProgress : 0,

@@ -56,7 +56,6 @@ const sheetOptions: ScreenTransitionConfig = {
 const zoomOptions: ScreenTransitionConfig = {
 	gestureEnabled: true,
 	gestureDirection: ["bidirectional", "pinch-in"],
-	navigationMaskEnabled: true,
 	screenStyleInterpolator: ({ bounds }) => {
 		"worklet";
 		return bounds(SHEET_ZOOM_BOUNDARY_ID).navigation.zoom();

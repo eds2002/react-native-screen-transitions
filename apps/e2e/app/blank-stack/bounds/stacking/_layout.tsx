@@ -33,7 +33,6 @@ export default function StackingBoundsLayout() {
 								backdropBehavior: "dismiss",
 								gestureDirection: ["bidirectional", "pinch-in"],
 								gestureEnabled: true,
-								navigationMaskEnabled: true,
 								screenStyleInterpolator: stackingInterpolator,
 								transitionSpec: Transition.Specs.Zoom,
 							}
@@ -46,7 +45,6 @@ export default function StackingBoundsLayout() {
 					backdropBehavior: "dismiss",
 					gestureDirection: ["bidirectional", "pinch-in"],
 					gestureEnabled: true,
-					navigationMaskEnabled: true,
 					screenStyleInterpolator: stackingInterpolator,
 					transitionSpec: Transition.Specs.Zoom,
 				}}

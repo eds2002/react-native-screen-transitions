@@ -2,7 +2,7 @@ import type { MeasuredDimensions } from "react-native-reanimated";
 import { interpolate } from "react-native-reanimated";
 import type {
 	ScreenTransitionState,
-	TransitionSlotStyle,
+	TransitionClip,
 } from "../../../../types/animation.types";
 import type {
 	BoundsLink,
@@ -11,18 +11,18 @@ import type {
 import type { Layout } from "../../../../types/screen.types";
 import type { BoundsAnchor } from "../../types/options";
 import { toNumber } from "../helpers";
-import { DRAG_MASK_HEIGHT_COLLAPSE_END } from "../reveal/config";
+import { DRAG_CLIP_HEIGHT_COLLAPSE_END } from "../reveal/config";
 import {
 	interpolateClamped,
-	resolveAspectRatioMaskHeight,
+	resolveAspectRatioClipHeight,
 } from "../reveal/math";
 import { ZOOM_SHARED_OPTIONS } from "./config";
 import type { ZoomDragState } from "./drag";
 
-export const ZOOM_NAVIGATION_MASK_BORDER_RADIUS = 64;
-const ZOOM_VERTICAL_DRAG_MASK_COLLAPSE_SCALE = 0.8;
+export const ZOOM_NAVIGATION_CLIP_BORDER_RADIUS = 64;
+const ZOOM_VERTICAL_DRAG_CLIP_COLLAPSE_SCALE = 0.8;
 
-interface ZoomNavigationMaskStyleProps {
+interface ZoomClipProps {
 	scopedBounds: BoundsScopedAccessor;
 	link: BoundsLink;
 	sourceBounds: MeasuredDimensions;
@@ -40,7 +40,7 @@ interface ZoomNavigationMaskStyleProps {
 	anchor: BoundsAnchor;
 }
 
-export function resolveZoomNavigationMaskStyle({
+export function resolveZoomClip({
 	scopedBounds,
 	link,
 	sourceBounds,
@@ -52,10 +52,10 @@ export function resolveZoomNavigationMaskStyle({
 	expandedBorderRadius,
 	active,
 	anchor,
-}: ZoomNavigationMaskStyleProps): TransitionSlotStyle {
+}: ZoomClipProps): TransitionClip {
 	"worklet";
 
-	const maskRaw = scopedBounds.values({
+	const clipRaw = scopedBounds.values({
 		scaleMode: ZOOM_SHARED_OPTIONS.scaleMode,
 		anchor,
 		method: "size",
@@ -63,46 +63,44 @@ export function resolveZoomNavigationMaskStyle({
 		target: "fullscreen",
 		progress: transitionProgress,
 	});
-	const maskWidth = maskRaw.width;
-	const maskHeight = maskRaw.height;
-	const maskAspectBounds = link.initialSource?.bounds ?? sourceBounds;
-	const minMaskHeight = resolveAspectRatioMaskHeight({
-		maskWidth,
-		maskHeight,
-		targetWidth: maskAspectBounds.width,
-		targetHeight: maskAspectBounds.height,
+	const clipWidth = clipRaw.width;
+	const clipHeight = clipRaw.height;
+	const clipAspectBounds = link.initialSource?.bounds ?? sourceBounds;
+	const minClipHeight = resolveAspectRatioClipHeight({
+		clipWidth,
+		clipHeight,
+		targetWidth: clipAspectBounds.width,
+		targetHeight: clipAspectBounds.height,
 	});
-	const maskHeightCollapseDrag = drag.collapsesMask
+	const clipHeightCollapseDrag = drag.collapsesClip
 		? Math.max(
 				0,
-				drag.dismissNorm * ZOOM_VERTICAL_DRAG_MASK_COLLAPSE_SCALE,
+				drag.dismissNorm * ZOOM_VERTICAL_DRAG_CLIP_COLLAPSE_SCALE,
 				drag.dismissProgress,
 			)
 		: 0;
-	const renderedMaskHeight = interpolateClamped(
-		maskHeightCollapseDrag,
+	const renderedClipHeight = interpolateClamped(
+		clipHeightCollapseDrag,
 		0,
-		DRAG_MASK_HEIGHT_COLLAPSE_END,
-		maskHeight,
-		minMaskHeight,
+		DRAG_CLIP_HEIGHT_COLLAPSE_END,
+		clipHeight,
+		minClipHeight,
 	);
-	const maskCenterX = maskWidth / 2;
-	const maskCenterY = renderedMaskHeight / 2;
 	const contentCenterX = screenLayout.width / 2;
 	const contentCenterY = screenLayout.height / 2;
-	const maskOriginOffsetY = drag.isVerticalInverted
-		? maskHeight - renderedMaskHeight
+	const clipOriginOffsetY = drag.isVerticalInverted
+		? clipHeight - renderedClipHeight
 		: 0;
-	const compensatedMaskTranslateX =
-		(maskRaw.translateX -
-			contentTransform.translateX +
-			(1 - contentTransform.scale) * (maskCenterX - contentCenterX)) /
+	const compensatedClipTranslateX =
+		(clipRaw.translateX -
+			contentTransform.translateX -
+			(1 - contentTransform.scale) * contentCenterX) /
 		contentTransform.scale;
-	const compensatedMaskTranslateY =
-		(maskRaw.translateY -
+	const compensatedClipTranslateY =
+		(clipRaw.translateY -
 			contentTransform.translateY +
-			maskOriginOffsetY +
-			(1 - contentTransform.scale) * (maskCenterY - contentCenterY)) /
+			clipOriginOffsetY -
+			(1 - contentTransform.scale) * contentCenterY) /
 		contentTransform.scale;
 	const initialSourceBorderRadius = toNumber(
 		link.initialSource?.styles.borderRadius,
@@ -110,10 +108,12 @@ export function resolveZoomNavigationMaskStyle({
 	);
 
 	return {
-		style: {
-			width: maskWidth,
-			height: renderedMaskHeight,
-			borderRadius: interpolate(
+		x: compensatedClipTranslateX,
+		y: compensatedClipTranslateY,
+		width: clipWidth / contentTransform.scale,
+		height: renderedClipHeight / contentTransform.scale,
+		borderRadius:
+			interpolate(
 				transitionProgress,
 				[0, 1],
 				[
@@ -121,13 +121,7 @@ export function resolveZoomNavigationMaskStyle({
 					active.animating ? expandedBorderRadius : 0,
 				],
 				"clamp",
-			),
-			borderCurve: "continuous",
-			transform: [
-				{ translateX: compensatedMaskTranslateX },
-				{ translateY: compensatedMaskTranslateY },
-				{ scale: 1 / contentTransform.scale },
-			],
-		},
+			) / contentTransform.scale,
+		borderCurve: "continuous",
 	};
 }

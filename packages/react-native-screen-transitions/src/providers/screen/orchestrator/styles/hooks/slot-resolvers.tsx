@@ -7,12 +7,8 @@ import {
 	getLocalTransformForSlotComposition,
 } from "../helpers/compose-slot-style";
 
-const useCurrentScreenSlotsMap = () => {
-	return useOrchestratorStore((store) => store.slotsMap);
-};
-
 export const useSlotStyles = (slotId: string | undefined) => {
-	const slotsMap = useCurrentScreenSlotsMap();
+	const slotsMap = useOrchestratorStore((store) => store.slotsMap);
 
 	return useAnimatedStyle(() => {
 		const slot = slotId ? slotsMap.get()[slotId] : undefined;
@@ -30,7 +26,7 @@ export const useComposedSlotStyles = (
 	slotId: string | undefined,
 	style: unknown,
 ) => {
-	const slotsMap = useCurrentScreenSlotsMap();
+	const slotsMap = useOrchestratorStore((store) => store.slotsMap);
 	const localTransform = useMemo(
 		() => getLocalTransformForSlotComposition(style),
 		[style],
@@ -54,7 +50,7 @@ export const useComposedSlotStyles = (
  * target takes the full associated style. Yields `NO_STYLES` when neither is set.
  */
 export const useSlotStackingStyles = (slotId: string | undefined) => {
-	const slotsMap = useCurrentScreenSlotsMap();
+	const slotsMap = useOrchestratorStore((store) => store.slotsMap);
 
 	return useAnimatedStyle(() => {
 		const baseStyle = slotId ? slotsMap.get()[slotId]?.style : undefined;
@@ -70,7 +66,7 @@ export const useSlotStackingStyles = (slotId: string | undefined) => {
 };
 
 export const useSlotLayoutStyles = (slotId: string | undefined) => {
-	const slotsMap = useCurrentScreenSlotsMap();
+	const slotsMap = useOrchestratorStore((store) => store.slotsMap);
 
 	return useAnimatedStyle(() => {
 		const baseStyle = slotId ? slotsMap.get()[slotId]?.style : undefined;
@@ -107,9 +103,10 @@ export const useSlotLayoutStyles = (slotId: string | undefined) => {
 };
 
 export const useSlotProps = (slotId: string | undefined) => {
-	const slotsMap = useCurrentScreenSlotsMap();
+	const slotsMap = useOrchestratorStore((store) => store.slotsMap);
 
 	return useAnimatedProps(() => {
-		return (slotId ? slotsMap.get()[slotId]?.props : undefined) ?? NO_PROPS;
-	});
+		return ((slotId ? slotsMap.get()[slotId]?.props : undefined) ??
+			NO_PROPS) as any;
+	}) as any;
 };

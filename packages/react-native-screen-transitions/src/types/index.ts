@@ -9,6 +9,7 @@ export type {
 	ScreenTransitionOptions,
 	ScreenTransitionState,
 	ScreenTransitionTarget,
+	TransitionClip,
 	TransitionInterpolatedStyle,
 	TransitionInterpolatorOptions,
 	TransitionSlotProps,

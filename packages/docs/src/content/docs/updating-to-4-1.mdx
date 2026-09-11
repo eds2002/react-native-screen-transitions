@@ -16,6 +16,22 @@ Version 4.1 exposes the providers behind screen transitions, adds named animatio
 
 These notes cover the upcoming 4.1 release. If you use the interpolator's `transition()` accessor, see the migration note below.
 
+## Experimental built-in clipping
+
+The reserved `clip` interpolator key replaces navigation masks. It defines a rectangle in the content layer's local coordinates while the screen keeps its original layout size:
+
+```tsx
+return {
+  clip: { x: 0, y: 80, width: 390, height: 600, borderRadius: 24 },
+};
+```
+
+Omit `clip` to disable clipping. `navigation.zoom()` and `navigation.reveal()` return clipping geometry automatically on iOS and Android, using ordinary React Native views.
+
+Remove `navigationMaskEnabled` from screen options. It remains accepted but is deprecated and ignored, including when set to `false`. `maskSizingMode` is also deprecated and ignored. The exported `NAVIGATION_MASK_CONTAINER_STYLE_ID` and `NAVIGATION_MASK_ELEMENT_STYLE_ID` constants remain available, but their interpolator output does nothing. Migrate custom mask output to `clip` and screen transforms to `content`.
+
+`clip` is now reserved: rename any custom `styleId` that used this name. Screen Transitions no longer imports MaskedView. You can remove `@react-native-masked-view/masked-view` from your direct dependencies if no other feature needs it; other packages may still install it transitively.
+
 ## Public motion providers
 
 Advanced hosts can now import `BuilderProvider`, `MotionProvider`, `OrchestratorProvider`, their prop types, and `useMotionStore` from the package root.

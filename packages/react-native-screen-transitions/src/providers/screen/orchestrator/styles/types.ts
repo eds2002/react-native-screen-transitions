@@ -8,5 +8,6 @@ export type ScreenSlotName =
 	| "content"
 	| "surface"
 	| "backdrop"
+	| "clip"
 	| typeof NAVIGATION_MASK_CONTAINER_STYLE_ID
 	| typeof NAVIGATION_MASK_ELEMENT_STYLE_ID;

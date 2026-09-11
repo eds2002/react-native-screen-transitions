@@ -1,10 +1,10 @@
+import { buildRevealStyles } from "../../utils/bounds/navigation/reveal/build";
 import { mountMotionValues } from "../helpers/mount-motion-values";
 import { beforeEach, describe, expect, it } from "bun:test";
 import { makeMutable } from "react-native-reanimated";
 import { getInitialDestinationMeasurementSignal } from "../../components/boundary/utils/destination-signals";
 import { getRefreshBoundarySignal } from "../../components/boundary/utils/refresh-signals";
 import { getInitialSourceCaptureSignal } from "../../components/boundary/utils/source-signals";
-import { NAVIGATION_MASK_ELEMENT_STYLE_ID } from "../../constants";
 import { BoundStore } from "../../stores/bounds";
 import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { pairs } from "../../stores/bounds/internals/state";
@@ -120,14 +120,14 @@ const createZoomProps = ({
 					current: {
 						route: { key: "screen-b" },
 						transitionProgress: progress,
-						options: { navigationMaskEnabled: true },
+						options: {},
 					},
 				}
 			: {
 					current: {
 						route: { key: "screen-a" },
 						transitionProgress: 1,
-						options: { navigationMaskEnabled: true },
+						options: {},
 					},
 					next: {
 						route: { key: "screen-b" },
@@ -272,18 +272,17 @@ describe("zoom bound target", () => {
 		});
 		const focusedBackdrop = focusedStyles.backdrop?.style as any;
 		const focusedContent = focusedStyles.content?.style as any;
-		const focusedMask = focusedStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID]
-			?.style as any;
+		const focusedClip = focusedStyles.clip!;
 		const unfocusedContent = unfocusedStyles.content?.style as any;
 
 		expect(focusedBackdrop.backgroundColor).toBe("#123456");
 		expect(focusedBackdrop.opacity).toBeCloseTo(0.2, 10);
 		expect(focusedContent.borderRadius).toBe(36);
-		expect(focusedMask.borderRadius).toBe(36);
+		expect(focusedClip.borderRadius).toBe(36);
 		expect(unfocusedContent.transform[0]?.scale).toBeCloseTo(0.9, 10);
 	});
 
-	it("places the destination bound over the source while the navigation mask enters", () => {
+	it("places the destination bound over the source while the clipping window enters", () => {
 		registerSource();
 		registerDestination();
 
@@ -296,7 +295,7 @@ describe("zoom bound target", () => {
 		const contentTranslateX = contentTransform[0]?.translateX as number;
 		const contentTranslateY = contentTransform[1]?.translateY as number;
 		const contentScale = contentTransform[2]?.scale as number;
-		const mask = styles[NAVIGATION_MASK_ELEMENT_STYLE_ID]?.style as any;
+		const clip = styles.clip!;
 		const screenCenterX = SCREEN_LAYOUT.width / 2;
 		const screenCenterY = SCREEN_LAYOUT.height / 2;
 		const destinationCenterX =
@@ -320,11 +319,13 @@ describe("zoom bound target", () => {
 			SOURCE_BOUNDS.width / DESTINATION_BOUNDS.width,
 			8,
 		);
-		expect(mask.width).toBeCloseTo(SOURCE_BOUNDS.width, 8);
-		expect(mask.height).toBeCloseTo(SOURCE_BOUNDS.height, 8);
+		expect(screenCenterX + (clip.x - screenCenterX) * contentScale + contentTranslateX).toBeCloseTo(SOURCE_BOUNDS.pageX, 8);
+        expect(screenCenterY + (clip.y - screenCenterY) * contentScale + contentTranslateY).toBeCloseTo(SOURCE_BOUNDS.pageY, 8);
+        expect(clip.width * contentScale).toBeCloseTo(SOURCE_BOUNDS.width, 8);
+		expect(clip.height * contentScale).toBeCloseTo(SOURCE_BOUNDS.height, 8);
 	});
 
-	it("keeps a source-correct mask while a stale destination write misplaces bound content", () => {
+	it("keeps a source-correct clip while a stale destination write misplaces bound content", () => {
 		registerSource();
 		const staleDestination = {
 			...DESTINATION_BOUNDS,
@@ -358,8 +359,7 @@ describe("zoom bound target", () => {
 			zoomOptions: { target: "bound" },
 		});
 		const staleTransform = staleStyles.content?.style?.transform as any[];
-		const staleMask = staleStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID]
-			?.style as any;
+		const staleClip = staleStyles.clip!;
 
 		BoundStore.entry.set("card", "screen-b", { bounds: DESTINATION_BOUNDS });
 		BoundStore.link.setDestination(
@@ -378,11 +378,10 @@ describe("zoom bound target", () => {
 			zoomOptions: { target: "bound" },
 		});
 		const measuredTransform = measuredStyles.content?.style?.transform as any[];
-		const measuredMask = measuredStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID]
-			?.style as any;
+		const measuredClip = measuredStyles.clip!;
 
-		expect(staleMask.width).toBeCloseTo(measuredMask.width, 8);
-		expect(staleMask.height).toBeCloseTo(measuredMask.height, 8);
+		expect(staleClip.width * staleTransform[2].scale).toBeCloseTo(measuredClip.width * measuredTransform[2].scale, 8);
+		expect(staleClip.height * staleTransform[2].scale).toBeCloseTo(measuredClip.height * measuredTransform[2].scale, 8);
 		expect(staleTransform[1]?.translateY).not.toBeCloseTo(
 			measuredTransform[1]?.translateY,
 			8,
@@ -706,3 +705,34 @@ describe("zoom focused visibility", () => {
 		);
 	});
 });
+
+ describe("built-in clipping compatibility", () => {
+  it("clips zoom without an enable flag and ignores the legacy option", () => {
+   registerSource(); registerDestination();
+   const props = createZoomProps({ focused: true, progress: 0.5 });
+   const baseline = buildZoomStyles({ tag: "card", props });
+   expect(baseline.clip).toBeDefined();
+   for (const navigationMaskEnabled of [false, true]) {
+    props.current.options.navigationMaskEnabled = navigationMaskEnabled;
+    expect(buildZoomStyles({ tag: "card", props })).toEqual(baseline);
+   }
+  });
+  it("reveal ignores every legacy sizing mode and returns local clip geometry", () => {
+   registerSource(); registerDestination();
+   const props = createZoomProps({ focused: true, progress: 0 });
+   props.active.closing = false;
+   props.active.entering = true;
+   const baseline = buildRevealStyles({ tag: "card", props });
+   expect(baseline.clip).toBeDefined();
+   const clip = baseline.clip!;
+   const transform = baseline.content?.style?.transform as any[];
+   const scale = transform[2].scale;
+   expect(SCREEN_LAYOUT.width / 2 + (clip.x - SCREEN_LAYOUT.width / 2) * scale + transform[0].translateX).toBeCloseTo(SOURCE_BOUNDS.pageX, 8);
+   expect(SCREEN_LAYOUT.height / 2 + (clip.y - SCREEN_LAYOUT.height / 2) * scale + transform[1].translateY).toBeCloseTo(SOURCE_BOUNDS.pageY, 8);
+   expect(clip.width * scale).toBeCloseTo(SOURCE_BOUNDS.width, 8);
+   expect(clip.height * scale).toBeCloseTo(SOURCE_BOUNDS.height, 8);
+   for (const maskSizingMode of ["auto", "transform", "size"] as const) {
+    expect(buildRevealStyles({ tag: "card", props, revealOptions: { maskSizingMode } })).toEqual(baseline);
+   }
+  });
+ });

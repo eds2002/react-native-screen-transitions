@@ -96,6 +96,7 @@ export type {
 	ScrollGestureState,
 	ScrollMetadataState,
 	SheetSnapBehavior,
+	TransitionClip,
 	TransitionInterpolatedStyle,
 	TransitionSlotProps,
 	TransitionSlotStyle,

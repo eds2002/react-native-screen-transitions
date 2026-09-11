@@ -191,7 +191,7 @@ describe("hydrateTransitionState snap indices", () => {
 			>[2],
 		);
 
-		expect(hydrated.options.navigationMaskEnabled).toBe(false);
+		expect(hydrated.options.navigationMaskEnabled).toBeUndefined();
 		expect(hydrated.options.gestureTracking).toBe("always");
 		expect(hydrated.options.gestureSensitivity).toBe(0.5);
 		expect("navigationMaskEnabled" in hydrated.layouts).toBe(false);

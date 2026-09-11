@@ -1,6 +1,5 @@
-import { type ComponentType, memo, useCallback, useMemo } from "react";
+import { memo, useCallback } from "react";
 import { Pressable, StyleSheet } from "react-native";
-import Animated from "react-native-reanimated";
 import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
 import { DefaultSnapSpec } from "../../../../configs/specs";
 import { useBuilderStore } from "../../../../providers/screen/builder";
@@ -15,7 +14,7 @@ import type {
 } from "../../../../types/screen.types";
 import { animateToProgress } from "../../../../utils/animation/animate-to-progress";
 import { findCollapseTarget } from "../helpers/find-collapse-target";
-import { usesLayerRenderProps } from "./render-component";
+import { LayerComponent } from "../helpers/layer-component";
 
 export const BackdropLayer = memo(function BackdropLayer({
 	backdropBehavior,
@@ -40,16 +39,6 @@ export const BackdropLayer = memo(function BackdropLayer({
 	const animations = useMotionStore((store) => store.state);
 	const { targetProgress, animationProgress, resolvedAutoSnapPoint } =
 		animations;
-
-	const AnimatedBackdropComponent = useMemo(
-		() =>
-			BackdropComponent && !usesLayerRenderProps(BackdropComponent)
-				? Animated.createAnimatedComponent(
-						BackdropComponent as ComponentType<any>,
-					)
-				: null,
-		[BackdropComponent],
-	);
 
 	const handleBackdropPress = useCallback(() => {
 		if (backdropBehavior === "dismiss") {
@@ -140,24 +129,12 @@ export const BackdropLayer = memo(function BackdropLayer({
 			pointerEvents={backdropBehavior === "passthrough" ? "none" : "auto"}
 			onPress={isBackdropActive ? handleBackdropPress : undefined}
 		>
-			{AnimatedBackdropComponent ? (
-				<AnimatedBackdropComponent
-					style={backdropStyles}
-					animatedProps={animatedBackdropProps}
-					pointerEvents={backdropPointerEvents}
-				/>
-			) : BackdropComponent ? (
-				<BackdropComponent
-					styles={backdropStyles}
-					props={backdropProps}
-					pointerEvents={backdropPointerEvents}
-				/>
-			) : (
-				<Animated.View
-					style={backdropStyles}
-					pointerEvents={backdropPointerEvents}
-				/>
-			)}
+			<LayerComponent
+				component={BackdropComponent}
+				styles={backdropStyles}
+				props={BackdropComponent ? backdropProps : undefined}
+				pointerEvents={backdropPointerEvents}
+			/>
 		</Pressable>
 	);
 });

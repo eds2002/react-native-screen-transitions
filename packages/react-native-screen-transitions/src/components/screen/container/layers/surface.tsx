@@ -1,13 +1,12 @@
-import { type ComponentType, memo, useMemo } from "react";
+import { memo } from "react";
 import { StyleSheet } from "react-native";
-import Animated from "react-native-reanimated";
 import { useBuilderStore } from "../../../../providers/screen/builder";
 import {
 	useSlotProps,
 	useSlotStyles,
 } from "../../../../providers/screen/orchestrator/styles";
 import type { ScreenSurfaceComponentProps } from "../../../../types";
-import { usesLayerRenderProps } from "./render-component";
+import { LayerComponent } from "../helpers/layer-component";
 
 type Props = {
 	children: React.ReactNode;
@@ -18,12 +17,6 @@ export const SurfaceLayer = memo(({ children, pointerEvents }: Props) => {
 	const SurfaceComponent = useBuilderStore(
 		(store) => store.options.surfaceComponent,
 	);
-
-	const AnimatedSurfaceComponent = useMemo(() => {
-		return SurfaceComponent && !usesLayerRenderProps(SurfaceComponent)
-			? Animated.createAnimatedComponent(SurfaceComponent as ComponentType<any>)
-			: null;
-	}, [SurfaceComponent]);
 
 	const animatedSurfaceStyle = useSlotStyles("surface");
 	const animatedSurfaceProps = useSlotProps("surface");
@@ -38,26 +31,15 @@ export const SurfaceLayer = memo(({ children, pointerEvents }: Props) => {
 		return children;
 	}
 
-	if (AnimatedSurfaceComponent) {
-		return (
-			<AnimatedSurfaceComponent
-				style={surfaceStyles}
-				animatedProps={animatedSurfaceProps}
-				pointerEvents={pointerEvents}
-			>
-				{children}
-			</AnimatedSurfaceComponent>
-		);
-	}
-
 	return (
-		<SurfaceComponent
+		<LayerComponent
+			component={SurfaceComponent}
 			styles={surfaceStyles}
 			props={surfaceProps}
 			pointerEvents={pointerEvents}
 		>
 			{children}
-		</SurfaceComponent>
+		</LayerComponent>
 	);
 });
 

@@ -7,9 +7,6 @@
       "ignore": [
         "src/**/__tests__/**",
         "src/**/*.native.tsx"
-      ],
-      "ignoreDependencies": [
-        "@react-native-masked-view/masked-view"
       ]
     }
   }

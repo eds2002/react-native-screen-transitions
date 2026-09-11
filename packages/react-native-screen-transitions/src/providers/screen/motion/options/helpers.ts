@@ -204,7 +204,6 @@ const areScreenOptionsEqual = (
 ) => {
 	"worklet";
 	return (
-		left.navigationMaskEnabled === right.navigationMaskEnabled &&
 		left.gestureEnabled === right.gestureEnabled &&
 		left.gestureTracking === right.gestureTracking &&
 		areGestureDirectionsEqual(left.gestureDirection, right.gestureDirection) &&
@@ -225,10 +224,6 @@ export const resolveBaseScreenOptions = (
 	options: ScreenTransitionConfig,
 ): ScreenOptionsSnapshot => {
 	return {
-		navigationMaskEnabled: resolveBooleanOption(
-			options.navigationMaskEnabled,
-			undefined,
-		),
 		gestureEnabled: resolveBooleanOption(options.gestureEnabled, undefined),
 		gestureTracking: resolveGestureTrackingOption(
 			options.gestureTracking,
@@ -298,7 +293,6 @@ export const syncScreenOptionsOverrides = (
 	const base = screenOptions.get().baseOptions;
 
 	const next: ScreenOptionsState = {
-		navigationMaskEnabled: base.navigationMaskEnabled,
 		gestureEnabled: resolveBooleanOption(
 			options?.gestureEnabled,
 			base.gestureEnabled,

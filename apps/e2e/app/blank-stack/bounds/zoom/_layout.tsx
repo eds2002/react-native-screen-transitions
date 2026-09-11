@@ -44,7 +44,6 @@ export default function NavigationZoomGroupTransitionsLayout() {
 			<BlankStack.Screen
 				name="[id]"
 				options={{
-					navigationMaskEnabled: true,
 					backdropBehavior: "dismiss",
 					gestureEnabled: true,
 					gestureDirection: ["bidirectional", "pinch-in"],

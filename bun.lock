@@ -20,7 +20,6 @@
       "version": "1.0.1-beta.0",
       "dependencies": {
         "@expo/vector-icons": "^15.0.3",
-        "@react-native-masked-view/masked-view": "^0.3.2",
         "@react-navigation/bottom-tabs": "^7.4.0",
         "@react-navigation/elements": "^2.6.3",
         "@react-navigation/native": "^7.3.3",
@@ -89,7 +88,7 @@
     },
     "packages/react-native-screen-transitions": {
       "name": "react-native-screen-transitions",
-      "version": "4.1.0-alpha.0",
+      "version": "4.1.0-beta.0",
       "dependencies": {
         "standard-navigation": "^0.0.7",
       },

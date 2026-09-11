@@ -7,7 +7,6 @@ export const buildScreenTransitionOptions = (
 	options: ScreenTransitionConfig,
 ): ScreenTransitionOptions => {
 	return {
-		navigationMaskEnabled: options.navigationMaskEnabled,
 		gestureEnabled: options.gestureEnabled,
 		gestureTracking: options.gestureTracking,
 		gestureDirection: options.gestureDirection,
