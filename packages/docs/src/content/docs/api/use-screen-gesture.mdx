@@ -17,7 +17,10 @@ import { useScreenGesture } from "react-native-screen-transitions";
 
 const screenGesture = useScreenGesture();
 
-const pan = Gesture.Pan().requireExternalGestureToFail(screenGesture);
+const pan = Gesture.Pan();
+if (screenGesture) {
+  pan.requireExternalGestureToFail(screenGesture);
+}
 ```
 
 Target an ancestor navigator with negative depth:
@@ -26,4 +29,4 @@ Target an ancestor navigator with negative depth:
 const parentGesture = useScreenGesture({ depth: -1 });
 ```
 
-`useScreenGesture()` supports the current screen and ancestors. Positive depth is not valid here because gesture ownership only walks upward.
+`depth: 0` reads the current screen, negative depth resolves ancestors, and positive depth resolves descendants through Blank Stack's screen topology. The hook returns `null` when the target is unavailable, including when there is no local screen context. Check for a gesture before passing it to Gesture Handler.

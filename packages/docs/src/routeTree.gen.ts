@@ -38,6 +38,7 @@ import { Route as UpdatingTo36RouteImport } from './routes/updating-to-3-6'
 import { Route as UpdatingTo37RouteImport } from './routes/updating-to-3-7'
 import { Route as ApiCreateBoundaryComponentRouteImport } from './routes/api_.create-boundary-component'
 import { Route as ApiCreateTransitionAwareComponentRouteImport } from './routes/api_.create-transition-aware-component'
+import { Route as ApiProvidersRouteImport } from './routes/api_.providers'
 import { Route as ApiSnapToRouteImport } from './routes/api_.snap-to'
 import { Route as ApiTransitionBlockingRouteImport } from './routes/api_.transition-blocking'
 import { Route as ApiUseHistoryRouteImport } from './routes/api_.use-history'
@@ -194,6 +195,11 @@ const ApiCreateTransitionAwareComponentRoute =
     path: '/api/create-transition-aware-component',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiProvidersRoute = ApiProvidersRouteImport.update({
+  id: '/api_/providers',
+  path: '/api/providers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiSnapToRoute = ApiSnapToRouteImport.update({
   id: '/api_/snap-to',
   path: '/api/snap-to',
@@ -265,6 +271,7 @@ export interface FileRoutesByFullPath {
   '/updating-to-3-7': typeof UpdatingTo37Route
   '/api/create-boundary-component': typeof ApiCreateBoundaryComponentRoute
   '/api/create-transition-aware-component': typeof ApiCreateTransitionAwareComponentRoute
+  '/api/providers': typeof ApiProvidersRoute
   '/api/snap-to': typeof ApiSnapToRoute
   '/api/transition-blocking': typeof ApiTransitionBlockingRoute
   '/api/use-history': typeof ApiUseHistoryRoute
@@ -304,6 +311,7 @@ export interface FileRoutesByTo {
   '/updating-to-3-7': typeof UpdatingTo37Route
   '/api/create-boundary-component': typeof ApiCreateBoundaryComponentRoute
   '/api/create-transition-aware-component': typeof ApiCreateTransitionAwareComponentRoute
+  '/api/providers': typeof ApiProvidersRoute
   '/api/snap-to': typeof ApiSnapToRoute
   '/api/transition-blocking': typeof ApiTransitionBlockingRoute
   '/api/use-history': typeof ApiUseHistoryRoute
@@ -344,6 +352,7 @@ export interface FileRoutesById {
   '/updating-to-3-7': typeof UpdatingTo37Route
   '/api_/create-boundary-component': typeof ApiCreateBoundaryComponentRoute
   '/api_/create-transition-aware-component': typeof ApiCreateTransitionAwareComponentRoute
+  '/api_/providers': typeof ApiProvidersRoute
   '/api_/snap-to': typeof ApiSnapToRoute
   '/api_/transition-blocking': typeof ApiTransitionBlockingRoute
   '/api_/use-history': typeof ApiUseHistoryRoute
@@ -385,6 +394,7 @@ export interface FileRouteTypes {
     | '/updating-to-3-7'
     | '/api/create-boundary-component'
     | '/api/create-transition-aware-component'
+    | '/api/providers'
     | '/api/snap-to'
     | '/api/transition-blocking'
     | '/api/use-history'
@@ -424,6 +434,7 @@ export interface FileRouteTypes {
     | '/updating-to-3-7'
     | '/api/create-boundary-component'
     | '/api/create-transition-aware-component'
+    | '/api/providers'
     | '/api/snap-to'
     | '/api/transition-blocking'
     | '/api/use-history'
@@ -463,6 +474,7 @@ export interface FileRouteTypes {
     | '/updating-to-3-7'
     | '/api_/create-boundary-component'
     | '/api_/create-transition-aware-component'
+    | '/api_/providers'
     | '/api_/snap-to'
     | '/api_/transition-blocking'
     | '/api_/use-history'
@@ -503,6 +515,7 @@ export interface RootRouteChildren {
   UpdatingTo37Route: typeof UpdatingTo37Route
   ApiCreateBoundaryComponentRoute: typeof ApiCreateBoundaryComponentRoute
   ApiCreateTransitionAwareComponentRoute: typeof ApiCreateTransitionAwareComponentRoute
+  ApiProvidersRoute: typeof ApiProvidersRoute
   ApiSnapToRoute: typeof ApiSnapToRoute
   ApiTransitionBlockingRoute: typeof ApiTransitionBlockingRoute
   ApiUseHistoryRoute: typeof ApiUseHistoryRoute
@@ -718,6 +731,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCreateTransitionAwareComponentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api_/providers': {
+      id: '/api_/providers'
+      path: '/api/providers'
+      fullPath: '/api/providers'
+      preLoaderRoute: typeof ApiProvidersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api_/snap-to': {
       id: '/api_/snap-to'
       path: '/api/snap-to'
@@ -808,6 +828,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCreateBoundaryComponentRoute: ApiCreateBoundaryComponentRoute,
   ApiCreateTransitionAwareComponentRoute:
     ApiCreateTransitionAwareComponentRoute,
+  ApiProvidersRoute: ApiProvidersRoute,
   ApiSnapToRoute: ApiSnapToRoute,
   ApiTransitionBlockingRoute: ApiTransitionBlockingRoute,
   ApiUseHistoryRoute: ApiUseHistoryRoute,

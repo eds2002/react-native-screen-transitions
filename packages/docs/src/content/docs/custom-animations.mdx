@@ -87,6 +87,29 @@ In practice:
 
 </PropertyTable>
 
+## Stack progress
+
+`stackProgress` sums the visual progress of the current screen and every route above it in the same navigator. It includes live gesture movement and fractional snap positions; it is not simply the route count. A closing screen contributes its decreasing progress until it is removed.
+
+For three fully open screens `A → B → C`, the values are `3` for A, `2` for B, and `1` for C. When C closes, A moves from `3` toward `2` and B moves from `2` toward `1`.
+
+Use it for a persistent progress indicator or a screen that moves as a flow grows:
+
+```tsx
+function FlowProgress() {
+  const animation = useScreenAnimation();
+  const style = useAnimatedStyle(() => ({
+    width: `${interpolate(animation.get().stackProgress, [1, 4], [0, 100], "clamp")}%`,
+  }));
+
+  return <Animated.View style={[{ height: 4, backgroundColor: "white" }, style]} />;
+}
+```
+
+Import `useScreenAnimation` from `react-native-screen-transitions` and `Animated`, `interpolate`, and `useAnimatedStyle` from `react-native-reanimated`. Mount this example inside the first screen of a four-screen flow and give that screen `inactiveBehavior: "keep"` so its animation reader keeps running while covered.
+
+Use `hide` or `pause` for other screens that should retain their state. See [Inactive Behavior](/inactive-behavior).
+
 ## Related Transition Scopes
 
 Use [`useScreenAnimation`](/api/use-screen-animation) inside a component to read another transition scope:

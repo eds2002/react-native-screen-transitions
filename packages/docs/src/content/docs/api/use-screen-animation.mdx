@@ -9,7 +9,7 @@ order: 1
 to: /api/use-screen-animation
 ---
 
-`useScreenAnimation()` returns a Reanimated derived value with the same interpolation props passed to `screenStyleInterpolator`.
+`useScreenAnimation()` returns a Reanimated derived value with the same interpolation props passed to `screenStyleInterpolator`. The no-argument call and `{ depth: 0 }` require a local screen context and throw when used outside it.
 
 ```tsx
 import { useScreenAnimation } from "react-native-screen-transitions";
@@ -46,8 +46,15 @@ Set `transitionKey` in a screen's options, then pass that key to the hook:
 // Screen options
 { transitionKey: "feed" }
 
-// Inside a component under a transition scope
+// Inside a React component
 const feedAnimation = useScreenAnimation("feed");
 ```
 
 The key must be unique among mounted screens. The derived value is `null` while the target is unavailable. Call this hook from a component, not from `screenStyleInterpolator` or another worklet.
+
+
+Named lookup can also be used outside a screen context. The target must be registered in Blank Stack's screen topology; passing a name does not create a screen or keep its effects running. Relative depth lookup needs a local screen from which to resolve the relationship.
+
+## Stack progress and inactive screens
+
+`animation.get().stackProgress` includes the current screen and the routes above it in its navigator. To keep an animation reader updating while its own screen is covered, use `inactiveBehavior: "keep"` on that screen. `hide` and `pause` preserve state but pause effects. See [Stack progress](/custom-animations#stack-progress) and [Inactive Behavior](/inactive-behavior).
