@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, expect, it, mock, spyOn } from "bun:test";
+import { createModuleMock } from "./helpers/mock-module";
+import { afterEach, beforeEach, expect, it, spyOn } from "bun:test";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import type { ScreenTransitionConfig } from "../types";
 import type { BaseStackRoute } from "../types/stack.types";
@@ -9,7 +10,8 @@ import { ScrollStore } from "../stores/scroll.store";
 
 let options: ScreenTransitionConfig = {};
 let route: BaseStackRoute = { key: "option-projection", name: "Detail" };
-mock.module("../providers/builder", () => ({
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("../providers/builder", () => ({
 	useBuilderStore: (select: (value: any) => unknown) =>
 		select({ options, descriptors: { current: { route, options } } }),
 }));

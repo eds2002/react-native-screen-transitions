@@ -1,3 +1,4 @@
+import { createModuleMock } from "../helpers/mock-module";
 import { beforeAll, beforeEach, describe, expect, it, mock } from "bun:test";
 import { createElement, type ComponentType, type ReactNode } from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
@@ -8,7 +9,8 @@ import { act, create, type ReactTestRenderer } from "react-test-renderer";
 (globalThis as any).__DEV__ = false;
 
 const usePortalDestination = mock(() => ({teleportProps:{},localHostName:"screen:card"}));
-mock.module(
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule(
 	"../../components/boundary/portal/teleport",
 	() => ({
 		isTeleportAvailable: true,
@@ -18,8 +20,8 @@ mock.module(
 		PORTAL_POINTER_EVENTS: "box-none",
 	}),
 );
-mock.module("../../components/boundary/portal/hooks/use-portal-destination", () => ({usePortalDestination}));
-mock.module(
+await mockModule("../../components/boundary/portal/hooks/use-portal-destination", () => ({usePortalDestination}));
+await mockModule(
 	"../../components/boundary/portal/hooks/use-placeholder-styles",
 	() => ({
 		usePlaceholderStyles: () => ({

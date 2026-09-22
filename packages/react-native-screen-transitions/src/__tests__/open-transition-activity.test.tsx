@@ -1,9 +1,11 @@
+import { createModuleMock } from "./helpers/mock-module";
 import { afterEach, expect, it, mock } from "bun:test";
 import { Activity, useLayoutEffect } from "react";
 import { makeMutable } from "react-native-reanimated";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 
-mock.module("../providers/builder", () => ({
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("../providers/builder", () => ({
 	useBuilderStore: (selector: (store: any) => unknown) =>
 		selector({ derivations: { isFirstKey: false } }),
 }));

@@ -1,4 +1,5 @@
-import { describe, expect, it, mock } from "bun:test";
+import { createModuleMock } from "../helpers/mock-module";
+import { describe, expect, it } from "bun:test";
 import {
 	createContext,
 	type ComponentType,
@@ -44,7 +45,8 @@ const useOrchestratorStore = <Selected,>(
 	return resolvedSelector ? resolvedSelector(store) : store;
 };
 
-mock.module("../../providers/motion", () => ({
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("../../providers/motion", () => ({
 	getMotionStore: () => {
 		throw new Error("Overlay rendering should not request a snap");
 	},
@@ -60,13 +62,13 @@ mock.module("../../providers/motion", () => ({
 	},
 }));
 
-mock.module("../../navigators/blank-stack/state/blank-stack.provider", () => ({
+await mockModule("../../navigators/blank-stack/state/blank-stack.provider", () => ({
 	useOptionalBlankStackStore: (selector: (store: null) => unknown) =>
 		selector(null),
 	useBlankStackStore: () => stackState,
 }));
 
-mock.module(
+await mockModule(
 	"../../providers/orchestrator/orchestrator.provider",
 	() => ({
 		OrchestratorProvider: ({
@@ -87,7 +89,7 @@ mock.module(
 	}),
 );
 
-mock.module("../../providers/orchestrator", () => ({
+await mockModule("../../providers/orchestrator", () => ({
 	OrchestratorProvider: ({
 		children,
 		screenKey,

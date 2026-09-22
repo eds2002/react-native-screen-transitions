@@ -1,8 +1,10 @@
-import { describe, expect, it, mock } from "bun:test";
+import { createModuleMock } from "../helpers/mock-module";
+import { describe, expect, it } from "bun:test";
 import { useEffect } from "react";
 import { act, create } from "react-test-renderer";
 
-mock.module("react-native", () => ({
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("react-native", () => ({
 	View: "View",
 	I18nManager: { isRTL: false },
 	StyleSheet: { create: (styles: unknown) => styles },
@@ -16,7 +18,7 @@ const store = {
 		get: () => ({ layouts: { screen: { width: 390, height: 844 } } }),
 	},
 };
-mock.module(
+await mockModule(
 	"../../providers/orchestrator/orchestrator.provider",
 	() => ({
 		useOrchestratorStore: (select: (state: typeof store) => unknown) =>

@@ -1,4 +1,5 @@
-import { beforeEach, expect, it, mock } from "bun:test";
+import { createModuleMock } from "../helpers/mock-module";
+import { beforeEach, expect, it } from "bun:test";
 
 type Bounds = { x: number; y: number; pageX: number; pageY: number; width: number; height: number };
 type Mutable = { get: () => any; set: (next: any) => void; version: number };
@@ -19,7 +20,8 @@ let result: Bounds | null;
 let cursor = 0;
 let values: Mutable[] = [];
 let reactions: Reaction[] = [];
-mock.module("react-native-reanimated", () => ({
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("react-native-reanimated", () => ({
  makeMutable: mutable,
  useSharedValue: (value: any) => values[cursor++] ?? (values[cursor - 1] = mutable(value)),
  useAnimatedRef: () => ({}),

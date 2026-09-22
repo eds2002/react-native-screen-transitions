@@ -1,7 +1,9 @@
-import { afterEach, expect, it, mock } from "bun:test";
+import { createModuleMock } from "../helpers/mock-module";
+import { afterEach, expect, it } from "bun:test";
 
 // Exercise the exact snapshots React compares without mounting native views.
-mock.module("react", () => ({
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("react", () => ({
 	useSyncExternalStore: (_subscribe: unknown, getSnapshot: () => unknown) => getSnapshot(),
 }));
 const { mountPortalBoundaryHost: mount, unmountPortalBoundaryHostByName: unmount, useActivePortalBoundaryHosts: read } = await import("../../components/boundary/portal/stores/portal-boundary-host.store");

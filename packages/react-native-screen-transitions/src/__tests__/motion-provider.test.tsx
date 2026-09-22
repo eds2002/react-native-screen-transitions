@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, expect, it, mock } from "bun:test";
+import { createModuleMock } from "./helpers/mock-module";
+import { afterEach, beforeEach, expect, it } from "bun:test";
 import { Activity, useLayoutEffect } from "react";
 import { useInterpolatorState } from "../providers/orchestrator/helpers/use-interpolator-state";
 import { hydrateTransitionState } from "../providers/motion/animation/helpers/hydrate-transition-state";
@@ -28,7 +29,8 @@ function gesture() {
 	return result;
 }
 const nativeGestures = await import("react-native-gesture-handler");
-mock.module("react-native-gesture-handler", () => ({
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("react-native-gesture-handler", () => ({
 	...nativeGestures,
 	Gesture: {
 		...nativeGestures.Gesture,
@@ -47,14 +49,14 @@ let options = {
 	gestureDirection: "horizontal" as const,
 	gestureSensitivity: 1,
 };
-mock.module("../navigators/blank-stack/state/blank-stack.provider", () => ({
+await mockModule("../navigators/blank-stack/state/blank-stack.provider", () => ({
 	useBlankStackStore: () => {
 		throw new Error("Motion must not read Blank Stack");
 	},
 }));
 let dismissRequest: (() => void) | undefined;
 let animationState: ReturnType<typeof useTransitionValues>;
-mock.module("../providers/builder", () => ({
+await mockModule("../providers/builder", () => ({
 	useBuilderStore: (selector: (store: any) => unknown) =>
 		selector({
 			options,

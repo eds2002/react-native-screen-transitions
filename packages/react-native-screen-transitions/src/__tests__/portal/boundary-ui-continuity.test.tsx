@@ -1,4 +1,5 @@
-import { expect, it, mock } from "bun:test";
+import { createModuleMock } from "../helpers/mock-module";
+import { expect, it } from "bun:test";
 import { act, create } from "react-test-renderer";
 import { makeMutable } from "react-native-reanimated";
 import { createScreenTransitionState } from "../../constants";
@@ -13,14 +14,15 @@ const motion = keys.map(() => ({isScreenReady:makeMutable(true),state:{closing:m
 const slotsMap = makeMutable({});
 const orchestrators = frames.map(screenInterpolatorProps => ({screenInterpolatorProps, slotsMap, currentInterpolator: () => ({content:{opacity:1}}), pairPresentation: undefined as any}));
 let currentIndex = 0;
-mock.module("../../providers/builder", () => ({
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("../../providers/builder", () => ({
  useBuilderStore: (select: any) => select({derivations:{currentScreenKey:keys[currentIndex], destinationPairKey:currentIndex ? `${keys[currentIndex-1]}<>${keys[currentIndex]}` : undefined}}),
  useOptionalBuilderStore: (_keys: any, select: any) => keys.map((_,i) => select({derivations:{destinationPairKey:i ? `${keys[i-1]}<>${keys[i]}` : undefined}})),
 }));
-mock.module("../../providers/builder/topology", () => ({useScreenRelationships: () => ({parentScreenKey:null})}));
-mock.module("../../navigators/blank-stack/state/blank-stack.provider", () => ({useOptionalBlankStackStore: (select:any) => select({scenes})}));
-mock.module("../../providers/motion", () => ({useMotionStore: (select:any) => select(motion[currentIndex]), useOptionalMotionStore: (_keys:any,select:any) => motion.map(select)}));
-mock.module("../../providers/orchestrator", () => ({
+await mockModule("../../providers/builder/topology", () => ({useScreenRelationships: () => ({parentScreenKey:null})}));
+await mockModule("../../navigators/blank-stack/state/blank-stack.provider", () => ({useOptionalBlankStackStore: (select:any) => select({scenes})}));
+await mockModule("../../providers/motion", () => ({useMotionStore: (select:any) => select(motion[currentIndex]), useOptionalMotionStore: (_keys:any,select:any) => motion.map(select)}));
+await mockModule("../../providers/orchestrator", () => ({
  useOrchestratorStore: (select:any) => select(orchestrators[0]),
  useOptionalOrchestratorStore: (keys:any,select:any) => keys ? orchestrators.map(select) : null,
 }));

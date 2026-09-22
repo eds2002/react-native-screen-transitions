@@ -1,6 +1,7 @@
+import { createModuleMock } from "./helpers/mock-module";
 import { mountMotionValues } from "./helpers/mount-motion-values";
 import { mountMotionTransitionValues } from "./helpers/mount-transition-values";
-import { beforeAll, describe, expect, it, mock } from "bun:test";
+import { beforeAll, describe, expect, it } from "bun:test";
 import React from "react";
 import { act, create } from "react-test-renderer";
 import { ScrollStore } from "../stores/scroll.store";
@@ -18,12 +19,13 @@ const descriptors: {
 	previous: undefined,
 };
 
-mock.module("react-native-safe-area-context", () => ({
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("react-native-safe-area-context", () => ({
 	useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }),
 }));
 
 
-mock.module("../navigators/blank-stack/state/blank-stack.provider", () => ({
+await mockModule("../navigators/blank-stack/state/blank-stack.provider", () => ({
 	useBlankStackStore: (selector: (state: any) => unknown) =>
 		selector({ routeKeys: [], scenesByKey: {} }),
 	useOptionalBlankStackStore: (selector: (state: any) => unknown) =>
@@ -34,7 +36,7 @@ const currentMotion = mountMotionValues();
 const nextMotion = mountMotionValues();
 const currentSystem = mountMotionTransitionValues();
 const nextSystem = mountMotionTransitionValues();
-mock.module("../providers/builder", () => ({
+await mockModule("../providers/builder", () => ({
 	useBuilderStore: (
 		selector: (state: { descriptors: typeof descriptors }) => unknown,
 	) => {
@@ -65,7 +67,7 @@ function motionForKey(key: string) {
 		},
 	};
 }
-mock.module("../providers/motion", () => ({
+await mockModule("../providers/motion", () => ({
 	useMotionStore: (selector: ((state: any) => unknown) | readonly string[]) =>
 		Array.isArray(selector)
 			? []

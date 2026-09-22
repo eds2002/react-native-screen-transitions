@@ -1,5 +1,7 @@
-import { describe, expect, it, mock } from "bun:test";
-mock.module("../../components/boundary/portal/teleport", () => ({isTeleportAvailable:true}));
+import { createModuleMock } from "../helpers/mock-module";
+import { describe, expect, it } from "bun:test";
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("../../components/boundary/portal/teleport", () => ({isTeleportAvailable:true}));
 const {resolveBoundaryPortal} = await import("../../components/boundary/portal/utils/resolve-portal");
 
 describe("resolveBoundaryPortal", () => {

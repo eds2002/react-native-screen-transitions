@@ -42,13 +42,19 @@ We use TypeScript, Biome (lint + format), Bun tests, and Maestro for e2e. Make s
 # From repo root
 bun run lint       # biome check
 bun run typecheck  # tsc --noEmit
-bun run test       # unit tests (each file runs in an isolated process)
+bun test           # unit tests (bun run test runs the same suite)
 
 # E2e tests (requires Maestro CLI + iOS simulator)
 cd apps/e2e
 npx expo run:ios --configuration Release
 maestro test .maestro/complete.yaml
 ```
+
+Tests share a process. For file-specific module overrides, use `createModuleMock`
+from the library’s `src/__tests__/helpers/mock-module.ts` and await each replacement. It preserves
+unmodified exports and restores replacements after the file finishes. Keep shared
+native dependency stubs in `test/setup.ts`; direct `mock.module()` calls in test
+files leak into other tests.
 
 Biome auto-fixes many issues:
 

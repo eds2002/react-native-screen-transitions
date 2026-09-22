@@ -1,4 +1,5 @@
-import { afterEach, expect, it, mock } from "bun:test";
+import { createModuleMock } from "./helpers/mock-module";
+import { afterEach, expect, it } from "bun:test";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import type { SharedValue } from "react-native-reanimated";
 import type { MotionAnimationState } from "../providers/motion/animation/helpers/hydrate-transition-state/types";
@@ -12,21 +13,22 @@ let motions: Record<string, MotionAnimationState> = {};
 let routeKeys: string[] = [];
 let current: MotionAnimationState | null = null;
 const native = await import("react-native");
-mock.module("react-native", () => ({
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("react-native", () => ({
 	...native,
 	useWindowDimensions: () => dimensions,
 }));
-mock.module("react-native-safe-area-context", () => ({
+await mockModule("react-native-safe-area-context", () => ({
 	useSafeAreaInsets: () => insets,
 }));
-mock.module("../providers/builder", () => ({
+await mockModule("../providers/builder", () => ({
 	useBuilderStore: (select: (store: any) => any) => select({ descriptors }),
 }));
-mock.module("../navigators/blank-stack/state/blank-stack.provider", () => ({
+await mockModule("../navigators/blank-stack/state/blank-stack.provider", () => ({
 	useOptionalBlankStackStore: (select: (store: any) => any) =>
 		select({ routeKeys }),
 }));
-mock.module("../providers/motion", () => ({
+await mockModule("../providers/motion", () => ({
 	useMotionStore: (
 		keysOrSelector: string[] | ((store: any) => any),
 		select = (store: any) => store,
@@ -41,7 +43,7 @@ mock.module("../providers/motion", () => ({
 }));
 // This fixture tests frame hydration, while listener lifecycle has its own
 // real hook tests. Keep its minimal shared-value mocks out of listener setup.
-mock.module(
+await mockModule(
 	"../providers/orchestrator/helpers/use-stack-progress-inputs",
 	() => ({
 		useStackProgressInputs: (currentRouteKey: string) => ({

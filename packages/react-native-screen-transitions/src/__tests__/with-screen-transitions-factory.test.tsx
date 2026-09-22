@@ -1,5 +1,6 @@
+import { createModuleMock } from "./helpers/mock-module";
 import { TestStackLayout, TestScreenLayout } from "./helpers/adapter-layouts";
-import { beforeAll, describe, expect, it, mock } from "bun:test";
+import { beforeAll, describe, expect, it } from "bun:test";
 import {
 	BaseNavigationContainer,
 	createNavigatorFactory,
@@ -12,7 +13,8 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 import type * as Adapter from "../adapters/with-screen-transitions";
 import { resolveAdapterTransitionOptions } from "../adapters/with-screen-transitions/options";
 
-mock.module("../adapters/with-screen-transitions/stack-layout", () => ({
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("../adapters/with-screen-transitions/stack-layout", () => ({
 	ScreenTransitionsScreenLayout: TestScreenLayout,
 	ScreenTransitionsStackLayout: TestStackLayout,
 }));

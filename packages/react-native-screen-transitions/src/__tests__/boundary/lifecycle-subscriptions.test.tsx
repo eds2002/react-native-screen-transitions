@@ -1,4 +1,5 @@
-import { afterEach, expect, it, mock } from "bun:test";
+import { createModuleMock } from "../helpers/mock-module";
+import { afterEach, expect, it } from "bun:test";
 import { useSyncExternalStore } from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { makeMutable } from "react-native-reanimated";
@@ -28,11 +29,12 @@ let state = {
 	closing: makeMutable(0),
 	route: { key: "home" },
 };
-mock.module("../../navigators/blank-stack/state/blank-stack.provider", () => ({
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("../../navigators/blank-stack/state/blank-stack.provider", () => ({
 	useBlankStackStore: <T,>(selector: (value: typeof stack) => T) =>
 		useSelection(() => stack, selector),
 }));
-mock.module("../../providers/builder", () => ({
+await mockModule("../../providers/builder", () => ({
 	useBuilderStore: <T,>(
 		selector: (value: {
 			derivations: {
@@ -44,7 +46,7 @@ mock.module("../../providers/builder", () => ({
 	) =>
 		selector({ derivations: { currentScreenKey: "home", destinationPairKey } }),
 }));
-mock.module("../../providers/motion", () => ({
+await mockModule("../../providers/motion", () => ({
 	useMotionStore: <T,>(selector: (value: { state: typeof state }) => T) =>
 		useSelection(
 			() => state,

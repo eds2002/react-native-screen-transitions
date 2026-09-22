@@ -1,5 +1,6 @@
+import { createModuleMock } from "./helpers/mock-module";
 import { mountMotionTransitionValues } from "./helpers/mount-transition-values";
-import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import React from "react";
 import { act, create } from "react-test-renderer";
 import { MotionProvider, getMotionStore } from "../providers/motion";
@@ -53,7 +54,8 @@ let softDismissCount: number;
 let blankCloseCount: number;
 let handleBlankClose: boolean;
 
-mock.module("../providers/builder", () => ({
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("../providers/builder", () => ({
 	useOptionalBuilderStore: () => null,
 	useBuilderStore: (selector: (store: any) => unknown) =>
 		selector({
@@ -65,7 +67,7 @@ mock.module("../providers/builder", () => ({
 		}),
 }));
 
-mock.module("../navigators/blank-stack/state/blank-stack.provider", () => ({
+await mockModule("../navigators/blank-stack/state/blank-stack.provider", () => ({
 	useBlankStackStore: (selector: (stack: any) => unknown) =>
 		selector({
 			requestDismiss: requestStackDismiss,

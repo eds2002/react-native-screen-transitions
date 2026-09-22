@@ -1,4 +1,5 @@
-import { afterEach, expect, it, mock } from "bun:test";
+import { createModuleMock } from "./helpers/mock-module";
+import { afterEach, expect, it } from "bun:test";
 import { useEffect, useSyncExternalStore, type ReactNode } from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 
@@ -15,22 +16,23 @@ let motionRenders = 0;
 let descendantValue = 0;
 let mounts = 0;
 const passthrough = ({ children }: { children?: ReactNode }) => children;
-mock.module("react-native-gesture-handler", () => ({
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("react-native-gesture-handler", () => ({
 	GestureHandlerRootView: passthrough,
 }));
-mock.module("react-native-safe-area-context", () => ({
+await mockModule("react-native-safe-area-context", () => ({
 	SafeAreaProvider: passthrough,
 }));
-mock.module("../components/boundary/portal", () => ({
+await mockModule("../components/boundary/portal", () => ({
 	PortalProvider: passthrough,
 }));
-mock.module("../components/overlay", () => ({
+await mockModule("../components/overlay", () => ({
 	Overlay: () => null,
 }));
-mock.module("../navigators/blank-stack/components/lifecycle/blank-stack", () => ({
+await mockModule("../navigators/blank-stack/components/lifecycle/blank-stack", () => ({
 	BlankStackLifecycle: () => null,
 }));
-mock.module("../navigators/blank-stack/state/blank-stack.provider", () => ({
+await mockModule("../navigators/blank-stack/state/blank-stack.provider", () => ({
 	BlankStackProvider: passthrough,
 	useBlankStackStore: (select: (s: any) => unknown) =>
 		useSyncExternalStore(
@@ -43,27 +45,27 @@ mock.module("../navigators/blank-stack/state/blank-stack.provider", () => ({
 			() => select({ routeKeys, scenesByKey: { A: scene } }),
 		),
 }));
-mock.module("../providers/builder", () => ({
+await mockModule("../providers/builder", () => ({
 	BuilderProvider: passthrough,
 }));
-mock.module("../navigators/blank-stack/hooks/use-navigation-helpers", () => ({
+await mockModule("../navigators/blank-stack/hooks/use-navigation-helpers", () => ({
 	useNavigationHelpers: () => ({ requestDismiss: dismiss }),
 }));
 const dismiss = () => {};
-mock.module("../providers/motion", () => ({
+await mockModule("../providers/motion", () => ({
 	MotionProvider: ({ children }: { children: ReactNode }) => {
 		motionRenders++;
 		return children;
 	},
 }));
-mock.module("../providers/orchestrator", () => ({
+await mockModule("../providers/orchestrator", () => ({
 	OrchestratorProvider: passthrough,
 }));
-mock.module("../navigators/blank-stack/components/activity", () => ({
+await mockModule("../navigators/blank-stack/components/activity", () => ({
 	ActivityScreen: passthrough,
 	ActivityContainer: passthrough,
 }));
-mock.module("../components/screen-layers", () => ({
+await mockModule("../components/screen-layers", () => ({
 	ScreenLayers: passthrough,
 }));
 const { BlankStackView } = await import("../navigators/blank-stack/components/stack-view");

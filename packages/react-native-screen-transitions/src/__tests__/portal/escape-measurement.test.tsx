@@ -1,10 +1,12 @@
-import { expect, it, mock } from 'bun:test';
+import { createModuleMock } from "../helpers/mock-module";
+import { expect, it } from "bun:test";
 import { act, create } from 'react-test-renderer';
 import { makeMutable } from 'react-native-reanimated';
 import type { MeasureBoundary, BoundaryLocalMeasurement } from '../../components/boundary/types';
 
 const motion = {isScreenReady:makeMutable(false), state:{pendingLifecycleStartBlockCount:makeMutable(1)}};
-mock.module('../../providers/motion', () => ({useMotionStore:(select:any)=>select(motion)}));
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule('../../providers/motion', () => ({useMotionStore:(select:any)=>select(motion)}));
 const {useMeasurer} = await import('../../components/boundary/hooks/use-measurer');
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 

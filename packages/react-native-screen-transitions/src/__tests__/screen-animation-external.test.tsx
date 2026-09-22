@@ -1,4 +1,5 @@
-import { afterEach, expect, it, mock } from "bun:test";
+import { createModuleMock } from "./helpers/mock-module";
+import { afterEach, expect, it } from "bun:test";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import createProvider from "../utils/create-provider";
 
@@ -9,10 +10,11 @@ const { OrchestratorProvider, useOptionalOrchestratorStore } = createProvider("O
   key: id,
   value: { screenInterpolatorProps: { get: () => ({ current: { progress: 0.5 } }) }, boundsAccessor: {} },
 }));
-mock.module("../providers/orchestrator/orchestrator.provider", () => ({ useOptionalOrchestratorStore }));
-mock.module("../providers/builder", () => ({ useOptionalBuilderStore: (selector: (value: null) => unknown) => selector(null) }));
-mock.module("../providers/builder/topology", () => ({ useResolvedTransitionKey: (_: unknown, target: unknown) => typeof target === "string" ? target : null }));
-mock.module("react-native-reanimated", () => ({ useDerivedValue: (read: () => unknown) => ({ get: read }) }));
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("../providers/orchestrator/orchestrator.provider", () => ({ useOptionalOrchestratorStore }));
+await mockModule("../providers/builder", () => ({ useOptionalBuilderStore: (selector: (value: null) => unknown) => selector(null) }));
+await mockModule("../providers/builder/topology", () => ({ useResolvedTransitionKey: (_: unknown, target: unknown) => typeof target === "string" ? target : null }));
+await mockModule("react-native-reanimated", () => ({ useDerivedValue: (read: () => unknown) => ({ get: read }) }));
 const { useScreenAnimation } = await import("../providers/motion/animation/use-screen-animation");
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 let renderer: ReactTestRenderer | undefined;

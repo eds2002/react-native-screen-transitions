@@ -1,4 +1,5 @@
-import { beforeEach, expect, it, mock } from "bun:test";
+import { createModuleMock } from "../helpers/mock-module";
+import { beforeEach, expect, it } from "bun:test";
 import { act, create } from "react-test-renderer";
 import { makeMutable } from "react-native-reanimated";
 
@@ -8,9 +9,10 @@ const boundaryPresentation = makeMutable<any>({owner:{pairKey:"a<>b",ready:true}
 const root = {currentScreenKey:"a",localMeasurement,slotsMap:makeMutable({}),boundaryPresentation};
 let hostReady = false;
 let registeredScope: string | undefined;
-mock.module("../../components/boundary/providers/boundary-root.provider", () => ({useBoundaryRootStore:(select:any)=>select(root)}));
-mock.module("../../components/boundary/portal/stores/host-registry.store", () => ({useActiveHostKey:(screen:string|null)=>screen ? "overlay" : undefined}));
-mock.module("../../components/boundary/portal/hooks/use-active-portal-boundary-host", () => ({useActivePortalBoundaryHost:({escapeHostKey,portalHostReady}:any)=>{registeredScope=escapeHostKey;portalHostReady.set(hostReady);return escapeHostKey ? "overlay-photo" : null;}}));
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("../../components/boundary/providers/boundary-root.provider", () => ({useBoundaryRootStore:(select:any)=>select(root)}));
+await mockModule("../../components/boundary/portal/stores/host-registry.store", () => ({useActiveHostKey:(screen:string|null)=>screen ? "overlay" : undefined}));
+await mockModule("../../components/boundary/portal/hooks/use-active-portal-boundary-host", () => ({useActivePortalBoundaryHost:({escapeHostKey,portalHostReady}:any)=>{registeredScope=escapeHostKey;portalHostReady.set(hostReady);return escapeHostKey ? "overlay-photo" : null;}}));
 const {usePortalDestination} = await import("../../components/boundary/portal/hooks/use-portal-destination");
 beforeEach(()=>{hostReady=false;registeredScope=undefined;localMeasurement.set({pairKey:"a<>b"});});
 

@@ -55,6 +55,8 @@ globalThis.resetMutableRegistry = () => {
 
 mock.module("react-native", () => ({
 	View: "View",
+	Pressable: "Pressable",
+	I18nManager: { isRTL: false },
 	NativeComponentRegistry: {
 		get: (name: string) => name,
 	},
@@ -68,7 +70,10 @@ mock.module("react-native", () => ({
 		absoluteFill: {},
 		absoluteFillObject: {},
 		create: <T>(styles: T) => styles,
-		flatten: (style: unknown): any => Array.isArray(style) ? Object.assign({}, ...style.flat(Infinity).filter(Boolean)) : style,
+		flatten: (style: unknown): any =>
+			Array.isArray(style)
+				? Object.assign({}, ...style.flat(Infinity).filter(Boolean))
+				: style,
 	},
 }));
 function createTestGesture() {
@@ -92,6 +97,7 @@ function createTestGesture() {
 }
 
 mock.module("react-native-gesture-handler", () => ({
+	GestureHandlerRootView: "GestureHandlerRootView",
 	GestureDetector: ({ children }: { children: React.ReactNode }) => children,
 	Gesture: {
 		Pan: createTestGesture,
@@ -149,6 +155,11 @@ mock.module("react-native-worklets", () => ({
 }));
 mock.module("react-native-reanimated", () => ({
 	makeMutable: createTestMutable,
+	useAnimatedRef: () => React.useRef(null),
+	isSharedValue: (value: any) =>
+		value != null &&
+		typeof value.get === "function" &&
+		typeof value.set === "function",
 	createAnimatedComponent,
 	default: {
 		View: "AnimatedView",
@@ -241,4 +252,17 @@ mock.module("react-native-reanimated", () => ({
 	) => {
 		return (...args: A): T => worklet(...args);
 	},
+}));
+
+mock.module("react-native-safe-area-context", () => ({
+	useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+	SafeAreaProvider: ({ children }: { children: React.ReactNode }) => children,
+	SafeAreaInsetsContext: React.createContext(null),
+}));
+
+mock.module("react-native-teleport", () => ({
+	Portal: ({ children }: { children: React.ReactNode }) => children,
+	PortalHost: (props: Record<string, unknown>) =>
+		React.createElement("native-host", props),
+	PortalProvider: ({ children }: { children: React.ReactNode }) => children,
 }));

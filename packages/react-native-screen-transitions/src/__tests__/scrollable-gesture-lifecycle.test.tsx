@@ -1,12 +1,5 @@
-import {
-	afterEach,
-	beforeAll,
-	beforeEach,
-	describe,
-	expect,
-	it,
-	mock,
-} from "bun:test";
+import { createModuleMock } from "./helpers/mock-module";
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import { type ComponentType, type ReactNode, useState } from "react";
 import { GestureDetector } from "react-native-gesture-handler";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
@@ -27,18 +20,19 @@ const EMPTY_COORDINATION: ScrollGestureCoordination = {
 let gestureContext: { routeKey: string } | null = { routeKey: ROUTE_KEY };
 let coordination = EMPTY_COORDINATION;
 
-mock.module("../providers/motion", () => ({
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("../providers/motion", () => ({
 	useMotionStore: () => [],
 	useOptionalMotionStore: (selector: (store: unknown) => unknown) =>
 		selector(gestureContext ? { gestures: gestureContext } : null),
 }));
-mock.module(
+await mockModule(
 	"../providers/motion/gestures/ownership/use-gesture-scroll-coordination",
 	() => ({
 		useGestureScrollCoordination: () => coordination,
 	}),
 );
-mock.module("../providers/orchestrator/styles", () => ({
+await mockModule("../providers/orchestrator/styles", () => ({
 	useSlotStyles: () => ({}),
 	useSlotProps: () => ({}),
 }));

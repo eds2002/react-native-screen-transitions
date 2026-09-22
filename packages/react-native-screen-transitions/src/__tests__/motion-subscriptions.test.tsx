@@ -1,4 +1,5 @@
-import { afterEach, expect, it, mock } from "bun:test";
+import { createModuleMock } from "./helpers/mock-module";
+import { afterEach, expect, it } from "bun:test";
 import { memo, useSyncExternalStore } from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import type { ScreenTransitionConfig } from "../types";
@@ -22,7 +23,8 @@ const subscribe = (listener: () => void) => {
 		listeners.delete(listener);
 	};
 };
-mock.module("../providers/builder", () => ({
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("../providers/builder", () => ({
 	useBuilderStore: (select: (store: any) => unknown) =>
 		useSyncExternalStore(subscribe, () => select(snapshot)),
 }));

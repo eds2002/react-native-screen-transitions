@@ -1,5 +1,6 @@
+import { createModuleMock } from "../helpers/mock-module";
 import { MotionProvider, getMotionStore } from "../../providers/motion";
-import { beforeAll, beforeEach, describe, expect, it, mock } from "bun:test";
+import { beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import type { BoundTag } from "../../stores/bounds/types";
 import { BoundStore } from "../../stores/bounds";
@@ -26,13 +27,14 @@ let stackState = {
 	scenes: [] as Array<{ activity: string; route: { key: string } }>,
 };
 
-mock.module("../../providers/builder", () => ({
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("../../providers/builder", () => ({
 	useOptionalBuilderStore: () => null,
 	useBuilderStore: <T,>(selector: (state: typeof descriptorState) => T) =>
 		selector(descriptorState),
 }));
 
-mock.module("../../navigators/blank-stack/state/blank-stack.provider", () => ({
+await mockModule("../../navigators/blank-stack/state/blank-stack.provider", () => ({
 	useBlankStackStore: <T,>(selector: (state: typeof stackState) => T) =>
 		selector(stackState),
 }));

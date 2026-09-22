@@ -1,5 +1,6 @@
+import { createModuleMock } from "./helpers/mock-module";
 import { TestStackLayout, TestScreenLayout } from "./helpers/adapter-layouts";
-import { beforeAll, describe, expect, it, mock } from "bun:test";
+import { beforeAll, describe, expect, it } from "bun:test";
 import {
 	Children,
 	createElement,
@@ -15,7 +16,8 @@ import type {
 
 const SCREEN_LAYOUT_COMPONENT = TestScreenLayout;
 
-mock.module("../adapters/with-screen-transitions/stack-layout", () => ({
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("../adapters/with-screen-transitions/stack-layout", () => ({
 	ScreenTransitionsScreenLayout: SCREEN_LAYOUT_COMPONENT,
 	ScreenTransitionsStackLayout: TestStackLayout,
 }));

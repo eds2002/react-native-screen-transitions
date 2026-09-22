@@ -1,5 +1,6 @@
+import { createModuleMock } from "./helpers/mock-module";
 import { useMotionValues } from "../providers/motion/hooks/use-motion-values";
-import { afterEach, expect, it, mock } from "bun:test";
+import { afterEach, expect, it } from "bun:test";
 import { createContext, type ReactNode, useContext, useMemo } from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { useSharedValue } from "react-native-reanimated";
@@ -11,25 +12,26 @@ import { ScrollStore } from "../stores/scroll.store";
 
 const BuilderContext = createContext<any>(null);
 const MotionContext = createContext<any>(null);
-mock.module("../providers/builder", () => ({
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("../providers/builder", () => ({
 	useBuilderStore: (selector: (state: any) => unknown) =>
 		selector(useContext(BuilderContext)),
 	useOptionalBuilderStore: () => null,
 }));
-mock.module("../providers/motion", () => ({
+await mockModule("../providers/motion", () => ({
 	useMotionStore: (selector: ((state: any) => unknown) | readonly string[]) =>
 		Array.isArray(selector)
 			? []
 			: (selector as (state: any) => unknown)(useContext(MotionContext)),
 	useOptionalMotionStore: () => null,
 }));
-mock.module("../navigators/blank-stack/state/blank-stack.provider", () => ({
+await mockModule("../navigators/blank-stack/state/blank-stack.provider", () => ({
 	useBlankStackStore: (selector: (state: any) => unknown) =>
 		selector({ routeKeys: [], scenesByKey: {} }),
 	useOptionalBlankStackStore: (selector: (state: any) => unknown) =>
 		selector(null),
 }));
-mock.module("react-native-safe-area-context", () => ({
+await mockModule("react-native-safe-area-context", () => ({
 	useSafeAreaInsets: () => ({ top: 0, left: 0, right: 0, bottom: 0 }),
 }));
 const { useMotionAnimationPipeline } = await import(

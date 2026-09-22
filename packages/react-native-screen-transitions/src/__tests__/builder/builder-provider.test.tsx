@@ -1,3 +1,4 @@
+import { createModuleMock } from "../helpers/mock-module";
 import {
 	MotionProvider,
 	getMotionStore,
@@ -7,7 +8,7 @@ import {
 import { screenTopology } from "../../providers/builder/topology/helpers/create-screen-topology";
 import { snapDescriptorToIndex } from "../../controls/snap-to";
 import { Activity, useLayoutEffect } from "react";
-import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { LifecycleTransitionRequestKind } from "../../providers/motion/hooks/use-transition-values";
 import { useContentLayout } from "../../components/screen-layers/hooks/use-content-layout";
@@ -31,7 +32,8 @@ const scenes = Object.fromEntries(
 );
 
 let hasStack = true;
-mock.module("../../navigators/blank-stack/state/blank-stack.provider", () => ({
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("../../navigators/blank-stack/state/blank-stack.provider", () => ({
 	useOptionalBlankStackStore: (selector: (store: any) => unknown) =>
 		selector(
 			hasStack

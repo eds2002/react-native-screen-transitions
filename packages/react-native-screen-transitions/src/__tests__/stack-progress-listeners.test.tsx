@@ -1,4 +1,5 @@
-import { afterEach, expect, it, mock } from "bun:test";
+import { createModuleMock } from "./helpers/mock-module";
+import { afterEach, expect, it } from "bun:test";
 import { Activity, useState } from "react";
 import * as reanimated from "react-native-reanimated";
 import * as worklets from "react-native-worklets";
@@ -42,22 +43,23 @@ function mutable<T>(initial: T) {
 const reanimatedExports = { ...reanimated },
 	workletExports = { ...worklets };
 const jobs: (() => void)[] = [];
-mock.module("react-native-reanimated", () => ({
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("react-native-reanimated", () => ({
 	...reanimatedExports,
 	makeMutable: mutable,
 	useSharedValue: <T,>(value: T) => useState(() => mutable(value))[0],
 }));
-mock.module("react-native-worklets", () => ({
+await mockModule("react-native-worklets", () => ({
 	...workletExports,
 	scheduleOnUI: (fn: (...args: any[]) => void, ...args: any[]) =>
 		jobs.push(() => fn(...args)),
 }));
 let hookEntries: readonly StackProgressEntry[] = [];
-mock.module("../navigators/blank-stack/state/blank-stack.provider", () => ({
+await mockModule("../navigators/blank-stack/state/blank-stack.provider", () => ({
 	useOptionalBlankStackStore: (select: (store: any) => unknown) =>
 		select({ routeKeys: hookEntries.map((entry) => entry.routeKey) }),
 }));
-mock.module("../providers/motion", () => ({
+await mockModule("../providers/motion", () => ({
 	useMotionStore: (keys: readonly string[], select: (store: any) => unknown) =>
 		keys.map((key) => {
 			const entry = hookEntries.find((entry) => entry.routeKey === key);
