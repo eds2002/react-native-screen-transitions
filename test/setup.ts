@@ -68,6 +68,7 @@ mock.module("react-native", () => ({
 		absoluteFill: {},
 		absoluteFillObject: {},
 		create: <T>(styles: T) => styles,
+		flatten: (style: unknown): any => Array.isArray(style) ? Object.assign({}, ...style.flat(Infinity).filter(Boolean)) : style,
 	},
 }));
 function createTestGesture() {

@@ -181,6 +181,17 @@ export const reconcileBlankStackRoutes = (
 		return acceptedRemoval;
 	}
 
+	// Navigation no longer includes screens removed by an earlier pop. Keep
+	// those visual scenes until their own close-completion callback removes them.
+	const retainedClosingRoutes = current.routes.filter(
+		(route) =>
+			closingRouteKeys.has(route.key) &&
+			!nextRoutesSnapshot.some((candidate) => candidate.key === route.key),
+	);
+	const previousClosingOrder = Array.from(closingRouteKeys).filter((key) =>
+		retainedClosingRoutes.some((route) => route.key === key),
+	);
+
 	const result = syncRoutesWithRemoved({
 		prevRoutes:
 			previousRoutesSnapshot.length > 0
@@ -192,8 +203,26 @@ export const reconcileBlankStackRoutes = (
 		closingRouteKeys,
 	});
 
+	if (nextRoutesSnapshot.length > 0) {
+		for (const route of retainedClosingRoutes) {
+			if (!result.routes.some((candidate) => candidate.key === route.key)) {
+				result.routes.push(route);
+			}
+		}
+		// The insertion order selects the most recently closing neighbor.
+		const newlyClosingKeys = Array.from(closingRouteKeys);
+		closingRouteKeys.clear();
+		for (const key of [...previousClosingOrder, ...newlyClosingKeys]) {
+			closingRouteKeys.add(key);
+		}
+	}
+
 	return {
 		routes: result.routes,
-		descriptors: result.descriptors,
+		descriptors: composeDescriptors(
+			result.routes,
+			nextDescriptors,
+			current.sourceDescriptors,
+		),
 	};
 };

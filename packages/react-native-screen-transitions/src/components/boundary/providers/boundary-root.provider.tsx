@@ -133,7 +133,11 @@ export const {
 			slotsMap,
 			boundTag.tag,
 			style,
-			hasTarget ? "stacking" : "full",
+			hasTarget
+				? "stacking"
+				: shouldEscapeBoundaryRootToScreenHost
+					? "layout"
+					: "full",
 		);
 
 		const rootRef = useAnimatedRef<View>();
@@ -160,16 +164,14 @@ export const {
 		const handoffEnabled = enabled && portalRuntime.handoff;
 		// A nested active target takes the full associated style, so the root keeps
 		// only its stacking context. Root-owned escape-clipping moves the root
-		// through a screen host, so its associated style is applied through the
-		// host instead of inline on the escaped element.
+		// through a screen host, so transforms apply through the host while layout dimensions
+		// also apply to the escaped element.
 		// Host-only handoff receivers still need the associated style: their
 		// handoff host is absolute-filled inside this root, so the root is the
 		// visual frame that animates the received payload.
-		const attachedStyle =
-			shouldAttachAssociatedStyles &&
-			(hasTarget || !shouldRenderBoundaryRootThroughPortal)
-				? associatedStyles
-				: undefined;
+		const attachedStyle = shouldAttachAssociatedStyles
+			? associatedStyles
+			: undefined;
 
 		const value = useMemo<BoundaryRootContextValue>(
 			() => ({

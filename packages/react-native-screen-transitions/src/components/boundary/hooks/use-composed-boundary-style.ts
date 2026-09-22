@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { StyleSheet, type ViewStyle } from "react-native";
 import {
 	type SharedValue,
 	type StyleProps,
@@ -22,6 +23,11 @@ export function useComposedBoundaryStyle(
 		[style],
 	);
 
+	const baseLayout = useMemo(
+		() => StyleSheet.flatten(style as ViewStyle) ?? {},
+		[style],
+	);
+
 	return useAnimatedStyle(() => {
 		const slot = id ? slots?.get()[id] : undefined;
 		const value: StyleProps = slot?.style ?? NO_STYLES;
@@ -40,13 +46,13 @@ export function useComposedBoundaryStyle(
 			} = value;
 
 			return {
-				width,
-				height,
-				minWidth,
-				minHeight,
-				maxWidth,
-				maxHeight,
-				aspectRatio,
+				width: width ?? baseLayout.width,
+				height: height ?? baseLayout.height,
+				minWidth: minWidth ?? baseLayout.minWidth,
+				minHeight: minHeight ?? baseLayout.minHeight,
+				maxWidth: maxWidth ?? baseLayout.maxWidth,
+				maxHeight: maxHeight ?? baseLayout.maxHeight,
+				aspectRatio: aspectRatio ?? baseLayout.aspectRatio,
 			};
 		}
 		return composeSlotStyleWithLocalTransform(

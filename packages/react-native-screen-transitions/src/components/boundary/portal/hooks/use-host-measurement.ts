@@ -1,4 +1,4 @@
-import type { View } from "react-native";
+import { useWindowDimensions, type View } from "react-native";
 import {
 	cancelAnimation,
 	type MeasuredDimensions,
@@ -9,7 +9,9 @@ import {
 	withDelay,
 	withTiming,
 } from "react-native-reanimated";
+import { getVisibilityBlockOffset } from "../../../../utils/visibility-block-offset";
 import type { BoundaryLocalMeasurementValue } from "../../types";
+import { correctMeasuredBoundsForVisibilityGate } from "../../utils/measured-bounds";
 
 const HOST_MEASUREMENT_RETRY_DELAY_MS = 16;
 const MAX_HOST_MEASUREMENT_ATTEMPTS = 20;
@@ -23,6 +25,8 @@ export const useHostMeasurement = ({
 	enabled,
 	boundaryMeasurements,
 }: UseHostMeasurementParams) => {
+	const { width: viewportWidth, height: viewportHeight } =
+		useWindowDimensions();
 	const hostRef = useAnimatedRef<View>();
 	const hostBounds = useSharedValue<MeasuredDimensions | null>(null);
 	const retryToken = useSharedValue(0);
@@ -34,7 +38,18 @@ export const useHostMeasurement = ({
 		attempts.set(count);
 		const measured = measure(hostRef);
 		if (measured && measured.width > 0 && measured.height > 0) {
-			hostBounds.set({ ...measured });
+			// The host can still carry the preparation translation for one native
+			// frame, even after JS readiness flips. Normalize the known gate offset
+			// just like the boundary capture before subtracting page coordinates.
+			hostBounds.set(
+				correctMeasuredBoundsForVisibilityGate({
+					measured,
+					isScreenReady: false,
+					visibilityBlockOffset: getVisibilityBlockOffset(viewportHeight),
+					viewportWidth,
+					viewportHeight,
+				}),
+			);
 		} else if (count < MAX_HOST_MEASUREMENT_ATTEMPTS) {
 			retryToken.set(
 				withDelay(

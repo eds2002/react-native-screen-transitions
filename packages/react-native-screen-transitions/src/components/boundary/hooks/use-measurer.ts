@@ -70,13 +70,6 @@ export const useMeasurer = ({
 				viewportHeight,
 			});
 
-			if (escapeClipping && target.type === "source") {
-				localMeasurement.set({
-					bounds: measured,
-					pairKey: target.pairKey,
-				});
-			}
-
 			/**
 			 * - Destination Pass -
 			 * Be strict while lifecycle start is blocked for destination capture.
@@ -97,6 +90,15 @@ export const useMeasurer = ({
 				);
 
 			if (!viewportAllowsDestinationWrite) return;
+
+			// Handoff can render into the destination boundary's escape host too.
+			// Capture only accepted geometry, correcting the destination visibility gate.
+			if (escapeClipping) {
+				localMeasurement.set({
+					bounds: correctedMeasured,
+					pairKey: target.pairKey,
+				});
+			}
 
 			const measuredWithScroll = attachScrollSnapshotToMeasuredBounds(
 				correctedMeasured,

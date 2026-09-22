@@ -20,6 +20,7 @@ let cursor = 0;
 let values: Mutable[] = [];
 let reactions: Reaction[] = [];
 mock.module("react-native-reanimated", () => ({
+ makeMutable: mutable,
  useSharedValue: (value: any) => values[cursor++] ?? (values[cursor - 1] = mutable(value)),
  useAnimatedRef: () => ({}),
  useAnimatedReaction: (prepare: Reaction["prepare"], react: Reaction["react"]) => { reactions.push({prepare, react, inputs: null}); },
@@ -148,3 +149,13 @@ it("measures fresh when re-enabled even if the source capture is unchanged", () 
  expect(host.hostBounds.get()?.pageY).toBe(120);
  expect(measurements).toBe(2);
 });
+
+for (const offset of [1689, -1689]) {
+ it(`normalizes the native visibility offset ${offset} before escape placement`, () => {
+  result = {...bounds(offset), width:390, height:844};
+  const host = render();
+  settle();
+  expect(host.hostBounds.get()?.pageY).toBe(0);
+  expect(measurements).toBe(1);
+ });
+}

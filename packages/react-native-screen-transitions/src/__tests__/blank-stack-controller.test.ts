@@ -386,3 +386,24 @@ describe("createBlankStackController", () => {
 		expect(afterState.scenes[2]).not.toBe(beforeState.scenes[2]);
 	});
 });
+
+for (const completionOrder of [["C", "B"], ["B", "C"]]) {
+ it(`retains successive popped scenes until each closes: ${completionOrder}`, () => {
+  const navigation = createNavigation();
+  const routes = ["A", "B", "C"].map(createRoute);
+  const descriptors = Object.fromEntries(routes.map(route => [route.key, createDescriptor(route, navigation)]));
+  const props = (count: number) => createProps(routes.slice(0, count), Object.fromEntries(routes.slice(0, count).map(route => [route.key, descriptors[route.key]])), navigation);
+  const controller = createBlankStackController(props(3));
+  controller.update(props(2));
+  const retained = controller.getSnapshot().state.descriptors.C;
+  controller.update(props(1));
+  expect(controller.getSnapshot().state.routeKeys).toEqual(["A", "B", "C"]);
+  expect(controller.getSnapshot().state.descriptors.C).toBe(retained);
+  expect([...controller.getSnapshot().state.closingRouteKeys]).toEqual(["C", "B"]);
+  for (const key of completionOrder) {
+   controller.handleCloseRoute({route: routes.find(route => route.key === key)!});
+   expect(controller.getSnapshot().state.routeKeys).not.toContain(key);
+  }
+  expect(controller.getSnapshot().state.routeKeys).toEqual(["A"]);
+ });
+}

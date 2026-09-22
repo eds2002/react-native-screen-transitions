@@ -11,7 +11,7 @@ export default function StackProgressLayout() {
 				options={{
 					gestureEnabled: true,
 					gestureDirection: "vertical",
-					inactiveBehavior: "unmount",
+					inactiveBehavior: "hide",
 					screenStyleInterpolator: ({ stackProgress, current }) => {
 						"worklet";
 
