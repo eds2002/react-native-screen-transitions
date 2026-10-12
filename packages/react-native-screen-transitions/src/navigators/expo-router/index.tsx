@@ -1,4 +1,5 @@
 import {
+	type IntegrateWithRouterOptions,
 	type StackNavigationState,
 	StackRouter,
 	type StackRouterOptions,
@@ -10,21 +11,27 @@ import {
 	type BlankStackStandardEventMap,
 	type BlankStackStandardNavigatorProps,
 } from "../create-blank-stack-navigator";
+import { createBlankStackProps } from "./create-blank-stack-props";
 
 type BlankStackExpoRouterParamList = Record<string, object | undefined>;
 
+type BlankStackExpoRouterState =
+	StackNavigationState<BlankStackExpoRouterParamList>;
+
+// Expo Router 57+ adds a sixth type argument for `createProps` that 56 rejects,
+// so the options are checked with `satisfies` and cast to fit every version.
 export const BlankStack = unstable_integrateWithRouter<
 	BlankStackNavigationOptions,
-	StackNavigationState<BlankStackExpoRouterParamList>,
+	BlankStackExpoRouterState,
 	BlankStackStandardEventMap,
 	BlankStackStandardNavigatorProps,
 	StackRouterOptions
 >(BlankStackNavigator, StackRouter, {
-	createProps: ({ state, navigation }) => ({
-		navigationState: state,
-		navigation,
-	}),
-});
+	createProps: createBlankStackProps,
+} satisfies IntegrateWithRouterOptions<
+	BlankStackExpoRouterState,
+	BlankStackStandardNavigatorProps
+> as never);
 
 export const BlankStackScreen = BlankStack.Screen;
 
