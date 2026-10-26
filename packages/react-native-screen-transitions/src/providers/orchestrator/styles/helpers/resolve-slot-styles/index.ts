@@ -55,7 +55,7 @@ const hasResettableDisappearedKeys = (
 ) => {
 	"worklet";
 
-	if (!previousKeys || !previousResetValues) {
+	if (!previousKeys || !previousResetValues || previousKeys === currentKeys) {
 		return false;
 	}
 
@@ -102,7 +102,7 @@ const mergeResettableStyleStates = (
 		return currentState;
 	}
 
-	if (!currentState) {
+	if (!currentState || currentState === previousState) {
 		return previousState;
 	}
 
@@ -133,7 +133,7 @@ const getResolvedSlotOutput = ({
 	deferMissingKeyResets: boolean;
 }) => {
 	"worklet";
-	const state = getResolvedSlotState(slot);
+	const state = getResolvedSlotState(slot, previousState);
 
 	if (deferMissingKeyResets) {
 		// This used to force a reset when animationProgress reached zero during

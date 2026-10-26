@@ -38,6 +38,11 @@ export const useMaybeBlockVisibility = ({
 
 	const hasVisibilityGateOpened = useSharedValue(false);
 	const localVisibilityBlocked = useSharedValue(!isFloatingOverlay);
+	const lastVisibilityStyle = useSharedValue<{
+		opacity: number;
+		translateY: number;
+		style: { opacity: number; transform: { translateY: number }[] };
+	} | null>(null);
 
 	useAnimatedReaction(
 		() => {
@@ -94,14 +99,23 @@ export const useMaybeBlockVisibility = ({
 		const appliesOffset =
 			!isScreenReady.get() && (ancestorIsScreenReady?.get() ?? true);
 
-		return {
-			opacity: shouldHideClosedScreen ? 0 : 1,
-			transform: [
-				{
-					translateY: appliesOffset ? offset : 0,
-				},
-			],
-		};
+		const opacity = shouldHideClosedScreen ? 0 : 1;
+		const translateY = appliesOffset ? offset : 0;
+
+		// Same object while unchanged: Reanimated only skips the native write
+		// when the style is shallow-equal, and a fresh transform array is not.
+		const previous = lastVisibilityStyle.get();
+		if (
+			previous &&
+			previous.opacity === opacity &&
+			previous.translateY === translateY
+		) {
+			return previous.style;
+		}
+
+		const style = { opacity, transform: [{ translateY }] };
+		lastVisibilityStyle.set({ opacity, translateY, style });
+		return style;
 	});
 
 	const animatedProps = useAnimatedProps(() => {

@@ -15,6 +15,27 @@ import Animated, {
 import { useOrchestratorStore } from "../../../providers/orchestrator/orchestrator.provider";
 import type { Layout } from "../../../types/screen.types";
 
+type ClipStyles = { viewport: ViewStyle; content: ViewStyle };
+
+type ClipStylesCache = {
+	viewportKey: unknown[];
+	contentKey: unknown[];
+	styles: ClipStyles;
+};
+
+const haveSameValues = (a: unknown[], b: unknown[]) => {
+	"worklet";
+	if (a.length !== b.length) {
+		return false;
+	}
+	for (let i = 0; i < a.length; i++) {
+		if (a[i] !== b[i]) {
+			return false;
+		}
+	}
+	return true;
+};
+
 /** Stable layout host: changing the viewport must never resize the screen. */
 export const Clip = memo(
 	({
@@ -29,6 +50,7 @@ export const Clip = memo(
 			(store) => store.screenInterpolatorProps,
 		);
 		const layout = useSharedValue<Layout | null>(null);
+		const lastStyles = useSharedValue<ClipStylesCache | null>(null);
 
 		const onLayout = useCallback(
 			(event: LayoutChangeEvent) => {
@@ -51,33 +73,76 @@ export const Clip = memo(
 			const x = clip?.x ?? 0;
 			const y = clip?.y ?? 0;
 
-			return {
-				viewport: {
-					width: clip ? clip.width : "100%",
-					height: clip ? clip.height : "100%",
-					overflow: clip ? "hidden" : "visible",
-					borderRadius: clip?.borderRadius,
-					borderTopLeftRadius: clip?.borderTopLeftRadius,
-					borderTopRightRadius: clip?.borderTopRightRadius,
-					borderBottomLeftRadius: clip?.borderBottomLeftRadius,
-					borderBottomRightRadius: clip?.borderBottomRightRadius,
-					borderTopStartRadius: clip?.borderTopStartRadius,
-					borderTopEndRadius: clip?.borderTopEndRadius,
-					borderBottomStartRadius: clip?.borderBottomStartRadius,
-					borderBottomEndRadius: clip?.borderBottomEndRadius,
-					borderStartStartRadius: clip?.borderStartStartRadius,
-					borderStartEndRadius: clip?.borderStartEndRadius,
-					borderEndStartRadius: clip?.borderEndStartRadius,
-					borderEndEndRadius: clip?.borderEndEndRadius,
-					borderCurve: clip?.borderCurve,
-					transform: [{ translateX: x }, { translateY: y }],
-				} satisfies ViewStyle,
-				content: {
-					width: contentLayout.width,
-					height: contentLayout.height,
-					transform: [{ translateX: -x }, { translateY: -y }],
-				},
-			};
+			// Reanimated sends a style's every key whenever the object is not
+			// shallow-equal to the last one, and a fresh `transform` array never
+			// is. Reusing the previous objects while their inputs are unchanged
+			// keeps width/height/overflow (layout props, which force a
+			// shadow-tree commit) off the per-frame path.
+			const viewportKey = [
+				clip ? clip.width : "100%",
+				clip ? clip.height : "100%",
+				x,
+				y,
+				clip?.borderRadius,
+				clip?.borderTopLeftRadius,
+				clip?.borderTopRightRadius,
+				clip?.borderBottomLeftRadius,
+				clip?.borderBottomRightRadius,
+				clip?.borderTopStartRadius,
+				clip?.borderTopEndRadius,
+				clip?.borderBottomStartRadius,
+				clip?.borderBottomEndRadius,
+				clip?.borderStartStartRadius,
+				clip?.borderStartEndRadius,
+				clip?.borderEndStartRadius,
+				clip?.borderEndEndRadius,
+				clip?.borderCurve,
+			];
+			const contentKey = [contentLayout.width, contentLayout.height, x, y];
+			const previous = lastStyles.get();
+			const viewport =
+				previous && haveSameValues(previous.viewportKey, viewportKey)
+					? previous.styles.viewport
+					: ({
+							width: clip ? clip.width : "100%",
+							height: clip ? clip.height : "100%",
+							overflow: clip ? "hidden" : "visible",
+							borderRadius: clip?.borderRadius,
+							borderTopLeftRadius: clip?.borderTopLeftRadius,
+							borderTopRightRadius: clip?.borderTopRightRadius,
+							borderBottomLeftRadius: clip?.borderBottomLeftRadius,
+							borderBottomRightRadius: clip?.borderBottomRightRadius,
+							borderTopStartRadius: clip?.borderTopStartRadius,
+							borderTopEndRadius: clip?.borderTopEndRadius,
+							borderBottomStartRadius: clip?.borderBottomStartRadius,
+							borderBottomEndRadius: clip?.borderBottomEndRadius,
+							borderStartStartRadius: clip?.borderStartStartRadius,
+							borderStartEndRadius: clip?.borderStartEndRadius,
+							borderEndStartRadius: clip?.borderEndStartRadius,
+							borderEndEndRadius: clip?.borderEndEndRadius,
+							borderCurve: clip?.borderCurve,
+							transform: [{ translateX: x }, { translateY: y }],
+						} satisfies ViewStyle);
+			const content =
+				previous && haveSameValues(previous.contentKey, contentKey)
+					? previous.styles.content
+					: {
+							width: contentLayout.width,
+							height: contentLayout.height,
+							transform: [{ translateX: -x }, { translateY: -y }],
+						};
+
+			if (
+				previous &&
+				viewport === previous.styles.viewport &&
+				content === previous.styles.content
+			) {
+				return previous.styles;
+			}
+
+			const styles = { viewport, content };
+			lastStyles.set({ viewportKey, contentKey, styles });
+			return styles;
 		});
 
 		const viewportStyle = useAnimatedStyle(() => clippingStyles.get().viewport);

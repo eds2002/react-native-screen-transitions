@@ -284,13 +284,41 @@ export const syncScreenOptionsBase = (
 	}
 };
 
+const isStateEqualToBase = (
+	state: ScreenOptionsState,
+	base: ScreenOptionsSnapshot,
+) => {
+	"worklet";
+	return (
+		state.gestureEnabled === base.gestureEnabled &&
+		state.gestureTracking === base.gestureTracking &&
+		state.gestureDirection === base.gestureDirection &&
+		state.gestureSensitivity === base.gestureSensitivity &&
+		state.gestureVelocityImpact === base.gestureVelocityImpact &&
+		state.gestureSnapVelocityImpact === base.gestureSnapVelocityImpact &&
+		state.gestureReleaseVelocityScale === base.gestureReleaseVelocityScale &&
+		state.gestureSnapLocked === base.gestureSnapLocked &&
+		state.sheetSnapBehavior === base.sheetSnapBehavior &&
+		state.sheetScrollGestureBehavior === base.sheetScrollGestureBehavior &&
+		state.backdropBehavior === base.backdropBehavior &&
+		state.transitionSpec === base.transitionSpec
+	);
+};
+
 export const syncScreenOptionsOverrides = (
 	raw: TransitionInterpolatedStyle | undefined,
 	screenOptions: ScreenOptionsContextValue,
 ) => {
 	"worklet";
 	const options = raw?.options;
-	const base = screenOptions.get().baseOptions;
+	const current = screenOptions.get();
+	const base = current.baseOptions;
+
+	// Most interpolators return no `options`; every resolver below then yields
+	// the base value, so a state already equal to the base needs no rebuild.
+	if (options === undefined && isStateEqualToBase(current, base)) {
+		return;
+	}
 
 	const next: ScreenOptionsState = {
 		gestureEnabled: resolveBooleanOption(

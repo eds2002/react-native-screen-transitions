@@ -65,6 +65,12 @@ const resolvePanGestureAffectedProgress = (
 		);
 	}
 
+	// No pan offset: the clamp below reduces to `transitionProgress`. Skipping the
+	// direction lookup matters because this runs per state, per screen, per frame.
+	if (progressDelta.x === 0 && progressDelta.y === 0) {
+		return transitionProgress;
+	}
+
 	const directions = getPanActivationDirections({
 		gestureDirection,
 		hasSnapPoints: false,

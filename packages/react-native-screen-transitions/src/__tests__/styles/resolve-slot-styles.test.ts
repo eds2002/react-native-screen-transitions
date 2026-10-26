@@ -354,3 +354,67 @@ describe("resolveSlotStyles", () => {
 		});
 	});
 });
+
+describe("resolveSlotStyles reset state reuse", () => {
+	const frame = (opacity: number, translateX: number) =>
+		[
+			{
+				card: {
+					style: { opacity, transform: [{ translateX }] },
+				},
+			},
+		] satisfies LocalStyleLayers;
+
+	it("reuses the previous reset state while the key set is unchanged", () => {
+		const first = resolve({ localStylesMaps: frame(0.2, 100) });
+		const second = resolve({
+			localStylesMaps: frame(0.6, 40),
+			previousStyleStatesBySlot: first.nextPreviousStyleStatesBySlot,
+		});
+
+		expect(second.nextPreviousStyleStatesBySlot.card).toBe(
+			first.nextPreviousStyleStatesBySlot.card,
+		);
+		expect(second.resolvedStylesMap.card?.style).toEqual({
+			opacity: 0.6,
+			transform: [{ translateX: 40 }],
+		});
+	});
+
+	it("still resets a key that disappears after a reused frame", () => {
+		const first = resolve({ localStylesMaps: frame(0.2, 100) });
+		const second = resolve({
+			localStylesMaps: frame(0.6, 40),
+			previousStyleStatesBySlot: first.nextPreviousStyleStatesBySlot,
+		});
+		const third = resolve({
+			localStylesMaps: [{ card: { style: { opacity: 1 } } }],
+			previousStyleStatesBySlot: second.nextPreviousStyleStatesBySlot,
+		});
+
+		expect(third.resolvedStylesMap.card?.style).toEqual({
+			transform: IDENTITY_TRANSFORM,
+			opacity: 1,
+		});
+		expect(third.nextPreviousStyleStatesBySlot.card).not.toBe(
+			second.nextPreviousStyleStatesBySlot.card,
+		);
+	});
+
+	it("rebuilds the state when a key's value becomes undefined", () => {
+		const first = resolve({ localStylesMaps: frame(0.2, 100) });
+		const second = resolve({
+			localStylesMaps: [
+				{ card: { style: { opacity: undefined, transform: [{ translateX: 0 }] } } },
+			],
+			previousStyleStatesBySlot: first.nextPreviousStyleStatesBySlot,
+		});
+
+		expect(second.nextPreviousStyleStatesBySlot.card).not.toBe(
+			first.nextPreviousStyleStatesBySlot.card,
+		);
+		expect(second.nextPreviousStyleStatesBySlot.card?.styleKeys).toEqual({
+			transform: true,
+		});
+	});
+});
