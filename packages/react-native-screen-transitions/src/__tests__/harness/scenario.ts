@@ -36,7 +36,11 @@ export type Step =
 			distance: number;
 			durationMs: number;
 			holdMs?: number;
+			/** Start here instead of inside the focused screen. */
+			from?: { x: number; y: number };
 	  }
+	/** The named screen's navigation.setOptions. */
+	| { op: "setOptions"; name: string; options: Record<string, unknown> }
 	| { op: "pinch"; fromSpan: number; toSpan: number; durationMs: number }
 	/** The library's `snapTo(index)` on the focused screen. */
 	| { op: "snapTo"; index: number }
@@ -156,8 +160,13 @@ const runStep = async (stack: StackHarness, step: Step, expectations: Expectatio
 			const focusedKey = stack.leafRoutes().at(-1)?.key;
 			const scenes = stack.trace.at(-1)?.scenes ?? [];
 			const top = (scenes.find((s) => s.key === focusedKey) ?? scenes.at(-1))?.rect;
-			const { from, to } = swipePath(step.direction, step.distance, top);
+			const path = swipePath(step.direction, step.distance, top);
+			const from = step.from ?? path.from;
+			const to = step.from ? { x: from.x + path.to.x - path.from.x, y: from.y + path.to.y - path.from.y } : path.to;
 			return stack.gestures.drag(from, to, step.durationMs, { holdMs: step.holdMs });
+		}
+		case "setOptions": {
+			return stack.setOptions(step.name, step.options);
 		}
 		case "pinch":
 			return stack.gestures.pinch({ x: WINDOW.width / 2, y: WINDOW.height / 2 }, step.fromSpan, step.toSpan, step.durationMs);

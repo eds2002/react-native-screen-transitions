@@ -548,9 +548,112 @@ export const buildOwnershipCatalog = (interpolate: InterpolateFn, window: { widt
 	return scenarios;
 };
 
+
+// ---------------------------------------------------------------------------
+// Gesture options: enablement, activation areas, wrong axes, direction sets,
+// pinch, sensitivity and release velocity, runtime option changes.
+
+export const buildGestureOptionCatalog = (interpolate: InterpolateFn): Scenario[] => {
+	const base = (direction: SwipeDirection, extra: Record<string, unknown> = {}) => ({
+		...slide(direction)(interpolate).options,
+		...extra,
+	});
+	// A zoom-like card that any listed gesture dismisses, for direction sets and pinch.
+	const card = (gestureDirection: unknown, extra: Record<string, unknown> = {}) => ({
+		gestureEnabled: true,
+		gestureDirection,
+		transitionSpec: { open: DEFAULT_SPEC, close: DEFAULT_SPEC },
+		screenStyleInterpolator: ({ progress }: any) => {
+			"worklet";
+			return {
+				content: {
+					style: {
+						opacity: interpolate(progress, [0, 1, 2], [0, 1, 1], "clamp"),
+						transform: [{ scale: interpolate(progress, [0, 1, 2], [0.8, 1, 1], "clamp") }],
+					},
+				},
+			};
+		},
+		...extra,
+	});
+	const swipe = (direction: SwipeDirection, from?: { x: number; y: number }): Step => ({
+		op: "swipe",
+		direction,
+		distance: 0.6,
+		durationMs: 200,
+		from,
+	});
+	const cases: Array<{ name: string; options: Record<string, unknown>; act: Step[]; routes: string[] }> = [
+		{ name: "disabled", options: base("horizontal", { gestureEnabled: false }), act: [swipe("horizontal")], routes: ["A", "B"] },
+		{ name: "wrong-axis", options: base("vertical"), act: [swipe("horizontal")], routes: ["A", "B"] },
+		{ name: "wrong-way", options: base("vertical"), act: [swipe("vertical-inverted")], routes: ["A", "B"] },
+		{
+			name: "edge-area-from-middle",
+			options: base("horizontal", { gestureDirection: { gesture: "horizontal", area: "edge" } }),
+			act: [swipe("horizontal", { x: 200, y: 422 })],
+			routes: ["A", "B"],
+		},
+		{
+			name: "edge-area-from-edge",
+			options: base("horizontal", { gestureDirection: { gesture: "horizontal", area: "edge" } }),
+			act: [swipe("horizontal", { x: 4, y: 422 })],
+			routes: ["A"],
+		},
+		{
+			name: "px-area-inside",
+			options: base("vertical", { gestureDirection: [{ gesture: "vertical", area: 96 }, "horizontal"] }),
+			act: [swipe("vertical", { x: 195, y: 40 })],
+			routes: ["A"],
+		},
+		{
+			name: "px-area-outside",
+			options: base("vertical", { gestureDirection: [{ gesture: "vertical", area: 96 }, "horizontal"] }),
+			act: [swipe("vertical", { x: 195, y: 300 })],
+			routes: ["A", "B"],
+		},
+		{ name: "array-first", options: card(["horizontal", "vertical"]), act: [swipe("horizontal")], routes: ["A"] },
+		{ name: "array-second", options: card(["horizontal", "vertical"]), act: [swipe("vertical")], routes: ["A"] },
+		{ name: "array-unlisted", options: card(["horizontal", "vertical"]), act: [swipe("vertical-inverted")], routes: ["A", "B"] },
+		{ name: "bidirectional-left", options: card("bidirectional"), act: [swipe("horizontal-inverted")], routes: ["A"] },
+		{ name: "bidirectional-up", options: card("bidirectional"), act: [swipe("vertical-inverted")], routes: ["A"] },
+		{ name: "pinch-in", options: card("pinch-in"), act: [{ op: "pinch", fromSpan: 300, toSpan: 80, durationMs: 250 }], routes: ["A"] },
+		{ name: "pinch-out", options: card("pinch-out"), act: [{ op: "pinch", fromSpan: 100, toSpan: 340, durationMs: 250 }], routes: ["A"] },
+		{ name: "pinch-wrong-way", options: card("pinch-in"), act: [{ op: "pinch", fromSpan: 100, toSpan: 340, durationMs: 250 }], routes: ["A", "B"] },
+		{ name: "pinch-only-swiped", options: card("pinch-in"), act: [swipe("vertical")], routes: ["A", "B"] },
+		{ name: "low-sensitivity", options: base("horizontal", { gestureSensitivity: 0.3 }), act: [swipe("horizontal")], routes: ["A"] },
+		{ name: "no-release-velocity", options: base("horizontal", { gestureReleaseVelocityScale: 0 }), act: [swipe("horizontal")], routes: ["A"] },
+		{ name: "strong-release-velocity", options: base("horizontal", { gestureReleaseVelocityScale: 2 }), act: [swipe("horizontal")], routes: ["A"] },
+		{
+			name: "runtime-disable",
+			options: base("horizontal"),
+			act: [{ op: "setOptions", name: "B", options: { gestureEnabled: false } }, { op: "frames", count: 2 }, swipe("horizontal")],
+			routes: ["A", "B"],
+		},
+		{
+			name: "runtime-reenable",
+			options: base("horizontal", { gestureEnabled: false }),
+			act: [{ op: "setOptions", name: "B", options: { gestureEnabled: true } }, { op: "frames", count: 2 }, swipe("horizontal")],
+			routes: ["A"],
+		},
+		{
+			name: "runtime-direction",
+			options: base("horizontal"),
+			act: [{ op: "setOptions", name: "B", options: { gestureDirection: "vertical" } }, { op: "frames", count: 2 }, swipe("vertical")],
+			routes: ["A"],
+		},
+	];
+	return cases.map(({ name, options, act, routes }) => ({
+		name: `gesture-${name} / preset-spec / push-then-gesture`,
+		screens: [{ name: "A" }, { name: "B", options }],
+		steps: [{ op: "push", name: "B" }, { op: "settle" }, ...act, { op: "expectRoutes", names: routes }],
+		expect: { mayOvershoot: true },
+	}));
+};
+
 export const buildFullCatalog = (presets: Presets, interpolate: InterpolateFn, window: { width: number; height: number }) => [
 	...buildCatalog(presets, interpolate),
 	...buildSheetCatalog(interpolate, window),
 	...buildBackdropCatalog(interpolate, window),
 	...buildOwnershipCatalog(interpolate, window),
+	...buildGestureOptionCatalog(interpolate),
 ];

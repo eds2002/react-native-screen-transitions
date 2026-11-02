@@ -312,9 +312,12 @@ export const mountStack = async (
 	const trace: TraceFrame[] = [];
 
 	const taps: Record<string, number> = {};
+	/** Each mounted screen's navigation object, by route name (for setOptions). */
+	const navigations: Record<string, { setOptions: (options: object) => void }> = {};
 	// Each screen is one pressable surface counting its taps, around the marker the recorder reads.
-	const Screen = ({ route }: { route: { key: string; name: string } }) =>
-		React.createElement(
+	const Screen = ({ route, navigation }: { route: { key: string; name: string }; navigation: { setOptions: (o: object) => void } }) => {
+		navigations[route.name] = navigation;
+		return React.createElement(
 			"Pressable",
 			{
 				testID: `harness-tap:${route.key}`,
@@ -324,6 +327,7 @@ export const mountStack = async (
 			},
 			React.createElement("View", { testID: `${SCREEN_MARKER}${route.key}:${route.name}` }),
 		);
+	};
 
 	/** One BlankStack with these screens; nested specs become nested stacks. */
 	const buildNavigator = (specs: ScreenSpec[], navigatorOptions?: Record<string, unknown>) => {
@@ -424,6 +428,13 @@ export const mountStack = async (
 		gestures,
 		tap,
 		taps,
+		/** The named screen's navigation.setOptions, on the JS thread. */
+		setOptions: (name: string, options: object) =>
+			js(() => {
+				const navigation = navigations[name];
+				if (!navigation) throw new Error(`no mounted screen named ${name}`);
+				navigation.setOptions(options);
+			}),
 		renderer: root,
 		frame,
 		frames,
