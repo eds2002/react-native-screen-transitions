@@ -650,10 +650,64 @@ export const buildGestureOptionCatalog = (interpolate: InterpolateFn): Scenario[
 	}));
 };
 
+
+// ---------------------------------------------------------------------------
+// inactiveBehavior: what a screen two levels down does, and that it comes back.
+
+export const buildInactiveCatalog = (interpolate: InterpolateFn): Scenario[] => {
+	const slideOptions = slide("horizontal")(interpolate).options;
+	const expected = { keep: "shown", pause: "shown", hide: "hidden", unmount: "absent" } as const;
+	const scenarios: Scenario[] = [];
+	for (const behavior of ["keep", "pause", "hide", "unmount"] as const) {
+		const screens = [
+			{ name: "A", options: { ...slideOptions, inactiveBehavior: behavior } },
+			{ name: "B", options: slideOptions },
+			{ name: "C", options: slideOptions },
+		];
+		scenarios.push({
+			name: `inactive-${behavior} / preset-spec / cover-and-return`,
+			screens,
+			steps: [
+				{ op: "push", name: "B" },
+				{ op: "settle" },
+				{ op: "expectScene", name: "A", state: "shown" },
+				{ op: "push", name: "C" },
+				{ op: "expectScene", name: "A", state: expected[behavior] },
+				{ op: "pop" },
+				{ op: "expectScene", name: "A", state: "shown" },
+				{ op: "pop" },
+				{ op: "expectRoutes", names: ["A"] },
+			],
+		});
+		scenarios.push({
+			name: `inactive-${behavior} / preset-spec / swipe-back-to-it`,
+			screens,
+			steps: [
+				{ op: "push", name: "B" },
+				{ op: "settle" },
+				{ op: "push", name: "C" },
+				{ op: "settle" },
+				{ op: "swipe", direction: "horizontal", distance: 0.75, durationMs: 200 },
+				{ op: "expectScene", name: "A", state: "shown" },
+				{ op: "swipe", direction: "horizontal", distance: 0.75, durationMs: 200 },
+				{ op: "expectRoutes", names: ["A"] },
+			],
+		});
+		const rapid: Step[] = [];
+		for (let i = 0; i < 8; i++) rapid.push({ op: "push", name: i % 2 ? "C" : "B" }, { op: "frames", count: 4 });
+		rapid.push({ op: "settle" });
+		for (let i = 0; i < 8; i++) rapid.push({ op: "pop" }, { op: "frames", count: 4 });
+		rapid.push({ op: "expectRoutes", names: ["A"] }, { op: "expectScene", name: "A", state: "shown" });
+		scenarios.push({ name: `inactive-${behavior} / preset-spec / rapid-push-pop`, screens, steps: rapid });
+	}
+	return scenarios;
+};
+
 export const buildFullCatalog = (presets: Presets, interpolate: InterpolateFn, window: { width: number; height: number }) => [
 	...buildCatalog(presets, interpolate),
 	...buildSheetCatalog(interpolate, window),
 	...buildBackdropCatalog(interpolate, window),
 	...buildOwnershipCatalog(interpolate, window),
 	...buildGestureOptionCatalog(interpolate),
+	...buildInactiveCatalog(interpolate),
 ];

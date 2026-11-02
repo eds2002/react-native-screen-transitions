@@ -23,7 +23,7 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			"screen mid-close and snaps the screen beneath to rest; a pop during a pop removes the closing screen at once; " +
 			"a push during a push drives the first screen's progress below 0, so it jumps off-screen and flies back in.",
 		matches: (scenario, v) =>
-			["push-mid-pop", "rapid"].includes(sequenceOf(scenario)) &&
+			["push-mid-pop", "rapid", "rapid-push-pop"].includes(sequenceOf(scenario)) &&
 			["vanish", "spike", "teleport", "flash", "turns-back"].includes(v.rule),
 	},
 	{

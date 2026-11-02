@@ -39,6 +39,8 @@ export type Step =
 			/** Start here instead of inside the focused screen. */
 			from?: { x: number; y: number };
 	  }
+	/** Settles, then checks a screen (by route name; the last one with that name) is absent, rendered but hidden, or shown. */
+	| { op: "expectScene"; name: string; state: "absent" | "hidden" | "shown" }
 	/** The named screen's navigation.setOptions. */
 	| { op: "setOptions"; name: string; options: Record<string, unknown> }
 	| { op: "pinch"; fromSpan: number; toSpan: number; durationMs: number }
@@ -164,6 +166,18 @@ const runStep = async (stack: StackHarness, step: Step, expectations: Expectatio
 			const from = step.from ?? path.from;
 			const to = step.from ? { x: from.x + path.to.x - path.from.x, y: from.y + path.to.y - path.from.y } : path.to;
 			return stack.gestures.drag(from, to, step.durationMs, { holdMs: step.holdMs });
+		}
+		case "expectScene": {
+			await stack.settle();
+			const scene = stack.trace
+				.at(-1)
+				?.scenes.filter((s) => s.name === step.name)
+				.at(-1);
+			const state = !scene ? "absent" : scene.opacity < 0.01 ? "hidden" : "shown";
+			if (state !== step.state) {
+				violations.push({ rule: "scene-state", frame: stack.trace.at(-1)?.frame ?? -1, scene: step.name, detail: `${step.name} is ${state}, expected ${step.state}` });
+			}
+			return;
 		}
 		case "setOptions": {
 			return stack.setOptions(step.name, step.options);
