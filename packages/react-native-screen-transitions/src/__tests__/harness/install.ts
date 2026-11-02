@@ -32,6 +32,8 @@ export const installHarness = ({
 	if (insets) Object.assign(INSETS, insets);
 	PLATFORM.os = os;
 	const sim = createReanimatedSim({ frameMs });
+	// React Native's development flag (Metro defines it).
+	(globalThis as { __DEV__?: boolean }).__DEV__ = true;
 	globalThis.requestAnimationFrame = sim.requestAnimationFrame as typeof requestAnimationFrame;
 	mock.module("react-native-reanimated", () => sim.reanimated);
 	mock.module("react-native-worklets", () => sim.worklets);

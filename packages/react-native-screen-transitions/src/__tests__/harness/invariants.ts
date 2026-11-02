@@ -47,6 +47,24 @@ const numbersIn = (value: unknown, out: number[] = []): number[] => {
 	return out;
 };
 
+/** Every opacity a layer receives is within [0, 1] (React Native clamps it, but it means an unclamped interpolation). */
+export const checkStyleRange = (trace: TraceFrame[]): Violation[] => {
+	const out: Violation[] = [];
+	const seen = new Set<string>();
+	for (const frame of trace) {
+		for (const scene of frame.scenes) {
+			for (const layer of scene.layers) {
+				const o = layer.style.opacity;
+				if (typeof o === "number" && (o < -1e-3 || o > 1 + 1e-3) && !seen.has(scene.key)) {
+					seen.add(scene.key);
+					out.push({ rule: "style-range", frame: frame.frame, scene: scene.name, detail: `opacity ${o.toFixed(3)} on ${layer.type}` });
+				}
+			}
+		}
+	}
+	return out;
+};
+
 /** No NaN or Infinity in any pose or any style value a layer received. */
 export const checkFinite = (trace: TraceFrame[]): Violation[] => {
 	const out: Violation[] = [];
@@ -84,11 +102,18 @@ const byScene = (trace: TraceFrame[]) => {
 export const checkContinuity = (trace: TraceFrame[], expectations: Expectations = {}): Violation[] => {
 	if (expectations.instant) return [];
 	const out: Violation[] = [];
-	for (const [, series] of byScene(trace)) {
+	for (const [key, series] of byScene(trace)) {
 		for (let i = 1; i < series.length; i++) {
 			const prev = series[i - 1];
 			const cur = series[i];
 			if (!prev || !cur || !visible(prev.scene) || !visible(cur.scene)) continue;
+			// A change under an opaque screen in both frames is not seen.
+			const hidden = (index: number) => {
+				const frame = trace[index];
+				const at = frame.scenes.findIndex((s) => s.key === key);
+				return at >= 0 && shownFraction(frame, at) < 0.01;
+			};
+			if (hidden(i - 1) && hidden(i)) continue;
 			const jump = distance(pose(prev.scene), pose(cur.scene));
 			// Per axis: 45% of the window along it (opacity: 0.45).
 			const a = pose(prev.scene);
@@ -176,13 +201,18 @@ export const checkVanish = (trace: TraceFrame[], expectations: Expectations = {}
 export const checkMonotonic = (trace: TraceFrame[], expectations: Expectations, settleFrames = 0): Violation[] => {
 	if (expectations.mayOvershoot || expectations.instant) return [];
 	const out: Violation[] = [];
-	for (const [, series] of byScene(trace)) {
+	for (const [key, series] of byScene(trace)) {
+		const hidden = (index: number) => {
+			const frame = trace[index];
+			const at = frame.scenes.findIndex((s) => s.key === key);
+			return at >= 0 && shownFraction(frame, at) < 0.01;
+		};
 		for (let axis = 0; axis < 5; axis++) {
 			let direction = 0;
 			for (let i = Math.max(1, settleFrames); i < series.length; i++) {
 				const prev = series[i - 1];
 				const cur = series[i];
-				if (!prev || !cur || !visible(prev.scene) || !visible(cur.scene)) {
+				if (!prev || !cur || !visible(prev.scene) || !visible(cur.scene) || (hidden(i - 1) && hidden(i))) {
 					direction = 0;
 					continue;
 				}

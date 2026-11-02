@@ -984,11 +984,141 @@ export const buildScrollCatalog = (interpolate: InterpolateFn, window: { width: 
 	];
 };
 
+
+// ---------------------------------------------------------------------------
+// Bounds: zoom, styles() and reveal() from a measured Transition.Boundary.
+
+export const buildBoundsCatalog = (interpolate: InterpolateFn, window: { width: number; height: number }, specs: { Zoom?: unknown }): Scenario[] => {
+	const card = { x: window.width * 0.1, y: window.height * 0.24, width: window.width * 0.36, height: window.height * 0.21 };
+	const cardCenter = { x: card.x + card.width / 2, y: card.y + card.height / 2 };
+	const full = { x: 0, y: 0, ...window };
+	const zoomSpec = specs.Zoom ?? DEFAULT_SPEC;
+	const source = { name: "A", bounds: [{ id: "card", rect: card, pushTo: "Z" }] };
+	const zoom = (zoomOptions?: Record<string, unknown>) => ({
+		gestureEnabled: true,
+		gestureDirection: ["bidirectional", "pinch-in"],
+		transitionSpec: { open: zoomSpec, close: zoomSpec },
+		screenStyleInterpolator: ({ bounds }: any) => {
+			"worklet";
+			return bounds("card").navigation.zoom(zoomOptions);
+		},
+	});
+	const detailBound = { x: 0, y: 0, width: window.width, height: window.height * 0.4 };
+	const tapCard: Step = { op: "tap", at: cardCenter };
+	const scenarios: Scenario[] = [];
+	const zooms: Record<string, { options: Record<string, unknown>; z: Partial<ScreenSpec> }> = {
+		zoom: { options: zoom(), z: {} },
+		"zoom-to-bound": { options: zoom({ target: "bound" }), z: { bounds: [{ id: "card", rect: detailBound }] } },
+	};
+	for (const [zoomName, { options, z }] of Object.entries(zooms)) {
+		const screens = [source, { name: "Z", options, ...z }];
+		const add = (sequence: string, steps: Step[]) =>
+			scenarios.push({ name: `bounds-${zoomName} / zoom-spec / ${sequence}`, screens, steps, expect: { mayOvershoot: true } });
+		// zoom: the screen grows out of the card; target "bound": the destination boundary does.
+		const moving: Pick<Extract<Step, { op: "expectTrajectory" }>, "scene" | "element"> =
+			zoomName === "zoom-to-bound" ? { scene: "Z", element: "bound:card" } : { scene: "Z" };
+		const destination = zoomName === "zoom-to-bound" ? detailBound : full;
+		add("open-close", [
+			tapCard,
+			{ op: "expectRoutes", names: ["A", "Z"] },
+			{ op: "expectTrajectory", ...moving, from: card, to: destination, tolerance: 60 },
+			{ op: "pop" },
+			// The zoomed screen fades out as it lands: follow it until it is removed.
+			{ op: "expectTrajectory", ...moving, to: card, tolerance: 60, throughFade: true },
+			{ op: "expectRoutes", names: ["A"] },
+		]);
+		add("swipe-dismiss", [
+			tapCard,
+			{ op: "settle" },
+			{ op: "swipe", direction: "vertical", distance: 0.5, durationMs: 250 },
+			{ op: "expectRoutes", names: ["A"] },
+		]);
+		add("swipe-cancel", [
+			tapCard,
+			{ op: "settle" },
+			{ op: "swipe", direction: "vertical", distance: 0.1, durationMs: 300, holdMs: 200 },
+			{ op: "expectRoutes", names: ["A", "Z"] },
+			{ op: "expectTrajectory", scene: "Z", to: full, tolerance: 2 },
+		]);
+		add("pinch-dismiss", [tapCard, { op: "settle" }, { op: "pinch", fromSpan: 300, toSpan: 80, durationMs: 250 }, { op: "expectRoutes", names: ["A"] }]);
+		add("grab-mid-open", [tapCard, { op: "frames", count: 6 }, { op: "swipe", direction: "vertical", distance: 0.5, durationMs: 250 }]);
+		add("pop-mid-open", [tapCard, { op: "frames", count: 6 }, { op: "pop" }, { op: "expectRoutes", names: ["A"] }]);
+		add("reopen-after-close", [tapCard, { op: "settle" }, { op: "pop" }, { op: "settle" }, tapCard, { op: "expectRoutes", names: ["A", "Z"] }]);
+	}
+
+	// styles(): the destination boundary morphs from the source boundary's rect to its own.
+	const morphTarget = { x: window.width * 0.05, y: window.height * 0.12, width: window.width * 0.9, height: window.height * 0.35 };
+	const styled = {
+		gestureEnabled: true,
+		gestureDirection: "vertical",
+		transitionSpec: { open: DEFAULT_SPEC, close: DEFAULT_SPEC },
+		screenStyleInterpolator: ({ bounds, progress }: any) => {
+			"worklet";
+			return {
+				content: { style: { opacity: interpolate(progress, [0, 1, 2], [0, 1, 1], "clamp") } },
+				// A boundary's slot is keyed by its id (as in the e2e app's bounds examples).
+				card: bounds("card").styles(),
+			};
+		},
+	};
+	const morphScreens = [
+		{ name: "A", bounds: [{ id: "card", rect: card, pushTo: "B" }] },
+		{ name: "B", options: styled, bounds: [{ id: "card", rect: morphTarget }] },
+	];
+	scenarios.push(
+		{
+			name: "bounds-styles / preset-spec / open-close",
+			screens: morphScreens,
+			steps: [
+				tapCard,
+				{ op: "expectTrajectory", scene: "B", element: "bound:card", from: card, to: morphTarget, tolerance: 40 },
+				{ op: "pop" },
+				{ op: "expectTrajectory", scene: "B", element: "bound:card", to: card, tolerance: 40 },
+				{ op: "expectRoutes", names: ["A"] },
+			],
+		},
+		{
+			name: "bounds-styles / preset-spec / swipe-dismiss",
+			screens: morphScreens,
+			steps: [tapCard, { op: "settle" }, { op: "swipe", direction: "vertical", distance: 0.6, durationMs: 200 }, { op: "expectRoutes", names: ["A"] }],
+		},
+	);
+
+	// reveal(): the screen opens out of the source boundary.
+	const revealed = {
+		gestureEnabled: true,
+		gestureDirection: ["vertical", "horizontal"],
+		transitionSpec: { open: DEFAULT_SPEC, close: DEFAULT_SPEC },
+		screenStyleInterpolator: ({ bounds }: any) => {
+			"worklet";
+			return bounds("card").navigation.reveal();
+		},
+	};
+	const revealScreens = [
+		{ name: "A", bounds: [{ id: "card", rect: card, pushTo: "R" }] },
+		{ name: "R", options: revealed, bounds: [{ id: "card", rect: morphTarget }] },
+	];
+	scenarios.push(
+		{
+			name: "bounds-reveal / preset-spec / open-close",
+			screens: revealScreens,
+			steps: [tapCard, { op: "expectRoutes", names: ["A", "R"] }, { op: "pop" }, { op: "expectRoutes", names: ["A"] }],
+		},
+		{
+			name: "bounds-reveal / preset-spec / swipe-dismiss",
+			screens: revealScreens,
+			steps: [tapCard, { op: "settle" }, { op: "swipe", direction: "vertical", distance: 0.5, durationMs: 250 }, { op: "expectRoutes", names: ["A"] }],
+		},
+	);
+	return scenarios;
+};
+
 export const buildFullCatalog = (
 	presets: Presets,
 	interpolate: InterpolateFn,
 	window: { width: number; height: number },
 	overlay?: unknown,
+	specs?: { Zoom?: unknown },
 ) => [
 	...buildCatalog(presets, interpolate),
 	...buildSheetCatalog(interpolate, window),
@@ -999,4 +1129,5 @@ export const buildFullCatalog = (
 	...buildSlotCatalog(interpolate, overlay),
 	...buildStackProgressCatalog(interpolate),
 	...buildScrollCatalog(interpolate, window),
+	...buildBoundsCatalog(interpolate, window, specs ?? {}),
 ];

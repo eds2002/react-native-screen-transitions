@@ -19,7 +19,7 @@ it.skipIf(!name)("inspect a catalog scenario", async () => {
 	const { HarnessOverlay } = await import("./stack-harness");
 	const presets = await import("../../configs/presets");
 	const { interpolate } = await import("react-native-reanimated");
-	const scenario = buildFullCatalog(presets as never, interpolate as never, WINDOW, HarnessOverlay).find((s) => s.name === name);
+	const scenario = buildFullCatalog(presets as never, interpolate as never, WINDOW, HarnessOverlay, (await import("../../configs/specs")) as never).find((s) => s.name === name);
 	if (!scenario) throw new Error(`no scenario named "${name}"`);
 	const result = await runScenario(sim, scenario);
 	const from = Number(process.env.FROM ?? 0);

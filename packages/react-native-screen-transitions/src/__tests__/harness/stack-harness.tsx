@@ -38,6 +38,52 @@ export type OverlayFrame = { owner: string; focused: string; rect: Rect; opacity
 export type TraceFrame = { frame: number; time: number; scenes: SceneFrame[]; overlays: OverlayFrame[]; label?: string };
 
 export const ELEMENT_MARKER = "harness-el:";
+export const BOUND_MARKER = "harness-bound:";
+
+/**
+ * A view's on-screen box: its layout rect (the nearest ancestor-or-self with an
+ * explicit left/top/width/height, else the window), through its own and its
+ * descendants' transforms about that rect's center, and through the layers
+ * above it (which fill the window) about the window's center.
+ */
+export const elementBox = (node: ReactTestInstance, sim: ReanimatedSim) => {
+	const path = pathTo(node).filter((n) => typeof n.type === "string");
+	const styles = path.map((n) => flattenStyle(sim.resolveAnimated(n.props.style)));
+	let layoutIndex = -1;
+	for (let i = path.length - 1; i >= 0; i--) {
+		const st = styles[i];
+		if (typeof st.width === "number" && typeof st.height === "number" && (typeof st.left === "number" || typeof st.top === "number")) {
+			layoutIndex = i;
+			break;
+		}
+	}
+	const rect =
+		layoutIndex >= 0
+			? {
+					x: Number(styles[layoutIndex].left ?? 0),
+					y: Number(styles[layoutIndex].top ?? 0),
+					width: Number(styles[layoutIndex].width),
+					height: Number(styles[layoutIndex].height),
+				}
+			: { x: 0, y: 0, ...WINDOW };
+	let matrix = IDENTITY;
+	path.forEach((_, i) => {
+		const { matrix: local } = transformMatrix(styles[i].transform);
+		const own = i >= layoutIndex && layoutIndex >= 0;
+		const cx = own ? rect.x + rect.width / 2 : WINDOW.width / 2;
+		const cy = own ? rect.y + rect.height / 2 : WINDOW.height / 2;
+		matrix = multiply(matrix, multiply(multiply({ ...IDENTITY, tx: cx, ty: cy }, local), { ...IDENTITY, tx: -cx, ty: -cy }));
+	});
+	const corners = [
+		[rect.x, rect.y],
+		[rect.x + rect.width, rect.y],
+		[rect.x, rect.y + rect.height],
+		[rect.x + rect.width, rect.y + rect.height],
+	].map(([x, y]) => [matrix.a * x + matrix.c * y + matrix.tx, matrix.b * x + matrix.d * y + matrix.ty]);
+	const xs = corners.map((p) => p[0]);
+	const ys = corners.map((p) => p[1]);
+	return { x: Math.min(...xs), y: Math.min(...ys), width: Math.max(...xs) - Math.min(...xs), height: Math.max(...ys) - Math.min(...ys) };
+};
 export const SCROLL_MARKER = "harness-scroll:";
 export const OVERLAY_MARKER = "harness-overlay:";
 
@@ -48,7 +94,7 @@ const composedOpacity = (node: ReactTestInstance, sim: ReanimatedSim) => {
 		if (typeof step.type !== "string") continue;
 		const style = flattenStyle(sim.resolveAnimated(step.props.style));
 		if (style.display === "none") return 0;
-		if (typeof style.opacity === "number") opacity *= style.opacity;
+		if (typeof style.opacity === "number") opacity *= Math.min(1, Math.max(0, style.opacity));
 	}
 	return opacity;
 };
@@ -253,7 +299,8 @@ export const readScenes = (renderer: ReactTestRenderer, sim: ReanimatedSim): Sce
 			const pointerEvents = animatedProps.pointerEvents ?? node.props.pointerEvents;
 			if (pointerEvents === "none") touchable = false;
 			if (style.display === "none") opacity = 0;
-			if (typeof style.opacity === "number") opacity *= style.opacity;
+			// React Native clamps opacity to [0, 1].
+			if (typeof style.opacity === "number") opacity *= Math.min(1, Math.max(0, style.opacity));
 			const { matrix: local, approx3d: was3d } = transformMatrix(style.transform);
 			approx3d ||= was3d;
 			const cx = WINDOW.width / 2;
@@ -274,26 +321,46 @@ export const readScenes = (renderer: ReactTestRenderer, sim: ReanimatedSim): Sce
 		const ys = corners.map((p) => p[1]);
 		const elements: SceneFrame["elements"] = {};
 		for (const element of marker.findAll(
-			(node) => typeof node.type === "string" && String(node.props.testID ?? "").startsWith(ELEMENT_MARKER),
+			(node) =>
+				typeof node.type === "string" &&
+				(String(node.props.testID ?? "").startsWith(ELEMENT_MARKER) || String(node.props.testID ?? "").startsWith(BOUND_MARKER)),
 			{ deep: true },
 		)) {
-			const id = String(element.props.testID).split(":").at(-1) as string;
+			const bound = String(element.props.testID).startsWith(BOUND_MARKER);
+			const id = `${bound ? "bound:" : ""}${String(element.props.testID).split(":").at(-1)}`;
 			elements[id] = {
-				rect: nodeBox(element, sim),
+				rect: bound ? elementBox(element, sim) : nodeBox(element, sim),
 				opacity: composedOpacity(element, sim),
 				style: flattenStyle(sim.resolveAnimated(element.props.style)),
 			};
+		}
+		let rect = {
+			x: Math.min(...xs),
+			y: Math.min(...ys),
+			width: Math.max(...xs) - Math.min(...xs),
+			height: Math.max(...ys) - Math.min(...ys),
+		};
+		// Clipped to the innermost sized, overflow-hidden layer on the way down (zoom and reveal crop the screen).
+		const clipping = pathTo(marker)
+			.filter((n) => typeof n.type === "string")
+			.filter((n) => {
+				const st = flattenStyle(sim.resolveAnimated(n.props.style));
+				return st.overflow === "hidden" && typeof st.width === "number" && typeof st.height === "number";
+			})
+			.at(-1);
+		if (clipping) {
+			const clip = elementBox(clipping, sim);
+			const x1 = Math.max(rect.x, clip.x);
+			const y1 = Math.max(rect.y, clip.y);
+			const x2 = Math.min(rect.x + rect.width, clip.x + clip.width);
+			const y2 = Math.min(rect.y + rect.height, clip.y + clip.height);
+			rect = { x: x1, y: y1, width: Math.max(0, x2 - x1), height: Math.max(0, y2 - y1) };
 		}
 		scenes.push({
 			elements,
 			key,
 			name,
-			rect: {
-				x: Math.min(...xs),
-				y: Math.min(...ys),
-				width: Math.max(...xs) - Math.min(...xs),
-				height: Math.max(...ys) - Math.min(...ys),
-			},
+			rect,
 			opacity,
 			touchable,
 			approx3d,
@@ -310,6 +377,8 @@ export type ScreenSpec = {
 	elements?: string[];
 	/** A full-screen Transition.ScrollView with this much content (along its axis). */
 	scroll?: { contentSize: number; horizontal?: boolean };
+	/** Transition.Boundary views at these window rects; pressing one pushes `pushTo` (with params { id }). */
+	bounds?: Array<{ id: string; rect: Rect; pushTo?: string; group?: string }>;
 	/** Makes this screen a nested BlankStack with these screens (the first is its initial route). */
 	stack?: { screens: ScreenSpec[]; screenOptions?: Record<string, unknown> };
 };
@@ -400,6 +469,18 @@ export const mountStack = async (
 							} as never),
 						]
 					: []),
+				...(specsByName.get(route.name)?.bounds ?? []).map((bound) =>
+					React.createElement(Transition.Boundary as never, {
+						key: `bound-${bound.id}`,
+						id: bound.id,
+						group: bound.group,
+						testID: `${BOUND_MARKER}${route.key}:${bound.id}`,
+						style: { position: "absolute", left: bound.rect.x, top: bound.rect.y, width: bound.rect.width, height: bound.rect.height },
+						onPress: bound.pushTo
+							? () => (navigation as unknown as { push: (n: string, p: object) => void }).push(bound.pushTo as string, { id: bound.id })
+							: undefined,
+					} as never),
+				),
 				...(specsByName.get(route.name)?.elements ?? []).map((styleId) =>
 					React.createElement(Transition.View as never, {
 						key: styleId,
@@ -432,6 +513,24 @@ export const mountStack = async (
 	};
 
 	let renderer: ReactTestRenderer | undefined;
+	// Host refs are mock instances naming their view; measure() resolves them against the live tree.
+	const createNodeMock = (element: { type: unknown; props: Record<string, unknown> }) => ({
+		testID: element.props.testID,
+		measureInWindow: () => {},
+	});
+	(globalThis as { __harnessMeasure?: (instance: unknown) => unknown }).__harnessMeasure = (instance) => {
+		const testID = (instance as { testID?: string } | null)?.testID;
+		if (!testID || !renderer) return null;
+		let node: ReactTestInstance | undefined;
+		try {
+			node = renderer.root.findAll((n) => typeof n.type === "string" && n.props.testID === testID, { deep: true })[0];
+		} catch {
+			return null;
+		}
+		if (!node) return null;
+		const box = elementBox(node, sim);
+		return { x: box.x, y: box.y, width: box.width, height: box.height, pageX: box.x, pageY: box.y };
+	};
 	await act(async () => {
 		renderer = create(
 			React.createElement(
@@ -443,6 +542,7 @@ export const mountStack = async (
 					buildNavigator(screens, screenOptions),
 				),
 			),
+			{ createNodeMock } as never,
 		);
 	});
 	const root = renderer as ReactTestRenderer;

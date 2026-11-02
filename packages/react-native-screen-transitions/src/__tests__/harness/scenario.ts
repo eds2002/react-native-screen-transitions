@@ -10,6 +10,7 @@ import {
 	checkMonotonic,
 	checkSettled,
 	checkStartLatency,
+	checkStyleRange,
 	checkVanish,
 	elementTrace,
 	type Expectations,
@@ -46,6 +47,22 @@ export type Step =
 	| { op: "expectScene"; name: string; state: "absent" | "hidden" | "shown" }
 	/** The named screen's navigation.setOptions. */
 	| { op: "setOptions"; name: string; options: Record<string, unknown> }
+	/**
+	 * Settles, then checks the motion since the last action: the first frame a
+	 * screen (or one of its elements) is visible starts near `from`, and its last
+	 * visible frame ends near `to` (centers within `tolerance` px, sizes within
+	 * 35%).
+	 */
+	| {
+			op: "expectTrajectory";
+			scene: string;
+			element?: string;
+			from?: { x: number; y: number; width: number; height: number };
+			to?: { x: number; y: number; width: number; height: number };
+			tolerance?: number;
+			/** Count frames where it is transparent too (screens that fade as they land). */
+			throughFade?: boolean;
+	  }
 	/** Scrolls the focused screen's scroll view to an offset (as if the user had scrolled there). */
 	| { op: "scrollTo"; offset: number }
 	/** Checks the focused screen's scroll offset. */
@@ -109,8 +126,48 @@ export const swipePath = (
 
 const { snapTo } = await import("../../controls/snap-to");
 
+let lastActionIndex = 0;
+
+const near = (a: { x: number; y: number; width: number; height: number }, b: typeof a, tolerance: number) => {
+	const ca = { x: a.x + a.width / 2, y: a.y + a.height / 2 };
+	const cb = { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+	const sized = (u: number, v: number) => Math.abs(u - v) <= 0.35 * Math.max(u, v);
+	return Math.hypot(ca.x - cb.x, ca.y - cb.y) <= tolerance && sized(a.width, b.width) && sized(a.height, b.height);
+};
+
 const runStep = async (stack: StackHarness, step: Step, expectations: Expectations, violations: Violation[]) => {
 	switch (step.op) {
+		case "expectTrajectory": {
+			await stack.settle();
+			const tolerance = step.tolerance ?? 40;
+			const poses = stack.trace
+				.slice(lastActionIndex)
+				.map((frame) => {
+					const scene = frame.scenes.filter((s) => s.name === step.scene).at(-1);
+					if (!scene) return null;
+					const pose = step.element ? scene.elements[step.element] : { rect: scene.rect, opacity: scene.opacity };
+					if (!pose || (!step.throughFade && pose.opacity < 0.05)) return null;
+					const r = pose.rect;
+					const onScreen = r.x < WINDOW.width && r.x + r.width > 0 && r.y < WINDOW.height && r.y + r.height > 0;
+					return onScreen ? r : null;
+				})
+				.filter((r): r is NonNullable<typeof r> => !!r);
+			const label = `${step.scene}${step.element ? `#${step.element}` : ""}`;
+			const fmt = (r: { x: number; y: number; width: number; height: number }) =>
+				`${r.x.toFixed(0)},${r.y.toFixed(0)} ${r.width.toFixed(0)}x${r.height.toFixed(0)}`;
+			if (!poses.length) {
+				violations.push({ rule: "trajectory", frame: stack.trace.at(-1)?.frame ?? -1, scene: label, detail: "never visible" });
+				return;
+			}
+			if (step.from && !near(poses[0], step.from, tolerance)) {
+				violations.push({ rule: "trajectory", frame: stack.trace.at(-1)?.frame ?? -1, scene: label, detail: `starts at ${fmt(poses[0])}, expected near ${fmt(step.from)}` });
+			}
+			const end = poses.at(-1) as (typeof poses)[number];
+			if (step.to && !near(end, step.to, tolerance)) {
+				violations.push({ rule: "trajectory", frame: stack.trace.at(-1)?.frame ?? -1, scene: label, detail: `ends at ${fmt(end)}, expected near ${fmt(step.to)}` });
+			}
+			return;
+		}
 		case "snapTo":
 			return stack.js(() => snapTo(step.index));
 		case "tap":
@@ -250,6 +307,7 @@ export const runScenario = async (sim: ReanimatedSim, scenario: Scenario): Promi
 		for (const step of scenario.steps) {
 			const before = stack.trace.length;
 			if (step.op !== "settle" && step.op !== "frames") stepStarts.add(before);
+			if (ACTIONS.has(step.op) || step.op === "swipe" || step.op === "pinch" || step.op === "tap") lastActionIndex = before;
 			await runStep(stack, step, expectations, violations);
 			if (ACTIONS.has(step.op)) {
 				// The action ran between frames; the next frames must show it.
@@ -279,7 +337,12 @@ export const runScenario = async (sim: ReanimatedSim, scenario: Scenario): Promi
 		} else current.push(frame);
 	});
 	if (current.length) runs.push(current);
-	violations.push(...checkFinite(trace), ...checkContinuity(trace, expectations), ...checkVanish(trace, expectations));
+	violations.push(
+		...checkFinite(trace),
+		...checkStyleRange(trace),
+		...checkContinuity(trace, expectations),
+		...checkVanish(trace, expectations),
+	);
 	const elements = elementTrace(trace);
 	violations.push(
 		...checkFinite(elements).map((v) => ({ ...v, rule: `element-${v.rule}` })),

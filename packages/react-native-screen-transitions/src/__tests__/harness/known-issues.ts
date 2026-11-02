@@ -66,6 +66,39 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			scenario === "ownership-snap-locked-no-bubble / preset-spec / swipe-down" && ["teleport", "spike", "flash"].includes(v.rule),
 	},
 	{
+		id: "zoom-pinch-background-snap",
+		summary:
+			"Pinch-dismissing a zoom: while pinching, the screen underneath stays at full size; on release it snaps to " +
+			"its zoom background scale (0.94, a 52 px step) in one frame, then animates back. A swipe dismiss scales " +
+			"it continuously.",
+		matches: (scenario, v) =>
+			scenario.startsWith("bounds-zoom") && scenario.endsWith("/ pinch-dismiss") && v.rule === "spike" && v.scene === "A",
+	},
+	{
+		id: "reveal-dismiss-source-jump",
+		summary:
+			"After swiping away a reveal, the source boundary on the screen underneath stays 29 px off its layout " +
+			"position through the close and snaps back when the revealed screen is removed. (Its release also turns " +
+			"back by 1-2 px.)",
+		matches: (scenario, v) =>
+			scenario === "bounds-reveal / preset-spec / swipe-dismiss" && ["element-spike", "turns-back"].includes(v.rule),
+	},
+	{
+		id: "reveal-opacity-overflow",
+		summary:
+			"navigation.reveal() gives the revealed screen's content an unclamped opacity (up to 1.37, and about 4 " +
+			"near the end of opening). React Native clamps it, so nothing visible; it points at an unclamped interpolation.",
+		matches: (scenario, v) => scenario.startsWith("bounds-reveal") && v.rule === "style-range",
+	},
+	{
+		id: "zoom-to-bound-close-unverified",
+		summary:
+			"zoom({ target: 'bound' }): on close the destination boundary stays at its own rect until the screen is " +
+			"removed instead of shrinking back to the source. Unverified: may be the harness's measure() or inset " +
+			"handling (zoom mixes window and safe-area coordinates); confirm on a device.",
+		matches: (scenario, v) => scenario === "bounds-zoom-to-bound / zoom-spec / open-close" && v.rule === "trajectory",
+	},
+	{
 		id: "screens-under-translucent-screen",
 		summary:
 			"With a transition that leaves the covered screen translucent (scale-fade fades it to 0.6), screens further " +

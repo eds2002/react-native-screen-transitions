@@ -426,7 +426,11 @@ export const createReanimatedSim = ({ frameMs = 1000 / 60 }: { frameMs?: number 
 		withSpring,
 		withDelay,
 		cancelAnimation,
-		measure: (ref: { current?: { measurement?: unknown } }) => ref?.current?.measurement ?? null,
+		// The harness resolves a measured view's on-screen box (see stack-harness `measureNode`).
+		measure: (ref: { current?: { measurement?: unknown } }) =>
+			(globalThis as { __harnessMeasure?: (instance: unknown) => unknown }).__harnessMeasure?.(ref?.current) ??
+			ref?.current?.measurement ??
+			null,
 		runOnJS: <T extends (...args: never[]) => unknown>(callback: T) => callback,
 		runOnUI: <T extends (...args: never[]) => unknown>(callback: T) => callback,
 		executeOnUIRuntimeSync:
