@@ -251,3 +251,37 @@ export const rectOff = (a: Rect, b: Rect) =>
 	Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y), Math.abs(a.width - b.width), Math.abs(a.height - b.height));
 
 const roundRect = (r: Rect) => ({ x: +r.x.toFixed(1), y: +r.y.toFixed(1), width: +r.width.toFixed(1), height: +r.height.toFixed(1) });
+
+/**
+ * Elements (styleId views) and overlays as their own scenes, so the finite and
+ * continuity rules apply to them too.
+ */
+export const elementTrace = (trace: TraceFrame[]): TraceFrame[] =>
+	trace.map((frame) => ({
+		...frame,
+		overlays: [],
+		scenes: [
+			...frame.scenes.flatMap((scene) =>
+				Object.entries(scene.elements).map(([id, element]) => ({
+					key: `${scene.key}#${id}`,
+					name: `${scene.name}#${id}`,
+					rect: element.rect,
+					opacity: element.opacity,
+					touchable: true,
+					approx3d: false,
+					layers: [{ type: "element", style: element.style }],
+					elements: {},
+				})),
+			),
+			...frame.overlays.map((overlay) => ({
+				key: `overlay:${overlay.owner}`,
+				name: `overlay(${overlay.owner})`,
+				rect: overlay.rect,
+				opacity: overlay.opacity,
+				touchable: true,
+				approx3d: false,
+				layers: [],
+				elements: {},
+			})),
+		],
+	}));

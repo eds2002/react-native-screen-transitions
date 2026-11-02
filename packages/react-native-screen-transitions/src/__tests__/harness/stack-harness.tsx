@@ -29,9 +29,44 @@ export type SceneFrame = {
 	approx3d: boolean;
 	/** Per host layer on the way down: its resolved style and props, for debugging and goldens. */
 	layers: Array<{ type: string; style: Record<string, unknown>; pointerEvents?: unknown }>;
+	/** The screen's styleId elements: composed pose and their own resolved style. */
+	elements: Record<string, { rect: Rect; opacity: number; style: Record<string, unknown> }>;
 };
 
-export type TraceFrame = { frame: number; time: number; scenes: SceneFrame[]; label?: string };
+export type OverlayFrame = { owner: string; focused: string; rect: Rect; opacity: number };
+
+export type TraceFrame = { frame: number; time: number; scenes: SceneFrame[]; overlays: OverlayFrame[]; label?: string };
+
+export const ELEMENT_MARKER = "harness-el:";
+export const OVERLAY_MARKER = "harness-overlay:";
+
+/** A host node's composed opacity (its own and its ancestors'). */
+const composedOpacity = (node: ReactTestInstance, sim: ReanimatedSim) => {
+	let opacity = 1;
+	for (const step of pathTo(node)) {
+		if (typeof step.type !== "string") continue;
+		const style = flattenStyle(sim.resolveAnimated(step.props.style));
+		if (style.display === "none") return 0;
+		if (typeof style.opacity === "number") opacity *= style.opacity;
+	}
+	return opacity;
+};
+
+/** Every overlay marker: which screen owns it, which route it shows as focused, and its pose. */
+export const readOverlays = (renderer: ReactTestRenderer, sim: ReanimatedSim): OverlayFrame[] => {
+	let root: ReactTestInstance;
+	try {
+		root = renderer.root;
+	} catch {
+		return [];
+	}
+	return root
+		.findAll((node) => typeof node.type === "string" && String(node.props.testID ?? "").startsWith(OVERLAY_MARKER), { deep: true })
+		.map((node) => {
+			const [, owner, focused] = String(node.props.testID).split(":");
+			return { owner, focused, rect: nodeBox(node, sim), opacity: composedOpacity(node, sim) };
+		});
+};
 
 type Affine = { a: number; b: number; c: number; d: number; tx: number; ty: number };
 
@@ -236,7 +271,20 @@ export const readScenes = (renderer: ReactTestRenderer, sim: ReanimatedSim): Sce
 		].map(([x, y]) => [matrix.a * x + matrix.c * y + matrix.tx, matrix.b * x + matrix.d * y + matrix.ty]);
 		const xs = corners.map((p) => p[0]);
 		const ys = corners.map((p) => p[1]);
+		const elements: SceneFrame["elements"] = {};
+		for (const element of marker.findAll(
+			(node) => typeof node.type === "string" && String(node.props.testID ?? "").startsWith(ELEMENT_MARKER),
+			{ deep: true },
+		)) {
+			const id = String(element.props.testID).split(":").at(-1) as string;
+			elements[id] = {
+				rect: nodeBox(element, sim),
+				opacity: composedOpacity(element, sim),
+				style: flattenStyle(sim.resolveAnimated(element.props.style)),
+			};
+		}
 		scenes.push({
+			elements,
 			key,
 			name,
 			rect: {
@@ -257,6 +305,8 @@ export const readScenes = (renderer: ReactTestRenderer, sim: ReanimatedSim): Sce
 export type ScreenSpec = {
 	name: string;
 	options?: Record<string, unknown>;
+	/** styleIds rendered as Transition.View elements inside the screen. */
+	elements?: string[];
 	/** Makes this screen a nested BlankStack with these screens (the first is its initial route). */
 	stack?: { screens: ScreenSpec[]; screenOptions?: Record<string, unknown> };
 };
@@ -311,6 +361,15 @@ export const mountStack = async (
 	const ref = createNavigationContainerRef<Record<string, object | undefined>>();
 	const trace: TraceFrame[] = [];
 
+	const { default: Transition } = await import("../../index");
+	const specsByName = new Map<string, ScreenSpec>();
+	const collect = (list: ScreenSpec[]) => {
+		for (const spec of list) {
+			specsByName.set(spec.name, spec);
+			if (spec.stack) collect(spec.stack.screens);
+		}
+	};
+	collect(screens);
 	const taps: Record<string, number> = {};
 	/** Each mounted screen's navigation object, by route name (for setOptions). */
 	const navigations: Record<string, { setOptions: (options: object) => void }> = {};
@@ -325,7 +384,17 @@ export const mountStack = async (
 					taps[route.name] = (taps[route.name] ?? 0) + 1;
 				},
 			},
-			React.createElement("View", { testID: `${SCREEN_MARKER}${route.key}:${route.name}` }),
+			React.createElement(
+				"View",
+				{ testID: `${SCREEN_MARKER}${route.key}:${route.name}` },
+				...(specsByName.get(route.name)?.elements ?? []).map((styleId) =>
+					React.createElement(Transition.View as never, {
+						key: styleId,
+						styleId,
+						testID: `${ELEMENT_MARKER}${route.key}:${styleId}`,
+					} as never),
+				),
+			),
 		);
 	};
 
@@ -366,7 +435,13 @@ export const mountStack = async (
 	const root = renderer as ReactTestRenderer;
 
 	const record = (label?: string) => {
-		const frame = { frame: sim.clock.frame, time: sim.clock.now, scenes: readScenes(root, sim), label };
+		const frame = {
+			frame: sim.clock.frame,
+			time: sim.clock.now,
+			scenes: readScenes(root, sim),
+			overlays: readOverlays(root, sim),
+			label,
+		};
 		trace.push(frame);
 		return frame;
 	};
@@ -466,4 +541,11 @@ export const mountStack = async (
 		window: WINDOW,
 		insets: INSETS,
 	};
+};
+
+/** An overlay component for screen options: renders a marker naming its owner and the focused route. */
+export const HarnessOverlay = ({ route, focusedRoute }: { route: { name: string }; focusedRoute: { name: string } }) => {
+	// biome-ignore lint/style/noCommonJs: lazy to keep react out of module init order
+	const React = require("react") as typeof import("react");
+	return React.createElement("View", { testID: `${OVERLAY_MARKER}${route.name}:${focusedRoute.name}` });
 };

@@ -703,11 +703,180 @@ export const buildInactiveCatalog = (interpolate: InterpolateFn): Scenario[] => 
 	return scenarios;
 };
 
-export const buildFullCatalog = (presets: Presets, interpolate: InterpolateFn, window: { width: number; height: number }) => [
+
+// ---------------------------------------------------------------------------
+// Element slots (styleId), style reset, custom layer components, overlays.
+
+export const buildSlotCatalog = (interpolate: InterpolateFn, overlay: unknown): Scenario[] => {
+	const content = (progress: number, width: number) => ({
+		style: { transform: [{ translateX: interpolate(progress, [0, 1, 2], [width, 0, -width * 0.3]) }] },
+	});
+	const withHero = (hero: (progress: number, active: any) => Record<string, unknown> | undefined) => ({
+		gestureEnabled: true,
+		gestureDirection: "horizontal",
+		transitionSpec: { open: DEFAULT_SPEC, close: DEFAULT_SPEC },
+		screenStyleInterpolator: ({ progress, active, layouts: { screen } }: any) => {
+			"worklet";
+			const slot = hero(progress, active);
+			return { content: content(progress, screen.width), ...(slot ? { hero: slot } : {}) };
+		},
+	});
+	const heroSlots: Record<string, ReturnType<typeof withHero>> = {
+		// Styled through the whole motion, identity at rest.
+		override: withHero((progress) => ({
+			style: {
+				opacity: interpolate(progress, [0, 1, 2], [0, 1, 1], "clamp"),
+				transform: [{ scale: interpolate(progress, [0, 1, 2], [0.5, 1, 1.2], "clamp") }],
+			},
+		})),
+		// Returned only while animating (identity where it settles), then dropped: nothing may linger.
+		"while-animating": withHero((progress, active) =>
+			active.settled
+				? undefined
+				: {
+						style: {
+							opacity: interpolate(progress, [0, 1, 2], [0.2, 1, 1], "clamp"),
+							transform: [{ translateY: interpolate(progress, [0, 1, 2], [120, 0, 0], "clamp") }],
+						},
+					},
+		),
+		// Keys that come and go across the motion.
+		"changing-keys": withHero((progress) =>
+			progress < 0.999
+				? { style: { backgroundColor: "red", transform: [{ translateY: 80 * (1 - progress) }] } }
+				: { style: { opacity: 1 } },
+		),
+	};
+	const scenarios: Scenario[] = [];
+	const heroSequences: Record<string, Step[]> = {
+		"push-pop": [
+			{ op: "push", name: "B" },
+			{ op: "expectElementAtRest", styleId: "hero" },
+			{ op: "pop" },
+			{ op: "expectElementAtRest", styleId: "hero" },
+		],
+		"swipe-dismiss": [
+			{ op: "push", name: "B" },
+			{ op: "settle" },
+			{ op: "swipe", direction: "horizontal", distance: 0.75, durationMs: 200 },
+			{ op: "expectElementAtRest", styleId: "hero" },
+		],
+		"swipe-cancel": [
+			{ op: "push", name: "B" },
+			{ op: "settle" },
+			{ op: "swipe", direction: "horizontal", distance: 0.2, durationMs: 300, holdMs: 200 },
+			{ op: "expectElementAtRest", styleId: "hero" },
+		],
+		"pop-mid-push": [{ op: "push", name: "B" }, { op: "frames", count: 6 }, { op: "pop" }, { op: "expectElementAtRest", styleId: "hero" }],
+	};
+	for (const [slotName, options] of Object.entries(heroSlots)) {
+		for (const [sequenceName, steps] of Object.entries(heroSequences)) {
+			scenarios.push({
+				name: `slot-hero-${slotName} / preset-spec / ${sequenceName}`,
+				screens: [
+					{ name: "A", elements: ["hero"] },
+					{ name: "B", options, elements: ["hero"] },
+				],
+				screenOptions: options,
+				steps,
+			});
+		}
+	}
+
+	// Custom layer components must move exactly like the built-in layers.
+	const layer =
+		(type: string) =>
+		({ styles, props, pointerEvents, children }: any) => {
+			// biome-ignore lint/style/noCommonJs: lazy to keep react out of module init order
+			const React = require("react") as typeof import("react");
+			return React.createElement(type, { style: styles, animatedProps: props, pointerEvents }, children);
+		};
+	const plain = slide("horizontal")(interpolate).options;
+	const componentVariants: Record<string, Record<string, unknown>> = {
+		"content-component": { ...plain, contentComponent: layer("AnimatedView") },
+		"backdrop-component": { ...plain, backdropComponent: layer("AnimatedView") },
+		"surface-component": {
+			...plain,
+			surfaceComponent: layer("AnimatedView"),
+			screenStyleInterpolator: ({ progress, layouts: { screen } }: any) => {
+				"worklet";
+				return {
+					content: content(progress, screen.width),
+					surface: { style: { opacity: interpolate(progress, [0, 1, 2], [0.5, 1, 1], "clamp") } },
+				};
+			},
+		},
+	};
+	for (const [variantName, options] of Object.entries(componentVariants)) {
+		for (const [sequenceName, build] of Object.entries(sequences)) {
+			const steps = build("horizontal");
+			if (!steps || !["push-pop", "swipe-dismiss", "swipe-cancel", "pop-mid-push"].includes(sequenceName)) continue;
+			scenarios.push({
+				name: `slot-${variantName} / preset-spec / ${sequenceName}`,
+				screens: [{ name: "A" }, { name: "B" }, { name: "C" }],
+				screenOptions: options,
+				steps,
+			});
+		}
+	}
+
+	// Overlays: persist across pushes and show the focused route.
+	const withOverlay = { ...plain, overlay, overlayShown: true };
+	scenarios.push(
+		{
+			name: "overlay-on-first / preset-spec / push-pop",
+			screens: [{ name: "A", options: withOverlay }, { name: "B", options: plain }],
+			steps: [
+				{ op: "expectOverlay", focused: "A" },
+				{ op: "push", name: "B" },
+				{ op: "expectOverlay", focused: "B" },
+				{ op: "pop" },
+				{ op: "expectOverlay", focused: "A" },
+			],
+		},
+		{
+			name: "overlay-on-first / preset-spec / swipe-dismiss",
+			screens: [{ name: "A", options: withOverlay }, { name: "B", options: plain }],
+			steps: [
+				{ op: "push", name: "B" },
+				{ op: "settle" },
+				{ op: "swipe", direction: "horizontal", distance: 0.75, durationMs: 200 },
+				{ op: "expectOverlay", focused: "A" },
+			],
+		},
+		{
+			name: "overlay-on-first / preset-spec / rapid",
+			screens: [{ name: "A", options: withOverlay }, { name: "B", options: plain }, { name: "C", options: plain }],
+			steps: [
+				{ op: "push", name: "B" },
+				{ op: "frames", count: 3 },
+				{ op: "push", name: "C" },
+				{ op: "expectOverlay", focused: "C" },
+				{ op: "pop" },
+				{ op: "pop" },
+				{ op: "expectOverlay", focused: "A" },
+			],
+		},
+		{
+			name: "overlay-hidden / preset-spec / push-pop",
+			screens: [{ name: "A", options: { ...withOverlay, overlayShown: false } }, { name: "B", options: plain }],
+			steps: [{ op: "expectOverlay", focused: null }, { op: "push", name: "B" }, { op: "expectOverlay", focused: null }],
+		},
+	);
+	return scenarios;
+};
+
+export const buildFullCatalog = (
+	presets: Presets,
+	interpolate: InterpolateFn,
+	window: { width: number; height: number },
+	overlay?: unknown,
+) => [
 	...buildCatalog(presets, interpolate),
 	...buildSheetCatalog(interpolate, window),
 	...buildBackdropCatalog(interpolate, window),
 	...buildOwnershipCatalog(interpolate, window),
 	...buildGestureOptionCatalog(interpolate),
 	...buildInactiveCatalog(interpolate),
+	...buildSlotCatalog(interpolate, overlay),
 ];

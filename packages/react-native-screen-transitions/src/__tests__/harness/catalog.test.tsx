@@ -7,11 +7,12 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 const { runScenario } = await import("./scenario");
 const { buildFullCatalog } = await import("./catalog");
 const { WINDOW } = await import("./install");
+const { HarnessOverlay } = await import("./stack-harness");
 const { KNOWN_ISSUES } = await import("./known-issues");
 const presets = await import("../../configs/presets");
 const { interpolate } = await import("react-native-reanimated");
 
-const catalog = buildFullCatalog(presets as never, interpolate as never, WINDOW);
+const catalog = buildFullCatalog(presets as never, interpolate as never, WINDOW, HarnessOverlay);
 
 it(`runs the ${catalog.length} generated scenarios: every violation is a known issue, and every known issue still reproduces`, async () => {
 	const unexplained: string[] = [];

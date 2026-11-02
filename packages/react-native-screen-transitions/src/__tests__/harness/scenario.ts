@@ -11,6 +11,7 @@ import {
 	checkSettled,
 	checkStartLatency,
 	checkVanish,
+	elementTrace,
 	type Expectations,
 	rectOff,
 	type Violation,
@@ -43,6 +44,10 @@ export type Step =
 	| { op: "expectScene"; name: string; state: "absent" | "hidden" | "shown" }
 	/** The named screen's navigation.setOptions. */
 	| { op: "setOptions"; name: string; options: Record<string, unknown> }
+	/** Settles, then checks the focused screen's styleId element sits exactly on its screen (no leftover slot style). */
+	| { op: "expectElementAtRest"; styleId: string }
+	/** Settles, then checks the overlays rendered: the focused route they show (none: no overlay). */
+	| { op: "expectOverlay"; focused: string | null }
 	| { op: "pinch"; fromSpan: number; toSpan: number; durationMs: number }
 	/** The library's `snapTo(index)` on the focused screen. */
 	| { op: "snapTo"; index: number }
@@ -179,6 +184,32 @@ const runStep = async (stack: StackHarness, step: Step, expectations: Expectatio
 			}
 			return;
 		}
+		case "expectElementAtRest": {
+			await stack.settle();
+			const focusedKey = stack.leafRoutes().at(-1)?.key;
+			const scene = stack.trace.at(-1)?.scenes.find((s) => s.key === focusedKey);
+			const element = scene?.elements[step.styleId];
+			if (!scene || !element) throw new Error(`no ${step.styleId} element on the focused screen`);
+			if (rectOff(element.rect, scene.rect) > 0.5 || Math.abs(element.opacity - scene.opacity) > 1e-3) {
+				violations.push({
+					rule: "element-rest",
+					frame: stack.trace.at(-1)?.frame ?? -1,
+					scene: `${scene.name}#${step.styleId}`,
+					detail: `rests at ${JSON.stringify(element.rect)} opacity ${element.opacity.toFixed(3)}, its screen at ${JSON.stringify(scene.rect)} opacity ${scene.opacity.toFixed(3)}; style ${JSON.stringify(element.style)}`,
+				});
+			}
+			return;
+		}
+		case "expectOverlay": {
+			await stack.settle();
+			const overlays = stack.trace.at(-1)?.overlays ?? [];
+			const shown = overlays.filter((o) => o.opacity > 0.01);
+			const ok = step.focused === null ? shown.length === 0 : shown.length > 0 && shown.every((o) => o.focused === step.focused);
+			if (!ok) {
+				violations.push({ rule: "overlay", frame: stack.trace.at(-1)?.frame ?? -1, detail: `overlays ${JSON.stringify(shown.map((o) => `${o.owner}->${o.focused}`))}, expected focused ${step.focused}` });
+			}
+			return;
+		}
 		case "setOptions": {
 			return stack.setOptions(step.name, step.options);
 		}
@@ -232,6 +263,11 @@ export const runScenario = async (sim: ReanimatedSim, scenario: Scenario): Promi
 	});
 	if (current.length) runs.push(current);
 	violations.push(...checkFinite(trace), ...checkContinuity(trace, expectations), ...checkVanish(trace, expectations));
+	const elements = elementTrace(trace);
+	violations.push(
+		...checkFinite(elements).map((v) => ({ ...v, rule: `element-${v.rule}` })),
+		...checkContinuity(elements, expectations).map((v) => ({ ...v, rule: `element-${v.rule}` })),
+	);
 	const latency = (expectations.maxStartLatency ?? 3) + 1;
 	for (const run of runs) violations.push(...checkMonotonic(run, expectations, latency));
 	const routes = stack.leafRoutes();
