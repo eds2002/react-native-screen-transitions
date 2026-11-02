@@ -37,9 +37,11 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 	{
 		id: "release-after-grab-during-snap",
 		summary:
-			"A sheet grabbed while snapTo animates follows the finger, but on release it jumps (268 px on a bottom " +
-			"sheet, 124 px on a side sheet) in one frame before its release animation runs. Every sheet variant and spec.",
-		matches: (scenario, v) => sequenceOf(scenario) === "swipe-during-snap" && v.rule === "spike",
+			"A sheet grabbed while a snap animation runs (snapTo, or a backdrop collapse) follows the finger, but on " +
+			"release it jumps (268 px on a bottom sheet, 124 px on a side sheet) in one frame before its release " +
+			"animation runs. Every sheet variant and spec.",
+		matches: (scenario, v) =>
+			["swipe-during-snap", "tap-backdrop-then-swipe"].includes(sequenceOf(scenario)) && v.rule === "spike",
 	},
 	{
 		id: "screens-under-translucent-screen",

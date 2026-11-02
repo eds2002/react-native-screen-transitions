@@ -133,6 +133,60 @@ const pathTo = (node: ReactTestInstance): ReactTestInstance[] => {
 
 export const SCREEN_MARKER = "harness-screen:";
 
+/** A host node's box in window coordinates (layers assumed to fill the window), and its pointerEvents. */
+export const nodeBox = (node: ReactTestInstance, sim: ReanimatedSim) => {
+	let matrix = IDENTITY;
+	for (const step of pathTo(node)) {
+		if (typeof step.type !== "string") continue;
+		const style = flattenStyle(sim.resolveAnimated(step.props.style));
+		const { matrix: local } = transformMatrix(style.transform);
+		const cx = WINDOW.width / 2;
+		const cy = WINDOW.height / 2;
+		matrix = multiply(matrix, multiply(multiply({ ...IDENTITY, tx: cx, ty: cy }, local), { ...IDENTITY, tx: -cx, ty: -cy }));
+	}
+	const corners = [
+		[0, 0],
+		[WINDOW.width, 0],
+		[0, WINDOW.height],
+		[WINDOW.width, WINDOW.height],
+	].map(([x, y]) => [matrix.a * x + matrix.c * y + matrix.tx, matrix.b * x + matrix.d * y + matrix.ty]);
+	const xs = corners.map((p) => p[0]);
+	const ys = corners.map((p) => p[1]);
+	return { x: Math.min(...xs), y: Math.min(...ys), width: Math.max(...xs) - Math.min(...xs), height: Math.max(...ys) - Math.min(...ys) };
+};
+
+const pointerEventsOf = (node: ReactTestInstance, sim: ReanimatedSim) =>
+	(flattenStyle(sim.resolveAnimated(node.props.animatedProps)).pointerEvents ?? node.props.pointerEvents ?? "auto") as string;
+
+/**
+ * React Native's touch target for a point: the topmost, deepest host view
+ * under it that takes touches (pointerEvents "none" skips a subtree,
+ * "box-none" skips the view itself, "box-only" skips its children).
+ */
+export const hitTest = (root: ReactTestInstance, point: { x: number; y: number }, sim: ReanimatedSim) => {
+	const inside = (node: ReactTestInstance) => {
+		const box = nodeBox(node, sim);
+		return point.x >= box.x && point.x <= box.x + box.width && point.y >= box.y && point.y <= box.y + box.height;
+	};
+	const visit = (node: ReactTestInstance): ReactTestInstance | null => {
+		const host = typeof node.type === "string";
+		// display: contents has no box of its own: never a target, its children can be.
+		const contents = host && flattenStyle(sim.resolveAnimated(node.props.style)).display === "contents";
+		const pe = host && !contents ? pointerEventsOf(node, sim) : contents ? "box-none" : "box-none";
+		if (pe === "none") return null;
+		if (pe !== "box-only") {
+			const children = node.children.filter((c): c is ReactTestInstance => typeof c !== "string");
+			for (let i = children.length - 1; i >= 0; i--) {
+				const hit = visit(children[i]);
+				if (hit) return hit;
+			}
+		}
+		if (host && pe !== "box-none" && node.type !== "GestureDetector" && inside(node)) return node;
+		return null;
+	};
+	return visit(root);
+};
+
 /** Reads every marked screen's visual state from the rendered host tree. */
 export const readScenes = (renderer: ReactTestRenderer, sim: ReanimatedSim): SceneFrame[] => {
 	const markers = renderer.root.findAll(
@@ -214,8 +268,19 @@ export const mountStack = async (
 	const ref = createNavigationContainerRef<Record<string, object | undefined>>();
 	const trace: TraceFrame[] = [];
 
+	const taps: Record<string, number> = {};
+	// Each screen is one pressable surface counting its taps, around the marker the recorder reads.
 	const Screen = ({ route }: { route: { key: string; name: string } }) =>
-		React.createElement("View", { testID: `${SCREEN_MARKER}${route.key}:${route.name}` });
+		React.createElement(
+			"Pressable",
+			{
+				testID: `harness-tap:${route.key}`,
+				onPress: () => {
+					taps[route.name] = (taps[route.name] ?? 0) + 1;
+				},
+			},
+			React.createElement("View", { testID: `${SCREEN_MARKER}${route.key}:${route.name}` }),
+		);
 
 	let renderer: ReactTestRenderer | undefined;
 	await act(async () => {
@@ -290,10 +355,23 @@ export const mountStack = async (
 		frameMs: sim.clock.frameMs,
 	});
 
+	/** A tap: the touched view's nearest onPress runs (between frames, on the JS thread). Returns what it hit. */
+	const tap = async (point: { x: number; y: number }) => {
+		const hit = hitTest(root.root, point, sim);
+		let handler: ReactTestInstance | null = hit;
+		while (handler && typeof handler.props.onPress !== "function") handler = handler.parent;
+		await js(() => {
+			(handler?.props.onPress as ((e: unknown) => void) | undefined)?.({ nativeEvent: { locationX: point.x, locationY: point.y } });
+		});
+		return { hit: hit ? `${String(hit.type)}${hit.props.testID ? `#${hit.props.testID}` : ""}` : null, handled: !!handler };
+	};
+
 	return {
 		ref,
 		trace,
 		gestures,
+		tap,
+		taps,
 		renderer: root,
 		frame,
 		frames,

@@ -39,7 +39,13 @@ export type Step =
 	/** The library's `snapTo(index)` on the focused screen. */
 	| { op: "snapTo"; index: number }
 	/** Settles, then checks the top screen rests at `expect.snapRects[index]`. */
-	| { op: "expectSnap"; index: number };
+	| { op: "expectSnap"; index: number }
+	/** A tap at a window point (hit-tested like React Native). */
+	| { op: "tap"; at: { x: number; y: number } }
+	/** Settles, then checks the route names, bottom to top. */
+	| { op: "expectRoutes"; names: string[] }
+	/** Checks how many taps each named screen's surface received so far. */
+	| { op: "expectTaps"; counts: Record<string, number> };
 
 export type Scenario = {
 	name: string;
@@ -86,6 +92,24 @@ const runStep = async (stack: StackHarness, step: Step, expectations: Expectatio
 	switch (step.op) {
 		case "snapTo":
 			return stack.js(() => snapTo(step.index));
+		case "tap":
+			return stack.tap(step.at);
+		case "expectRoutes": {
+			await stack.settle();
+			const names = stack.routes().map((r) => r.name);
+			if (JSON.stringify(names) !== JSON.stringify(step.names)) {
+				violations.push({ rule: "routes", frame: stack.trace.at(-1)?.frame ?? -1, detail: `routes ${JSON.stringify(names)}, expected ${JSON.stringify(step.names)}` });
+			}
+			return;
+		}
+		case "expectTaps": {
+			for (const [name, count] of Object.entries(step.counts)) {
+				if ((stack.taps[name] ?? 0) !== count) {
+					violations.push({ rule: "taps", frame: stack.trace.at(-1)?.frame ?? -1, scene: name, detail: `${name} received ${stack.taps[name] ?? 0} taps, expected ${count}` });
+				}
+			}
+			return;
+		}
 		case "expectSnap": {
 			await stack.settle();
 			const top = stack.trace.at(-1)?.scenes.at(-1);

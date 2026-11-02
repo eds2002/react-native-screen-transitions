@@ -302,7 +302,86 @@ export const buildSheetCatalog = (interpolate: InterpolateFn, window: { width: n
 	return scenarios;
 };
 
+
+// ---------------------------------------------------------------------------
+// Backdrops: what a tap outside a sheet does, per backdropBehavior.
+
+type Behavior = "dismiss" | "collapse" | "block" | "passthrough";
+
+/** A bottom sheet over A; collapse gets two snap points so it has somewhere to collapse to. */
+const backdropSheet = (behavior: Behavior): SheetVariant =>
+	behavior === "collapse"
+		? { edge: "bottom", snapPoints: [0.5, 0.75], initialSnapIndex: 1, extra: { backdropBehavior: behavior } }
+		: { edge: "bottom", snapPoints: [0.5], initialSnapIndex: 0, extra: { backdropBehavior: behavior } };
+
+const ABOVE_SHEET = { x: 195, y: 120 };
+const ON_SHEET = { x: 195, y: 780 };
+
+export const backdropSequences: Record<string, (behavior: Behavior) => Step[]> = {
+	"tap-backdrop": (behavior) => {
+		const open: Step[] = [{ op: "push", name: "S" }, { op: "settle" }, { op: "tap", at: ABOVE_SHEET }];
+		switch (behavior) {
+			case "dismiss":
+				return [...open, { op: "expectRoutes", names: ["A"] }, { op: "expectTaps", counts: { A: 0, S: 0 } }];
+			case "collapse":
+				return [
+					...open,
+					{ op: "expectSnap", index: 0 },
+					{ op: "expectRoutes", names: ["A", "S"] },
+					{ op: "tap", at: ABOVE_SHEET },
+					{ op: "expectRoutes", names: ["A"] },
+					{ op: "expectTaps", counts: { A: 0, S: 0 } },
+				];
+			case "block":
+				return [...open, { op: "expectRoutes", names: ["A", "S"] }, { op: "expectTaps", counts: { A: 0, S: 0 } }];
+			case "passthrough":
+				return [...open, { op: "expectRoutes", names: ["A", "S"] }, { op: "expectTaps", counts: { A: 1, S: 0 } }];
+		}
+	},
+	"tap-sheet": () => [
+		{ op: "push", name: "S" },
+		{ op: "settle" },
+		{ op: "tap", at: ON_SHEET },
+		{ op: "expectRoutes", names: ["A", "S"] },
+		{ op: "expectTaps", counts: { A: 0, S: 1 } },
+	],
+	"tap-backdrop-while-opening": () => [{ op: "push", name: "S" }, { op: "frames", count: 4 }, { op: "tap", at: ABOVE_SHEET }],
+	"double-tap-backdrop": () => [
+		{ op: "push", name: "S" },
+		{ op: "settle" },
+		{ op: "tap", at: ABOVE_SHEET },
+		{ op: "frames", count: 2 },
+		{ op: "tap", at: ABOVE_SHEET },
+	],
+	"tap-backdrop-then-swipe": () => [
+		{ op: "push", name: "S" },
+		{ op: "settle" },
+		{ op: "tap", at: ABOVE_SHEET },
+		{ op: "frames", count: 3 },
+		{ op: "swipe", direction: "vertical", distance: 0.3, durationMs: 250 },
+	],
+};
+
+export const buildBackdropCatalog = (interpolate: InterpolateFn, window: { width: number; height: number }): Scenario[] => {
+	const scenarios: Scenario[] = [];
+	for (const behavior of ["dismiss", "collapse", "block", "passthrough"] as Behavior[]) {
+		const variant = backdropSheet(behavior);
+		const options = sheetOptions(variant, interpolate);
+		const snapRects = [...variant.snapPoints].sort((a, b) => a - b).map((s) => sheetRect(variant.edge, s, window));
+		for (const [sequenceName, build] of Object.entries(backdropSequences)) {
+			scenarios.push({
+				name: `backdrop-${behavior} / preset-spec / ${sequenceName}`,
+				screens: [{ name: "A" }, { name: "S", options }],
+				steps: build(behavior),
+				expect: { snapRects, rest: { S: snapRects } },
+			});
+		}
+	}
+	return scenarios;
+};
+
 export const buildFullCatalog = (presets: Presets, interpolate: InterpolateFn, window: { width: number; height: number }) => [
 	...buildCatalog(presets, interpolate),
 	...buildSheetCatalog(interpolate, window),
+	...buildBackdropCatalog(interpolate, window),
 ];
