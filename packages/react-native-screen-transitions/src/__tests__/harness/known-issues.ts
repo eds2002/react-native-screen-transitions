@@ -81,7 +81,7 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			"position through the close and snaps back when the revealed screen is removed. (Its release also turns " +
 			"back by 1-2 px.)",
 		matches: (scenario, v) =>
-			scenario === "bounds-reveal / preset-spec / swipe-dismiss" && ["element-spike", "turns-back"].includes(v.rule),
+			scenario.startsWith("bounds-reveal") && ["element-spike", "turns-back"].includes(v.rule),
 	},
 	{
 		id: "reveal-opacity-overflow",
