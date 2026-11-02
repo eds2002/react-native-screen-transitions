@@ -14,10 +14,11 @@ const name = process.env.SCENARIO;
 
 it.skipIf(!name)("inspect a catalog scenario", async () => {
 	const { runScenario } = await import("./scenario");
-	const { buildCatalog } = await import("./catalog");
+	const { buildFullCatalog } = await import("./catalog");
+	const { WINDOW } = await import("./install");
 	const presets = await import("../../configs/presets");
 	const { interpolate } = await import("react-native-reanimated");
-	const scenario = buildCatalog(presets as never, interpolate as never).find((s) => s.name === name);
+	const scenario = buildFullCatalog(presets as never, interpolate as never, WINDOW).find((s) => s.name === name);
 	if (!scenario) throw new Error(`no scenario named "${name}"`);
 	const result = await runScenario(sim, scenario);
 	const from = Number(process.env.FROM ?? 0);

@@ -11,6 +11,10 @@ export type Violation = { rule: string; frame: number; scene?: string; detail: s
 export type Expectations = {
 	/** Where the top screen rests (default: the full window). Null skips the check. */
 	restRect?: Rect | null;
+	/** Per screen name: where it may rest when it is on top (any of these). Overrides restRect. */
+	rest?: Record<string, Rect[] | null>;
+	/** A sheet's pose at each snap index (sorted snap points), for `expectSnap` steps. */
+	snapRects?: Rect[];
 	/** Frames an action may take to show any motion (default 3). */
 	maxStartLatency?: number;
 	/** Motion without a finger may overshoot its target (springs that bounce). */
@@ -235,11 +239,15 @@ export const checkSettled = (
 	}
 	if (!topScene.touchable) out.push({ rule: "top-untouchable", frame: last.frame, scene: top?.name, detail: "settled top screen does not take touches" });
 	if (Math.abs(topScene.opacity - 1) > 1e-3) out.push({ rule: "top-faded", frame: last.frame, scene: top?.name, detail: `opacity ${topScene.opacity}` });
-	const rest = expectations.restRect === undefined ? { x: 0, y: 0, ...WINDOW } : expectations.restRect;
-	if (rest) {
-		const r = topScene.rect;
-		const off = Math.max(Math.abs(r.x - rest.x), Math.abs(r.y - rest.y), Math.abs(r.width - rest.width), Math.abs(r.height - rest.height));
-		if (off > 0.5) out.push({ rule: "top-rest", frame: last.frame, scene: top?.name, detail: `rests at ${JSON.stringify(r)}, expected ${JSON.stringify(rest)}` });
+	const fallback = expectations.restRect === undefined ? [{ x: 0, y: 0, ...WINDOW }] : expectations.restRect ? [expectations.restRect] : null;
+	const allowed = top && expectations.rest && top.name in expectations.rest ? expectations.rest[top.name] : fallback;
+	if (allowed && !allowed.some((rest) => rectOff(topScene.rect, rest) <= 0.5)) {
+		out.push({ rule: "top-rest", frame: last.frame, scene: top?.name, detail: `rests at ${JSON.stringify(roundRect(topScene.rect))}, expected one of ${JSON.stringify(allowed.map(roundRect))}` });
 	}
 	return out;
 };
+
+export const rectOff = (a: Rect, b: Rect) =>
+	Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y), Math.abs(a.width - b.width), Math.abs(a.height - b.height));
+
+const roundRect = (r: Rect) => ({ x: +r.x.toFixed(1), y: +r.y.toFixed(1), width: +r.width.toFixed(1), height: +r.height.toFixed(1) });

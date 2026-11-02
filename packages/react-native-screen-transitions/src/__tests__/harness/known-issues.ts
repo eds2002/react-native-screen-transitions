@@ -35,6 +35,13 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 		matches: (scenario, v) => sequenceOf(scenario) === "regrab-spring-back" && v.rule === "flash",
 	},
 	{
+		id: "release-after-grab-during-snap",
+		summary:
+			"A sheet grabbed while snapTo animates follows the finger, but on release it jumps (268 px on a bottom " +
+			"sheet, 124 px on a side sheet) in one frame before its release animation runs. Every sheet variant and spec.",
+		matches: (scenario, v) => sequenceOf(scenario) === "swipe-during-snap" && v.rule === "spike",
+	},
+	{
 		id: "screens-under-translucent-screen",
 		summary:
 			"With a transition that leaves the covered screen translucent (scale-fade fades it to 0.6), screens further " +

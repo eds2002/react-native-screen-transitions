@@ -12,6 +12,7 @@ import {
 	checkStartLatency,
 	checkVanish,
 	type Expectations,
+	rectOff,
 	type Violation,
 } from "./invariants";
 import type { ReanimatedSim } from "./reanimated-sim";
@@ -34,7 +35,11 @@ export type Step =
 			durationMs: number;
 			holdMs?: number;
 	  }
-	| { op: "pinch"; fromSpan: number; toSpan: number; durationMs: number };
+	| { op: "pinch"; fromSpan: number; toSpan: number; durationMs: number }
+	/** The library's `snapTo(index)` on the focused screen. */
+	| { op: "snapTo"; index: number }
+	/** Settles, then checks the top screen rests at `expect.snapRects[index]`. */
+	| { op: "expectSnap"; index: number };
 
 export type Scenario = {
 	name: string;
@@ -75,8 +80,27 @@ export const swipePath = (
 	}
 };
 
-const runStep = async (stack: StackHarness, step: Step) => {
+const { snapTo } = await import("../../controls/snap-to");
+
+const runStep = async (stack: StackHarness, step: Step, expectations: Expectations, violations: Violation[]) => {
 	switch (step.op) {
+		case "snapTo":
+			return stack.js(() => snapTo(step.index));
+		case "expectSnap": {
+			await stack.settle();
+			const top = stack.trace.at(-1)?.scenes.at(-1);
+			const want = expectations.snapRects?.[step.index];
+			if (!top || !want) throw new Error(`expectSnap ${step.index}: no top screen or no snapRects`);
+			if (rectOff(top.rect, want) > 0.5) {
+				violations.push({
+					rule: "snap",
+					frame: stack.trace.at(-1)?.frame ?? -1,
+					scene: top.name,
+					detail: `expected snap ${step.index} at y=${want.y.toFixed(1)} x=${want.x.toFixed(1)}, rests at y=${top.rect.y.toFixed(1)} x=${top.rect.x.toFixed(1)}`,
+				});
+			}
+			return;
+		}
 		case "push":
 			return stack.push(step.name);
 		case "navigate":
@@ -100,6 +124,8 @@ const runStep = async (stack: StackHarness, step: Step) => {
 	}
 };
 
+// Navigation actions must show motion within the start latency. (snapTo is checked by
+// expectSnap instead: its target may already be on screen, e.g. a clamped overshoot.)
 const ACTIONS = new Set(["push", "navigate", "pop", "replace"]);
 
 export const runScenario = async (sim: ReanimatedSim, scenario: Scenario): Promise<ScenarioResult> => {
@@ -113,7 +139,7 @@ export const runScenario = async (sim: ReanimatedSim, scenario: Scenario): Promi
 		for (const step of scenario.steps) {
 			const before = stack.trace.length;
 			if (step.op !== "settle" && step.op !== "frames") stepStarts.add(before);
-			await runStep(stack, step);
+			await runStep(stack, step, expectations, violations);
 			if (ACTIONS.has(step.op)) {
 				// The action ran between frames; the next frames must show it.
 				await stack.frames((expectations.maxStartLatency ?? 3) + 1);

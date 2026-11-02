@@ -139,3 +139,170 @@ export const buildCatalog = (presets: Presets, interpolate: InterpolateFn): Scen
 	}
 	return scenarios;
 };
+
+// ---------------------------------------------------------------------------
+// Sheets: snap points, snapTo, snap gestures, snap lock, step behavior.
+
+type SheetEdge = "bottom" | "top" | "right" | "left";
+
+const SHEET_DISMISS: Record<SheetEdge, SwipeDirection> = {
+	bottom: "vertical",
+	top: "vertical-inverted",
+	right: "horizontal",
+	left: "horizontal-inverted",
+};
+
+const OPPOSITE: Record<SwipeDirection, SwipeDirection> = {
+	vertical: "vertical-inverted",
+	"vertical-inverted": "vertical",
+	horizontal: "horizontal-inverted",
+	"horizontal-inverted": "horizontal",
+};
+
+type SheetVariant = {
+	edge: SheetEdge;
+	snapPoints: number[];
+	initialSnapIndex: number;
+	extra?: Record<string, unknown>;
+	locked?: boolean;
+};
+
+export const sheetVariants: Record<string, SheetVariant> = {
+	"sheet-bottom": { edge: "bottom", snapPoints: [0.5, 1], initialSnapIndex: 0 },
+	"sheet-top": { edge: "top", snapPoints: [0.5, 1], initialSnapIndex: 0 },
+	"sheet-right": { edge: "right", snapPoints: [0.5, 1], initialSnapIndex: 0 },
+	"sheet-left": { edge: "left", snapPoints: [0.5, 1], initialSnapIndex: 0 },
+	"sheet-three-snaps": { edge: "bottom", snapPoints: [0.3, 0.6, 1], initialSnapIndex: 1 },
+	"sheet-step": { edge: "bottom", snapPoints: [0.4, 0.9, 1], initialSnapIndex: 1, extra: { sheetSnapBehavior: "step" } },
+	"sheet-locked": {
+		edge: "bottom",
+		snapPoints: [0.3, 0.6, 1],
+		initialSnapIndex: 1,
+		extra: { gestureSnapLocked: true },
+		locked: true,
+	},
+};
+
+/** The sheet's resting rect at snap fraction `s` (the interpolator below puts it there). */
+const sheetRect = (edge: SheetEdge, s: number, window: { width: number; height: number }) => {
+	const off = 1 - s;
+	switch (edge) {
+		case "bottom":
+			return { x: 0, y: off * window.height, ...window };
+		case "top":
+			return { x: 0, y: -off * window.height, ...window };
+		case "right":
+			return { x: off * window.width, y: 0, ...window };
+		case "left":
+			return { x: -off * window.width, y: 0, ...window };
+	}
+};
+
+const sheetOptions = (variant: SheetVariant, interpolate: InterpolateFn) => ({
+	gestureEnabled: true,
+	gestureDirection: SHEET_DISMISS[variant.edge],
+	snapPoints: variant.snapPoints,
+	initialSnapIndex: variant.initialSnapIndex,
+	transitionSpec: { open: DEFAULT_SPEC, close: DEFAULT_SPEC },
+	...variant.extra,
+	screenStyleInterpolator: ({ progress, layouts: { screen } }: any) => {
+		"worklet";
+		const horizontal = variant.edge === "left" || variant.edge === "right";
+		const size = horizontal ? screen.width : screen.height;
+		const sign = variant.edge === "top" || variant.edge === "left" ? -1 : 1;
+		const offset = interpolate(progress, [0, 1], [sign * size, 0], "clamp");
+		return {
+			content: { style: { transform: [horizontal ? { translateX: offset } : { translateY: offset }] } },
+		};
+	},
+});
+
+/** Sheet step sequences, given the variant: S is the sheet over A. */
+export const sheetSequences: Record<string, (v: SheetVariant) => Step[] | null> = {
+	"open-close": (v) => [{ op: "push", name: "S" }, { op: "expectSnap", index: v.initialSnapIndex }, { op: "pop" }],
+	"snap-to-cycle": (v) => [
+		{ op: "push", name: "S" },
+		{ op: "settle" },
+		{ op: "snapTo", index: v.snapPoints.length - 1 },
+		{ op: "expectSnap", index: v.snapPoints.length - 1 },
+		{ op: "snapTo", index: 0 },
+		{ op: "expectSnap", index: 0 },
+		{ op: "pop" },
+	],
+	"swipe-expand": (v) => [
+		{ op: "push", name: "S" },
+		{ op: "settle" },
+		{ op: "swipe", direction: OPPOSITE[SHEET_DISMISS[v.edge]], distance: 0.4, durationMs: 200 },
+		...(v.locked ? [{ op: "expectSnap", index: v.initialSnapIndex } as Step] : []),
+	],
+	"swipe-dismiss": (v) => [
+		{ op: "push", name: "S" },
+		{ op: "settle" },
+		...(v.initialSnapIndex === 0 ? [] : ([{ op: "snapTo", index: 0 }, { op: "settle" }] as Step[])),
+		{ op: "swipe", direction: SHEET_DISMISS[v.edge], distance: 0.6, durationMs: 200 },
+	],
+	"collapse-from-full": (v) => [
+		{ op: "push", name: "S" },
+		{ op: "settle" },
+		{ op: "snapTo", index: v.snapPoints.length - 1 },
+		{ op: "settle" },
+		{ op: "swipe", direction: SHEET_DISMISS[v.edge], distance: 0.25, durationMs: 400, holdMs: 150 },
+		...(v.locked ? [{ op: "expectSnap", index: v.snapPoints.length - 1 } as Step] : []),
+	],
+	"snap-to-during-open": (v) => [
+		{ op: "push", name: "S" },
+		{ op: "frames", count: 5 },
+		{ op: "snapTo", index: v.snapPoints.length - 1 },
+		{ op: "expectSnap", index: v.snapPoints.length - 1 },
+	],
+	"snap-to-interrupt": (v) => [
+		{ op: "push", name: "S" },
+		{ op: "settle" },
+		{ op: "snapTo", index: v.snapPoints.length - 1 },
+		{ op: "frames", count: 4 },
+		{ op: "snapTo", index: 0 },
+		{ op: "expectSnap", index: 0 },
+	],
+	"swipe-during-snap": (v) => [
+		{ op: "push", name: "S" },
+		{ op: "settle" },
+		{ op: "snapTo", index: v.snapPoints.length - 1 },
+		{ op: "frames", count: 4 },
+		{ op: "swipe", direction: SHEET_DISMISS[v.edge], distance: 0.6, durationMs: 200 },
+	],
+	"pop-during-snap": (v) => [
+		{ op: "push", name: "S" },
+		{ op: "settle" },
+		{ op: "snapTo", index: v.snapPoints.length - 1 },
+		{ op: "frames", count: 4 },
+		{ op: "pop" },
+	],
+};
+
+export const buildSheetCatalog = (interpolate: InterpolateFn, window: { width: number; height: number }): Scenario[] => {
+	const scenarios: Scenario[] = [];
+	for (const [variantName, variant] of Object.entries(sheetVariants)) {
+		for (const [specName, { spec, mayOvershoot }] of Object.entries(specs)) {
+			if (spec === null) continue;
+			const base = sheetOptions(variant, interpolate);
+			const options = spec ? { ...base, transitionSpec: { open: spec, close: spec } } : base;
+			const snapRects = [...variant.snapPoints].sort((a, b) => a - b).map((s) => sheetRect(variant.edge, s, window));
+			for (const [sequenceName, build] of Object.entries(sheetSequences)) {
+				const steps = build(variant);
+				if (!steps) continue;
+				scenarios.push({
+					name: `${variantName} / ${specName} / ${sequenceName}`,
+					screens: [{ name: "A" }, { name: "S", options }],
+					steps,
+					expect: { mayOvershoot, snapRects, rest: { S: snapRects } },
+				});
+			}
+		}
+	}
+	return scenarios;
+};
+
+export const buildFullCatalog = (presets: Presets, interpolate: InterpolateFn, window: { width: number; height: number }) => [
+	...buildCatalog(presets, interpolate),
+	...buildSheetCatalog(interpolate, window),
+];

@@ -5,12 +5,13 @@ const sim = installHarness();
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 const { runScenario } = await import("./scenario");
-const { buildCatalog } = await import("./catalog");
+const { buildFullCatalog } = await import("./catalog");
+const { WINDOW } = await import("./install");
 const { KNOWN_ISSUES } = await import("./known-issues");
 const presets = await import("../../configs/presets");
 const { interpolate } = await import("react-native-reanimated");
 
-const catalog = buildCatalog(presets as never, interpolate as never);
+const catalog = buildFullCatalog(presets as never, interpolate as never, WINDOW);
 
 it(`runs the ${catalog.length} generated scenarios: every violation is a known issue, and every known issue still reproduces`, async () => {
 	const unexplained: string[] = [];
