@@ -46,6 +46,10 @@ export type Step =
 	| { op: "expectScene"; name: string; state: "absent" | "hidden" | "shown" }
 	/** The named screen's navigation.setOptions. */
 	| { op: "setOptions"; name: string; options: Record<string, unknown> }
+	/** Scrolls the focused screen's scroll view to an offset (as if the user had scrolled there). */
+	| { op: "scrollTo"; offset: number }
+	/** Checks the focused screen's scroll offset. */
+	| { op: "expectScroll"; min?: number; max?: number }
 	/** Settles, then checks the focused screen's styleId element sits exactly on its screen (no leftover slot style). */
 	| { op: "expectElementAtRest"; styleId: string }
 	/** Settles, then checks the overlays rendered: the focused route they show (none: no overlay). */
@@ -209,6 +213,17 @@ const runStep = async (stack: StackHarness, step: Step, expectations: Expectatio
 			const ok = step.focused === null ? shown.length === 0 : shown.length > 0 && shown.every((o) => o.focused === step.focused);
 			if (!ok) {
 				violations.push({ rule: "overlay", frame: stack.trace.at(-1)?.frame ?? -1, detail: `overlays ${JSON.stringify(shown.map((o) => `${o.owner}->${o.focused}`))}, expected focused ${step.focused}` });
+			}
+			return;
+		}
+		case "scrollTo":
+			return stack.scrollFocusedTo(step.offset);
+		case "expectScroll": {
+			await stack.settle();
+			const key = stack.leafRoutes().at(-1)?.key;
+			const offset = stack.scrollOffsets.get(`harness-scroll:${key}`) ?? 0;
+			if ((step.min !== undefined && offset < step.min) || (step.max !== undefined && offset > step.max)) {
+				violations.push({ rule: "scroll", frame: stack.trace.at(-1)?.frame ?? -1, detail: `scroll offset ${offset.toFixed(1)}, expected ${step.min ?? "-inf"}..${step.max ?? "inf"}` });
 			}
 			return;
 		}

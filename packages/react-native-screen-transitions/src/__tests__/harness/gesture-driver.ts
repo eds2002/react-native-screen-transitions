@@ -72,6 +72,11 @@ const contains = (scene: SceneFrame, point: Point) =>
 
 export type GestureDriverHost = {
 	renderer: ReactTestRenderer;
+	/** The view a touch at this point lands on (React Native hit-testing). */
+	hitTest: (point: Point) => ReactTestInstance | null;
+	scrollOffset: (testID: string) => number;
+	scrollTo: (testID: string, offset: number) => void;
+	scrollLimit: (testID: string) => number;
 	/** Scenes in paint order (last on top) as the recorder reads them now. */
 	scenes: () => SceneFrame[];
 	/** Runs one UI frame with the given UI-thread work done first. */
@@ -104,10 +109,23 @@ export const createGestureDriver = (host: GestureDriverHost) => {
 		const scenes = host.scenes();
 		const target = [...scenes].reverse().find((scene) => scene.touchable && scene.opacity > 0 && contains(scene, start));
 		if (!target) throw new Error(`no touchable screen under (${start.x}, ${start.y})`);
-		const tracked: Tracked[] = detectorsAbove(host.renderer, target)
+		// Gesture detectors above the touched view (scroll views included), else above the screen.
+		const hit = host.hitTest(start);
+		const detectors: GestureLike[] = [];
+		let scrollView: ReactTestInstance | null = null;
+		for (let node: ReactTestInstance | null = hit; node; node = node.parent) {
+			if (node.type === "GestureDetector") detectors.push(node.props.gesture as GestureLike);
+			if (!scrollView && typeof node.props.testID === "string" && node.props.testID.startsWith("harness-scroll:")) scrollView = node;
+		}
+		const all: Tracked[] = (hit ? detectors : detectorsAbove(host.renderer, target))
 			.flatMap((detector) => leaves(detector))
-			.filter(({ gesture }) => gesture.config.enabled !== false && gesture.type !== "native")
+			.filter(({ gesture }) => gesture.config.enabled !== false)
 			.map(({ gesture, group }) => ({ gesture, group, state: "pending" }));
+		// Native (scroll) gestures only hear touches; screen gestures decide.
+		const natives = all.filter((entry) => entry.gesture.type === "native");
+		const tracked = all.filter((entry) => entry.gesture.type !== "native");
+		const scrollId = scrollView ? String(scrollView.props.testID) : null;
+		let scrollFrom: { offset: number; at: Point } | null = null;
 
 		const frames = Math.max(1, Math.round(durationMs / host.frameMs));
 		const holdFrames = Math.round(holdMs / host.frameMs);
@@ -173,6 +191,17 @@ export const createGestureDriver = (host: GestureDriverHost) => {
 		const step = (p: Point, p2: Point | undefined, kind: "down" | "move" | "up") => {
 			if (kind !== "up") history.push({ time, p, p2 });
 			const event = touchEvent(p, p2, kind);
+			for (const native of natives) {
+				call(native.gesture, kind === "down" ? "onTouchesDown" : kind === "up" ? "onTouchesUp" : "onTouchesMove", event, manager(native));
+			}
+			// The scroll view moves once every screen gesture has failed (it waits for them).
+			if (scrollId && kind === "move" && tracked.every((e) => e.state === "failed" || e.state === "cancelled")) {
+				if (!scrollFrom) scrollFrom = { offset: host.scrollOffset(scrollId), at: p };
+				const horizontal = !!scrollView?.props.horizontal;
+				const delta = horizontal ? p.x - scrollFrom.at.x : p.y - scrollFrom.at.y;
+				const next = Math.min(host.scrollLimit(scrollId), Math.max(0, scrollFrom.offset - delta));
+				if (next !== host.scrollOffset(scrollId)) host.scrollTo(scrollId, next);
+			}
 			for (const entry of tracked) {
 				if (entry.state === "failed" || entry.state === "cancelled" || entry.state === "ended") continue;
 				if (kind === "down") {

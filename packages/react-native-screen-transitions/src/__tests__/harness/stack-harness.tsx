@@ -38,6 +38,7 @@ export type OverlayFrame = { owner: string; focused: string; rect: Rect; opacity
 export type TraceFrame = { frame: number; time: number; scenes: SceneFrame[]; overlays: OverlayFrame[]; label?: string };
 
 export const ELEMENT_MARKER = "harness-el:";
+export const SCROLL_MARKER = "harness-scroll:";
 export const OVERLAY_MARKER = "harness-overlay:";
 
 /** A host node's composed opacity (its own and its ancestors'). */
@@ -307,6 +308,8 @@ export type ScreenSpec = {
 	options?: Record<string, unknown>;
 	/** styleIds rendered as Transition.View elements inside the screen. */
 	elements?: string[];
+	/** A full-screen Transition.ScrollView with this much content (along its axis). */
+	scroll?: { contentSize: number; horizontal?: boolean };
 	/** Makes this screen a nested BlankStack with these screens (the first is its initial route). */
 	stack?: { screens: ScreenSpec[]; screenOptions?: Record<string, unknown> };
 };
@@ -387,6 +390,16 @@ export const mountStack = async (
 			React.createElement(
 				"View",
 				{ testID: `${SCREEN_MARKER}${route.key}:${route.name}` },
+				...(specsByName.get(route.name)?.scroll
+					? [
+							React.createElement(Transition.ScrollView as never, {
+								key: "scroll",
+								testID: `${SCROLL_MARKER}${route.key}`,
+								horizontal: specsByName.get(route.name)?.scroll?.horizontal,
+								style: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0 },
+							} as never),
+						]
+					: []),
 				...(specsByName.get(route.name)?.elements ?? []).map((styleId) =>
 					React.createElement(Transition.View as never, {
 						key: styleId,
@@ -446,9 +459,49 @@ export const mountStack = async (
 		return frame;
 	};
 
+	// Scroll views: their offset, and a layout/content-size report once mounted (as React Native sends).
+	const scrollOffsets = new Map<string, number>();
+	const scrollViews = () => {
+		try {
+			return root.root.findAll((n) => typeof n.type === "string" && String(n.props.testID ?? "").startsWith(SCROLL_MARKER), { deep: true });
+		} catch {
+			return [];
+		}
+	};
+	const reportScrollLayouts = () => {
+		for (const node of scrollViews()) {
+			const id = String(node.props.testID);
+			if (scrollOffsets.has(id)) continue;
+			scrollOffsets.set(id, 0);
+			const routeKey = id.slice(SCROLL_MARKER.length);
+			const name = leafRoutes(ref.getRootState() as unknown as NavState).find((r) => r.key === routeKey)?.name;
+			const spec = name ? specsByName.get(name)?.scroll : undefined;
+			(node.props.onLayout as ((e: unknown) => void) | undefined)?.({ nativeEvent: { layout: { x: 0, y: 0, ...WINDOW } } });
+			const size = spec?.contentSize ?? WINDOW.height;
+			(node.props.onContentSizeChange as ((w: number, h: number) => void) | undefined)?.(
+				spec?.horizontal ? size : WINDOW.width,
+				spec?.horizontal ? WINDOW.height : size,
+			);
+		}
+	};
+	/** Sends a scroll event to a scroll view (by testID) and records its offset. */
+	const scrollTo = (testID: string, offset: number) => {
+		const node = scrollViews().find((n) => n.props.testID === testID);
+		if (!node) throw new Error(`no scroll view ${testID}`);
+		scrollOffsets.set(testID, offset);
+		const horizontal = !!node.props.horizontal;
+		const event = { contentOffset: horizontal ? { x: offset, y: 0 } : { x: 0, y: offset } };
+		const handlers = ([] as unknown[]).concat(node.props.onScroll ?? []);
+		for (const handler of handlers) {
+			if (typeof handler === "function") handler(event);
+			else (handler as { onScroll?: (e: unknown) => void })?.onScroll?.(event);
+		}
+	};
+
 	/** One UI frame (after `beforeFrame`, UI-thread work such as touch events), then the JS work it scheduled, then a recorded frame. */
 	const frame = async (label?: string, beforeFrame?: () => void) => {
 		await act(async () => {
+			reportScrollLayouts();
 			beforeFrame?.();
 			sim.frame();
 			// JS work can schedule more UI work and vice versa; drain both hops.
@@ -481,6 +534,16 @@ export const mountStack = async (
 
 	const gestures = createGestureDriver({
 		renderer: root,
+		hitTest: (point) => hitTest(root.root, point, sim),
+		scrollOffset: (testID) => scrollOffsets.get(testID) ?? 0,
+		scrollTo,
+		scrollLimit: (testID) => {
+			const routeKey = testID.slice(SCROLL_MARKER.length);
+			const name = leafRoutes(ref.getRootState() as unknown as NavState).find((r) => r.key === routeKey)?.name;
+			const spec = name ? specsByName.get(name)?.scroll : undefined;
+			if (!spec) return 0;
+			return Math.max(0, spec.contentSize - (spec.horizontal ? WINDOW.width : WINDOW.height));
+		},
 		scenes: () => readScenes(root, sim),
 		frameWith: (beforeFrame) => frame(undefined, beforeFrame),
 		frameMs: sim.clock.frameMs,
@@ -503,6 +566,12 @@ export const mountStack = async (
 		gestures,
 		tap,
 		taps,
+		scrollOffsets,
+		/** Scrolls the focused screen's scroll view to `offset` (on the UI thread, before a frame). */
+		scrollFocusedTo: async (offset: number) => {
+			const key = leafRoutes(ref.getRootState() as unknown as NavState).at(-1)?.key;
+			await frame(undefined, () => scrollTo(`${SCROLL_MARKER}${key}`, offset));
+		},
 		/** The named screen's navigation.setOptions, on the JS thread. */
 		setOptions: (name: string, options: object) =>
 			js(() => {

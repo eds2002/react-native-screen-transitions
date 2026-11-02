@@ -916,6 +916,74 @@ export const buildStackProgressCatalog = (interpolate: InterpolateFn): Scenario[
 	];
 };
 
+
+// ---------------------------------------------------------------------------
+// Scroll handoff: a Transition.ScrollView inside a dismissable screen or sheet.
+
+export const buildScrollCatalog = (interpolate: InterpolateFn, window: { width: number; height: number }): Scenario[] => {
+	const content = 2000;
+	const down = (distance: number): Step => ({ op: "swipe", direction: "vertical", distance, durationMs: 250 });
+	const up = (distance: number): Step => ({ op: "swipe", direction: "vertical-inverted", distance, durationMs: 250 });
+	const screen = { ...slide("vertical")(interpolate).options };
+	const sheet = (behavior: "expand-and-collapse" | "collapse-only") =>
+		sheetOptions(
+			{ edge: "bottom", snapPoints: [0.4, 0.7, 1], initialSnapIndex: 1, extra: { sheetScrollGestureBehavior: behavior } },
+			interpolate,
+		);
+	const snapRects = [0.4, 0.7, 1].map((s) => sheetRect("bottom", s, window));
+	const boundary = (name: string, steps: Step[]): Scenario => ({
+		name: `scroll-boundary / preset-spec / ${name}`,
+		screens: [{ name: "A" }, { name: "S", options: screen, scroll: { contentSize: content } }],
+		steps: [{ op: "push", name: "S" }, { op: "settle" }, ...steps],
+	});
+	const sheetCase = (behavior: "expand-and-collapse" | "collapse-only", name: string, steps: Step[]): Scenario => ({
+		name: `scroll-sheet-${behavior} / preset-spec / ${name}`,
+		screens: [{ name: "A" }, { name: "S", options: sheet(behavior), scroll: { contentSize: content } }],
+		steps: [{ op: "push", name: "S" }, { op: "settle" }, ...steps],
+		expect: { snapRects, rest: { S: snapRects } },
+	});
+	return [
+		boundary("at-top-swipe-down-dismisses", [down(0.6), { op: "expectRoutes", names: ["A"] }]),
+		boundary("scrolled-swipe-down-scrolls", [
+			{ op: "scrollTo", offset: 400 },
+			down(0.2),
+			{ op: "expectRoutes", names: ["A", "S"] },
+			{ op: "expectScroll", max: 399 },
+		]),
+		boundary("scrolled-swipe-up-scrolls", [
+			{ op: "scrollTo", offset: 400 },
+			up(0.2),
+			{ op: "expectRoutes", names: ["A", "S"] },
+			{ op: "expectScroll", min: 401 },
+		]),
+		sheetCase("expand-and-collapse", "at-top-swipe-up-expands", [up(0.25), { op: "expectSnap", index: 2 }, { op: "expectScroll", max: 0 }]),
+		sheetCase("expand-and-collapse", "full-swipe-up-scrolls", [
+			{ op: "snapTo", index: 2 },
+			{ op: "settle" },
+			up(0.2),
+			{ op: "expectSnap", index: 2 },
+			{ op: "expectScroll", min: 1 },
+		]),
+		sheetCase("expand-and-collapse", "full-scrolled-swipe-down-scrolls", [
+			{ op: "snapTo", index: 2 },
+			{ op: "settle" },
+			{ op: "scrollTo", offset: 400 },
+			down(0.15),
+			{ op: "expectSnap", index: 2 },
+			{ op: "expectScroll", max: 399 },
+		]),
+		sheetCase("expand-and-collapse", "full-at-top-swipe-down-collapses", [
+			{ op: "snapTo", index: 2 },
+			{ op: "settle" },
+			down(0.15),
+			{ op: "expectRoutes", names: ["A", "S"] },
+			{ op: "expectScroll", max: 0 },
+		]),
+		sheetCase("collapse-only", "at-top-swipe-up-scrolls", [up(0.2), { op: "expectSnap", index: 1 }, { op: "expectScroll", min: 1 }]),
+		sheetCase("collapse-only", "at-top-swipe-down-collapses", [down(0.15), { op: "expectScroll", max: 0 }]),
+	];
+};
+
 export const buildFullCatalog = (
 	presets: Presets,
 	interpolate: InterpolateFn,
@@ -930,4 +998,5 @@ export const buildFullCatalog = (
 	...buildInactiveCatalog(interpolate),
 	...buildSlotCatalog(interpolate, overlay),
 	...buildStackProgressCatalog(interpolate),
+	...buildScrollCatalog(interpolate, window),
 ];
