@@ -21,8 +21,10 @@ import { mountStack, type ScreenSpec, type StackHarness, type TraceFrame } from 
 export type SwipeDirection = "horizontal" | "horizontal-inverted" | "vertical" | "vertical-inverted";
 
 export type Step =
-	| { op: "push"; name: string }
-	| { op: "navigate"; name: string }
+	| { op: "push"; name: string; params?: object }
+	| { op: "navigate"; name: string; params?: object }
+	/** Pushes onto the nested stack at `path` (route names from the root). */
+	| { op: "pushIn"; path: string[]; name: string }
 	| { op: "pop" }
 	| { op: "replace"; name: string }
 	| { op: "settle" }
@@ -44,6 +46,8 @@ export type Step =
 	| { op: "tap"; at: { x: number; y: number } }
 	/** Settles, then checks the route names, bottom to top. */
 	| { op: "expectRoutes"; names: string[] }
+	/** Settles, then checks the route names from the root to the focused screen. */
+	| { op: "expectPath"; names: string[] }
 	/** Checks how many taps each named screen's surface received so far. */
 	| { op: "expectTaps"; counts: Record<string, number> };
 
@@ -126,9 +130,19 @@ const runStep = async (stack: StackHarness, step: Step, expectations: Expectatio
 			return;
 		}
 		case "push":
-			return stack.push(step.name);
+			return stack.push(step.name, step.params);
 		case "navigate":
-			return stack.navigate(step.name);
+			return stack.navigate(step.name, step.params);
+		case "pushIn":
+			return stack.pushIn(step.path, step.name);
+		case "expectPath": {
+			await stack.settle();
+			const names = stack.focusedPath();
+			if (JSON.stringify(names) !== JSON.stringify(step.names)) {
+				violations.push({ rule: "path", frame: stack.trace.at(-1)?.frame ?? -1, detail: `focused path ${JSON.stringify(names)}, expected ${JSON.stringify(step.names)}` });
+			}
+			return;
+		}
 		case "pop":
 			return stack.goBack();
 		case "replace":
@@ -138,8 +152,10 @@ const runStep = async (stack: StackHarness, step: Step, expectations: Expectatio
 		case "frames":
 			return stack.frames(step.count);
 		case "swipe": {
-			// Start on the top screen wherever it is now (cards shrink and move).
-			const top = stack.trace.at(-1)?.scenes.at(-1)?.rect;
+			// Start on the focused screen wherever it is now (cards shrink and move).
+			const focusedKey = stack.leafRoutes().at(-1)?.key;
+			const scenes = stack.trace.at(-1)?.scenes ?? [];
+			const top = (scenes.find((s) => s.key === focusedKey) ?? scenes.at(-1))?.rect;
 			const { from, to } = swipePath(step.direction, step.distance, top);
 			return stack.gestures.drag(from, to, step.durationMs, { holdMs: step.holdMs });
 		}
@@ -150,7 +166,7 @@ const runStep = async (stack: StackHarness, step: Step, expectations: Expectatio
 
 // Navigation actions must show motion within the start latency. (snapTo is checked by
 // expectSnap instead: its target may already be on screen, e.g. a clamped overshoot.)
-const ACTIONS = new Set(["push", "navigate", "pop", "replace"]);
+const ACTIONS = new Set(["push", "navigate", "pushIn", "pop", "replace"]);
 
 export const runScenario = async (sim: ReanimatedSim, scenario: Scenario): Promise<ScenarioResult> => {
 	const stack = await mountStack(sim, { screens: scenario.screens, screenOptions: scenario.screenOptions });
@@ -195,7 +211,7 @@ export const runScenario = async (sim: ReanimatedSim, scenario: Scenario): Promi
 	violations.push(...checkFinite(trace), ...checkContinuity(trace, expectations), ...checkVanish(trace, expectations));
 	const latency = (expectations.maxStartLatency ?? 3) + 1;
 	for (const run of runs) violations.push(...checkMonotonic(run, expectations, latency));
-	const routes = stack.routes();
+	const routes = stack.leafRoutes();
 	violations.push(...checkSettled(trace, routes, expectations));
 	await stack.unmount();
 	sim.reset();

@@ -4,6 +4,7 @@
  * examples exercise one by one.
  */
 import type { Scenario, Step, SwipeDirection } from "./scenario";
+import type { Rect, ScreenSpec } from "./stack-harness";
 
 type TransitionFactory = (interpolate: InterpolateFn) => {
 	options: Record<string, unknown>;
@@ -380,8 +381,176 @@ export const buildBackdropCatalog = (interpolate: InterpolateFn, window: { width
 	return scenarios;
 };
 
+
+// ---------------------------------------------------------------------------
+// Nested gesture ownership: the e2e app's gestures/* setups, with the outcomes
+// their GestureInfo tables document (which level a swipe dismisses, if any).
+
+type FingerDirection = "down" | "up" | "right" | "left";
+
+const FINGER: Record<FingerDirection, SwipeDirection> = {
+	down: "vertical",
+	up: "vertical-inverted",
+	right: "horizontal",
+	left: "horizontal-inverted",
+};
+
+type OwnershipSetup = {
+	screens: ScreenSpec[];
+	/** Steps that open the screen the rows swipe on. */
+	reach: Step[];
+	/** Path to that screen. */
+	at: string[];
+	/** Per finger direction: the focused path after the swipe (null: nothing happens). */
+	rows: Partial<Record<FingerDirection, string[] | null>>;
+	/** Extra steps checked after a row's swipe (e.g. a sheet expanding). */
+	after?: Partial<Record<FingerDirection, Step[]>>;
+	rest?: Record<string, Rect[] | null>;
+	snapRects?: Rect[];
+};
+
+export const buildOwnershipCatalog = (interpolate: InterpolateFn, window: { width: number; height: number }): Scenario[] => {
+	const slideOpts = (direction: SwipeDirection) => slide(direction)(interpolate).options;
+	const sheetVariant = (edge: SheetEdge, snapPoints: number[], initialSnapIndex: number, extra?: Record<string, unknown>): SheetVariant => ({
+		edge,
+		snapPoints,
+		initialSnapIndex,
+		extra,
+	});
+	const sheetOpts = (v: SheetVariant) => sheetOptions(v, interpolate);
+	const rects = (edge: SheetEdge, snaps: number[]) => snaps.map((s) => sheetRect(edge, s, window));
+	const open = (...names: string[]): Step[] => {
+		// push the first level, then push each deeper level onto its nested stack
+		const steps: Step[] = [{ op: "push", name: names[0] }, { op: "settle" }];
+		for (let depth = 1; depth < names.length; depth++) {
+			steps.push({ op: "pushIn", path: names.slice(0, depth), name: names[depth] }, { op: "settle" });
+		}
+		return steps;
+	};
+	const leaf = (name: string, options?: Record<string, unknown>): ScreenSpec => ({ name, options });
+	const L1 = (options: Record<string, unknown>, screens: ScreenSpec[]): ScreenSpec => ({ name: "L1", options, stack: { screens } });
+
+	const setups: Record<string, OwnershipSetup> = {
+		"simple-inheritance": {
+			screens: [{ name: "home" }, L1(slideOpts("vertical"), [leaf("index"), leaf("leaf")])],
+			reach: open("L1", "leaf"),
+			at: ["L1", "leaf"],
+			rows: { down: ["home"], up: null, right: null, left: null },
+		},
+		"two-axes": {
+			screens: [{ name: "home" }, L1(slideOpts("vertical"), [leaf("index"), leaf("leaf", slideOpts("horizontal"))])],
+			reach: open("L1", "leaf"),
+			at: ["L1", "leaf"],
+			rows: { down: ["home"], right: ["L1", "index"], up: null, left: null },
+		},
+		"same-axis-shadowing": {
+			screens: [{ name: "home" }, L1(slideOpts("vertical"), [leaf("index"), leaf("leaf", slideOpts("vertical"))])],
+			reach: open("L1", "leaf"),
+			at: ["L1", "leaf"],
+			rows: { down: ["L1", "index"], up: null },
+		},
+		"deep-nesting": {
+			screens: [
+				{ name: "home" },
+				L1(slideOpts("vertical"), [
+					leaf("index"),
+					{ name: "deeper", options: slideOpts("horizontal"), stack: { screens: [leaf("index"), leaf("leaf", slideOpts("vertical"))] } },
+				]),
+			],
+			reach: open("L1", "deeper", "leaf"),
+			at: ["L1", "deeper", "leaf"],
+			rows: { down: ["L1", "deeper", "index"], right: ["L1", "index"], up: null, left: null },
+		},
+		"inverted-gesture": {
+			screens: [{ name: "home" }, L1(slideOpts("vertical-inverted"), [leaf("index"), leaf("leaf")])],
+			reach: open("L1", "leaf"),
+			at: ["L1", "leaf"],
+			rows: { up: ["home"], down: null, right: null, left: null },
+		},
+		coexistence: {
+			screens: [{ name: "home" }, L1(slideOpts("vertical-inverted"), [leaf("index"), leaf("leaf", slideOpts("vertical"))])],
+			reach: open("L1", "leaf"),
+			at: ["L1", "leaf"],
+			rows: { up: ["home"], down: ["L1", "index"], right: null, left: null },
+		},
+		"snap-shadows-axis": {
+			screens: [{ name: "home" }, L1(slideOpts("vertical"), [leaf("index"), leaf("sheet", sheetOpts(sheetVariant("bottom", [0.5, 0.8], 0)))])],
+			reach: open("L1", "sheet"),
+			at: ["L1", "sheet"],
+			rows: { down: ["L1", "index"], up: null, right: null, left: null },
+			after: { up: [{ op: "expectSnap", index: 1 }] },
+			rest: { sheet: rects("bottom", [0.5, 0.8]) },
+			snapRects: rects("bottom", [0.5, 0.8]),
+		},
+		"snap-different-axis": {
+			screens: [{ name: "home" }, L1(slideOpts("vertical"), [leaf("index"), leaf("drawer", sheetOpts(sheetVariant("right", [0.5, 0.8], 0)))])],
+			reach: open("L1", "drawer"),
+			at: ["L1", "drawer"],
+			rows: { down: ["home"], right: ["L1", "index"], left: null, up: null },
+			after: { left: [{ op: "expectSnap", index: 1 }] },
+			rest: { drawer: rects("right", [0.5, 0.8]) },
+			snapRects: rects("right", [0.5, 0.8]),
+		},
+		"snap-locked-no-bubble": {
+			screens: [
+				{ name: "home" },
+				L1(slideOpts("vertical"), [
+					leaf("index"),
+					leaf("sheet", sheetOpts(sheetVariant("bottom", [0, 0.55, 1], 1, { gestureEnabled: false, gestureSnapLocked: true }))),
+				]),
+			],
+			reach: open("L1", "sheet"),
+			at: ["L1", "sheet"],
+			rows: { down: null, up: null, right: null, left: null },
+			// Locked and not dismissable: it stays exactly at 0.55.
+			rest: { sheet: rects("bottom", [0.55]) },
+		},
+	};
+
+	const scenarios: Scenario[] = [];
+	for (const [setupName, setup] of Object.entries(setups)) {
+		for (const [direction, expected] of Object.entries(setup.rows) as Array<[FingerDirection, string[] | null]>) {
+			scenarios.push({
+				name: `ownership-${setupName} / preset-spec / swipe-${direction}`,
+				screens: setup.screens,
+				steps: [
+					...setup.reach,
+					{ op: "expectPath", names: setup.at },
+					{ op: "swipe", direction: FINGER[direction], distance: 0.6, durationMs: 200 },
+					{ op: "expectPath", names: expected ?? setup.at },
+					...(setup.after?.[direction] ?? []),
+				],
+				expect: { rest: setup.rest, snapRects: setup.snapRects },
+			});
+		}
+	}
+	// claim-fallback: three levels; each swipe down dismisses the nearest owner, then the next.
+	scenarios.push({
+		name: "ownership-claim-fallback / preset-spec / swipe-down-three-times",
+		screens: [
+			{ name: "home" },
+			L1(slideOpts("vertical"), [
+				leaf("index"),
+				{ name: "mid", options: slideOpts("vertical"), stack: { screens: [leaf("index"), leaf("top", slideOpts("vertical"))] } },
+			]),
+		],
+		steps: [
+			...open("L1", "mid", "top"),
+			{ op: "expectPath", names: ["L1", "mid", "top"] },
+			{ op: "swipe", direction: "vertical", distance: 0.6, durationMs: 200 },
+			{ op: "expectPath", names: ["L1", "mid", "index"] },
+			{ op: "swipe", direction: "vertical", distance: 0.6, durationMs: 200 },
+			{ op: "expectPath", names: ["L1", "index"] },
+			{ op: "swipe", direction: "vertical", distance: 0.6, durationMs: 200 },
+			{ op: "expectPath", names: ["home"] },
+		],
+	});
+	return scenarios;
+};
+
 export const buildFullCatalog = (presets: Presets, interpolate: InterpolateFn, window: { width: number; height: number }) => [
 	...buildCatalog(presets, interpolate),
 	...buildSheetCatalog(interpolate, window),
 	...buildBackdropCatalog(interpolate, window),
+	...buildOwnershipCatalog(interpolate, window),
 ];

@@ -189,7 +189,14 @@ export const hitTest = (root: ReactTestInstance, point: { x: number; y: number }
 
 /** Reads every marked screen's visual state from the rendered host tree. */
 export const readScenes = (renderer: ReactTestRenderer, sim: ReanimatedSim): SceneFrame[] => {
-	const markers = renderer.root.findAll(
+	// Nothing rendered at all (the whole tree unmounted): no screens.
+	let root: ReactTestInstance;
+	try {
+		root = renderer.root;
+	} catch {
+		return [];
+	}
+	const markers = root.findAll(
 		(node) => typeof node.props.testID === "string" && node.props.testID.startsWith(SCREEN_MARKER),
 		{ deep: true },
 	);
@@ -247,7 +254,44 @@ export const readScenes = (renderer: ReactTestRenderer, sim: ReanimatedSim): Sce
 	return scenes;
 };
 
-export type ScreenSpec = { name: string; options?: Record<string, unknown> };
+export type ScreenSpec = {
+	name: string;
+	options?: Record<string, unknown>;
+	/** Makes this screen a nested BlankStack with these screens (the first is its initial route). */
+	stack?: { screens: ScreenSpec[]; screenOptions?: Record<string, unknown> };
+};
+
+type NavState = { index: number; routes: Array<{ key: string; name: string; state?: NavState }> };
+
+/** Every leaf route (a route that is not itself a stack), with the focused leaf last. */
+export const leafRoutes = (state: NavState | undefined) => {
+	const leaves: Array<{ key: string; name: string }> = [];
+	let focused: { key: string; name: string } | undefined;
+	const walk = (s: NavState, onFocusedPath: boolean) => {
+		s.routes.forEach((route, i) => {
+			const focusedHere = onFocusedPath && i === s.index;
+			if (route.state) walk(route.state, focusedHere);
+			else {
+				leaves.push({ key: route.key, name: route.name });
+				if (focusedHere) focused = { key: route.key, name: route.name };
+			}
+		});
+	};
+	if (state) walk(state, true);
+	return focused ? [...leaves.filter((l) => l.key !== focused?.key), focused] : leaves;
+};
+
+/** Route names from the root to the focused leaf. */
+export const focusedPath = (state: NavState | undefined) => {
+	const path: string[] = [];
+	let current = state;
+	while (current) {
+		const route = current.routes[current.index];
+		path.push(route.name);
+		current = route.state;
+	}
+	return path;
+};
 
 export type StackHarness = Awaited<ReturnType<typeof mountStack>>;
 
@@ -264,7 +308,6 @@ export const mountStack = async (
 	const { BaseNavigationContainer, createNavigationContainerRef } = await import("@react-navigation/core");
 	const { LinkingContext } = await import("@react-navigation/native");
 	const { createBlankStackNavigator } = await import("../../navigators/react-navigation");
-	const Stack = createBlankStackNavigator();
 	const ref = createNavigationContainerRef<Record<string, object | undefined>>();
 	const trace: TraceFrame[] = [];
 
@@ -282,6 +325,26 @@ export const mountStack = async (
 			React.createElement("View", { testID: `${SCREEN_MARKER}${route.key}:${route.name}` }),
 		);
 
+	/** One BlankStack with these screens; nested specs become nested stacks. */
+	const buildNavigator = (specs: ScreenSpec[], navigatorOptions?: Record<string, unknown>) => {
+		const Stack = createBlankStackNavigator();
+		const children = specs.map((spec) => {
+			const component = spec.stack
+				? (() => {
+						const Nested = buildNavigator(spec.stack.screens, spec.stack.screenOptions);
+						return () => Nested;
+					})()
+				: Screen;
+			return React.createElement(Stack.Screen as never, {
+				key: spec.name,
+				name: spec.name,
+				component,
+				options: spec.options,
+			} as never);
+		});
+		return React.createElement(Stack.Navigator as never, { screenOptions: navigatorOptions } as never, ...children);
+	};
+
 	let renderer: ReactTestRenderer | undefined;
 	await act(async () => {
 		renderer = create(
@@ -291,18 +354,7 @@ export const mountStack = async (
 				React.createElement(
 					BaseNavigationContainer,
 					{ ref } as never,
-					React.createElement(
-						Stack.Navigator as never,
-						{ screenOptions } as never,
-						...screens.map((screen) =>
-							React.createElement(Stack.Screen as never, {
-								key: screen.name,
-								name: screen.name,
-								component: Screen,
-								options: screen.options,
-							} as never),
-						),
-					),
+					buildNavigator(screens, screenOptions),
 				),
 			),
 		);
@@ -382,9 +434,23 @@ export const mountStack = async (
 		push: (name: string, params?: object) =>
 			js(() => ref.dispatch({ type: "PUSH", payload: { name, params } } as never)),
 		goBack: () => js(() => ref.goBack()),
+		/** Pushes `name` onto the nested stack at `path` (route names from the root's routes down). */
+		pushIn: (path: string[], name: string, params?: object) =>
+			js(() => {
+				let state = ref.getRootState() as unknown as (NavState & { key: string }) | undefined;
+				for (const segment of path) {
+					const route = state?.routes.find((r) => r.name === segment);
+					state = route?.state as (NavState & { key: string }) | undefined;
+				}
+				if (!state) throw new Error(`no nested stack at ${path.join("/")}`);
+				ref.dispatch({ type: "PUSH", payload: { name, params }, target: state.key } as never);
+			}),
 		replace: (name: string, params?: object) =>
 			js(() => ref.dispatch({ type: "REPLACE", payload: { name, params } } as never)),
 		routes: () => ref.getRootState()?.routes.map((r) => ({ key: r.key, name: r.name })) ?? [],
+		/** Leaf routes across nested stacks, focused leaf last. */
+		leafRoutes: () => leafRoutes(ref.getRootState() as unknown as NavState),
+		focusedPath: () => focusedPath(ref.getRootState() as unknown as NavState),
 		unmount: () => act(async () => root.unmount()),
 		window: WINDOW,
 		insets: INSETS,
