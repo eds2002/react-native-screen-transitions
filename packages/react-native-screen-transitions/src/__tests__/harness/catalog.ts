@@ -264,12 +264,13 @@ export const sheetSequences: Record<string, (v: SheetVariant) => Step[] | null> 
 		{ op: "snapTo", index: 0 },
 		{ op: "expectSnap", index: 0 },
 	],
+	// A constant-speed finger (already moving when it lands) grabs the sheet mid-snap.
 	"swipe-during-snap": (v) => [
 		{ op: "push", name: "S" },
 		{ op: "settle" },
 		{ op: "snapTo", index: v.snapPoints.length - 1 },
 		{ op: "frames", count: 4 },
-		{ op: "swipe", direction: SHEET_DISMISS[v.edge], distance: 0.6, durationMs: 200 },
+		{ op: "swipe", direction: SHEET_DISMISS[v.edge], distance: 0.6, durationMs: 200, profile: "linear" },
 	],
 	"pop-during-snap": (v) => [
 		{ op: "push", name: "S" },
@@ -315,8 +316,8 @@ const backdropSheet = (behavior: Behavior): SheetVariant =>
 		? { edge: "bottom", snapPoints: [0.5, 0.75], initialSnapIndex: 1, extra: { backdropBehavior: behavior } }
 		: { edge: "bottom", snapPoints: [0.5], initialSnapIndex: 0, extra: { backdropBehavior: behavior } };
 
-const ABOVE_SHEET = { x: 195, y: 120 };
-const ON_SHEET = { x: 195, y: 780 };
+let ABOVE_SHEET = { x: 195, y: 120 };
+let ON_SHEET = { x: 195, y: 780 };
 
 export const backdropSequences: Record<string, (behavior: Behavior) => Step[]> = {
 	"tap-backdrop": (behavior) => {
@@ -359,11 +360,14 @@ export const backdropSequences: Record<string, (behavior: Behavior) => Step[]> =
 		{ op: "settle" },
 		{ op: "tap", at: ABOVE_SHEET },
 		{ op: "frames", count: 3 },
-		{ op: "swipe", direction: "vertical", distance: 0.3, durationMs: 250 },
+		{ op: "swipe", direction: "vertical", distance: 0.3, durationMs: 250, profile: "linear" },
 	],
 };
 
 export const buildBackdropCatalog = (interpolate: InterpolateFn, window: { width: number; height: number }): Scenario[] => {
+	// Above the half-height sheet, and on it, for this window.
+	ABOVE_SHEET = { x: window.width / 2, y: window.height * 0.14 };
+	ON_SHEET = { x: window.width / 2, y: window.height * 0.92 };
 	const scenarios: Scenario[] = [];
 	for (const behavior of ["dismiss", "collapse", "block", "passthrough"] as Behavior[]) {
 		const variant = backdropSheet(behavior);
@@ -866,6 +870,52 @@ export const buildSlotCatalog = (interpolate: InterpolateFn, overlay: unknown): 
 	return scenarios;
 };
 
+
+// ---------------------------------------------------------------------------
+// stackProgress across a deep stack, and animating the initial screen on mount.
+
+export const buildStackProgressCatalog = (interpolate: InterpolateFn): Scenario[] => {
+	// Like the e2e stack-progress example: each pushed card sinks as more stack on top.
+	const card = {
+		gestureEnabled: true,
+		gestureDirection: "vertical",
+		transitionSpec: { open: DEFAULT_SPEC, close: DEFAULT_SPEC },
+		screenStyleInterpolator: ({ progress, stackProgress, layouts: { screen } }: any) => {
+			"worklet";
+			const depth = Math.max(0, stackProgress - progress);
+			return {
+				content: {
+					style: {
+						transform: [
+							{ translateY: interpolate(progress, [0, 1], [screen.height, 0], "clamp") - interpolate(depth, [0, 3], [0, 60], "clamp") },
+							{ scale: interpolate(depth, [0, 3], [1, 0.85], "clamp") },
+						],
+					},
+				},
+			};
+		},
+	};
+	const screens = [{ name: "A" }, { name: "B", options: card }];
+	const deep: Step[] = [];
+	for (let i = 0; i < 4; i++) deep.push({ op: "push", name: "B" }, { op: "settle" });
+	const popAll: Step[] = [];
+	for (let i = 0; i < 4; i++) popAll.push({ op: "pop" }, { op: "settle" });
+	const swipeAll: Step[] = [];
+	for (let i = 0; i < 4; i++) swipeAll.push({ op: "swipe", direction: "vertical", distance: 0.6, durationMs: 200 }, { op: "settle" });
+	const rapid: Step[] = [];
+	for (let i = 0; i < 4; i++) rapid.push({ op: "push", name: "B" }, { op: "frames", count: 3 });
+	return [
+		{ name: "stack-progress / preset-spec / push-four-pop-four", screens, steps: [...deep, ...popAll, { op: "expectRoutes", names: ["A"] }] },
+		{ name: "stack-progress / preset-spec / push-four-swipe-four", screens, steps: [...deep, ...swipeAll, { op: "expectRoutes", names: ["A"] }] },
+		{ name: "stack-progress / preset-spec / rapid-push", screens, steps: [...rapid, { op: "settle" }, { op: "expectRoutes", names: ["A", "B", "B", "B", "B"] }] },
+		{
+			name: "initial-mount / preset-spec / animates-in",
+			screens: [{ name: "A", options: { ...slide("vertical")(interpolate).options, experimental_animateOnInitialMount: true } }],
+			steps: [{ op: "expectRoutes", names: ["A"] }],
+		},
+	];
+};
+
 export const buildFullCatalog = (
 	presets: Presets,
 	interpolate: InterpolateFn,
@@ -879,4 +929,5 @@ export const buildFullCatalog = (
 	...buildGestureOptionCatalog(interpolate),
 	...buildInactiveCatalog(interpolate),
 	...buildSlotCatalog(interpolate, overlay),
+	...buildStackProgressCatalog(interpolate),
 ];

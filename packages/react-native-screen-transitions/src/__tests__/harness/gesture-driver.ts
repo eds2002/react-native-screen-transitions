@@ -89,6 +89,7 @@ export const createGestureDriver = (host: GestureDriverHost) => {
 		durationMs,
 		holdMs = 0,
 		second,
+		profile = "ease-in",
 	}: {
 		path: Point[];
 		durationMs: number;
@@ -96,6 +97,8 @@ export const createGestureDriver = (host: GestureDriverHost) => {
 		holdMs?: number;
 		/** A second finger's path, sampled alongside the first (pinch). */
 		second?: Point[];
+		/** "ease-in": the finger accelerates (a hand); "linear": constant speed from touch-down (Maestro/Argent swipes, a flick already in motion). */
+		profile?: "ease-in" | "linear";
 	}) => {
 		const start = path[0];
 		const scenes = host.scenes();
@@ -202,7 +205,8 @@ export const createGestureDriver = (host: GestureDriverHost) => {
 		const end2 = second?.at(-1);
 		for (let i = 1; i <= frames; i++) {
 			time += host.frameMs;
-			const t = i / frames;
+			// Fingers accelerate into a swipe: ease in, so little travel builds up before activation.
+			const t = profile === "linear" ? i / frames : (i / frames) ** 2;
 			const p = sample(path, t);
 			const p2 = second ? sample(second, t) : undefined;
 			// The finger lifts with its last move, in the same frame.
@@ -225,7 +229,7 @@ export const createGestureDriver = (host: GestureDriverHost) => {
 	return {
 		touch,
 		/** A one-finger drag from `from` to `to`. */
-		drag: (from: Point, to: Point, durationMs: number, opts: { holdMs?: number } = {}) =>
+		drag: (from: Point, to: Point, durationMs: number, opts: { holdMs?: number; profile?: "ease-in" | "linear" } = {}) =>
 			touch({ path: [from, to], durationMs, ...opts }),
 		/** Two fingers spreading (scale > 1) or closing (scale < 1) about `center`. */
 		pinch: (center: Point, fromSpan: number, toSpan: number, durationMs: number) =>

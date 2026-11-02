@@ -107,8 +107,10 @@ export const checkContinuity = (trace: TraceFrame[], expectations: Expectations 
 				}
 			}
 			const stepIn = before && visible(before.scene) ? distance(pose(before.scene), pose(prev.scene)) : 0;
-			for (const span of [1, 2]) {
+			// Back within about two 60 Hz frames, whatever the display rate.
+			for (let span = 1; span <= 8; span++) {
 				const back = series[i + span];
+				if (back && trace[i + span].time - trace[i].time > 34) break;
 				// A flash starts abruptly: motion that was already this fast and turns back is a reversal.
 				if (!back || !visible(back.scene) || jump < 20 || jump < 3 * stepIn) continue;
 				if (distance(pose(prev.scene), pose(back.scene)) < jump / 5 && distance(pose(cur.scene), pose(back.scene)) > 20) {

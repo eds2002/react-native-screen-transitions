@@ -13,7 +13,24 @@ export const INSETS = { top: 47, right: 0, bottom: 34, left: 0 };
 const passthrough = ({ children }: { children?: React.ReactNode }) =>
 	(children ?? null) as React.ReactElement | null;
 
-export const installHarness = ({ frameMs }: { frameMs?: number } = {}) => {
+/** The environment a harness file runs in: platform, window, insets and display rate. */
+export const PLATFORM = { os: "ios" as "ios" | "android" };
+
+export const installHarness = ({
+	frameMs,
+	os = "ios",
+	window,
+	insets,
+}: {
+	frameMs?: number;
+	os?: "ios" | "android";
+	window?: { width: number; height: number };
+	insets?: typeof INSETS;
+} = {}) => {
+	// Mutated in place: every module that imported WINDOW/INSETS sees this file's values.
+	if (window) Object.assign(WINDOW, window);
+	if (insets) Object.assign(INSETS, insets);
+	PLATFORM.os = os;
 	const sim = createReanimatedSim({ frameMs });
 	globalThis.requestAnimationFrame = sim.requestAnimationFrame as typeof requestAnimationFrame;
 	mock.module("react-native-reanimated", () => sim.reanimated);
@@ -36,8 +53,8 @@ export const installHarness = ({ frameMs }: { frameMs?: number } = {}) => {
 			I18nManager: { isRTL: false, getConstants: () => ({ isRTL: false }) },
 			NativeComponentRegistry: { get: (name: string) => name },
 			Platform: {
-				OS: "ios",
-				select: <T>(obj: { ios?: T; android?: T; default?: T }) => obj.ios ?? obj.default,
+				OS: PLATFORM.os,
+				select: <T>(obj: { ios?: T; android?: T; default?: T }) => obj[PLATFORM.os] ?? obj.default,
 			},
 			useWindowDimensions: () => ({ ...WINDOW, scale: 3, fontScale: 1 }),
 			Dimensions: { get: () => ({ ...WINDOW, scale: 3, fontScale: 1 }) },

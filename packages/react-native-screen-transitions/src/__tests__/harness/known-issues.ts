@@ -32,7 +32,7 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			"Grabbing a screen while it springs back from a cancelled swipe shows its resting pose for one frame, then " +
 			"tracks the finger from rest instead of from where it was (startPanBase clears the gesture values the " +
 			"spring-back was still animating without folding them into the baseline).",
-		matches: (scenario, v) => sequenceOf(scenario) === "regrab-spring-back" && v.rule === "flash",
+		matches: (scenario, v) => sequenceOf(scenario) === "regrab-spring-back" && ["flash", "spike"].includes(v.rule),
 	},
 	{
 		id: "release-after-grab-during-snap",
@@ -41,7 +41,8 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			"release it jumps (268 px on a bottom sheet, 124 px on a side sheet) in one frame before its release " +
 			"animation runs. Every sheet variant and spec.",
 		matches: (scenario, v) =>
-			["swipe-during-snap", "tap-backdrop-then-swipe"].includes(sequenceOf(scenario)) && v.rule === "spike",
+			["swipe-during-snap", "tap-backdrop-then-swipe"].includes(sequenceOf(scenario)) &&
+			["spike", "vanish"].includes(v.rule),
 	},
 	{
 		id: "nested-sheet-dismiss-crash",

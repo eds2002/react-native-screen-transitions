@@ -39,6 +39,8 @@ export type Step =
 			holdMs?: number;
 			/** Start here instead of inside the focused screen. */
 			from?: { x: number; y: number };
+			/** Finger speed profile (default "ease-in"). */
+			profile?: "ease-in" | "linear";
 	  }
 	/** Settles, then checks a screen (by route name; the last one with that name) is absent, rendered but hidden, or shown. */
 	| { op: "expectScene"; name: string; state: "absent" | "hidden" | "shown" }
@@ -170,7 +172,7 @@ const runStep = async (stack: StackHarness, step: Step, expectations: Expectatio
 			const path = swipePath(step.direction, step.distance, top);
 			const from = step.from ?? path.from;
 			const to = step.from ? { x: from.x + path.to.x - path.from.x, y: from.y + path.to.y - path.from.y } : path.to;
-			return stack.gestures.drag(from, to, step.durationMs, { holdMs: step.holdMs });
+			return stack.gestures.drag(from, to, step.durationMs, { holdMs: step.holdMs, profile: step.profile });
 		}
 		case "expectScene": {
 			await stack.settle();

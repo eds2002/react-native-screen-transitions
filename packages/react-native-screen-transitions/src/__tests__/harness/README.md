@@ -10,11 +10,12 @@ hundreds of hand-written cases.
 |---|---|
 | `reanimated-sim.ts` | Frame-accurate Reanimated/Worklets stand-in: shared values step animation objects (the library spring, `withTiming`, `withDelay`) on a fake 60 Hz clock; reactions re-run each frame; `scheduleOnRN`, `scheduleOnUI` and `requestAnimationFrame` hop threads in order. |
 | `install.ts` | Installs the sim and stand-ins for `react-native`, gesture-handler (keeps every handler so they can be fired), safe-area-context and teleport. Call it first in a harness test. |
-| `stack-harness.tsx` | Mounts the real `createBlankStackNavigator()` and records each screen's window rect (all ancestor transforms composed), opacity and touchability per frame. Navigation helpers: `push`, `navigate`, `goBack`, `replace`, `frame(s)`, `settle`. |
-| `gesture-driver.ts` | Timed touches through the library's real pan/pinch handlers (manual activation, `onStart`/`onUpdate`/`onEnd`, simultaneous groups). |
+| `stack-harness.tsx` | Mounts the real `createBlankStackNavigator()` (screens can be nested stacks) and records per frame each screen's window rect (all ancestor transforms composed), opacity and touchability, its `styleId` elements and any overlays. Helpers: `push`, `pushIn` (nested), `navigate`, `goBack`, `replace`, `setOptions`, `tap` (React Native hit-testing, nearest `onPress`), `frame(s)`, `settle`. |
+| `gesture-driver.ts` | Timed touches through the library's real pan/pinch handlers (manual activation, `onStart`/`onUpdate`/`onEnd`, simultaneous groups). Fingers ease in by default; `linear` is a constant-speed swipe (Maestro/Argent style). |
 | `invariants.ts` | Rules every trace must satisfy: finite values, no teleport/spike/flash, no screen vanishing while visible, no turning back without a finger, motion starts within 3 frames, settled state matches the routes. |
-| `scenario.ts` | Scenarios as data (screens, options, steps) and `runScenario`, which plays them and checks every rule. |
-| `catalog.ts` | The generated space: transitions (library presets, slides from each edge, scale-fade) × specs (preset, timing, bouncy, instant) × step sequences (push/pop, swipe dismiss/cancel, grab mid-push, regrab during spring-back, pop mid-push, push mid-pop, deep, replace, rapid). |
+| `scenario.ts` | Scenarios as data (screens, options, steps) and `runScenario`, which plays them and checks every rule. Assertion steps: `expectRoutes`, `expectPath`, `expectSnap`, `expectTaps`, `expectScene`, `expectElementAtRest`, `expectOverlay`. |
+| `catalog.ts` | The generated space: stack transitions (presets, edge slides, scale-fade × preset/timing/bouncy/instant specs × 10 interaction sequences); sheets (edges, snap sets, step behavior, snap lock × snapTo and gesture sequences); backdrop behaviors; nested gesture ownership (the e2e app's `GestureInfo` tables); gesture options (enablement, activation areas, direction sets, pinch, sensitivity, runtime `setOptions`); `inactiveBehavior`; `styleId` slots and style reset; custom content/backdrop/surface components; overlays; `stackProgress`; animating on initial mount. |
+| `catalog-runner.ts` | Runs the catalog under the environment a test file installed; `catalog*.test.tsx` cover iOS 390×844 at 60 Hz (strict about known issues), Android 412×915, 120 Hz, and a compact 320×568 screen. |
 | `known-issues.ts` | Library behavior found and not fixed yet. The catalog test fails on any violation none of them explains, and on one that stops reproducing. |
 
 ## Running
@@ -37,4 +38,5 @@ HARNESS_REPORT=/tmp/report.json bun test catalog
 
 - Screen-level layers are assumed to fill the window, so transforms apply about the window center.
 - Touches go to every gesture above the touched screen; the first to activate wins unless composed with `Gesture.Simultaneous`. Other gesture relations are not modelled yet.
-- The window is 390×844, iOS, LTR.
+- Environments vary platform, window, insets and display rate, not RTL yet.
+- Not covered yet: scroll handoff (`Transition.ScrollView`), bounds/zoom/reveal (needs simulated layout measurement), the native-stack adapter.
