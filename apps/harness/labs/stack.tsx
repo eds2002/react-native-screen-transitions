@@ -1,0 +1,115 @@
+// @ts-nocheck
+/**
+ * stack: push / pop / replace / swipe-back on a three-screen blank stack with
+ * one horizontal slide, plus the racy cases (push+push, push then pop, pop then
+ * push) that interrupt a transition while it is still running.
+ *
+ * Testids: screens `stack-a|b|c` (titles `stack-a-title`...), push buttons
+ * `stack-push-<target>`, other buttons `stack-<screen>-<action>`. `stack-route`
+ * is rendered only by the focused screen: "route:B depth:2 stack:A>B".
+ *
+ * Argent loop (open harness://lab/stack):
+ * 1. expect stack-route = "route:A depth:1 stack:A"
+ * 2. tap stack-push-b → expect stack-b-title, stack-route "route:B depth:2 stack:A>B"
+ * 3. tap stack-push-c → expect stack-c-title, "route:C depth:3 stack:A>B>C"
+ * 4. tap stack-c-pop → expect stack-b-title, "route:B depth:2 stack:A>B"
+ * 5. swipe right from 0.03,0.5 to 0.9,0.5 → expect stack-a-title, "route:A depth:1 stack:A"
+ * 6. tap stack-push-b, then swipe right from 0.03,0.5 to 0.25,0.5 (release early)
+ *    → expect B springs back: "route:B depth:2 stack:A>B"
+ * 7. tap stack-b-replace-c → expect stack-c-title, "route:C depth:2 stack:A>C"
+ * 8. tap stack-c-pop → "route:A depth:1 stack:A"
+ * 9. tap stack-a-rapid (push B, push C 80ms later) → after settle "route:C depth:3 stack:A>B>C";
+ *    screen C fully on screen (no half-slid B or C)
+ * 10. tap stack-c-pop twice → "route:A depth:1 stack:A"
+ * 11. tap stack-a-pop-during-push (push B, pop it 150ms later) → after settle
+ *     "route:A depth:1 stack:A", A fully visible, B gone
+ * 12. tap stack-push-b, tap stack-b-push-during-pop (pop B, push C 150ms later)
+ *     → after settle "route:C depth:2 stack:A>C", C fully visible
+ * 13. tap stack-c-pop → "route:A depth:1 stack:A"; repeat steps 9-13 three times
+ *     to shake out timing; every settle must match the probe exactly.
+ */
+import { StackActions, useIsFocused, useNavigationState } from "@react-navigation/native";
+import { View } from "react-native";
+import { Button, createBlankStackNavigator, LabContainer, Page, Probe, slide, type Lab } from "./ui";
+
+const Stack = createBlankStackNavigator();
+
+const NEXT = { A: "B", B: "C", C: "A" };
+
+/**
+ * Dispatch to the stack itself rather than "from" this screen: a screen's own
+ * helpers stamp `source: route.key`, which makes a pop from a covered screen a
+ * no-op and a push from a removed screen unreliable.
+ */
+const toStack = (navigation, action) => navigation.dispatch({ ...action, source: undefined, target: navigation.getState().key });
+
+function RouteProbe() {
+	const focused = useIsFocused();
+	const summary = useNavigationState((state) => {
+		const names = state.routes.map((r) => r.name);
+		return `route:${names[state.index]} depth:${names.length} stack:${names.join(">")}`;
+	});
+	return focused ? <Probe testID="stack-route" value={summary} /> : null;
+}
+
+function StackScreen({ navigation, route }) {
+	const name = route.name;
+	const id = name.toLowerCase();
+	const next = NEXT[name];
+	const after = (ms, action) => setTimeout(() => toStack(navigation, action), ms);
+	return (
+		<Page title={`Screen ${name}`} testID={`stack-${id}`}>
+			<RouteProbe />
+			<View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+				<Button label={`push ${next}`} testID={`stack-push-${next.toLowerCase()}`} onPress={() => navigation.push(next)} />
+				{navigation.canGoBack() ? <Button label="pop" testID={`stack-${id}-pop`} onPress={() => navigation.goBack()} /> : null}
+				<Button label="replace with C" testID={`stack-${id}-replace-c`} onPress={() => navigation.replace("C")} />
+				<Button
+					label={`rapid: push ${next} + ${NEXT[next]}`}
+					testID={`stack-${id}-rapid`}
+					onPress={() => {
+						navigation.push(next);
+						after(80, StackActions.push(NEXT[next]));
+					}}
+				/>
+				<Button
+					label="pop during push"
+					testID={`stack-${id}-pop-during-push`}
+					onPress={() => {
+						navigation.push(next);
+						after(150, StackActions.pop());
+					}}
+				/>
+				{navigation.canGoBack() ? (
+					<Button
+						label="push C during pop"
+						testID={`stack-${id}-push-during-pop`}
+						onPress={() => {
+							navigation.goBack();
+							after(150, StackActions.push("C"));
+						}}
+					/>
+				) : null}
+			</View>
+		</Page>
+	);
+}
+
+function Component() {
+	return (
+		<LabContainer>
+			<Stack.Navigator screenOptions={slide("horizontal")}>
+				<Stack.Screen name="A" component={StackScreen} />
+				<Stack.Screen name="B" component={StackScreen} />
+				<Stack.Screen name="C" component={StackScreen} />
+			</Stack.Navigator>
+		</LabContainer>
+	);
+}
+
+export const lab: Lab = {
+	id: "stack",
+	title: "stack",
+	covers: "push/pop/replace, swipe back, push+push, pop during push, push during pop",
+	Component,
+};
