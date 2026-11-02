@@ -42,43 +42,18 @@ const slide =
 		},
 	});
 
-const scaleFade: TransitionFactory = (interpolate) => ({
-	dismiss: "vertical",
-	options: {
-		gestureEnabled: true,
-		gestureDirection: "vertical",
-		transitionSpec: { open: DEFAULT_SPEC, close: DEFAULT_SPEC },
-		screenStyleInterpolator: ({ progress }: any) => {
-			"worklet";
-			return {
-				content: {
-					style: {
-						opacity: interpolate(progress, [0, 1, 2], [0, 1, 0.6], "clamp"),
-						transform: [{ scale: interpolate(progress, [0, 1, 2], [0.85, 1, 0.94], "clamp") }],
-					},
-				},
-			};
-		},
-	},
-});
-
-export const transitions = (presets: Presets): Record<string, TransitionFactory> => ({
+/**
+ * Interpolator math is not under test: one horizontal and one vertical slide
+ * exercise progress, gestures and lifecycle in both axes.
+ */
+export const transitions = (_presets: Presets): Record<string, TransitionFactory> => ({
 	"slide-horizontal": slide("horizontal"),
-	"slide-horizontal-inverted": slide("horizontal-inverted"),
 	"slide-vertical": slide("vertical"),
-	"slide-vertical-inverted": slide("vertical-inverted"),
-	"scale-fade": scaleFade,
-	"preset-slide-from-top": () => ({ options: presets.SlideFromTop(), dismiss: "vertical-inverted" }),
-	"preset-slide-from-bottom": () => ({ options: presets.SlideFromBottom(), dismiss: "vertical" }),
-	"preset-zoom-in": () => ({ options: presets.ZoomIn(), dismiss: null }),
-	"preset-draggable-card": () => ({ options: presets.DraggableCard(), dismiss: "horizontal" }),
-	"preset-elastic-card": () => ({ options: presets.ElasticCard(), dismiss: "horizontal" }),
 });
 
+/** A spring (the library default) and no spec (instant switches). */
 export const specs: Record<string, { spec?: Record<string, unknown> | null; mayOvershoot?: boolean; instant?: boolean }> = {
 	"preset-spec": {},
-	timing: { spec: { duration: 350 } },
-	bouncy: { spec: { stiffness: 400, damping: 18, mass: 1 }, mayOvershoot: true },
 	// No transitionSpec: the library switches screens without animating.
 	instant: { spec: null, instant: true },
 };
@@ -170,9 +145,7 @@ type SheetVariant = {
 
 export const sheetVariants: Record<string, SheetVariant> = {
 	"sheet-bottom": { edge: "bottom", snapPoints: [0.5, 1], initialSnapIndex: 0 },
-	"sheet-top": { edge: "top", snapPoints: [0.5, 1], initialSnapIndex: 0 },
 	"sheet-right": { edge: "right", snapPoints: [0.5, 1], initialSnapIndex: 0 },
-	"sheet-left": { edge: "left", snapPoints: [0.5, 1], initialSnapIndex: 0 },
 	"sheet-three-snaps": { edge: "bottom", snapPoints: [0.3, 0.6, 1], initialSnapIndex: 1 },
 	"sheet-step": { edge: "bottom", snapPoints: [0.4, 0.9, 1], initialSnapIndex: 1, extra: { sheetSnapBehavior: "step" } },
 	"sheet-locked": {

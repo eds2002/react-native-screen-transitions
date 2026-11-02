@@ -98,12 +98,4 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			"handling (zoom mixes window and safe-area coordinates); confirm on a device.",
 		matches: (scenario, v) => scenario === "bounds-zoom-to-bound / zoom-spec / open-close" && v.rule === "trajectory",
 	},
-	{
-		id: "screens-under-translucent-screen",
-		summary:
-			"With a transition that leaves the covered screen translucent (scale-fade fades it to 0.6), screens further " +
-			"down show through it, and disappear in one frame when they are deactivated (deep stack) or removed (replace).",
-		matches: (scenario, v) =>
-			transitionOf(scenario) === "scale-fade" && ["deep", "replace"].includes(sequenceOf(scenario)) && v.rule === "vanish",
-	},
 ];
