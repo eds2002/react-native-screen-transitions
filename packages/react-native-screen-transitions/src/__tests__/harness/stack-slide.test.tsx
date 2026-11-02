@@ -53,3 +53,35 @@ it("pushes and pops with the slide: positions move monotonically and land exactl
 	);
 	await stack.unmount();
 });
+
+it("dismisses with a full swipe and springs back from a short one", async () => {
+	const stack = await mountStack(sim, { screens: [{ name: "A" }, { name: "B" }], screenOptions: slide });
+	await stack.settle();
+	await stack.navigate("B");
+	await stack.settle();
+
+	// Short, slow drag released at rest: B returns to 0.
+	const shortStart = stack.trace.length;
+	const short = await stack.gestures.drag({ x: 40, y: 400 }, { x: 120, y: 400 }, 300, { holdMs: 200 });
+	expect(short.activated).toEqual(["pan"]);
+	await stack.settle();
+	const shortTrace = stack.trace.slice(shortStart);
+	const maxX = Math.max(...shortTrace.map((f) => sceneX(f, "B") ?? 0));
+	expect(maxX).toBeGreaterThan(60);
+	expect(sceneX(stack.trace.at(-1)!, "B")).toBeCloseTo(0, 3);
+	expect(stack.routes().map((r) => r.name)).toEqual(["A", "B"]);
+
+	// Long fast swipe: B leaves and the route is popped.
+	const fullStart = stack.trace.length;
+	await stack.gestures.drag({ x: 40, y: 400 }, { x: 330, y: 400 }, 200);
+	await stack.settle();
+	const full = stack.trace.slice(fullStart);
+	expect(stack.routes().map((r) => r.name)).toEqual(["A"]);
+	expect(stack.trace.at(-1)!.scenes.map((s) => s.name)).toEqual(["A"]);
+	expect(sceneX(stack.trace.at(-1)!, "A")).toBeCloseTo(0, 3);
+	console.log(
+		"short B.x:", shortTrace.map((f) => sceneX(f, "B")?.toFixed(0)).join(" "),
+		"\nfull B.x:", full.map((f) => sceneX(f, "B")?.toFixed(0)).join(" "),
+	);
+	await stack.unmount();
+});

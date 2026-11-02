@@ -132,6 +132,32 @@ const interpolate = (
 	return outputRange[i] + t * (outputRange[i + 1] - outputRange[i]);
 };
 
+const parseColor = (color: string): [number, number, number, number] => {
+	const rgba = color.match(/rgba?\(([^)]+)\)/);
+	if (rgba) {
+		const [r, g, b, a = 1] = rgba[1].split(",").map((v) => Number.parseFloat(v));
+		return [r, g, b, a];
+	}
+	const hex = color.replace("#", "");
+	const full = hex.length === 3 ? hex.split("").map((c) => c + c).join("") : hex;
+	const n = Number.parseInt(full.slice(0, 6), 16);
+	const alpha = full.length === 8 ? Number.parseInt(full.slice(6, 8), 16) / 255 : 1;
+	return [(n >> 16) & 255, (n >> 8) & 255, n & 255, alpha];
+};
+
+const interpolateColor = (value: number, inputRange: readonly number[], outputRange: readonly string[]) => {
+	const channels = outputRange.map(parseColor);
+	const mixed = [0, 1, 2, 3].map((c) =>
+		interpolate(
+			value,
+			inputRange,
+			channels.map((ch) => ch[c]),
+			"clamp",
+		),
+	);
+	return `rgba(${Math.round(mixed[0])}, ${Math.round(mixed[1])}, ${Math.round(mixed[2])}, ${mixed[3]})`;
+};
+
 export type ReanimatedSim = ReturnType<typeof createReanimatedSim>;
 
 export const createReanimatedSim = ({ frameMs = 1000 / 60 }: { frameMs?: number } = {}) => {
@@ -224,7 +250,7 @@ export const createReanimatedSim = ({ frameMs = 1000 / 60 }: { frameMs?: number 
 			onFrame(animation, timestamp) {
 				const elapsed = timestamp - (animation.startTime as number);
 				const from = animation.startValue as number;
-				if (elapsed >= duration || duration <= 0) {
+				if (elapsed >= duration - 1e-6 || duration <= 0) {
 					animation.current = toValue;
 					return true;
 				}
@@ -285,7 +311,8 @@ export const createReanimatedSim = ({ frameMs = 1000 / 60 }: { frameMs?: number 
 	/** Advances the clock one frame: UI work queued since, animations, then reactions. */
 	const frame = () => {
 		clock.frame += 1;
-		clock.now += clock.frameMs;
+		// From the frame count, not accumulated: no drift between long and short runs.
+		clock.now = clock.frame * clock.frameMs;
 		const now = clock.now;
 		for (const task of uiQueue.splice(0)) task();
 		const callbacks = rafQueue;
@@ -393,6 +420,7 @@ export const createReanimatedSim = ({ frameMs = 1000 / 60 }: { frameMs?: number 
 		},
 		Extrapolation: { CLAMP: "clamp", EXTEND: "extend", IDENTITY: "identity" },
 		interpolate,
+		interpolateColor,
 		clamp: (value: number, lower: number, upper: number) => Math.min(Math.max(value, lower), upper),
 		withTiming,
 		withSpring,
@@ -457,6 +485,15 @@ export const createReanimatedSim = ({ frameMs = 1000 / 60 }: { frameMs?: number 
 			uiQueue.length === 0 &&
 			rafQueue.length === 0,
 		runningCount: () => running.size + pending.size,
+		/** Drops running animations and queued work (between independent mounts). */
+		reset: () => {
+			running.clear();
+			pending.clear();
+			rnQueue.length = 0;
+			uiQueue.length = 0;
+			rafQueue = [];
+			reactions.clear();
+		},
 		mutables,
 	};
 };

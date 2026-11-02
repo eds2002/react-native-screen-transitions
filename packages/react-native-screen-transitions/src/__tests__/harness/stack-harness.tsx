@@ -10,6 +10,7 @@
  * layers), so every transform is applied around the window's center.
  */
 import type { ReactTestInstance, ReactTestRenderer } from "react-test-renderer";
+import { createGestureDriver } from "./gesture-driver";
 import { INSETS, WINDOW } from "./install";
 import type { ReanimatedSim } from "./reanimated-sim";
 
@@ -249,9 +250,10 @@ export const mountStack = async (
 		return frame;
 	};
 
-	/** One UI frame, then the JS work it scheduled, then a recorded frame. */
-	const frame = async (label?: string) => {
+	/** One UI frame (after `beforeFrame`, UI-thread work such as touch events), then the JS work it scheduled, then a recorded frame. */
+	const frame = async (label?: string, beforeFrame?: () => void) => {
 		await act(async () => {
+			beforeFrame?.();
 			sim.frame();
 			// JS work can schedule more UI work and vice versa; drain both hops.
 			for (let i = 0; i < 5 && sim.flushRN() > 0; i++) sim.runReactions();
@@ -281,9 +283,17 @@ export const mountStack = async (
 		});
 	};
 
+	const gestures = createGestureDriver({
+		renderer: root,
+		scenes: () => readScenes(root, sim),
+		frameWith: (beforeFrame) => frame(undefined, beforeFrame),
+		frameMs: sim.clock.frameMs,
+	});
+
 	return {
 		ref,
 		trace,
+		gestures,
 		renderer: root,
 		frame,
 		frames,
