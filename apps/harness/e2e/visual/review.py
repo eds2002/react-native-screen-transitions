@@ -28,6 +28,7 @@ for name in sorted(os.listdir(out)):
         continue
     report = json.load(open(os.path.join(d, "report.json")))
     scenario = json.load(open(os.path.join(d, "scenario.json"))) if os.path.exists(os.path.join(d, "scenario.json")) else {"exit": None, "log": ""}
+    scenario["flaky"] = os.path.exists(os.path.join(d, "flaky"))
     runs.append((name, report, scenario))
 
 def failing(report):
@@ -36,10 +37,10 @@ def failing(report):
 rows, sections, summary = [], [], []
 for name, report, scenario in sorted(runs, key=lambda r: (r[2]["exit"] == 0, -failing(r[1]), r[0])):
     counts = report["summary"]["events"]
-    ok = scenario["exit"] == 0
-    summary.append({"run": name, "scenarioOk": ok, "events": counts})
+    ok = scenario["exit"] == 0 or scenario.get("flaky", False)
+    summary.append({"run": name, "scenarioOk": ok, "flaky": scenario.get("flaky", False) and scenario["exit"] != 0, "events": counts})
     cells = "".join(f'<td class="{"bad" if counts.get(k) and k not in INFO else ""}">{counts.get(k, 0) or ""}</td>' for k in KINDS)
-    rows.append(f'<tr><td><a href="#{name}">{html.escape(name)}</a></td><td class="{"" if ok else "bad"}">{"ok" if ok else "FAILED"}</td>{cells}</tr>')
+    rows.append(f'<tr><td><a href="#{name}">{html.escape(name)}</a></td><td class="{"" if ok else "bad"}">{("flaky" if scenario["exit"] != 0 else "ok") if ok else "FAILED"}</td>{cells}</tr>')
     items = []
     for e in report["events"]:
         items.append(

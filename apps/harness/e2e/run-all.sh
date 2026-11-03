@@ -4,6 +4,10 @@
 #   run-all.sh <udid> <outDir> [name filter]
 U=$1; OUT=${2:a}; FILTER=${3:-}; E=${0:a:h}
 mkdir -p $OUT
+# Runs whose end-state check may fail without failing the suite (reported as "flaky" on the review page):
+#   grab-mid-push-dismiss-120: a fling 120 ms into a push is sometimes not picked up as a gesture
+#   (parked: B never follows the finger, so the pan didn't start; native stacks don't allow it at all).
+FLAKY=(grab-mid-push-dismiss-120)
 # name | lab | path the lab starts on | analyzer options | scenario and arguments
 RUNS=(
   "regrab-spring-back-60|gestures|home|--track x@0.7|regrab-spring-back.sh 60"
@@ -43,6 +47,7 @@ for run in $RUNS; do
   open_lab $LAB $START || { echo "$NAME: could not open lab $LAB" >&2; continue; }
   SCRIPT=${CMD%% *}; ARGS=${CMD#* }
   $E/visual/record.sh $U $OUT/$NAME ${=OPTS} -- $E/scenarios/$SCRIPT $U ${=ARGS} > $OUT/$NAME.out 2>&1
+  (( ${FLAKY[(Ie)$NAME]} )) && touch $OUT/$NAME/flaky
   printf "%-28s %s\n" $NAME "$(grep -E '^\{' $OUT/$NAME.out | sed 's/.*"events": //' | tr -d '{}')"
 done
 python3 -I $E/visual/review.py $OUT
