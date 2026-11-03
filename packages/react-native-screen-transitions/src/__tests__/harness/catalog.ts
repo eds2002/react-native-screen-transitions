@@ -245,6 +245,17 @@ export const sheetSequences: Record<string, (v: SheetVariant) => Step[] | null> 
 		{ op: "frames", count: 4 },
 		{ op: "swipe", direction: SHEET_DISMISS[v.edge], distance: 0.6, durationMs: 200, profile: "linear" },
 	],
+	// Let go short of a snap change (springs back), then grab again while it springs back.
+	"regrab-spring-back": (v) =>
+		v.locked
+			? null
+			: [
+					{ op: "push", name: "S" },
+					{ op: "settle" },
+					{ op: "swipe", direction: SHEET_DISMISS[v.edge], distance: 0.15, durationMs: 300, holdMs: 150 },
+					{ op: "frames", count: 1 },
+					{ op: "swipe", direction: SHEET_DISMISS[v.edge], distance: 0.15, durationMs: 300, holdMs: 150 },
+				],
 	"pop-during-snap": (v) => [
 		{ op: "push", name: "S" },
 		{ op: "settle" },

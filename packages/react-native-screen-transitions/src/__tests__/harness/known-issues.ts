@@ -27,16 +27,6 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			["vanish", "spike", "teleport", "flash", "turns-back"].includes(v.rule),
 	},
 	{
-		id: "release-after-grab-during-snap",
-		summary:
-			"A sheet grabbed while a snap animation runs (snapTo, or a backdrop collapse) follows the finger, but on " +
-			"release it jumps (268 px on a bottom sheet, 124 px on a side sheet) in one frame before its release " +
-			"animation runs. Every sheet variant and spec.",
-		matches: (scenario, v) =>
-			["swipe-during-snap", "tap-backdrop-then-swipe"].includes(sequenceOf(scenario)) &&
-			["spike", "vanish"].includes(v.rule),
-	},
-	{
 		id: "nested-sheet-dismiss-crash",
 		summary:
 			"Dismissing a sheet or drawer inside a nested stack by gesture throws in BlankSceneRow " +

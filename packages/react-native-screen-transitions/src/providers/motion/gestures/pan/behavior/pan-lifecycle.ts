@@ -37,11 +37,15 @@ export const startPanBase = (runtime: PanGestureRuntime) => {
 	// before that spring finishes continues from what is on screen, not from rest, so fold the delta
 	// into transitionProgress and carry the gesture values into the new drag before clearing them.
 	const { internal } = gestures;
-	if (
+	const deltaInFlight =
 		Math.abs(internal.progressDeltaX.get()) > EPSILON ||
-		Math.abs(internal.progressDeltaY.get()) > EPSILON
-	) {
+		Math.abs(internal.progressDeltaY.get()) > EPSILON;
+	if (deltaInFlight) {
 		animations.transitionProgress.set(animations.visualProgress.get());
+	} else if (runtime.participation.effectiveSnapPoints.hasSnapPoints) {
+		// A sheet's progress is its position: stop whatever is animating it (a snapTo, a release's
+		// spring) so it doesn't keep moving under the finger and the release starts from where it is.
+		animations.transitionProgress.set(animations.transitionProgress.get());
 	}
 	internal.carry.x.set(gestures.x.get());
 	internal.carry.y.set(gestures.y.get());
