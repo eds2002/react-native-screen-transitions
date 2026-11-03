@@ -63,3 +63,11 @@ scenario checks the stack depth against the presses the app counted
 | `sheet-regrab.sh <ms> spring-back\|during-snap` | sheet lab: grab during the spring-back, or during a `snapTo` animation |
 
 `run-all.sh` lists every run with its parameters and analyzer options.
+
+## Showing a bug
+
+`visual/clip.py <spec.json>... --out clip.mp4` cuts an annotated clip from a
+recorded run: a title card, the moment at real speed, then slowed down
+(time-accurate, so dropped frames stay visible) with a caption per phase,
+flagged frames outlined, an optional magnified panel and marker line, and a
+before/after flip. The spec format is in the script's docstring.
