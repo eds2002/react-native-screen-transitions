@@ -41,6 +41,14 @@ const Stack = createBlankStackNavigator();
 
 const NEXT = { A: "B", B: "C", C: "A" };
 
+/** Distinct solid colours for screen instances; none is the BLANK magenta. */
+const INSTANCE_COLORS = ["#16a34a", "#dc2626", "#2563eb", "#ca8a04", "#7c3aed", "#0891b2", "#db2777", "#4d7c0f", "#c2410c", "#334155"];
+const instanceIndex = new Map<string, number>();
+const instanceColor = (key: string) => {
+	if (!instanceIndex.has(key)) instanceIndex.set(key, instanceIndex.size);
+	return INSTANCE_COLORS[instanceIndex.get(key)! % INSTANCE_COLORS.length];
+};
+
 /**
  * Dispatch to the stack itself rather than "from" this screen: a screen's own
  * helpers stamp `source: route.key`, which makes a pop from a covered screen a
@@ -68,7 +76,9 @@ function StackScreen({ navigation, route }) {
 	const next = NEXT[name];
 	const after = (ms, action) => setTimeout(() => toStack(navigation, action), ms);
 	return (
-		<Page title={`Screen ${name}`} testID={`stack-${id}`}>
+		// Each pushed instance gets its own colour (by route key): two screens with the same name crossing
+		// each other (a push landing during a pop) stay distinguishable in recordings.
+		<Page title={`Screen ${name}`} testID={`stack-${id}`} color={instanceColor(route.key)}>
 			<RouteProbe />
 			<View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
 				<Button label={`push ${next}`} testID={`stack-push-${next.toLowerCase()}`} onPress={() => navigation.push(next)} />

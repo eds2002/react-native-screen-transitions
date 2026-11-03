@@ -109,7 +109,7 @@ def edges_of(line):
     edges = []
     for (s0, e0, c0), (s1, e1, c1) in zip(runs, runs[1:]):
         if np.abs(c0 - c1).sum() > 60:
-            edges.append((e0 + s1) / 2)
+            edges.append(((e0 + s1) / 2, tuple(int(v) // 16 for v in c0) + tuple(int(v) // 16 for v in c1)))
     return edges
 
 
@@ -126,27 +126,36 @@ def follow_edge(tr, timeline, flags, jump_pt):
     # Edges at the same place in most frames belong to content that doesn't move.
     counts = {}
     for es in all_edges:
-        for e in {round(e) for e in es}:
+        for e in {round(e) for e, _ in es}:
             counts[e] = counts.get(e, 0) + 1
     static = {e for e, c in counts.items() if c > 0.6 * len(all_edges)}
-    pos, seen = [], []
+    pos, seen, pairs = [], [], []
     for es in all_edges:
-        es = [e for e in es if round(e) not in static and round(e) - 1 not in static and round(e) + 1 not in static]
+        es = [(e, pair) for e, pair in es if round(e) not in static and round(e) - 1 not in static and round(e) + 1 not in static]
         last = next((p for p in reversed(pos) if p is not None), None)
         if es:
-            pos.append(min(es, key=lambda e: abs(e - last)) if last is not None else es[0])
+            e, pair = min(es, key=lambda ep: abs(ep[0] - last)) if last is not None else es[0]
+            pos.append(e)
+            pairs.append(pair)
             seen.append(True)
         elif last is not None and moving_along(pos, seen):
             # The edge was moving along the line and is gone: the screen is at rest against the nearer boundary (or gone).
             pos.append(0.0 if last < length / 2 else float(length))
+            pairs.append(None)
             seen.append(False)
         else:
             pos.append(None)
+            pairs.append(None)
             seen.append(False)
     vel = [None] * len(pos)
+    segment = [0] * len(pos)  # steps of one continuous edge share a segment
     for n in range(1, len(pos)):
+        switched_here = seen[n] and seen[n - 1] and pairs[n] != pairs[n - 1]
+        segment[n] = segment[n - 1] + (1 if switched_here or seen[n] != seen[n - 1] else 0)
         # An edge appearing after none was visible starts a new motion (a screen entering), so no step is measured.
-        if pos[n] is not None and pos[n - 1] is not None and (seen[n - 1] or not seen[n]):
+        # An edge between a different pair of colours is a different screen's edge (two screens crossing).
+        switched = seen[n] and seen[n - 1] and pairs[n] != pairs[n - 1]
+        if pos[n] is not None and pos[n - 1] is not None and (seen[n - 1] or not seen[n]) and not switched:
             vel[n] = (pos[n] - pos[n - 1]) / timeline[n].get("displayFrames", 1)
     for n, e in enumerate(timeline):
         e[tr["name"]] = pos[n]
@@ -163,7 +172,7 @@ def follow_edge(tr, timeline, flags, jump_pt):
     for n, v in enumerate(vel):
         if v is None:
             continue
-        around = [vel[k] for k in range(max(1, n - 3), min(len(vel), n + 4)) if k != n and vel[k] is not None]
+        around = [vel[k] for k in range(max(1, n - 3), min(len(vel), n + 4)) if k != n and vel[k] is not None and segment[k] == segment[n]]
         if not around:
             continue
         expected = float(np.median(around))
