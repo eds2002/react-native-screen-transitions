@@ -10,6 +10,7 @@ import {
 import { getVisibilityBlockOffset } from "../../../utils/visibility-block-offset";
 import {
 	hasCloseTransitionFinished,
+	hasOpenTransitionStarted,
 	isScreenReady as resolveScreenReady,
 } from "../helpers/transition-visual-state";
 import { resolveScreenVisibilityGate } from "../helpers/visibility-gate";
@@ -73,8 +74,16 @@ export const useMaybeBlockVisibility = ({
 		const isPendingOpen =
 			pendingLifecycleRequestKind.get() === LifecycleTransitionRequestKind.Open;
 
+		// The reaction's block reaches styles a frame late. Once the open transition has started, the
+		// screen shows in that same frame: the screen under it moves with the same progress, so a lag
+		// here showed one frame of nothing over the gap it left.
+		const openStarted = hasOpenTransitionStarted({
+			pendingLifecycleStartBlockCount: pendingLifecycleStartBlockCount.get(),
+			animationProgress: animationProgress.get(),
+		});
+
 		return (
-			!localVisibilityBlocked.get() &&
+			(openStarted || !localVisibilityBlocked.get()) &&
 			(ancestorIsScreenReady?.get() ?? true) &&
 			resolveScreenReady({
 				opening: isPendingOpen || !!entering.get(),
