@@ -114,6 +114,7 @@ const createGestureStore = (
 			progressBaseline: shared(0),
 			progressDeltaX: shared(overrides.progressDeltaX ?? 0),
 			progressDeltaY: shared(overrides.progressDeltaY ?? 0),
+			carry: { x: shared(0), y: shared(0), normX: shared(0), normY: shared(0) },
 			lockedSnapPoint: shared(null),
 			snapshot: createGestureSnapshotStore({
 				x: overrides.snapshotX,

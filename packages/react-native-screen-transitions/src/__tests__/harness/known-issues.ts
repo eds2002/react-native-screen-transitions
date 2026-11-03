@@ -27,14 +27,6 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			["vanish", "spike", "teleport", "flash", "turns-back"].includes(v.rule),
 	},
 	{
-		id: "regrab-during-spring-back",
-		summary:
-			"Grabbing a screen while it springs back from a cancelled swipe shows its resting pose for one frame, then " +
-			"tracks the finger from rest instead of from where it was (startPanBase clears the gesture values the " +
-			"spring-back was still animating without folding them into the baseline).",
-		matches: (scenario, v) => sequenceOf(scenario) === "regrab-spring-back" && ["flash", "spike"].includes(v.rule),
-	},
-	{
 		id: "release-after-grab-during-snap",
 		summary:
 			"A sheet grabbed while a snap animation runs (snapTo, or a backdrop collapse) follows the finger, but on " +

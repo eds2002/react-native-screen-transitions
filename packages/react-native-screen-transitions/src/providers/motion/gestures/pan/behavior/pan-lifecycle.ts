@@ -32,10 +32,31 @@ export const startPanBase = (runtime: PanGestureRuntime) => {
 
 	emitMotionStart(animations);
 
+	// A drag released short of dismissing springs its offset back: the progress delta on top of
+	// transitionProgress, and x/y/normX/normY for interpolators that read them. A drag that starts
+	// before that spring finishes continues from what is on screen, not from rest, so fold the delta
+	// into transitionProgress and carry the gesture values into the new drag before clearing them.
+	const { internal } = gestures;
+	if (
+		Math.abs(internal.progressDeltaX.get()) > EPSILON ||
+		Math.abs(internal.progressDeltaY.get()) > EPSILON
+	) {
+		animations.transitionProgress.set(animations.visualProgress.get());
+	}
+	internal.carry.x.set(gestures.x.get());
+	internal.carry.y.set(gestures.y.get());
+	internal.carry.normX.set(gestures.normX.get());
+	internal.carry.normY.set(gestures.normY.get());
+
 	gestures.dragging.set(TRUE);
 	gestures.dismissing.set(0);
 	gestures.settling.set(0);
 	clearPanTrackingValues(gestures);
+	// Hold the carried values (stopping their spring) until the first update adds the new translation.
+	gestures.x.set(internal.carry.x.get());
+	gestures.y.set(internal.carry.y.get());
+	gestures.normX.set(internal.carry.normX.get());
+	gestures.normY.set(internal.carry.normY.get());
 	clearTransformTrackingValues(gestures);
 	clearFocalPoint(gestures);
 	gestures.internal.progressBaseline.set(animations.transitionProgress.get());
@@ -66,10 +87,13 @@ export const trackPanGesture = (
 		velocityY / Math.max(1, height),
 	);
 
-	gestures.x.set(x);
-	gestures.y.set(y);
-	gestures.normX.set(normX);
-	gestures.normY.set(normY);
+	// Values the drag picked up from a spring-back in flight (see startPanBase). The progress delta
+	// doesn't take them: that part was folded into transitionProgress.
+	const { carry } = gestures.internal;
+	gestures.x.set(x + carry.x.get());
+	gestures.y.set(y + carry.y.get());
+	gestures.normX.set(clamp(normX + carry.normX.get(), -1, 1));
+	gestures.normY.set(clamp(normY + carry.normY.get(), -1, 1));
 	gestures.internal.progressDeltaX.set(normX);
 	gestures.internal.progressDeltaY.set(normY);
 	gestures.velocity.set(velocity);

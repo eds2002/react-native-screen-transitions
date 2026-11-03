@@ -106,6 +106,7 @@ const createPinchReleaseRuntime = (
 					progressBaseline: { get: () => 1 },
 					progressDeltaX: { get: () => 0 },
 					progressDeltaY: { get: () => 0 },
+					carry: { x: { get: () => 0 }, y: { get: () => 0 }, normX: { get: () => 0 }, normY: { get: () => 0 } },
 					snapshot: {
 						x: { get: () => 0 },
 						y: { get: () => 0 },
@@ -238,6 +239,7 @@ const createGestureStore = () =>
 			progressBaseline: createSharedValue(0),
 			progressDeltaX: createSharedValue(0),
 			progressDeltaY: createSharedValue(0),
+			carry: { x: createSharedValue(0), y: createSharedValue(0), normX: createSharedValue(0), normY: createSharedValue(0) },
 			lockedSnapPoint: createSharedValue(null),
 			snapshot: createGestureSnapshotStore(),
 		},

@@ -62,6 +62,12 @@ function useGestureValues(): MotionGestureValues {
 			progressBaseline,
 			progressDeltaX,
 			progressDeltaY,
+			carry: {
+				x: useSharedValue(0),
+				y: useSharedValue(0),
+				normX: useSharedValue(0),
+				normY: useSharedValue(0),
+			},
 			lockedSnapPoint,
 			snapshot: {
 				x: useSharedValue(0),

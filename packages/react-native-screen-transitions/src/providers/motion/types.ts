@@ -39,10 +39,22 @@ type GestureSnapshotValues = {
 	active: SharedValue<ActiveGesture | null>;
 };
 
+/**
+ * What a drag picked up from a previous drag's spring-back still in flight when it started. Each update
+ * adds it to the new translation, so x/y/normX/normY continue from where they were on screen.
+ */
+type GestureCarryValues = {
+	x: SharedValue<number>;
+	y: SharedValue<number>;
+	normX: SharedValue<number>;
+	normY: SharedValue<number>;
+};
+
 type GestureInternalValues = {
 	progressBaseline: SharedValue<number>;
 	progressDeltaX: SharedValue<number>;
 	progressDeltaY: SharedValue<number>;
+	carry: GestureCarryValues;
 	lockedSnapPoint: SharedValue<number | null>;
 	snapshot: GestureSnapshotValues;
 };
