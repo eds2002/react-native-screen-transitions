@@ -31,6 +31,8 @@ export interface SpringAnimation extends Animation<SpringAnimation> {
 	initialEnergy: number;
 	animationProgressElapsed: number;
 	animationProgressDuration: number;
+	/** Frames run since onStart, counted up to STARTUP_FRAMES (see springOnFrame). */
+	startupFrames: number;
 }
 
 export type InnerSpringAnimation = SpringAnimation;

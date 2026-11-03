@@ -32,6 +32,10 @@ const REDUCE_MOTION_SYSTEM = "system";
 const REDUCE_MOTION_ALWAYS = "always";
 const DEFAULT_SPRING_SETTLE_DISTANCE = 0.001;
 const MAX_UNFINISHED_ANIMATION_PROGRESS = 1 - 1e-6;
+/** How many of a spring's first frames advance at most MAX_STARTUP_STEP_MS each. */
+const STARTUP_FRAMES = 3;
+/** One display frame at 60 Hz. */
+const MAX_STARTUP_STEP_MS = 1000 / 60;
 
 const DEFAULT_SPRING_CONFIG = {
 	damping: 120,
@@ -188,7 +192,15 @@ export const withInternalSpring = ((
 			}
 			const { lastTimestamp, velocity } = animation;
 
-			const deltaTime = Math.min(Math.max(now - lastTimestamp, 0), 64);
+			let deltaTime = Math.min(Math.max(now - lastTimestamp, 0), 64);
+			// A spring's first frames often follow a stall: the UI thread mounting the screen it moves
+			// (a heavy screen takes several frames). Time lost there wasn't motion anyone saw, so for the
+			// first frames advance at most one display frame each; otherwise the screen first appears
+			// part-way through its transition. Normal frames are already this short and don't change.
+			if (animation.startupFrames < STARTUP_FRAMES) {
+				animation.startupFrames += 1;
+				deltaTime = Math.min(deltaTime, MAX_STARTUP_STEP_MS);
+			}
 			animation.lastTimestamp = now;
 			animation.animationProgressElapsed += deltaTime;
 
@@ -339,6 +351,7 @@ export const withInternalSpring = ((
 			animationProgress?.value.set(animationProgress.from);
 
 			animation.lastTimestamp = previousAnimation?.lastTimestamp || now;
+			animation.startupFrames = 0;
 
 			animation.startTimestamp = triggeredTwice
 				? previousAnimation?.startTimestamp || now
@@ -371,6 +384,7 @@ export const withInternalSpring = ((
 			initialEnergy: 0,
 			animationProgressElapsed: 0,
 			animationProgressDuration: 0,
+			startupFrames: 0,
 			reduceMotion: getReduceMotionForAnimation(config.reduceMotion),
 		} as SpringAnimation;
 

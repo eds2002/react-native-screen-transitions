@@ -34,6 +34,34 @@ const shared = <T>(initialValue: T): SharedValue<T> => {
 };
 
 describe("internal withSpring", () => {
+	test("a stall before its first frames is not billed to the motion (heavy screen mounting)", () => {
+		const make = () => {
+			const definition = withInternalSpring(1, { stiffness: 1000, damping: 500, mass: 3 }) as unknown;
+			const animation = (typeof definition === "function" ? definition() : definition) as SpringAnimationRuntime & { current: number };
+			animation.onStart(animation, 0, 0, undefined);
+			return animation;
+		};
+		const frame = 1000 / 60;
+		// Normal start: one frame per vsync.
+		const normal = make();
+		normal.onFrame(normal, frame);
+		// The UI thread was busy for four frames before the first frame ran.
+		const stalled = make();
+		stalled.onFrame(stalled, frame * 5);
+		expect(stalled.current).toBeCloseTo(normal.current, 6);
+		// After the first frames, a long frame advances by its real duration (up to the 64 ms cap) again.
+		for (let i = 2; i <= 3; i++) {
+			normal.onFrame(normal, frame * i);
+			stalled.onFrame(stalled, frame * (i + 4));
+		}
+		const before = stalled.current;
+		stalled.onFrame(stalled, frame * 7 + 48);
+		const longStep = stalled.current - before;
+		const beforeNormal = normal.current;
+		normal.onFrame(normal, frame * 4);
+		expect(longStep).toBeGreaterThan((normal.current - beforeNormal) * 2);
+	});
+
 	test("keeps release velocity that initially points away from the target", () => {
 		const definition = withInternalSpring(0, { velocity: 2500 }) as unknown;
 		const animation =
