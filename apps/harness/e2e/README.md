@@ -27,6 +27,7 @@ them by the stamp, drops repeated captures, and flags:
 | blank | BLANK pixels: part of the window has no screen over it | yes |
 | flicker | a frame unlike both neighbours while they match each other | yes |
 | jump | a tracked screen edge steps far off its path in one frame | yes |
+| pop-in | a screen edge first appears well inside the window and keeps moving: a screen became visible part-way through its transition | yes |
 | burst | far more pixels change in one frame than around it | yes |
 | hitch | a jump-sized step across dropped frames (a stutter, not a wrong position) | no |
 | reversal | a "flicker" that is a tracked screen changing direction | no |
@@ -58,6 +59,7 @@ scenario checks the stack depth against the presses the app counted
 | `stack-spam.sh <pairs> <ms> alt\|burst` | stack lab: push/pop through the fixed bar, `<ms>` apart (the cooldown sweep) |
 | `stack-grab-mid-push.sh <ms> letgo\|dismiss` | stack lab: grab the incoming screen `<ms>` into a push; let go, or fling it away (dismiss needs `<ms>` ≥ ~120, earlier the screen is still under the right edge) |
 | `ownership-spam.sh <ms>` | ownership lab, L1 (↓) → L2 (→): short drags alternating owners `<ms>` apart, then → dismisses L2 and ↓ dismisses L1 |
+| `heavy-push.sh <cost>` | heavy lab: push a screen that burns `<cost>` ms on its first render; it must enter from the edge (no `pop-in`, no blank) |
 | `sheet-regrab.sh <ms> spring-back\|during-snap` | sheet lab: grab during the spring-back, or during a `snapTo` animation |
 
 `run-all.sh` lists every run with its parameters and analyzer options.

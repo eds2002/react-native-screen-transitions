@@ -8,12 +8,13 @@ frame strip (the flagged frames outlined in red). Open it in a browser.
 """
 import html, json, os, sys
 
-KINDS = ["blank", "flicker", "jump", "burst", "hitch", "reversal"]
+KINDS = ["blank", "flicker", "jump", "pop-in", "burst", "hitch", "reversal"]
 INFO = {"hitch", "reversal"}
 NOTE = {
     "blank": "BLANK (magenta) showing: no screen covers part of the window",
     "flicker": "a frame unlike both neighbours (something appears or vanishes for one frame)",
     "jump": "a tracked screen edge steps far off its path in one frame",
+    "pop-in": "a screen first appears part-way across the window instead of entering from its edge",
     "burst": "far more pixels change in one frame than around it",
     "hitch": "a jump-sized step across dropped frames (stutter); informational",
     "reversal": "a screen changes direction; informational",

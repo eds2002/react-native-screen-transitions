@@ -1,6 +1,7 @@
 import { lab as backdrop } from "./backdrop";
 import { lab as bounds } from "./bounds";
 import { lab as gestures } from "./gestures";
+import { lab as heavy } from "./heavy";
 import { lab as inactive } from "./inactive";
 import { lab as nativeStack } from "./native-stack";
 import { lab as overlay } from "./overlay";
@@ -12,4 +13,4 @@ import { lab as stack } from "./stack";
 import type { Lab } from "./ui";
 
 /** One lab per library mechanism, in this order on the home screen. */
-export const LABS: Lab[] = [stack, sheet, backdrop, gestures, ownership, scroll, inactive, slots, overlay, bounds, nativeStack];
+export const LABS: Lab[] = [stack, heavy, sheet, backdrop, gestures, ownership, scroll, inactive, slots, overlay, bounds, nativeStack];

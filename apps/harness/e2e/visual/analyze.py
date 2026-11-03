@@ -19,6 +19,8 @@ consecutive rendered frames:
            direction (e.g. a pop landing mid-push); reported, not a failure
   hitch    (with --track) a jump-sized step across a gap of dropped frames: a stutter
            rather than a wrong position; reported, not a failure
+  pop-in   (with --track) a screen edge first appears well inside the window instead of
+           at its edge: a screen became visible part-way through its transition
   burst    the fraction of pixels that changed in one display frame is much
            higher than around it (coarser than jump; catches what no tracked
            edge shows)
@@ -148,6 +150,16 @@ def follow_edge(tr, timeline, flags, jump_pt):
             vel[n] = (pos[n] - pos[n - 1]) / timeline[n].get("displayFrames", 1)
     for n, e in enumerate(timeline):
         e[tr["name"]] = pos[n]
+    # A screen sliding in shows up at the window's edge; one whose edge first appears well inside the
+    # window became visible part-way through its transition (it rendered late, or popped in).
+    margin = 0.15 * length
+    for n in range(3, len(pos) - 3):
+        fresh = seen[n] and not any(seen[n - 3 : n])
+        # ...and keeps moving along the line (a screen in transition, not content crossing it).
+        after = [p for p, ok in zip(pos[n : n + 4], seen[n : n + 4]) if ok]
+        moving = len(after) == 4 and max(after) - min(after) >= 4
+        if fresh and moving and margin < pos[n] < length - margin:
+            flags.append((n, "pop-in", float(pos[n])))
     for n, v in enumerate(vel):
         if v is None:
             continue
@@ -294,7 +306,7 @@ def main():
         "displayFrameMs": round(vsync * STAMP_UNIT_MS, 2),
         "gaps": sum(1 for e in timeline if e.get("displayFrames", 1) > 1),
         "framesInGaps": sum(e.get("displayFrames", 1) - 1 for e in timeline),
-        "events": {kind: sum(1 for e in events if e["kind"] == kind) for kind in ("blank", "flicker", "jump", "burst", "reversal", "hitch")},
+        "events": {kind: sum(1 for e in events if e["kind"] == kind) for kind in ("blank", "flicker", "jump", "pop-in", "burst", "reversal", "hitch")},
     }
     with open(os.path.join(args.out, "report.json"), "w") as f:
         json.dump({"summary": summary, "events": events, "timeline": timeline}, f, indent=1)
