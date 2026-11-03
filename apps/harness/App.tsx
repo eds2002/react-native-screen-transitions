@@ -7,7 +7,7 @@
 import * as Linking from "expo-linking";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LABS } from "./labs";
@@ -15,7 +15,11 @@ import { LABS } from "./labs";
 function Home({ onOpen }) {
 	const insets = useSafeAreaInsets();
 	return (
-		<View style={{ flex: 1, paddingTop: insets.top + 12, paddingHorizontal: 16, backgroundColor: "#0b0b0f", gap: 8 }}>
+		<ScrollView
+			testID="labs-list"
+			style={{ flex: 1, backgroundColor: "#0b0b0f" }}
+			contentContainerStyle={{ paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24, paddingHorizontal: 16, gap: 8 }}
+		>
 			<Text style={{ color: "white", fontSize: 30, fontWeight: "800", marginBottom: 8 }}>Harness</Text>
 			{LABS.map((lab) => (
 				<Pressable key={lab.id} testID={`open-${lab.id}`} onPress={() => onOpen(lab.id)} style={{ backgroundColor: "#1c1c24", borderRadius: 12, padding: 12 }}>
@@ -23,7 +27,7 @@ function Home({ onOpen }) {
 					<Text style={{ color: "#999", fontSize: 12 }}>{lab.covers}</Text>
 				</Pressable>
 			))}
-		</View>
+		</ScrollView>
 	);
 }
 
