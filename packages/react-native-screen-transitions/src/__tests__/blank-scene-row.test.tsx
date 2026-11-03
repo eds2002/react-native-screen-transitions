@@ -22,6 +22,7 @@ await mockModule("react-native-gesture-handler", () => ({
 }));
 await mockModule("react-native-safe-area-context", () => ({
 	SafeAreaProvider: passthrough,
+	SafeAreaInsetsContext: require("react").createContext(null),
 }));
 await mockModule("../components/boundary/portal", () => ({
 	PortalProvider: passthrough,

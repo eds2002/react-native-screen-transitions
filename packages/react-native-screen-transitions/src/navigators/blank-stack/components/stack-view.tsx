@@ -1,7 +1,10 @@
-import { memo, type ReactNode, useMemo } from "react";
-import { StyleSheet } from "react-native";
+import { memo, type ReactNode, useContext, useMemo } from "react";
+import { StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import {
+	SafeAreaInsetsContext,
+	SafeAreaProvider,
+} from "react-native-safe-area-context";
 import { PortalProvider } from "../../../components/boundary/portal";
 import { Overlay } from "../../../components/overlay";
 import { ScreenLayers } from "../../../components/screen-layers";
@@ -73,6 +76,20 @@ export const BlankStackView = memo(function BlankStackView() {
 	);
 });
 
+/**
+ * Provides safe-area insets only when nothing above does (like React Navigation's
+ * SafeAreaProviderCompat). A provider measures insets from where it sits on screen, so a nested
+ * stack with its own provider got new insets whenever an outer screen moved it (a drag, a
+ * transition), a frame late: its content stayed pinned while the screen moved, then jumped.
+ */
+function SafeAreaProviderIfNeeded({ children }: { children: ReactNode }) {
+	const insets = useContext(SafeAreaInsetsContext);
+	if (insets) {
+		return <View style={styles.container}>{children}</View>;
+	}
+	return <SafeAreaProvider>{children}</SafeAreaProvider>;
+}
+
 export const BlankStack = memo(function BlankStack({
 	state,
 	navigation,
@@ -80,7 +97,7 @@ export const BlankStack = memo(function BlankStack({
 }: BlankStackProviderProps) {
 	return (
 		<GestureHandlerRootView style={styles.container}>
-			<SafeAreaProvider>
+			<SafeAreaProviderIfNeeded>
 				<BlankStackProvider
 					state={state}
 					navigation={navigation}
@@ -88,7 +105,7 @@ export const BlankStack = memo(function BlankStack({
 				>
 					<BlankStackView />
 				</BlankStackProvider>
-			</SafeAreaProvider>
+			</SafeAreaProviderIfNeeded>
 		</GestureHandlerRootView>
 	);
 });
