@@ -37,6 +37,9 @@ export const installHarness = ({
 	globalThis.requestAnimationFrame = sim.requestAnimationFrame as typeof requestAnimationFrame;
 	mock.module("react-native-reanimated", () => sim.reanimated);
 	mock.module("react-native-worklets", () => sim.worklets);
+	// test/setup.ts swaps the library's timing animation for the instant withTiming mock; the
+	// harness steps frames, so it runs the real one.
+	mock.module("../../utils/animation/timing/index.ts", () => require("../../utils/animation/timing/timing.ts"));
 	// What the library imports from react-native, as host components the trace
 	// recorder can read.
 	mock.module("react-native", () => {

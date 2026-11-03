@@ -266,3 +266,33 @@ mock.module("react-native-teleport", () => ({
 		React.createElement("native-host", props),
 	PortalProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
+
+// The library's timing animation (a fork of withTiming, utils/animation/timing) runs frame by frame,
+// which these shared-value stand-ins don't do. Unit tests keep the mocked withTiming's behaviour
+// above: finish at once (or when deferred), and set the progress clock to its end. The fork itself
+// is tested by importing utils/animation/timing/timing directly.
+mock.module(
+	"../packages/react-native-screen-transitions/src/utils/animation/timing/index.ts",
+	() => ({
+		withInternalTiming: (
+			toValue: number,
+			config?: Record<string, unknown>,
+			callback?: (state: { finished: boolean; settled: boolean }) => void,
+			animationProgress?: {
+				value: { set: (value: number) => void };
+				from: number;
+				to: number;
+			},
+		) => {
+			const { withTiming } = require("react-native-reanimated");
+			if (animationProgress) {
+				animationProgress.value.set(animationProgress.from);
+				animationProgress.value.set(withTiming(animationProgress.to, config));
+			}
+			return withTiming(toValue, config, (finished?: boolean) => {
+				const didFinish = finished === true;
+				callback?.({ finished: didFinish, settled: didFinish });
+			});
+		},
+	}),
+);

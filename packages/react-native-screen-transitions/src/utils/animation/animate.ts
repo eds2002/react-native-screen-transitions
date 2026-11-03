@@ -1,18 +1,13 @@
 import type { WithTimingConfig } from "react-native-reanimated";
-import { withTiming } from "react-native-reanimated";
 import { type SpringConfig, withInternalSpring } from "./spring";
 import type { AnimationProgressDriver, AnimationStateCallback } from "./state";
+import { withInternalTiming } from "./timing";
 
 export type TimingAnimationConfig = WithTimingConfig;
 export type SpringAnimationConfig = SpringConfig;
 export type ScreenAnimationConfig =
 	| SpringAnimationConfig
 	| TimingAnimationConfig;
-
-const linearEasing = (progress: number) => {
-	"worklet";
-	return progress;
-};
 
 export const isSpringAnimationConfig = (
 	config: ScreenAnimationConfig | undefined,
@@ -43,24 +38,7 @@ export const animate = (
 	"worklet";
 
 	if (!isSpringAnimationConfig(config)) {
-		if (animationProgress) {
-			animationProgress.value.set(animationProgress.from);
-			animationProgress.value.set(
-				withTiming(animationProgress.to, {
-					...config,
-					easing: linearEasing,
-				}),
-			);
-		}
-
-		return withTiming(toValue, config, (finished) => {
-			"worklet";
-			const didFinish = finished === true;
-			callback?.({
-				finished: didFinish,
-				settled: didFinish,
-			});
-		});
+		return withInternalTiming(toValue, config, callback, animationProgress);
 	}
 
 	return withInternalSpring(toValue, config, callback, animationProgress);
