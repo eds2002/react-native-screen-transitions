@@ -71,6 +71,16 @@ export const usePanBehavior = (
 				runtime.get(),
 				screenOptions.get(),
 			);
+			// A snap-locked sheet that can't be dismissed claims the drag (so it doesn't reach a parent)
+			// but has nowhere to go: it stays put instead of following the finger and jumping back.
+			const { participation, policy } = latestRuntime;
+			if (
+				participation.effectiveSnapPoints.hasSnapPoints &&
+				policy.gestureSnapLocked &&
+				!participation.canDismiss
+			) {
+				return;
+			}
 			const event = withSensitivity(rawEvent);
 			trackPanGesture(
 				event,

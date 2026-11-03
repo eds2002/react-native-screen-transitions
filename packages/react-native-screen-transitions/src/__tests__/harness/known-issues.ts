@@ -28,15 +28,6 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			["vanish", "spike", "teleport", "flash", "turns-back"].includes(v.rule),
 	},
 	{
-		id: "locked-sheet-follows-drag",
-		summary:
-			"A snap-locked sheet with gestures disabled and a 0 snap point (e2e gestures/snap-locked-no-bubble) " +
-			"follows a downward drag towards the 0 snap point, then jumps back to its snap point in one frame on " +
-			"release. Its GestureInfo table expects no movement (the parent is correctly not dismissed).",
-		matches: (scenario, v) =>
-			scenario === "ownership-snap-locked-no-bubble / preset-spec / swipe-down" && ["teleport", "spike", "flash"].includes(v.rule),
-	},
-	{
 		id: "zoom-pinch-background-snap",
 		summary:
 			"Pinch-dismissing a zoom: while pinching, the screen underneath stays at full size; on release it snaps to " +
