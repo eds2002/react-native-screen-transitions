@@ -21,6 +21,11 @@ export type Expectations = {
 	mayOvershoot?: boolean;
 	/** No transitionSpec: screens switch in one frame, so motion rules do not apply. */
 	instant?: boolean;
+	/**
+	 * Screens that may turn back once without a finger: a push landing during a pop turns the screen
+	 * underneath from following the closing screen back to being covered by the new one.
+	 */
+	mayTurnBack?: string[];
 };
 
 const visible = (scene: SceneFrame) =>
@@ -201,6 +206,7 @@ export const checkVanish = (trace: TraceFrame[], expectations: Expectations = {}
 export const checkMonotonic = (trace: TraceFrame[], expectations: Expectations, settleFrames = 0): Violation[] => {
 	if (expectations.mayOvershoot || expectations.instant) return [];
 	const out: Violation[] = [];
+	const turned = new Set<string>();
 	for (const [key, series] of byScene(trace)) {
 		const hidden = (index: number) => {
 			const frame = trace[index];
@@ -221,6 +227,11 @@ export const checkMonotonic = (trace: TraceFrame[], expectations: Expectations, 
 				if (Math.abs(delta) < 1) continue;
 				const sign = Math.sign(delta);
 				if (direction !== 0 && sign !== direction) {
+					if (expectations.mayTurnBack?.includes(cur.scene.name) && !turned.has(key + axis)) {
+						turned.add(key + axis);
+						direction = sign;
+						continue;
+					}
 					out.push({ rule: "turns-back", frame: cur.frame, scene: cur.scene.name, detail: `axis ${["x", "y", "w", "h", "opacity"][axis]} reversed by ${delta.toFixed(2)}` });
 					break;
 				}

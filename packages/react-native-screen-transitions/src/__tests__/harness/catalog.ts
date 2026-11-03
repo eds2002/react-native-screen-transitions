@@ -76,6 +76,15 @@ export const sequences: Record<string, (dismiss: SwipeDirection | null) => Step[
 		],
 	"pop-mid-push": () => [{ op: "push", name: "B" }, { op: "frames", count: 6 }, { op: "pop" }],
 	"push-mid-pop": () => [{ op: "push", name: "B" }, { op: "settle" }, { op: "pop" }, { op: "frames", count: 5 }, { op: "push", name: "B" }],
+	// Push, pop while it is still opening, push again (push/pop spam ~100 ms apart).
+	"push-pop-push": () => [
+		{ op: "push", name: "B" },
+		{ op: "frames", count: 6 },
+		{ op: "pop" },
+		{ op: "frames", count: 6 },
+		{ op: "push", name: "B" },
+		{ op: "settle" },
+	],
 	deep: () => [
 		{ op: "push", name: "B" },
 		{ op: "settle" },
@@ -88,6 +97,8 @@ export const sequences: Record<string, (dismiss: SwipeDirection | null) => Step[
 	replace: () => [{ op: "push", name: "B" }, { op: "settle" }, { op: "replace", name: "C" }, { op: "settle" }, { op: "pop" }],
 	rapid: () => [{ op: "push", name: "B" }, { op: "push", name: "C" }, { op: "frames", count: 2 }, { op: "pop" }, { op: "pop" }],
 };
+
+const TURNS_BACK_ONCE = new Set(["push-mid-pop", "push-pop-push"]);
 
 export const buildCatalog = (presets: Presets, interpolate: InterpolateFn): Scenario[] => {
 	const scenarios: Scenario[] = [];
@@ -103,12 +114,14 @@ export const buildCatalog = (presets: Presets, interpolate: InterpolateFn): Scen
 			for (const [sequenceName, build] of Object.entries(sequences)) {
 				const steps = build(dismiss);
 				if (!steps) continue;
+				// A push landing during a pop: A follows the closing screen back, then the new one covers it.
+				const mayTurnBack = TURNS_BACK_ONCE.has(sequenceName) ? ["A"] : undefined;
 				scenarios.push({
 					name: `${transitionName} / ${specName} / ${sequenceName}`,
 					screens: [{ name: "A" }, { name: "B" }, { name: "C" }],
 					screenOptions,
 					steps,
-					expect: { mayOvershoot, instant },
+					expect: { mayOvershoot, instant, mayTurnBack },
 				});
 			}
 		}
