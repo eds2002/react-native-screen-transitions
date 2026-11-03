@@ -60,6 +60,7 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 	{
 		id: "reveal-dismiss-source-jump",
 		summary:
+			"(reveal() is deprecated in favour of zoom(); not planned to fix.) "+
 			"After swiping away a reveal, the source boundary on the screen underneath stays 29 px off its layout " +
 			"position through the close and snaps back when the revealed screen is removed. (Its release also turns " +
 			"back by 1-2 px.)",
@@ -69,6 +70,7 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 	{
 		id: "reveal-opacity-overflow",
 		summary:
+			"(reveal() is deprecated in favour of zoom(); not planned to fix.) "+
 			"navigation.reveal() gives the revealed screen's content an unclamped opacity (up to 1.37, and about 4 " +
 			"near the end of opening). React Native clamps it, so nothing visible; it points at an unclamped interpolation.",
 		matches: (scenario, v) => scenario.startsWith("bounds-reveal") && v.rule === "style-range",

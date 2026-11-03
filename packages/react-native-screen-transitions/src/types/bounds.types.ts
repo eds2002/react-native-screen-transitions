@@ -126,6 +126,7 @@ export type BoundsNavigationZoomStyle = TransitionInterpolatedStyle & {
 	[NAVIGATION_MASK_ELEMENT_STYLE_ID]?: TransitionSlotStyle;
 };
 
+/** @deprecated `navigation.reveal()` is deprecated: use `navigation.zoom()`. */
 export type BoundsNavigationRevealOptions = {
 	/**
 	 * Destination clip border radius.
@@ -195,10 +196,15 @@ export type BoundsNavigationRevealOptions = {
 	maskSizingMode?: "auto" | "transform" | "size";
 };
 
+/** @deprecated `navigation.reveal()` is deprecated: use `navigation.zoom()`. */
 export type BoundsNavigationRevealStyle = BoundsNavigationZoomStyle;
 
 export type BoundsNavigationAccessor = {
 	zoom: (options?: BoundsNavigationZoomOptions) => BoundsNavigationZoomStyle;
+	/**
+	 * @deprecated Use `zoom()`, the default navigation transition for bounds. `reveal()` keeps
+	 * working but won't get new behaviour or fixes.
+	 */
 	reveal: (
 		options?: BoundsNavigationRevealOptions,
 	) => BoundsNavigationRevealStyle;
