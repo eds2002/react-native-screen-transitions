@@ -10,7 +10,8 @@
  *     reset()            clear errors and frames
  * - `harness-state` (Argent `describe` / `ui-tree`, works in Release): a hidden
  *   accessibility element whose label is summary() as JSON:
- *     { lab, path, depth, settled, screens: [{ n, p, a, c }], errors, frames, counts }
+ *     { lab, path, depth, settled, screens: [{ n, p, a, c, d }], errors, frames, counts }
+ *   d: the screen's pan/pinch gesture is dragging; counts["drag:<name>"] counts drags that started
  *   depth: routes in the innermost focused navigator
  *   counts: named events labs report with bridge.count() (button presses), reset when a lab opens
  *
@@ -22,7 +23,7 @@ import { makeMutable, useAnimatedReaction } from "react-native-reanimated";
 import { useScreenAnimation } from "react-native-screen-transitions";
 import { scheduleOnRN } from "react-native-worklets";
 
-type ScreenState = { key: string; name: string; progress: number; animating: boolean; closing: boolean; settled: boolean; mounted: number };
+type ScreenState = { key: string; name: string; progress: number; animating: boolean; closing: boolean; settled: boolean; dragging: boolean; mounted: number };
 type Frame = { t: number; key: string; name: string; progress: number };
 
 /** 0 off, 1 state changes, 2 state changes and every frame's progress. Read on the UI thread. */
@@ -72,7 +73,7 @@ const summary = () => ({
 	path: focusedPath(state.nav).join("/"),
 	depth: focusedDepth(state.nav),
 	settled: isSettled(),
-	screens: [...state.screens.values()].map((s) => ({ n: s.name, p: Math.round(s.progress * 1000) / 1000, a: s.animating ? 1 : 0, c: s.closing ? 1 : 0 })),
+	screens: [...state.screens.values()].map((s) => ({ n: s.name, p: Math.round(s.progress * 1000) / 1000, a: s.animating ? 1 : 0, c: s.closing ? 1 : 0, d: s.dragging ? 1 : 0 })),
 	errors: state.errors.length,
 	frames: state.frames.length,
 	counts: state.counts,
@@ -90,11 +91,12 @@ export const bridge = {
 		state.nav = nav;
 		changed();
 	},
-	report(key: string, name: string, progress: number, animating: boolean, closing: boolean, settled: boolean) {
+	report(key: string, name: string, progress: number, animating: boolean, closing: boolean, settled: boolean, dragging = false) {
 		// Reports hop from the UI thread and can arrive after the screen unmounted: drop those.
 		const prev = state.screens.get(key);
 		if (!prev) return;
-		state.screens.set(key, { key, name, progress, animating, closing, settled, mounted: prev.mounted });
+		state.screens.set(key, { key, name, progress, animating, closing, settled, dragging, mounted: prev.mounted });
+		if (dragging && !prev.dragging) bridge.count(`drag:${name}`);
 		changed();
 	},
 	frame(key: string, name: string, progress: number, t: number) {
@@ -102,7 +104,7 @@ export const bridge = {
 	},
 	mount(key: string, name: string) {
 		const prev = state.screens.get(key);
-		state.screens.set(key, prev ? { ...prev, mounted: prev.mounted + 1 } : { key, name, progress: 1, animating: false, closing: false, settled: true, mounted: 1 });
+		state.screens.set(key, prev ? { ...prev, mounted: prev.mounted + 1 } : { key, name, progress: 1, animating: false, closing: false, settled: true, dragging: false, mounted: 1 });
 		changed();
 	},
 	unmount(key: string) {
@@ -178,13 +180,13 @@ function Reporter({ routeKey, name }: { routeKey: string; name: string }) {
 			const c = animation.value?.current;
 			if (!c) return null;
 			// Level 1: flags, and progress rounded so a running transition doesn't report every frame.
-			return [level === 2 ? c.progress : Math.round(c.progress * 10) / 10, c.animating, c.closing, c.settled, level];
+			return [level === 2 ? c.progress : Math.round(c.progress * 10) / 10, c.animating, c.closing, c.settled, level, c.gesture.dragging];
 		},
 		(v, prev) => {
 			if (!v) return;
 			if (v[4] === 2) scheduleOnRN(bridge.frame, routeKey, name, v[0], Date.now());
-			if (!prev || v[1] !== prev[1] || v[2] !== prev[2] || v[3] !== prev[3] || v[0] !== prev[0]) {
-				scheduleOnRN(bridge.report, routeKey, name, v[0], !!v[1], !!v[2], !!v[3]);
+			if (!prev || v[1] !== prev[1] || v[2] !== prev[2] || v[3] !== prev[3] || v[0] !== prev[0] || v[5] !== prev[5]) {
+				scheduleOnRN(bridge.report, routeKey, name, v[0], !!v[1], !!v[2], !!v[3], !!v[5]);
 			}
 		},
 		[routeKey, name],
