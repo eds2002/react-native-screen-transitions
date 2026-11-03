@@ -60,6 +60,11 @@ export interface BaseStackScene<
 	descriptor: TDescriptor;
 	previousDescriptor?: TDescriptor;
 	nextDescriptor?: TDescriptor;
+	/**
+	 * A screen still closing between this one and nextDescriptor (a push landed during its close).
+	 * This screen follows whichever of the two covers it more, so it doesn't jump when the push lands.
+	 */
+	closingNextDescriptor?: TDescriptor;
 }
 
 /**

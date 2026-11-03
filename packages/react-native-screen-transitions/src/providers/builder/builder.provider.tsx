@@ -13,6 +13,8 @@ export interface DescriptorsContextValue {
 	previous?: BaseDescriptor;
 	current: BaseDescriptor;
 	next?: BaseDescriptor;
+	/** A screen still closing between current and next (see BaseStackScene.closingNextDescriptor). */
+	closingNext?: BaseDescriptor;
 }
 
 export type DescriptorDerivationsContextValue = DescriptorDerivations;
@@ -44,6 +46,7 @@ const {
 		const currentDescriptor = inputDescriptors.current;
 		const previousDescriptor = inputDescriptors.previous;
 		const nextDescriptor = inputDescriptors.next;
+		const closingNextDescriptor = inputDescriptors.closingNext;
 		const options = currentDescriptor.options;
 
 		const descriptors = useMemo(() => {
@@ -51,8 +54,14 @@ const {
 				previous: previousDescriptor,
 				current: currentDescriptor,
 				next: nextDescriptor,
+				closingNext: closingNextDescriptor,
 			};
-		}, [previousDescriptor, currentDescriptor, nextDescriptor]);
+		}, [
+			previousDescriptor,
+			currentDescriptor,
+			nextDescriptor,
+			closingNextDescriptor,
+		]);
 
 		const derivations = useMemo(() => {
 			return deriveDescriptorDerivations({

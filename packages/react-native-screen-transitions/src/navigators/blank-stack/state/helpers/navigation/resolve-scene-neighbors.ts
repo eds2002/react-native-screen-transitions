@@ -41,6 +41,8 @@ const findPreviousDescriptor = <T extends SceneWithKey>(
  *   neighbor.
  * - If there is no non-closing neighbor above/below, we fall back to the first
  *   closing neighbor (needed for normal back transitions).
+ * - A closing scene between a scene and its non-closing next (a push that landed
+ *   during a close) is returned as closingNextDescriptor.
  */
 export function resolveSceneNeighbors<T extends SceneWithKey>(
 	scenes: T[],
@@ -50,6 +52,7 @@ export function resolveSceneNeighbors<T extends SceneWithKey>(
 ): {
 	previousDescriptor: T["descriptor"] | undefined;
 	nextDescriptor: T["descriptor"] | undefined;
+	closingNextDescriptor?: T["descriptor"];
 } {
 	const current = scenes[sceneIndex];
 	if (!current) {
@@ -90,8 +93,11 @@ export function resolveSceneNeighbors<T extends SceneWithKey>(
 		}
 	}
 
+	let closingNextDescriptor: T["descriptor"] | undefined;
 	if (nextDescriptor === undefined) {
 		nextDescriptor = latestClosingAbove;
+	} else {
+		closingNextDescriptor = latestClosingAbove;
 	}
 
 	const previousDescriptor = findPreviousDescriptor(
@@ -103,5 +109,6 @@ export function resolveSceneNeighbors<T extends SceneWithKey>(
 	return {
 		previousDescriptor,
 		nextDescriptor,
+		closingNextDescriptor,
 	};
 }

@@ -49,8 +49,14 @@ const BlankSceneRow = memo(function BlankSceneRow({ routeKey }: RouteKeyProps) {
 			current: scene.descriptor,
 			previous: scene.previousDescriptor,
 			next: scene.nextDescriptor,
+			closingNext: scene.closingNextDescriptor,
 		}),
-		[scene.descriptor, scene.previousDescriptor, scene.nextDescriptor],
+		[
+			scene.descriptor,
+			scene.previousDescriptor,
+			scene.nextDescriptor,
+			scene.closingNextDescriptor,
+		],
 	);
 
 	return (

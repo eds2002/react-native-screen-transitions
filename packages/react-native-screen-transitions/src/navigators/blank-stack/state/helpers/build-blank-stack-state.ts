@@ -254,17 +254,19 @@ const withSceneRelationships = ({
 	}));
 
 	const nextScenes = scenes.map((scene, sceneIndex) => {
-		const { previousDescriptor, nextDescriptor } = resolveSceneNeighbors(
-			relationshipScenes,
-			sceneIndex,
-			isRouteClosing,
-			(routeKey) => closingRouteOrder.get(routeKey),
-		);
+		const { previousDescriptor, nextDescriptor, closingNextDescriptor } =
+			resolveSceneNeighbors(
+				relationshipScenes,
+				sceneIndex,
+				isRouteClosing,
+				(routeKey) => closingRouteOrder.get(routeKey),
+			);
 
 		const nextScene = {
 			...scene,
 			previousDescriptor,
 			nextDescriptor,
+			closingNextDescriptor,
 		};
 
 		const previousScene =
@@ -278,7 +280,8 @@ const withSceneRelationships = ({
 			previousScene.route === nextScene.route &&
 			previousScene.descriptor === nextScene.descriptor &&
 			previousScene.previousDescriptor === nextScene.previousDescriptor &&
-			previousScene.nextDescriptor === nextScene.nextDescriptor
+			previousScene.nextDescriptor === nextScene.nextDescriptor &&
+			previousScene.closingNextDescriptor === nextScene.closingNextDescriptor
 		) {
 			return previousScene;
 		}

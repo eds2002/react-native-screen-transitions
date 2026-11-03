@@ -124,6 +124,9 @@ export const useInterpolatedStylesMap = ({
 }) => {
 	const isScreenReady = useMotionStore((store) => store.isScreenReady);
 	const nextScreenKey = useBuilderStore((s) => s.derivations.nextScreenKey);
+	// A screen still closing above this one (a push landed during its close) keeps covering it until
+	// the new screen's open starts, so the next interpolator keeps this screen's style meanwhile.
+	const hasClosingNext = useBuilderStore((s) => !!s.descriptors.closingNext);
 	const destinationPairKey = useBuilderStore(
 		(s) => s.derivations.destinationPairKey,
 	);
@@ -219,7 +222,7 @@ export const useInterpolatedStylesMap = ({
 			isInGestureMode ||
 			!nextInterpolator ||
 			!hasNextSystem ||
-			isOpeningBlocked ||
+			(isOpeningBlocked && !hasClosingNext) ||
 			hasCloseFinished;
 		const interpolatorOptionsOwner = currentOwnsInterpolator
 			? "current"

@@ -203,7 +203,8 @@ const hydrateInterpolatorFrame = <TFrame extends ScreenInterpolatorFrame>({
 	dimensions,
 	insets,
 	currentAnimation,
-	nextAnimation,
+	nextAnimation: activeNextAnimation,
+	closingNextAnimation,
 	prevAnimation,
 	interpolatorOptions,
 	stackProgressEntries,
@@ -214,12 +215,24 @@ const hydrateInterpolatorFrame = <TFrame extends ScreenInterpolatorFrame>({
 	insets: ScreenInterpolatorFrame["insets"];
 	currentAnimation: BuiltState | undefined;
 	nextAnimation: BuiltState | undefined;
+	closingNextAnimation: BuiltState | undefined;
 	prevAnimation: BuiltState | undefined;
 	interpolatorOptions: SelectedInterpolatorOptions;
 	stackProgressEntries: readonly StackProgressEntry[];
 	currentRouteKey: string;
 }): TFrame => {
 	"worklet";
+	// With a screen still closing between this one and its next (a push landed during a close), follow
+	// whichever covers this screen more. The closing one's progress falls while the new one's rises, so
+	// the hand-over happens where they're equal instead of jumping to the new screen's progress.
+	// (transitionProgress: the animations update it before any screen's styles are computed.)
+	const nextAnimation =
+		closingNextAnimation &&
+		(!activeNextAnimation ||
+			closingNextAnimation.transitionProgress.get() >
+				activeNextAnimation.transitionProgress.get())
+			? closingNextAnimation
+			: activeNextAnimation;
 	const shouldApplyOptionsToCurrent = interpolatorOptions.owner === "current";
 	const shouldApplyOptionsToNext =
 		interpolatorOptions.owner === "next" && !!nextAnimation;
@@ -270,10 +283,17 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 
 	const currDescriptor = useBuilderStore((store) => store.descriptors.current);
 	const nextDescriptor = useBuilderStore((store) => store.descriptors.next);
+	const closingNextDescriptor = useBuilderStore(
+		(store) => store.descriptors.closingNext,
+	);
 	const prevDescriptor = useBuilderStore((store) => store.descriptors.previous);
 	const currentMotion = useMotionStore((store) => store.state);
 	const nextMotion = useOptionalMotionStore(
 		nextDescriptor?.route.key ?? null,
+		(store) => store.state,
+	);
+	const closingNextMotion = useOptionalMotionStore(
+		closingNextDescriptor?.route.key ?? null,
 		(store) => store.state,
 	);
 	const previousMotion = useOptionalMotionStore(
@@ -282,6 +302,7 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 	);
 	const currentAnimation = useInterpolatorState(currentMotion);
 	const nextAnimation = useInterpolatorState(nextMotion);
+	const closingNextAnimation = useInterpolatorState(closingNextMotion);
 	const prevAnimation = useInterpolatorState(previousMotion);
 
 	const [initialInterpolatorProps] = useState(() =>
@@ -309,6 +330,7 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 				insets,
 				currentAnimation,
 				nextAnimation,
+				closingNextAnimation,
 				prevAnimation,
 				interpolatorOptions,
 				stackProgressEntries: liveStackProgressEntries.get(),

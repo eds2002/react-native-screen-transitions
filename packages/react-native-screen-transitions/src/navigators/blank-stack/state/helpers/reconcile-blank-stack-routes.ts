@@ -125,24 +125,31 @@ const acceptAlreadyClosingRouteRemovals = ({
 				closingRouteKeys,
 			})
 		: { routes: nextRoutesSnapshot };
-	const routes = [...result.routes];
-	if (nextRoutesSnapshot.length > 0) {
-		for (const route of remainingClosingRoutes) {
-			if (!routes.some((candidate) => candidate.key === route.key))
-				routes.push(route);
-			closingRouteKeys.add(route.key);
-		}
+	if (nextRoutesSnapshot.length === 0) {
+		return {
+			routes: result.routes,
+			descriptors: composeDescriptors(
+				result.routes,
+				nextDescriptors,
+				current.sourceDescriptors,
+			),
+		};
 	}
-	const descriptors = composeDescriptors(
-		routes,
-		nextDescriptors,
-		current.sourceDescriptors,
-	);
 
-	return {
-		routes,
-		descriptors,
-	};
+	// Same placement as a closing route kept on the main path, so it doesn't change stacking order
+	// between the two updates (it was appended on top here and kept in its slot there).
+	return keepClosingRoutes({
+		routes: result.routes,
+		descriptors: composeDescriptors(
+			result.routes,
+			nextDescriptors,
+			current.sourceDescriptors,
+		),
+		closingBefore: remainingClosingRoutes,
+		current,
+		nextDescriptors,
+		closingRouteKeys,
+	});
 };
 
 export const reconcileBlankStackRoutes = (
@@ -235,15 +242,23 @@ const keepClosingRoutes = ({
 	if (dropped.length === 0) {
 		return { routes, descriptors };
 	}
-	const previousKeys = new Set(current.routes.map((route) => route.key));
-	const firstAdded = routes.findIndex((route) => !previousKeys.has(route.key));
-	const insertAt = firstAdded === -1 ? routes.length : firstAdded;
-	const kept = [
-		...routes.slice(0, insertAt),
-		...dropped,
-		...routes.slice(insertAt),
-	];
+	// Each goes back right after the route it followed before, so stacking order never changes.
+	const kept = [...routes];
 	for (const route of dropped) {
+		const before = current.routes.findIndex(
+			(candidate) => candidate.key === route.key,
+		);
+		let insertAt = 0;
+		for (let i = before - 1; i >= 0; i--) {
+			const at = kept.findIndex(
+				(candidate) => candidate.key === current.routes[i].key,
+			);
+			if (at !== -1) {
+				insertAt = at + 1;
+				break;
+			}
+		}
+		kept.splice(insertAt, 0, route);
 		closingRouteKeys.add(route.key);
 	}
 	return {
