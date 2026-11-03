@@ -31,6 +31,7 @@ import type { LocalStyleLayers } from "../helpers/resolve-slot-styles";
 import {
 	type SelectedInterpolatorFrame,
 	selectInterpolatorFrame,
+	selectNextInterpolatorFrame,
 } from "../helpers/select-interpolator-frame";
 import { stripInterpolatorOptions } from "../helpers/strip-interpolator-options";
 
@@ -271,7 +272,10 @@ export const useInterpolatedStylesMap = ({
 				: NO_STYLE_LAYERS;
 		}
 
-		const nextSelectedFrame = selectInterpolatorFrame(props, false);
+		const nextSelectedFrame = selectNextInterpolatorFrame(
+			props,
+			!!currentResult?.stylesMap,
+		);
 		const nextResult = runInterpolator({
 			interpolator: nextInterpolator,
 			props,
