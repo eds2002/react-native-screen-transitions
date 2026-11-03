@@ -181,15 +181,9 @@ export const reconcileBlankStackRoutes = (
 		return acceptedRemoval;
 	}
 
-	// Navigation no longer includes screens removed by an earlier pop. Keep
-	// those visual scenes until their own close-completion callback removes them.
-	const retainedClosingRoutes = current.routes.filter(
-		(route) =>
-			closingRouteKeys.has(route.key) &&
-			!nextRoutesSnapshot.some((candidate) => candidate.key === route.key),
-	);
-	const previousClosingOrder = Array.from(closingRouteKeys).filter((key) =>
-		retainedClosingRoutes.some((route) => route.key === key),
+	// Routes still animating their close exist only here (navigation already removed them).
+	const closingBefore = current.routes.filter((route) =>
+		closingRouteKeys.has(route.key),
 	);
 
 	const result = syncRoutesWithRemoved({
@@ -203,24 +197,59 @@ export const reconcileBlankStackRoutes = (
 		closingRouteKeys,
 	});
 
-	if (nextRoutesSnapshot.length > 0) {
-		for (const route of retainedClosingRoutes) {
-			if (!result.routes.some((candidate) => candidate.key === route.key)) {
-				result.routes.push(route);
-			}
-		}
-		// The insertion order selects the most recently closing neighbor.
-		const newlyClosingKeys = Array.from(closingRouteKeys);
-		closingRouteKeys.clear();
-		for (const key of [...previousClosingOrder, ...newlyClosingKeys]) {
-			closingRouteKeys.add(key);
-		}
-	}
-
-	return {
+	return keepClosingRoutes({
 		routes: result.routes,
+		descriptors: result.descriptors,
+		closingBefore,
+		current,
+		nextDescriptors,
+		closingRouteKeys,
+	});
+};
+
+/**
+ * A navigation change that lands while a route is still closing (a push during a pop) used to drop
+ * that route at once, so it vanished mid-animation. Keep it in its slot, under any route the change
+ * added, until its close finishes (the controller's handleCloseRoute removes it then).
+ */
+const keepClosingRoutes = ({
+	routes,
+	descriptors,
+	closingBefore,
+	current,
+	nextDescriptors,
+	closingRouteKeys,
+}: {
+	routes: ReconciledRoutes["routes"];
+	descriptors: ReconciledRoutes["descriptors"];
+	closingBefore: LocalRoutesState["routes"];
+	current: LocalRoutesState;
+	nextDescriptors: BlankStackDescriptorSources;
+	closingRouteKeys: Set<string>;
+}): ReconciledRoutes => {
+	if (routes.length === 0) {
+		return { routes, descriptors };
+	}
+	const present = new Set(routes.map((route) => route.key));
+	const dropped = closingBefore.filter((route) => !present.has(route.key));
+	if (dropped.length === 0) {
+		return { routes, descriptors };
+	}
+	const previousKeys = new Set(current.routes.map((route) => route.key));
+	const firstAdded = routes.findIndex((route) => !previousKeys.has(route.key));
+	const insertAt = firstAdded === -1 ? routes.length : firstAdded;
+	const kept = [
+		...routes.slice(0, insertAt),
+		...dropped,
+		...routes.slice(insertAt),
+	];
+	for (const route of dropped) {
+		closingRouteKeys.add(route.key);
+	}
+	return {
+		routes: kept,
 		descriptors: composeDescriptors(
-			result.routes,
+			kept,
 			nextDescriptors,
 			current.sourceDescriptors,
 		),

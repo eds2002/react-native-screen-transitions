@@ -62,6 +62,25 @@ beforeEach(() => {
 });
 
 describe("createBlankStackController", () => {
+  it("keeps a closing screen under a screen pushed before its close finishes", () => {
+    const navigation = createNavigation();
+    const a = createRoute("a");
+    const b = createRoute("b");
+    const b2 = createRoute("b2");
+    const descriptors = { a: createDescriptor(a, navigation), b: createDescriptor(b, navigation), b2: createDescriptor(b2, navigation) };
+    const controller = createBlankStackController(createProps([a, b], { a: descriptors.a, b: descriptors.b }, navigation));
+    // Pop b: it stays mounted while it animates out.
+    controller.update(createProps([a], { a: descriptors.a }, navigation));
+    expect(controller.getSnapshot().state.routeKeys).toEqual(["a", "b"]);
+    // Push b2 before b's close finishes: b keeps closing in its slot, under b2.
+    controller.update(createProps([a, b2], { a: descriptors.a, b2: descriptors.b2 }, navigation));
+    expect(controller.getSnapshot().state.routeKeys).toEqual(["a", "b", "b2"]);
+    expect(controller.getSnapshot().state.closingRouteKeys.has("b")).toBe(true);
+    // When b's close finishes it is removed.
+    controller.handleCloseRoute({ route: b });
+    expect(controller.getSnapshot().state.routeKeys).toEqual(["a", "b2"]);
+    expect(navigation.actions).toEqual([]);
+  });
   it("retains the newly dismissed screen when a gesture-closing screen is removed in the same update", () => {
     const navigation = createNavigation();
     const a = createRoute("a");

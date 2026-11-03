@@ -19,9 +19,10 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 	{
 		id: "interrupted-navigation",
 		summary:
-			"A navigation action during another transition breaks continuity: a push during a pop removes the closing " +
-			"screen mid-close and snaps the screen beneath to rest; a pop during a pop removes the closing screen at once; " +
-			"a push during a push drives the first screen's progress below 0, so it jumps off-screen and flies back in.",
+			"A navigation action during another transition still steps the screens once: the screens below " +
+			"switch from following the transition in flight to following the new one (a push during a pop " +
+			"shifts the screen underneath ~40 pt in one frame; a push during a push drives the first screen's " +
+			"progress below 0). A screen closing when the action lands now stays mounted and finishes its close.",
 		matches: (scenario, v) =>
 			["push-mid-pop", "rapid", "rapid-push-pop"].includes(sequenceOf(scenario)) &&
 			["vanish", "spike", "teleport", "flash", "turns-back"].includes(v.rule),
