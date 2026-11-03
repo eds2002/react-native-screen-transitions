@@ -19,6 +19,7 @@ import type {
 	ScrollGestureState,
 } from "../../types";
 import { resolvePanActivationMoveDecision } from "./pan-activation-decision";
+import type { PanTouchPoint } from "./pan-activation-rules";
 
 interface UsePanActivationProps {
 	scrollState: SharedValue<ScrollGestureState | null>;
@@ -47,7 +48,7 @@ export const usePanActivation = ({
 		(store) => store.state.dismissing,
 	);
 
-	const initialTouch = useSharedValue({ x: 0, y: 0 });
+	const initialTouch = useSharedValue<PanTouchPoint>({ x: 0, y: 0 });
 
 	const gestureActivationState = useSharedValue<GestureActivationState>(
 		GestureActivationState.PENDING,
@@ -73,7 +74,12 @@ export const usePanActivation = ({
 			}
 
 			const firstTouch = event.changedTouches[0];
-			initialTouch.set({ x: firstTouch.x, y: firstTouch.y });
+			initialTouch.set({
+				x: firstTouch.x,
+				y: firstTouch.y,
+				absoluteX: firstTouch.absoluteX,
+				absoluteY: firstTouch.absoluteY,
+			});
 			gestureActivationState.set(GestureActivationState.PENDING);
 			pendingDirection.set(null);
 		},

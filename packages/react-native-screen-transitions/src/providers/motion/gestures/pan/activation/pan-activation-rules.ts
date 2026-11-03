@@ -8,9 +8,17 @@ import type { Direction } from "../../../../../types/ownership.types";
 import type { Layout } from "../../../../../types/screen.types";
 import type { ScrollGestureState } from "../../types";
 
+/** A touch relative to the gesture's view, and on screen when the event carries it. */
+export interface PanTouchPoint {
+	x: number;
+	y: number;
+	absoluteX?: number;
+	absoluteY?: number;
+}
+
 interface ResolveOffsetRulesProps {
-	initialTouch: { x: number; y: number };
-	touch: { x: number; y: number };
+	initialTouch: PanTouchPoint;
+	touch: PanTouchPoint;
 	directions: GestureDirections;
 	activationState: GestureActivationState;
 	activationArea?: ResolvedGestureActivationArea;
@@ -294,8 +302,19 @@ export const resolveOffsetRules = ({
 }: ResolveOffsetRulesProps): OffsetRuleResult => {
 	"worklet";
 
-	const deltaX = touch.x - initialTouch.x;
-	const deltaY = touch.y - initialTouch.y;
+	// The finger's movement on screen. Relative to the view, a screen that moves under the finger
+	// (the one below a closing screen sliding back) reads as a swipe the other way and fails.
+	const onScreen =
+		touch.absoluteX !== undefined &&
+		touch.absoluteY !== undefined &&
+		initialTouch.absoluteX !== undefined &&
+		initialTouch.absoluteY !== undefined;
+	const deltaX = onScreen
+		? (touch.absoluteX as number) - (initialTouch.absoluteX as number)
+		: touch.x - initialTouch.x;
+	const deltaY = onScreen
+		? (touch.absoluteY as number) - (initialTouch.absoluteY as number)
+		: touch.y - initialTouch.y;
 
 	const allowedDown = directions.vertical;
 	const allowedUp = directions.verticalInverted;

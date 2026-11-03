@@ -14,6 +14,7 @@ import type {
 } from "../../types";
 import {
 	checkScrollBoundary,
+	type PanTouchPoint,
 	resolveOffsetRules,
 } from "./pan-activation-rules";
 
@@ -46,7 +47,7 @@ interface ResolvePanActivationMoveDecisionProps {
 	event: GestureTouchEvent;
 	runtime: PanGestureRuntime;
 	dimensions: GestureDimensions;
-	initialTouch: { x: number; y: number };
+	initialTouch: PanTouchPoint;
 	activationState: GestureActivationState;
 	ancestorDismissing: boolean;
 	gestureOwners: GestureOwnerMap;
