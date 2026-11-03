@@ -28,18 +28,6 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			["vanish", "spike", "teleport", "flash", "turns-back"].includes(v.rule),
 	},
 	{
-		id: "nested-sheet-dismiss-crash",
-		summary:
-			"Dismissing a sheet or drawer inside a nested stack by gesture throws in BlankSceneRow " +
-			"(scenesByKey[routeKey] is undefined: the row renders from a store state whose routeKeys still list the " +
-			"removed route) and the whole tree unmounts. Seen under react-test-renderer; confirm on a device.",
-		matches: (scenario) =>
-			[
-				"ownership-snap-shadows-axis / preset-spec / swipe-down",
-				"ownership-snap-different-axis / preset-spec / swipe-right",
-			].includes(scenario),
-	},
-	{
 		id: "locked-sheet-follows-drag",
 		summary:
 			"A snap-locked sheet with gestures disabled and a 0 snap point (e2e gestures/snap-locked-no-bubble) " +

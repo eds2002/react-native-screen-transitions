@@ -45,19 +45,22 @@ interface RouteKeyProps {
 const BlankSceneRow = memo(function BlankSceneRow({ routeKey }: RouteKeyProps) {
 	const scene = useBlankStackStore((store) => store.scenesByKey[routeKey]);
 	const descriptors = useMemo(
-		() => ({
-			current: scene.descriptor,
-			previous: scene.previousDescriptor,
-			next: scene.nextDescriptor,
-			closingNext: scene.closingNextDescriptor,
-		}),
-		[
-			scene.descriptor,
-			scene.previousDescriptor,
-			scene.nextDescriptor,
-			scene.closingNextDescriptor,
-		],
+		() =>
+			scene && {
+				current: scene.descriptor,
+				previous: scene.previousDescriptor,
+				next: scene.nextDescriptor,
+				closingNext: scene.closingNextDescriptor,
+			},
+		// Scenes are reused while none of their descriptors change.
+		[scene],
 	);
+
+	// A row can re-render from a store snapshot that no longer has its route (it was just removed)
+	// before the list above it re-renders and drops the row: render nothing until then.
+	if (!scene || !descriptors) {
+		return null;
+	}
 
 	return (
 		<ActivityScreen routeKey={routeKey}>
