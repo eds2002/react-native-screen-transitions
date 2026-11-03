@@ -2,7 +2,7 @@
 /**
  * The device harness: one lab per library mechanism (labs/), each a small
  * screen family with labelled buttons and testIDs for Argent loops.
- * Deep link: harness://lab/<id>
+ * Deep links: harness://lab/<id>, harness://stamp/off (frame stamp off for perf runs), harness://stamp/on
  */
 import * as Linking from "expo-linking";
 import { StatusBar } from "expo-status-bar";
@@ -12,6 +12,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LABS } from "./labs";
 import { BridgeProbe, bridge } from "./labs/bridge";
+import { BLANK, FrameStamp } from "./labs/stamp";
 
 function Home({ onOpen }) {
 	const insets = useSafeAreaInsets();
@@ -34,15 +35,18 @@ function Home({ onOpen }) {
 
 export default function App() {
 	const [open, setOpen] = useState<string | null>(null);
+	const [stamp, setStamp] = useState(true);
 	const url = Linking.useURL();
 	useEffect(() => {
-		const match = url?.match(/lab\/([\w-]+)/);
-		if (match) setOpen(match[1]);
+		const lab = url?.match(/lab\/([\w-]+)/);
+		if (lab) setOpen(lab[1]);
+		const stampMatch = url?.match(/stamp\/(on|off)/);
+		if (stampMatch) setStamp(stampMatch[1] === "on");
 	}, [url]);
 	const lab = LABS.find((l) => l.id === open);
 	useEffect(() => bridge.setLab(lab?.id ?? null), [lab?.id]);
 	return (
-		<GestureHandlerRootView style={{ flex: 1 }}>
+		<GestureHandlerRootView style={{ flex: 1, backgroundColor: BLANK }}>
 			<SafeAreaProvider>
 				<StatusBar style="light" />
 				{lab ? (
@@ -56,6 +60,7 @@ export default function App() {
 					<Home onOpen={setOpen} />
 				)}
 				<BridgeProbe />
+				{stamp ? <FrameStamp /> : null}
 			</SafeAreaProvider>
 		</GestureHandlerRootView>
 	);

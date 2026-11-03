@@ -4,7 +4,7 @@
  * one library mechanism with one plain interpolator; everything Argent needs
  * to drive or read has a testID (see README.md for the conventions).
  */
-import { NavigationContainer, NavigationIndependentTree, NavigationRouteContext, useNavigationContainerRef } from "@react-navigation/native";
+import { DefaultTheme, NavigationContainer, NavigationIndependentTree, NavigationRouteContext, useNavigationContainerRef } from "@react-navigation/native";
 import { type ReactNode, useContext } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { interpolate } from "react-native-reanimated";
@@ -12,6 +12,10 @@ import Transition from "react-native-screen-transitions";
 import { createBlankStackNavigator } from "react-native-screen-transitions/react-navigation";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { bridge, ScreenReporter } from "./bridge";
+import { BLANK } from "./stamp";
+
+/** Navigator backgrounds are the blank color too, so anything they show counts as blank. */
+const THEME = { ...DefaultTheme, dark: true, colors: { ...DefaultTheme.colors, background: BLANK } };
 
 export { createBlankStackNavigator, interpolate, Transition };
 
@@ -90,7 +94,7 @@ export function LabContainer({ children }: { children: ReactNode }) {
 	const ref = useNavigationContainerRef();
 	return (
 		<NavigationIndependentTree>
-			<NavigationContainer ref={ref} onReady={() => bridge.setNav(ref.getRootState())} onStateChange={(state) => bridge.setNav(state)}>
+			<NavigationContainer theme={THEME} ref={ref} onReady={() => bridge.setNav(ref.getRootState())} onStateChange={(state) => bridge.setNav(state)}>
 				{children}
 			</NavigationContainer>
 		</NavigationIndependentTree>
