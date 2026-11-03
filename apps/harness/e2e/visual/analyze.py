@@ -17,6 +17,8 @@ consecutive rendered frames:
            smoothly, or snaps somewhere and carries on from there
   reversal (with --track) what looks like a flicker is a tracked screen changing
            direction (e.g. a pop landing mid-push); reported, not a failure
+  hitch    (with --track) a jump-sized step across a gap of dropped frames: a stutter
+           rather than a wrong position; reported, not a failure
   burst    the fraction of pixels that changed in one display frame is much
            higher than around it (coarser than jump; catches what no tracked
            edge shows)
@@ -86,18 +88,33 @@ def read_stamp(frame, h):
     return rows
 
 
+MIN_RUN = 60  # points of one colour along a line that count as a screen background
+
+
 def edges_of(line):
-    """Centres of colour edges along a line of pixels."""
-    d = np.abs(line[2:] - line[:-2]).sum(axis=1)
-    idx = np.where(d > 90)[0]
-    out, start = [], None
-    for k, i in enumerate(idx):
-        if start is None:
+    """
+    Where two screen backgrounds meet along a line of pixels. Backgrounds are long runs of one colour;
+    anything shorter (text, buttons, rounded corners) is content and ignored, so only screens make edges.
+    """
+    runs, start = [], 0
+    for i in range(1, len(line) + 1):
+        if i == len(line) or np.abs(line[i] - line[start]).sum() > 30:
+            # A screen sliding in or out shows only a sliver at the end of the line: keep short runs there.
+            at_end = start == 0 or i == len(line)
+            if i - start >= (3 if at_end else MIN_RUN):
+                runs.append((start, i, line[start:i].mean(axis=0)))
             start = i
-        if k == len(idx) - 1 or idx[k + 1] > i + 2:
-            out.append((start + i) / 2 + 1)
-            start = None
-    return out
+    edges = []
+    for (s0, e0, c0), (s1, e1, c1) in zip(runs, runs[1:]):
+        if np.abs(c0 - c1).sum() > 60:
+            edges.append((e0 + s1) / 2)
+    return edges
+
+
+def moving_along(pos, seen):
+    """Whether the last seen edge moved along the line in its last few frames (else it was something crossing it)."""
+    recent = [p for p, ok in zip(pos[-4:], seen[-4:]) if ok and p is not None]
+    return len(recent) >= 2 and max(recent) - min(recent) >= 2
 
 
 def follow_edge(tr, timeline, flags, jump_pt):
@@ -110,20 +127,24 @@ def follow_edge(tr, timeline, flags, jump_pt):
         for e in {round(e) for e in es}:
             counts[e] = counts.get(e, 0) + 1
     static = {e for e, c in counts.items() if c > 0.6 * len(all_edges)}
-    pos = []
+    pos, seen = [], []
     for es in all_edges:
         es = [e for e in es if round(e) not in static and round(e) - 1 not in static and round(e) + 1 not in static]
         last = next((p for p in reversed(pos) if p is not None), None)
         if es:
             pos.append(min(es, key=lambda e: abs(e - last)) if last is not None else es[0])
-        elif last is not None:
-            # No moving edge: the screen is at rest against the nearer boundary (or gone).
+            seen.append(True)
+        elif last is not None and moving_along(pos, seen):
+            # The edge was moving along the line and is gone: the screen is at rest against the nearer boundary (or gone).
             pos.append(0.0 if last < length / 2 else float(length))
+            seen.append(False)
         else:
             pos.append(None)
+            seen.append(False)
     vel = [None] * len(pos)
     for n in range(1, len(pos)):
-        if pos[n] is not None and pos[n - 1] is not None:
+        # An edge appearing after none was visible starts a new motion (a screen entering), so no step is measured.
+        if pos[n] is not None and pos[n - 1] is not None and (seen[n - 1] or not seen[n]):
             vel[n] = (pos[n] - pos[n - 1]) / timeline[n].get("displayFrames", 1)
     for n, e in enumerate(timeline):
         e[tr["name"]] = pos[n]
@@ -135,8 +156,14 @@ def follow_edge(tr, timeline, flags, jump_pt):
             continue
         expected = float(np.median(around))
         speed = float(np.median([abs(a) for a in around]))
-        if abs(v - expected) > max(jump_pt, 2.0 * speed):
-            flags.append((n, "jump", abs(v - expected)))
+        tolerance = max(jump_pt, 2.0 * speed)
+        if abs(v - expected) > tolerance:
+            # A stalled frame followed by a catch-up (injected touches arrive unevenly) adds up to normal motion.
+            prev = vel[n - 1]
+            if prev is not None and abs(prev) < abs(expected) / 2 and abs(prev + v - 2 * expected) <= tolerance:
+                continue
+            # Across a frame gap the step is a dropped frame (stutter), not the screen going somewhere wrong.
+            flags.append((n, "hitch" if timeline[n].get("displayFrames", 1) > 1 else "jump", abs(v - expected)))
 
 
 def main():
@@ -267,15 +294,15 @@ def main():
         "displayFrameMs": round(vsync * STAMP_UNIT_MS, 2),
         "gaps": sum(1 for e in timeline if e.get("displayFrames", 1) > 1),
         "framesInGaps": sum(e.get("displayFrames", 1) - 1 for e in timeline),
-        "events": {kind: sum(1 for e in events if e["kind"] == kind) for kind in ("blank", "flicker", "jump", "burst", "reversal")},
+        "events": {kind: sum(1 for e in events if e["kind"] == kind) for kind in ("blank", "flicker", "jump", "burst", "reversal", "hitch")},
     }
     with open(os.path.join(args.out, "report.json"), "w") as f:
         json.dump({"summary": summary, "events": events, "timeline": timeline}, f, indent=1)
     print(json.dumps(summary))
     for ev in events:
         print(f"  {ev['kind']:8s} {ev['ms']:9.1f} ms  frames {ev['first']}-{ev['last']}  peak {ev['peak']:.3f}  {ev['image']}")
-    # Reversals are reported for review but aren't failures on their own.
-    sys.exit(1 if any(e["kind"] != "reversal" for e in events) else 0)
+    # Reversals and hitches are reported for review but aren't failures on their own.
+    sys.exit(1 if any(e["kind"] not in ("reversal", "hitch") for e in events) else 0)
 
 
 if __name__ == "__main__":

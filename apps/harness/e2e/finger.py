@@ -32,7 +32,8 @@ for step in [s.split() for s in sys.argv[1].split(";") if s.strip()]:
         n = max(1, round(float(step[1]) / FRAME))
         events += [{"type": "Move", "x": pos[0], "y": pos[1], "delayMs": FRAME} for _ in range(n)]
     elif op == "up":
-        events.append({"type": "Up", "x": pos[0], "y": pos[1], "delayMs": FRAME})
+        events.append({"type": "Up", "x": pos[0], "y": pos[1], "delayMs": FRAME + pending})
+        pending = 0
     elif op == "wait":
         pending += float(step[1])
 print(json.dumps(events))

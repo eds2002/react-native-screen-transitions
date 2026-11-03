@@ -48,3 +48,8 @@ focused route path, every screen's transition state (`Page` renders a
   `summary()`, `setLevel(n)` (0 off for perf runs, 1 state changes, 2 also every
   frame's progress), `startRecording()` / `stopRecording()` (per-frame progress
   samples) and `reset()`.
+
+## E2E
+
+`e2e/` drives this app with Argent and checks every run visually (blanks,
+flickers, jumps) from a recording; see `e2e/README.md`.
