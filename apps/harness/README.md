@@ -25,3 +25,26 @@ showing `name:value`. Deep link: `harness://lab/<id>`.
 ```sh
 npx expo run:ios --device "<device name>" --configuration Release
 ```
+
+## Debug bridge
+
+`labs/bridge.tsx` keeps the harness state Argent asserts on: the open lab, the
+focused route path, every screen's transition state (`Page` renders a
+`ScreenReporter`), whether everything is settled, and JS errors
+(`ErrorUtils` and `console.error`).
+
+- **Release and debug**: a hidden 1×1 view with `testID="harness-state"`
+  whose accessibility label is the summary as JSON (refreshed at most every 100 ms):
+
+  ```json
+  {"lab":"gestures","path":"card","settled":false,
+   "screens":[{"n":"home","p":1,"a":0,"c":0},{"n":"card","p":0.2,"a":1,"c":1}],
+   "errors":0,"frames":0}
+  ```
+
+  `n` route name, `p` progress (rounded to 0.1 while level 1), `a` animating, `c` closing.
+  `e2e/state.sh <udid>` prints it.
+- **Debug builds** (`debugger-evaluate`): `globalThis.__harness` with `state()`,
+  `summary()`, `setLevel(n)` (0 off for perf runs, 1 state changes, 2 also every
+  frame's progress), `startRecording()` / `stopRecording()` (per-frame progress
+  samples) and `reset()`.

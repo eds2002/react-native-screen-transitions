@@ -1,0 +1,218 @@
+// @ts-nocheck
+/**
+ * The debug bridge Argent reads to assert on the harness.
+ *
+ * - `globalThis.__harness` (Argent `debugger-evaluate`, debug builds):
+ *     state()            full state: lab, navigation, focused path, screens, settled, errors
+ *     summary()          the compact form below
+ *     setLevel(n)        0 off (perf runs), 1 state changes (default), 2 + per-frame progress
+ *     startRecording()   level 2 and clear frames;  stopRecording() → frames
+ *     reset()            clear errors and frames
+ * - `harness-state` (Argent `describe` / `ui-tree`, works in Release): a hidden
+ *   accessibility element whose label is summary() as JSON:
+ *     { lab, path, settled, screens: [{ n, p, a, c }], errors, frames }
+ *
+ * Screens report through `ScreenReporter`, which `Page` renders.
+ */
+import { Component, useEffect, useState } from "react";
+import { View } from "react-native";
+import { makeMutable, useAnimatedReaction } from "react-native-reanimated";
+import { useScreenAnimation } from "react-native-screen-transitions";
+import { scheduleOnRN } from "react-native-worklets";
+
+type ScreenState = { key: string; name: string; progress: number; animating: boolean; closing: boolean; settled: boolean; mounted: number };
+type Frame = { t: number; key: string; name: string; progress: number };
+
+/** 0 off, 1 state changes, 2 state changes and every frame's progress. Read on the UI thread. */
+export const bridgeLevel = makeMutable(1);
+
+const state = {
+	lab: null as string | null,
+	nav: null as unknown,
+	screens: new Map<string, ScreenState>(),
+	errors: [] as Array<{ t: number; message: string }>,
+	frames: [] as Frame[],
+	version: 0,
+};
+const listeners = new Set<() => void>();
+const changed = () => {
+	state.version++;
+	for (const listener of listeners) listener();
+};
+
+const focusedPath = (nav) => {
+	const path = [];
+	let s = nav;
+	while (s?.routes) {
+		const route = s.routes[s.index ?? s.routes.length - 1];
+		path.push(route.name);
+		s = route.state;
+	}
+	return path;
+};
+
+const isSettled = () => [...state.screens.values()].every((s) => !s.animating && !s.closing);
+
+const summary = () => ({
+	lab: state.lab,
+	path: focusedPath(state.nav).join("/"),
+	settled: isSettled(),
+	screens: [...state.screens.values()].map((s) => ({ n: s.name, p: Math.round(s.progress * 1000) / 1000, a: s.animating ? 1 : 0, c: s.closing ? 1 : 0 })),
+	errors: state.errors.length,
+	frames: state.frames.length,
+});
+
+export const bridge = {
+	setLab(lab: string | null) {
+		// Screens unregister themselves on unmount; mounting effects run before the shell's, so don't clear here.
+		state.lab = lab;
+		if (lab === null) state.nav = null;
+		changed();
+	},
+	setNav(nav: unknown) {
+		state.nav = nav;
+		changed();
+	},
+	report(key: string, name: string, progress: number, animating: boolean, closing: boolean, settled: boolean) {
+		const prev = state.screens.get(key);
+		state.screens.set(key, { key, name, progress, animating, closing, settled, mounted: prev?.mounted ?? 1 });
+		changed();
+	},
+	frame(key: string, name: string, progress: number, t: number) {
+		if (state.frames.length < 20000) state.frames.push({ t, key, name, progress });
+	},
+	mount(key: string, name: string) {
+		const prev = state.screens.get(key);
+		state.screens.set(key, prev ? { ...prev, mounted: prev.mounted + 1 } : { key, name, progress: 1, animating: false, closing: false, settled: true, mounted: 1 });
+		changed();
+	},
+	unmount(key: string) {
+		state.screens.delete(key);
+		changed();
+	},
+	error(message: string) {
+		state.errors.push({ t: Date.now(), message: String(message).slice(0, 500) });
+		changed();
+	},
+};
+
+globalThis.__harness = {
+	version: 1,
+	state: () => ({
+		lab: state.lab,
+		nav: state.nav,
+		path: focusedPath(state.nav),
+		settled: isSettled(),
+		screens: [...state.screens.values()],
+		errors: state.errors,
+	}),
+	summary,
+	setLevel: (level: number) => {
+		bridgeLevel.value = level;
+	},
+	startRecording: () => {
+		state.frames = [];
+		bridgeLevel.value = 2;
+	},
+	stopRecording: () => {
+		bridgeLevel.value = 1;
+		return state.frames;
+	},
+	reset: () => {
+		state.errors = [];
+		state.frames = [];
+		changed();
+	},
+};
+
+// Uncaught JS errors and console.error land in the bridge (and still reach the default handler).
+const previousHandler = globalThis.ErrorUtils?.getGlobalHandler?.();
+globalThis.ErrorUtils?.setGlobalHandler?.((error, isFatal) => {
+	bridge.error(`${isFatal ? "fatal: " : ""}${error?.message ?? error}`);
+	previousHandler?.(error, isFatal);
+});
+const consoleError = console.error;
+console.error = (...args) => {
+	try {
+		bridge.error(args.map((a) => (typeof a === "string" ? a : a?.message ?? JSON.stringify(a))).join(" "));
+	} catch {}
+	consoleError(...args);
+};
+
+/** Reports one screen's transition state; renders nothing. */
+function Reporter({ routeKey, name }: { routeKey: string; name: string }) {
+	const animation = useScreenAnimation();
+	useEffect(() => {
+		bridge.mount(routeKey, name);
+		return () => bridge.unmount(routeKey);
+	}, [routeKey, name]);
+	useAnimatedReaction(
+		() => {
+			const level = bridgeLevel.value;
+			if (level === 0) return null;
+			const c = animation.value?.current;
+			if (!c) return null;
+			// Level 1: flags, and progress rounded so a running transition doesn't report every frame.
+			return [level === 2 ? c.progress : Math.round(c.progress * 10) / 10, c.animating, c.closing, c.settled, level];
+		},
+		(v, prev) => {
+			if (!v) return;
+			if (v[4] === 2) scheduleOnRN(bridge.frame, routeKey, name, v[0], Date.now());
+			if (!prev || v[1] !== prev[1] || v[2] !== prev[2] || v[3] !== prev[3] || v[0] !== prev[0]) {
+				scheduleOnRN(bridge.report, routeKey, name, v[0], !!v[1], !!v[2], !!v[3]);
+			}
+		},
+		[routeKey, name],
+	);
+	return null;
+}
+
+/** Screens outside a transition-aware stack (plain native-stack screens) have no animation state: render nothing. */
+class Quiet extends Component<{ children: React.ReactNode }, { failed: boolean }> {
+	state = { failed: false };
+	static getDerivedStateFromError() {
+		return { failed: true };
+	}
+	render() {
+		return this.state.failed ? null : this.props.children;
+	}
+}
+
+export function ScreenReporter({ routeKey, name }: { routeKey?: string; name?: string }) {
+	if (!routeKey || !name) return null;
+	return (
+		<Quiet>
+			<Reporter routeKey={routeKey} name={name} />
+		</Quiet>
+	);
+}
+
+/** The hidden element Argent reads in Release builds. Rendered once, by the app shell. */
+export function BridgeProbe() {
+	const [, setVersion] = useState(0);
+	useEffect(() => {
+		let timer = null;
+		const listener = () => {
+			if (timer) return;
+			timer = setTimeout(() => {
+				timer = null;
+				setVersion(state.version);
+			}, 100);
+		};
+		listeners.add(listener);
+		return () => {
+			listeners.delete(listener);
+			if (timer) clearTimeout(timer);
+		};
+	}, []);
+	return (
+		// A View, not a Text: iOS keeps a Text's first accessibility label.
+		<View
+			testID="harness-state"
+			accessible
+			accessibilityLabel={JSON.stringify(summary())}
+			style={{ position: "absolute", left: 0, bottom: 0, width: 1, height: 1, opacity: 0.01 }}
+			pointerEvents="none"
+		/>
+	);
+}

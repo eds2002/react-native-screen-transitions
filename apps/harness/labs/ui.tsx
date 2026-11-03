@@ -4,13 +4,14 @@
  * one library mechanism with one plain interpolator; everything Argent needs
  * to drive or read has a testID (see README.md for the conventions).
  */
-import { NavigationContainer, NavigationIndependentTree } from "@react-navigation/native";
-import type { ReactNode } from "react";
+import { NavigationContainer, NavigationIndependentTree, NavigationRouteContext, useNavigationContainerRef } from "@react-navigation/native";
+import { type ReactNode, useContext } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
 import { createBlankStackNavigator } from "react-native-screen-transitions/react-navigation";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { bridge, ScreenReporter } from "./bridge";
 
 export { createBlankStackNavigator, interpolate, Transition };
 
@@ -50,6 +51,7 @@ export const sheet = (snapPoints = [0.4, 0.7, 1], extra = {}) => ({
 /** A full-screen page: color, big title (testID `<testID>-title`), then children. */
 export function Page({ title, testID, color, children, scroll }: { title: string; testID: string; color?: string; children?: ReactNode; scroll?: boolean }) {
 	const insets = useSafeAreaInsets();
+	const route = useContext(NavigationRouteContext);
 	const body = (
 		<View style={{ paddingTop: insets.top + 56, paddingHorizontal: 20, paddingBottom: insets.bottom + 24, gap: 10 }}>
 			<Text testID={`${testID}-title`} style={{ color: "white", fontSize: 34, fontWeight: "800" }}>
@@ -60,6 +62,7 @@ export function Page({ title, testID, color, children, scroll }: { title: string
 	);
 	return (
 		<View testID={testID} style={{ flex: 1, backgroundColor: color ?? colorFor(title) }}>
+			<ScreenReporter routeKey={route?.key} name={route?.name} />
 			{scroll ? <ScrollView>{body}</ScrollView> : body}
 		</View>
 	);
@@ -82,11 +85,14 @@ export function Probe({ testID, value }: { testID: string; value: string }) {
 	);
 }
 
-/** Wraps a lab's own navigator so it is independent of the app shell. */
+/** Wraps a lab's own navigator so it is independent of the app shell; reports its state to the bridge. */
 export function LabContainer({ children }: { children: ReactNode }) {
+	const ref = useNavigationContainerRef();
 	return (
 		<NavigationIndependentTree>
-			<NavigationContainer>{children}</NavigationContainer>
+			<NavigationContainer ref={ref} onReady={() => bridge.setNav(ref.getRootState())} onStateChange={(state) => bridge.setNav(state)}>
+				{children}
+			</NavigationContainer>
 		</NavigationIndependentTree>
 	);
 }

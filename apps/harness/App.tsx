@@ -11,6 +11,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LABS } from "./labs";
+import { BridgeProbe, bridge } from "./labs/bridge";
 
 function Home({ onOpen }) {
 	const insets = useSafeAreaInsets();
@@ -39,6 +40,7 @@ export default function App() {
 		if (match) setOpen(match[1]);
 	}, [url]);
 	const lab = LABS.find((l) => l.id === open);
+	useEffect(() => bridge.setLab(lab?.id ?? null), [lab?.id]);
 	return (
 		<GestureHandlerRootView style={{ flex: 1 }}>
 			<SafeAreaProvider>
@@ -53,6 +55,7 @@ export default function App() {
 				) : (
 					<Home onOpen={setOpen} />
 				)}
+				<BridgeProbe />
 			</SafeAreaProvider>
 		</GestureHandlerRootView>
 	);
