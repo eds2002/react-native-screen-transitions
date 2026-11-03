@@ -10,7 +10,9 @@
  *     reset()            clear errors and frames
  * - `harness-state` (Argent `describe` / `ui-tree`, works in Release): a hidden
  *   accessibility element whose label is summary() as JSON:
- *     { lab, path, settled, screens: [{ n, p, a, c }], errors, frames }
+ *     { lab, path, depth, settled, screens: [{ n, p, a, c }], errors, frames, counts }
+ *   depth: routes in the innermost focused navigator
+ *   counts: named events labs report with bridge.count() (button presses), reset when a lab opens
  *
  * Screens report through `ScreenReporter`, which `Page` renders.
  */
@@ -32,6 +34,7 @@ const state = {
 	screens: new Map<string, ScreenState>(),
 	errors: [] as Array<{ t: number; message: string }>,
 	frames: [] as Frame[],
+	counts: {} as Record<string, number>,
 	version: 0,
 };
 const listeners = new Set<() => void>();
@@ -51,19 +54,33 @@ const focusedPath = (nav) => {
 	return path;
 };
 
+/** Number of routes in the innermost focused navigator. */
+const focusedDepth = (nav) => {
+	let s = nav;
+	let depth = 0;
+	while (s?.routes) {
+		depth = s.routes.length;
+		s = s.routes[s.index ?? s.routes.length - 1].state;
+	}
+	return depth;
+};
+
 const isSettled = () => [...state.screens.values()].every((s) => !s.animating && !s.closing);
 
 const summary = () => ({
 	lab: state.lab,
 	path: focusedPath(state.nav).join("/"),
+	depth: focusedDepth(state.nav),
 	settled: isSettled(),
 	screens: [...state.screens.values()].map((s) => ({ n: s.name, p: Math.round(s.progress * 1000) / 1000, a: s.animating ? 1 : 0, c: s.closing ? 1 : 0 })),
 	errors: state.errors.length,
 	frames: state.frames.length,
+	counts: state.counts,
 });
 
 export const bridge = {
 	setLab(lab: string | null) {
+		state.counts = {};
 		// Screens unregister themselves on unmount; mounting effects run before the shell's, so don't clear here.
 		state.lab = lab;
 		if (lab === null) state.nav = null;
@@ -74,8 +91,10 @@ export const bridge = {
 		changed();
 	},
 	report(key: string, name: string, progress: number, animating: boolean, closing: boolean, settled: boolean) {
+		// Reports hop from the UI thread and can arrive after the screen unmounted: drop those.
 		const prev = state.screens.get(key);
-		state.screens.set(key, { key, name, progress, animating, closing, settled, mounted: prev?.mounted ?? 1 });
+		if (!prev) return;
+		state.screens.set(key, { key, name, progress, animating, closing, settled, mounted: prev.mounted });
 		changed();
 	},
 	frame(key: string, name: string, progress: number, t: number) {
@@ -88,6 +107,11 @@ export const bridge = {
 	},
 	unmount(key: string) {
 		state.screens.delete(key);
+		changed();
+	},
+	/** Counts a named event (e.g. a button press) so a scenario can check its input arrived. */
+	count(name: string) {
+		state.counts[name] = (state.counts[name] ?? 0) + 1;
 		changed();
 	},
 	error(message: string) {
@@ -119,6 +143,7 @@ globalThis.__harness = {
 		return state.frames;
 	},
 	reset: () => {
+		state.counts = {};
 		state.errors = [];
 		state.frames = [];
 		changed();

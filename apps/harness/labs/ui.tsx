@@ -89,14 +89,18 @@ export function Probe({ testID, value }: { testID: string; value: string }) {
 	);
 }
 
-/** Wraps a lab's own navigator so it is independent of the app shell; reports its state to the bridge. */
-export function LabContainer({ children }: { children: ReactNode }) {
+/**
+ * Wraps a lab's own navigator so it is independent of the app shell; reports its state to the bridge.
+ * `overlay(ref)` renders above the navigator (fixed controls that drive it through the container ref).
+ */
+export function LabContainer({ children, overlay }: { children: ReactNode; overlay?: (ref) => ReactNode }) {
 	const ref = useNavigationContainerRef();
 	return (
 		<NavigationIndependentTree>
 			<NavigationContainer theme={THEME} ref={ref} onReady={() => bridge.setNav(ref.getRootState())} onStateChange={(state) => bridge.setNav(state)}>
 				{children}
 			</NavigationContainer>
+			{overlay?.(ref)}
 		</NavigationIndependentTree>
 	);
 }

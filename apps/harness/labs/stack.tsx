@@ -27,9 +27,14 @@
  *     → after settle "route:C depth:2 stack:A>C", C fully visible
  * 13. tap stack-c-pop → "route:A depth:1 stack:A"; repeat steps 9-13 three times
  *     to shake out timing; every settle must match the probe exactly.
+ *
+ * Fixed bar (over every screen, like a header): `stack-bar-pop` pops the top
+ * route, `stack-bar-push` pushes the next one. It never moves, so e2e spam taps
+ * its coordinates in one timed gesture (e2e/scenarios/stack-spam.sh).
  */
 import { StackActions, useIsFocused, useNavigationState } from "@react-navigation/native";
-import { View } from "react-native";
+import { Pressable, Text, View } from "react-native";
+import { bridge } from "./bridge";
 import { Button, createBlankStackNavigator, LabContainer, Page, Probe, slide, type Lab } from "./ui";
 
 const Stack = createBlankStackNavigator();
@@ -49,7 +54,12 @@ function RouteProbe() {
 		const names = state.routes.map((r) => r.name);
 		return `route:${names[state.index]} depth:${names.length} stack:${names.join(">")}`;
 	});
-	return focused ? <Probe testID="stack-route" value={summary} /> : null;
+	// Always laid out (hidden when unfocused) so a focus change doesn't shift the buttons below it.
+	return (
+		<View style={{ opacity: focused ? 1 : 0 }}>
+			<Probe testID={focused ? "stack-route" : undefined} value={summary} />
+		</View>
+	);
 }
 
 function StackScreen({ navigation, route }) {
@@ -95,9 +105,33 @@ function StackScreen({ navigation, route }) {
 	);
 }
 
+function BarButton({ label, testID, onPress }) {
+	return (
+		<Pressable testID={testID} accessibilityLabel={testID} onPress={onPress} style={{ flex: 1, height: 52, borderRadius: 14, backgroundColor: "#000c", alignItems: "center", justifyContent: "center" }}>
+			<Text style={{ color: "white", fontWeight: "800", fontSize: 16 }}>{label}</Text>
+		</Pressable>
+	);
+}
+
+function Bar({ nav }) {
+	return (
+		<View pointerEvents="box-none" style={{ position: "absolute", left: 16, right: 16, bottom: 96, flexDirection: "row", gap: 12 }}>
+			<BarButton label="◀ pop" testID="stack-bar-pop" onPress={() => {
+					bridge.count("bar-pop");
+					if (nav.canGoBack()) nav.dispatch(StackActions.pop());
+					else bridge.count("bar-pop-ignored");
+				}} />
+			<BarButton label="push ▶" testID="stack-bar-push" onPress={() => {
+					bridge.count("bar-push");
+					nav.dispatch(StackActions.push(NEXT[nav.getCurrentRoute()?.name ?? "A"]));
+				}} />
+		</View>
+	);
+}
+
 function Component() {
 	return (
-		<LabContainer>
+		<LabContainer overlay={(ref) => <Bar nav={ref} />}>
 			<Stack.Navigator screenOptions={slide("horizontal")}>
 				<Stack.Screen name="A" component={StackScreen} />
 				<Stack.Screen name="B" component={StackScreen} />

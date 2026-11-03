@@ -15,6 +15,8 @@ consecutive rendered frames:
   jump     (with --track) a tracked screen edge moves by a step that departs
            sharply from the steps around it: a screen leaps instead of moving
            smoothly, or snaps somewhere and carries on from there
+  reversal (with --track) what looks like a flicker is a tracked screen changing
+           direction (e.g. a pop landing mid-push); reported, not a failure
   burst    the fraction of pixels that changed in one display frame is much
            higher than around it (coarser than jump; catches what no tracked
            edge shows)
@@ -211,6 +213,8 @@ def main():
         e["ms"] = round(e["timeUnits"] * STAMP_UNIT_MS, 1)
 
     flags = []
+    for tr in tracks:
+        follow_edge(tr, timeline, flags, args.jump_pt)
     for n, e in enumerate(timeline):
         if e["blank"] > args.allow_blank:
             flags.append((n, "blank", e["blank"]))
@@ -218,15 +222,18 @@ def main():
             a, b = e.get("changed", 0), timeline[n + 1].get("changed", 0)
             skip = timeline[n + 1].get("changedSkip", 1)
             if min(a, b) > args.flicker_min and skip < 0.3 * min(a, b):
-                flags.append((n, "flicker", min(a, b)))
+                # A tracked edge that steps one way then back is a screen changing direction, not a flicker.
+                turned = any(
+                    None not in (e.get(t), timeline[n - 1].get(t), timeline[n + 1].get(t))
+                    and (e[t] - timeline[n - 1][t]) * (timeline[n + 1][t] - e[t]) < 0
+                    for t in args.track
+                )
+                flags.append((n, "reversal" if turned else "flicker", min(a, b)))
         if "motion" in e:
             around = [timeline[k]["motion"] for k in range(max(1, n - 3), min(len(timeline), n + 4)) if k != n and "motion" in timeline[k]]
             base = float(np.median(around)) if around else 0
             if e["motion"] > args.jump_min and e["motion"] > args.jump_ratio * base + args.jump_min / 2:
                 flags.append((n, "burst", e["motion"]))
-
-    for tr in tracks:
-        follow_edge(tr, timeline, flags, args.jump_pt)
 
     # Consecutive flags of one kind form one event.
     events = []
@@ -260,14 +267,15 @@ def main():
         "displayFrameMs": round(vsync * STAMP_UNIT_MS, 2),
         "gaps": sum(1 for e in timeline if e.get("displayFrames", 1) > 1),
         "framesInGaps": sum(e.get("displayFrames", 1) - 1 for e in timeline),
-        "events": {kind: sum(1 for e in events if e["kind"] == kind) for kind in ("blank", "flicker", "jump", "burst")},
+        "events": {kind: sum(1 for e in events if e["kind"] == kind) for kind in ("blank", "flicker", "jump", "burst", "reversal")},
     }
     with open(os.path.join(args.out, "report.json"), "w") as f:
         json.dump({"summary": summary, "events": events, "timeline": timeline}, f, indent=1)
     print(json.dumps(summary))
     for ev in events:
         print(f"  {ev['kind']:8s} {ev['ms']:9.1f} ms  frames {ev['first']}-{ev['last']}  peak {ev['peak']:.3f}  {ev['image']}")
-    sys.exit(1 if events else 0)
+    # Reversals are reported for review but aren't failures on their own.
+    sys.exit(1 if any(e["kind"] != "reversal" for e in events) else 0)
 
 
 if __name__ == "__main__":
