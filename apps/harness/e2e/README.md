@@ -77,6 +77,9 @@ and 0–1 dropped frames in the app. Count drops in the app instead:
   for a 120 Hz device (60 Hz by default)
 - `harness://bridge/0` stops the bridge's own reports while measuring (it re-renders a hidden
   view up to every 100 ms), `harness://bridge/1` turns them back on and refreshes the summary
+- `harness://perf/load/<ms>` burns that many ms of the UI thread every frame: the load at which
+  drops start is the headroom transitions leave (on the simulator: stack ~12 ms, zoom ~10 ms)
+- `latency: { push, pop }`: median ms from a stack-bar press to the screen's first moving frame
 - add `?n=<random>` to a link opened twice in a row, or the app doesn't see it again
 
 ## Showing a bug

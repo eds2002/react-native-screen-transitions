@@ -37,8 +37,20 @@ export const bridgeLevel = makeMutable(1);
  * after the last frame are skipped. The refresh interval is 60 Hz unless set (harness://perf/hz/120).
  */
 const perf = makeMutable({ frames: 0, dropped: 0, late: 0, worst: 0, vsync: 1000 / 60, last: -1 });
+/** Synthetic UI-thread work per frame in ms (harness://perf/load/<ms>): how much headroom the transitions leave. */
+const perfLoad = makeMutable(0);
+/** Press-to-first-motion latency in ms: [push, pop] lists, since the last reset. */
+const latency = { push: [] as number[], pop: [] as number[] };
+const pressedAt: Record<string, number> = {};
 const resetPerf = (hz?: number) => {
 	perf.value = { frames: 0, dropped: 0, late: 0, worst: 0, vsync: hz ? 1000 / hz : perf.value.vsync, last: -1 };
+	latency.push = [];
+	latency.pop = [];
+};
+const median = (xs: number[]) => {
+	if (!xs.length) return null;
+	const sorted = [...xs].sort((a, b) => a - b);
+	return sorted[Math.floor(sorted.length / 2)];
 };
 
 const state = {
@@ -89,7 +101,8 @@ const summary = () => ({
 	errors: state.errors.length,
 	frames: state.frames.length,
 	counts: state.counts,
-	perf: { frames: perf.value.frames, dropped: perf.value.dropped, late: perf.value.late, worst: Math.round(perf.value.worst * 10) / 10, vsync: Math.round(perf.value.vsync * 10) / 10 },
+	latency: { push: median(latency.push), pushMax: latency.push.length ? Math.max(...latency.push) : null, pop: median(latency.pop), popMax: latency.pop.length ? Math.max(...latency.pop) : null, n: latency.push.length + latency.pop.length },
+	perf: { load: perfLoad.value, frames: perf.value.frames, dropped: perf.value.dropped, late: perf.value.late, worst: Math.round(perf.value.worst * 10) / 10, vsync: Math.round(perf.value.vsync * 10) / 10 },
 });
 
 export const bridge = {
@@ -127,8 +140,16 @@ export const bridge = {
 	},
 	/** Counts a named event (e.g. a button press) so a scenario can check its input arrived. */
 	count(name: string) {
+		pressedAt[name] = Date.now();
 		state.counts[name] = (state.counts[name] ?? 0) + 1;
 		changed();
+	},
+	moved(kind: "push" | "pop", t: number) {
+		const pressed = pressedAt[`bar-${kind}`];
+		if (pressed && t - pressed < 1000) {
+			latency[kind].push(t - pressed);
+			delete pressedAt[`bar-${kind}`];
+		}
 	},
 	error(message: string) {
 		state.errors.push({ t: Date.now(), message: String(message).slice(0, 500) });
@@ -149,6 +170,10 @@ globalThis.__harness = {
 	summary,
 	setLevel: (level: number) => {
 		bridgeLevel.value = level;
+		changed();
+	},
+	setLoad: (ms: number) => {
+		perfLoad.value = ms;
 		changed();
 	},
 	resetPerf: (hz?: number) => {
@@ -192,6 +217,19 @@ function Reporter({ routeKey, name }: { routeKey: string; name: string }) {
 		bridge.mount(routeKey, name);
 		return () => bridge.unmount(routeKey);
 	}, [routeKey, name]);
+	// First moving frame of a push (this screen entering) or pop (this screen closing), against the
+	// latest bar press: tap-to-motion latency.
+	useAnimatedReaction(
+		() => {
+			const c = animation.value?.current;
+			if (!c || !c.animating) return 0;
+			if (c.closing) return c.progress < 0.999 ? 2 : 0;
+			return c.progress > 0.001 && c.progress < 0.999 ? 1 : 0;
+		},
+		(moving, prev) => {
+			if (moving && moving !== prev) scheduleOnRN(bridge.moved, moving === 1 ? "push" : "pop", Date.now());
+		},
+	);
 	useAnimatedReaction(
 		() => {
 			const level = bridgeLevel.value;
@@ -238,6 +276,11 @@ export function BridgeProbe() {
 	const [, setVersion] = useState(0);
 	useFrameCallback((frame) => {
 		"worklet";
+		const load = perfLoad.value;
+		if (load > 0) {
+			const end = performance.now() + load;
+			while (performance.now() < end) {}
+		}
 		const p = perf.value;
 		if (p.last < 0) {
 			perf.value = { ...p, last: frame.timestamp };
