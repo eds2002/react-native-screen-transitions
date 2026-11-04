@@ -23,4 +23,6 @@ jobs:
       - name: Ask for a reproduction
         run: gh issue comment "$NUMBER" --body "Hey @$USER :wave:, thanks for the report! Could you add a reproduction? An Expo Snack link is ideal, or a small GitHub repository if it needs a dev build. It makes bugs much faster to track down." --repo "$REPO"
       - name: Label Issue
-        run: gh issue edit "$NUMBER" --add-label "needs reproduction" --repo "$REPO"
+        run: |
+          gh label create "needs reproduction" --color FBCA04 --description "Waiting for an Expo Snack or repository that reproduces the bug" --force --repo "$REPO"
+          gh issue edit "$NUMBER" --add-label "needs reproduction" --repo "$REPO"
