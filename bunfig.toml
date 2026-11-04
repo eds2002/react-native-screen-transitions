@@ -3,3 +3,7 @@ linker = "hoisted"
 
 [test]
 preload = ["./test/setup.ts"]
+
+# Harness tests swap in a frame-stepping Reanimated for their whole file and need their own
+# process: bun run test:harness runs them one per process (bun run test runs both).
+pathIgnorePatterns = ["**/src/__tests__/harness/**"]

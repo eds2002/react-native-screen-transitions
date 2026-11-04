@@ -42,7 +42,9 @@ We use TypeScript, Biome (lint + format), Bun tests, and Maestro for e2e. Make s
 # From repo root
 bun run lint       # biome check
 bun run typecheck  # tsc --noEmit
-bun test           # unit tests (bun run test runs the same suite)
+bun test           # unit tests
+bun run test:harness  # frame-by-frame harness tests, one process per file
+bun run test       # both
 
 # E2e tests (requires Maestro CLI + iOS simulator)
 cd apps/e2e
