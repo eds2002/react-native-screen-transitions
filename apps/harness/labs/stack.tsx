@@ -43,10 +43,21 @@ const NEXT = { A: "B", B: "C", C: "A" };
 
 /** Distinct solid colours for screen instances; none is the BLANK magenta. */
 const INSTANCE_COLORS = ["#16a34a", "#dc2626", "#2563eb", "#ca8a04", "#7c3aed", "#0891b2", "#db2777", "#4d7c0f", "#c2410c", "#334155"];
-const instanceIndex = new Map<string, number>();
-const instanceColor = (key: string) => {
-	if (!instanceIndex.has(key)) instanceIndex.set(key, instanceIndex.size);
-	return INSTANCE_COLORS[instanceIndex.get(key)! % INSTANCE_COLORS.length];
+const instanceColors = new Map<string, string>();
+let nextColor = 0;
+/**
+ * A new instance takes the next colour in the cycle, skipping the colour of the screen below it: two
+ * neighbours with the same colour have no edge between them for the analyzer to track (a push turned
+ * back by a pop then read as a flicker).
+ */
+const instanceColor = (key: string, belowKey?: string) => {
+	if (!instanceColors.has(key)) {
+		const below = belowKey ? instanceColors.get(belowKey) : undefined;
+		let color = INSTANCE_COLORS[nextColor++ % INSTANCE_COLORS.length];
+		if (color === below) color = INSTANCE_COLORS[nextColor++ % INSTANCE_COLORS.length];
+		instanceColors.set(key, color);
+	}
+	return instanceColors.get(key);
 };
 
 /**
@@ -75,10 +86,12 @@ function StackScreen({ navigation, route }) {
 	const id = name.toLowerCase();
 	const next = NEXT[name];
 	const after = (ms, action) => setTimeout(() => toStack(navigation, action), ms);
+	const routes = navigation.getState()?.routes ?? [];
+	const belowKey = routes[routes.findIndex((r) => r.key === route.key) - 1]?.key;
 	return (
 		// Each pushed instance gets its own colour (by route key): two screens with the same name crossing
 		// each other (a push landing during a pop) stay distinguishable in recordings.
-		<Page title={`Screen ${name}`} testID={`stack-${id}`} color={instanceColor(route.key)}>
+		<Page title={`Screen ${name}`} testID={`stack-${id}`} color={instanceColor(route.key, belowKey)}>
 			<RouteProbe />
 			<View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
 				<Button label={`push ${next}`} testID={`stack-push-${next.toLowerCase()}`} onPress={() => navigation.push(next)} />
