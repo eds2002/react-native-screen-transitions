@@ -8,12 +8,16 @@ import {
 	useSharedValue,
 } from "react-native-reanimated";
 import { getVisibilityBlockOffset } from "../../../utils/visibility-block-offset";
+import { useBuilderStore } from "../../builder";
 import {
 	hasCloseTransitionFinished,
 	hasOpenTransitionStarted,
 	isScreenReady as resolveScreenReady,
 } from "../helpers/transition-visual-state";
-import { resolveScreenVisibilityGate } from "../helpers/visibility-gate";
+import {
+	resolveInitialVisibilityBlocked,
+	resolveScreenVisibilityGate,
+} from "../helpers/visibility-gate";
 import type { MotionValues } from "../types";
 import { LifecycleTransitionRequestKind } from "./use-transition-values";
 
@@ -37,8 +41,22 @@ export const useMaybeBlockVisibility = ({
 		pendingLifecycleRequestKind,
 	} = motion;
 
+	// The first screen of a stack (no open transition) starts visible: its only path to visible
+	// would otherwise be one UI-thread style update after mount, and losing it left it off-screen.
+	const isFirstKey = useBuilderStore((store) => store.derivations.isFirstKey);
+	const animateOnInitialMount = useBuilderStore(
+		(store) =>
+			(store.options as { experimental_animateOnInitialMount?: boolean })
+				.experimental_animateOnInitialMount,
+	);
 	const hasVisibilityGateOpened = useSharedValue(false);
-	const localVisibilityBlocked = useSharedValue(!isFloatingOverlay);
+	const localVisibilityBlocked = useSharedValue(
+		resolveInitialVisibilityBlocked({
+			isFloatingOverlay,
+			isFirstKey,
+			animateOnInitialMount,
+		}),
+	);
 	const lastVisibilityStyle = useSharedValue<{
 		opacity: number;
 		translateY: number;
