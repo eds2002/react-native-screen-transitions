@@ -114,6 +114,7 @@ const acceptAlreadyClosingRouteRemovals = ({
 		(route) =>
 			!nextRouteKeys.has(route.key) && !acceptedRemovedKeys.has(route.key),
 	);
+	const closingOrder = Array.from(closingRouteKeys);
 	const result = hasNewRemoval
 		? syncRoutesWithRemoved({
 				prevRoutes: previousRoutesSnapshot.filter(
@@ -146,6 +147,7 @@ const acceptAlreadyClosingRouteRemovals = ({
 			current.sourceDescriptors,
 		),
 		closingBefore: remainingClosingRoutes,
+		closingOrder,
 		current,
 		nextDescriptors,
 		closingRouteKeys,
@@ -192,6 +194,7 @@ export const reconcileBlankStackRoutes = (
 	const closingBefore = current.routes.filter((route) =>
 		closingRouteKeys.has(route.key),
 	);
+	const closingOrder = Array.from(closingRouteKeys);
 
 	const result = syncRoutesWithRemoved({
 		prevRoutes:
@@ -208,6 +211,7 @@ export const reconcileBlankStackRoutes = (
 		routes: result.routes,
 		descriptors: result.descriptors,
 		closingBefore,
+		closingOrder,
 		current,
 		nextDescriptors,
 		closingRouteKeys,
@@ -218,11 +222,16 @@ export const reconcileBlankStackRoutes = (
  * A navigation change that lands while a route is still closing (a push during a pop) used to drop
  * that route at once, so it vanished mid-animation. Keep it in its slot, under any route the change
  * added, until its close finishes (the controller's handleCloseRoute removes it then).
+ *
+ * closingRouteKeys' order is the order routes started closing, and a screen follows the most recent
+ * close above it (resolveSceneNeighbors): routes closing before this update stay ahead of the ones
+ * it closes, even when syncing dropped and re-added them.
  */
 const keepClosingRoutes = ({
 	routes,
 	descriptors,
 	closingBefore,
+	closingOrder,
 	current,
 	nextDescriptors,
 	closingRouteKeys,
@@ -230,6 +239,7 @@ const keepClosingRoutes = ({
 	routes: ReconciledRoutes["routes"];
 	descriptors: ReconciledRoutes["descriptors"];
 	closingBefore: LocalRoutesState["routes"];
+	closingOrder: string[];
 	current: LocalRoutesState;
 	nextDescriptors: BlankStackDescriptorSources;
 	closingRouteKeys: Set<string>;
@@ -260,6 +270,12 @@ const keepClosingRoutes = ({
 		}
 		kept.splice(insertAt, 0, route);
 		closingRouteKeys.add(route.key);
+	}
+	const earlier = closingOrder.filter((key) => closingRouteKeys.has(key));
+	const later = [...closingRouteKeys].filter((key) => !earlier.includes(key));
+	closingRouteKeys.clear();
+	for (const key of [...earlier, ...later]) {
+		closingRouteKeys.add(key);
 	}
 	return {
 		routes: kept,
