@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import {
 	type SharedValue,
@@ -7,9 +6,7 @@ import {
 	useDerivedValue,
 } from "react-native-reanimated";
 import { NO_PROPS, NO_STYLES } from "../../../constants";
-import type { ScreenAnimationContextValue } from "../../../providers/screen/animation/animation.provider";
-import { useBuildTransitionAccessor } from "../../../providers/screen/animation/helpers/accessors/use-build-transition-accessor";
-import { collectInterpolatorSharedValues } from "../../../providers/screen/styles/helpers/collect-interpolator-shared-values";
+import type { OrchestratorState } from "../../../providers/orchestrator/orchestrator.provider";
 import type {
 	NormalizedTransitionSlotStyle,
 	ScreenStyleInterpolator,
@@ -27,42 +24,23 @@ export const useOverlaySlot = ({
 	driverAnimationStore,
 	previousOverlayAnimationStore,
 	driverInterpolator,
-	interpolatorReady,
+	isScreenReady,
+	ancestorIsScreenReady,
 	isIncoming,
 }: {
-	overlayAnimationStore: ScreenAnimationContextValue;
+	overlayAnimationStore: OrchestratorState;
 	overlayInterpolator: ScreenStyleInterpolator | undefined;
-	driverAnimationStore: ScreenAnimationContextValue;
-	previousOverlayAnimationStore?: ScreenAnimationContextValue;
+	driverAnimationStore: OrchestratorState;
+	previousOverlayAnimationStore?: OrchestratorState;
 	driverInterpolator: ScreenStyleInterpolator | undefined;
-	interpolatorReady: SharedValue<number>;
+	isScreenReady: SharedValue<boolean>;
+	ancestorIsScreenReady: SharedValue<boolean> | null;
 	isIncoming: boolean;
 }) => {
 	const { height } = useWindowDimensions();
-	const overlayTransition = useBuildTransitionAccessor(overlayAnimationStore);
-	const driverTransition = useBuildTransitionAccessor(driverAnimationStore);
-
-	const interpolatorSharedValues = useMemo(
-		() =>
-			collectInterpolatorSharedValues([
-				overlayInterpolator,
-				driverInterpolator,
-			]),
-		[overlayInterpolator, driverInterpolator],
-	);
-
 	const overlaySlot = useDerivedValue<
 		NormalizedTransitionSlotStyle | undefined
 	>(() => {
-		"worklet";
-		overlayAnimationStore.screenInterpolatorPropsRevision.get();
-		driverAnimationStore.screenInterpolatorPropsRevision.get();
-		previousOverlayAnimationStore?.screenInterpolatorPropsRevision.get();
-
-		for (let index = 0; index < interpolatorSharedValues.length; index++) {
-			interpolatorSharedValues[index]?.get();
-		}
-
 		const overlayFrame = overlayAnimationStore.screenInterpolatorProps.get();
 		const driverFrame = driverAnimationStore.screenInterpolatorProps.get();
 		const overlayOwnsGesture = shouldUseOverlayGestureDriver(
@@ -81,7 +59,6 @@ export const useOverlaySlot = ({
 			interpolator: overlayOwnsGesture
 				? overlayInterpolator
 				: driverInterpolator,
-			transition: overlayOwnsGesture ? overlayTransition : driverTransition,
 		});
 	});
 
@@ -92,7 +69,11 @@ export const useOverlaySlot = ({
 			return NO_STYLES;
 		}
 
-		if (isIncoming && !interpolatorReady.get()) {
+		if (
+			isIncoming &&
+			!isScreenReady.get() &&
+			(ancestorIsScreenReady?.get() ?? true)
+		) {
 			return {
 				transform: [{ translateY: getVisibilityBlockOffset(height) }],
 			};

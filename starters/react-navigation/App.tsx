@@ -20,7 +20,6 @@ const sheetOptions = Transition.Presets.SlideFromBottom({
 const mediaZoomOptions: ScreenTransitionConfig = {
 	gestureEnabled: true,
 	gestureDirection: ["bidirectional", "pinch-in"],
-	navigationMaskEnabled: true,
 	transitionSpec: Transition.Specs.Zoom,
 	screenStyleInterpolator: ({ bounds }) => {
 		"worklet";

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { resolvePresentedIndex } from "../providers/stack/blank-stack-state/helpers/resolve-presented-index";
+import { resolvePresentedIndex } from "../navigators/blank-stack/state/helpers/resolve-presented-index";
 import type { BaseStackRoute } from "../types/stack.types";
 
 const route = (key: string): BaseStackRoute => ({ key, name: key });

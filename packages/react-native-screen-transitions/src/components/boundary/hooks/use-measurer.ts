@@ -2,11 +2,14 @@ import { useCallback } from "react";
 import type { View } from "react-native";
 import { useWindowDimensions } from "react-native";
 import type { AnimatedRef, StyleProps } from "react-native-reanimated";
-import { applyMeasuredBoundsWrites } from "../../../providers/helpers/measured-bounds-writes";
-import { useScreenSlotStore } from "../../../providers/screen/styles";
+import { useMotionStore } from "../../../providers/motion";
+import { setEntry } from "../../../stores/bounds/internals/entries";
+import {
+	setDestination,
+	setSource,
+} from "../../../stores/bounds/internals/links";
 import type { BoundTag } from "../../../stores/bounds/types";
 import { ScrollStore } from "../../../stores/scroll.store";
-import { SystemStore } from "../../../stores/system.store";
 import { getVisibilityBlockOffset } from "../../../utils/visibility-block-offset";
 import type { BoundaryLocalMeasurementValue, MeasureBoundary } from "../types";
 import {
@@ -42,13 +45,10 @@ export const useMeasurer = ({
 
 	const scrollState = ScrollStore.getValue(currentScreenKey, "coordination");
 	const scrollMetadata = ScrollStore.getValue(currentScreenKey, "metadata");
-	const pendingLifecycleStartBlockCount = SystemStore.getValue(
-		currentScreenKey,
-		"pendingLifecycleStartBlockCount",
+	const pendingLifecycleStartBlockCount = useMotionStore(
+		(store) => store.state.pendingLifecycleStartBlockCount,
 	);
-	const visibilityBlocked = useScreenSlotStore(
-		(store) => store.visibilityBlocked,
-	);
+	const isScreenReady = useMotionStore((store) => store.isScreenReady);
 
 	return useCallback(
 		(target) => {
@@ -64,18 +64,11 @@ export const useMeasurer = ({
 
 			const correctedMeasured = correctMeasuredBoundsForVisibilityGate({
 				measured,
-				visibilityBlocked: visibilityBlocked.get(),
+				isScreenReady: isScreenReady.get(),
 				visibilityBlockOffset: getVisibilityBlockOffset(viewportHeight),
 				viewportWidth,
 				viewportHeight,
 			});
-
-			if (escapeClipping && target.type === "source") {
-				localMeasurement.set({
-					bounds: measured,
-					pairKey: target.pairKey,
-				});
-			}
 
 			/**
 			 * - Destination Pass -
@@ -98,22 +91,46 @@ export const useMeasurer = ({
 
 			if (!viewportAllowsDestinationWrite) return;
 
+			// Handoff can render into the destination boundary's escape host too.
+			// Capture only accepted geometry, correcting the destination visibility gate.
+			if (escapeClipping) {
+				localMeasurement.set({
+					bounds: correctedMeasured,
+					pairKey: target.pairKey,
+				});
+			}
+
 			const measuredWithScroll = attachScrollSnapshotToMeasuredBounds(
 				correctedMeasured,
 				scrollMetadata.get(),
 			);
 
-			applyMeasuredBoundsWrites({
-				entryTag: boundTag.tag,
-				linkId: boundTag.linkKey,
-				group: boundTag.group,
-				currentScreenKey,
-				measured: measuredWithScroll,
-				preparedStyles,
-				linkWrite: target,
-				handoff,
-				escapeClipping,
-			});
+			// Refresh the public bounds entry on every accepted measurement.
+			setEntry(boundTag.tag, currentScreenKey, { bounds: measuredWithScroll });
+
+			if (target.type === "source") {
+				setSource(
+					target.pairKey,
+					boundTag.linkKey,
+					currentScreenKey,
+					measuredWithScroll,
+					preparedStyles,
+					boundTag.group,
+					{ handoff, escapeClipping },
+				);
+			}
+
+			if (target.type === "destination") {
+				setDestination(
+					target.pairKey,
+					boundTag.linkKey,
+					currentScreenKey,
+					measuredWithScroll,
+					preparedStyles,
+					boundTag.group,
+					{ handoff },
+				);
+			}
 		},
 		[
 			enabled,
@@ -129,7 +146,7 @@ export const useMeasurer = ({
 			scrollState,
 			scrollMetadata,
 			pendingLifecycleStartBlockCount,
-			visibilityBlocked,
+			isScreenReady,
 		],
 	);
 };

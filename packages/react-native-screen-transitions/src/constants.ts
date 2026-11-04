@@ -15,10 +15,12 @@ import type {
 import type { BaseStackRoute } from "./types/stack.types";
 
 /**
- * Navigation mask integration
+ * Legacy navigation mask identifiers (ignored).
  */
+/** @deprecated Ignored. Return `clip` geometry from the interpolator instead. */
 export const NAVIGATION_MASK_ELEMENT_STYLE_ID =
 	"NAVIGATION_MASK_ELEMENT_STYLE_ID";
+/** @deprecated Ignored. Return `clip` geometry from the interpolator instead. */
 export const NAVIGATION_MASK_CONTAINER_STYLE_ID =
 	"NAVIGATION_MASK_CONTAINER_STYLE_ID";
 
@@ -177,6 +179,11 @@ export const IS_WEB = Platform.OS === "web";
 
 export const TRUE = 1;
 export const FALSE = 0;
+
+export const AnimationProgress = {
+	Hidden: 0,
+	Visible: 1,
+} as const;
 
 /**
  * Small value for floating-point comparisons to handle animation/interpolation imprecision

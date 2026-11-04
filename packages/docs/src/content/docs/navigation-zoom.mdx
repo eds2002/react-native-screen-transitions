@@ -85,7 +85,6 @@ const navigationZoomId = makeMutable<string | null>(null);
 <Stack.Screen
   name="[id]"
   options={{
-    navigationMaskEnabled: Platform.OS === "ios",
     gestureEnabled: true,
     gestureDirection: ["vertical", "vertical-inverted", "horizontal"],
     transitionSpec: Transition.Specs.Zoom,
@@ -176,29 +175,11 @@ options={{
 
 Rotation runs alongside an active pinch. Zoom keeps the pinch's activation point anchored while scale and rotation change, then carries the same origin through the release handoff.
 
-## Navigation Mask
+## Clipping
 
-`navigationMaskEnabled` is optional for `navigation.zoom()` itself.
+`navigation.zoom()` returns `clip` geometry automatically on both platforms. No enable option or additional dependency is needed. To customize the visible region, override `clip` after spreading the helper result; set it to `undefined` to disable clipping.
 
-Enable it when you want masked reveal behavior during the navigation handoff:
-
-```tsx
-<Stack.Screen
-  name="[id]"
-  options={{
-    navigationMaskEnabled: Platform.OS === "ios",
-    transitionSpec: Transition.Specs.Zoom,
-    screenStyleInterpolator: ({ bounds }) => {
-      "worklet";
-      return bounds("hero").navigation.zoom();
-    },
-  }}
-/>
-```
-
-Install `@react-native-masked-view/masked-view` when you enable `navigationMaskEnabled`.
-
-Masked navigation transitions can cost more on Android. If you do not specifically need the masked reveal there, prefer leaving `navigationMaskEnabled` off on Android.
+`navigationMaskEnabled` is deprecated and ignored.
 
 ## Groups
 

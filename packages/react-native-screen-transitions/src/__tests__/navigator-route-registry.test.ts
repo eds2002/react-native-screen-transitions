@@ -3,7 +3,7 @@ import {
 	_resetNavigatorRouteRegistry,
 	registerMountedRoute,
 	unregisterMountedRoute,
-} from "../components/screen-lifecycle/hooks/history/navigator-route-registry";
+} from "../navigators/blank-stack/components/lifecycle/hooks/history/navigator-route-registry";
 
 beforeEach(() => {
 	_resetNavigatorRouteRegistry();

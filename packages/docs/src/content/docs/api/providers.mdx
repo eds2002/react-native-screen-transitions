@@ -1,0 +1,249 @@
+---
+title: "Providers"
+pageTitle: "Providers"
+summary: "Compose screen motion and Blank Stack presentation in an advanced host."
+description: "How BuilderProvider, MotionProvider, and OrchestratorProvider work together, and the goal of making screen motion more reusable."
+eyebrow: "Advanced"
+group: "Advanced"
+order: 1
+to: /api/providers
+---
+
+Version 4.1 exposes the building blocks used by Blank Stack and the native-stack adapter. They let a host supply screen relationships, create motion state, and turn that state into animated presentation.
+
+<Note>
+  These providers are experimental. This is the first step toward separating Screen Transitions from Blank Stack and opening up the kinds of navigators that can be built with its motion primitives.
+</Note>
+
+If you use the [React Navigation integration](/react-navigation), [Expo Router integration](/expo-router), or [native-stack adapter](/native-stack-adapter), the integration already supplies these providers. This guide is for building or extending the host that assembles them.
+
+## How the providers fit together
+
+Each screen has its own provider chain:
+
+| Provider | What it contributes |
+| --- | --- |
+| `BuilderProvider` | Identifies this screen, describes its neighbors, and makes their options available. |
+| `MotionProvider` | Creates this screen's gesture and animation state, including progress, snap targets, and readiness. |
+| `OrchestratorProvider` | Combines screen motion into an interpolation frame and resolves the styles and props used to render it. |
+
+For example, when screen B opens above screen A, the host updates A's `next` descriptor to B and supplies A as B's `previous` descriptor. Each screen has its own Motion state. Orchestrator reads those states so A can animate in response to B's opening progress. The host's lifecycle code starts the transition and decides when a closing route can be removed.
+
+The nesting order is Builder → Motion → Orchestrator:
+
+```tsx
+import {
+  BuilderProvider,
+  type BuilderProviderProps,
+  MotionProvider,
+  type MotionProviderProps,
+  OrchestratorProvider,
+} from "react-native-screen-transitions";
+
+type Props = BuilderProviderProps &
+  Pick<MotionProviderProps, "onDismissRequest">;
+
+function ScreenProviders({
+  routeKey,
+  descriptors,
+  onDismissRequest,
+  children,
+}: Props) {
+  return (
+    <BuilderProvider routeKey={routeKey} descriptors={descriptors}>
+      <MotionProvider onDismissRequest={onDismissRequest}>
+        <OrchestratorProvider>{children}</OrchestratorProvider>
+      </MotionProvider>
+    </BuilderProvider>
+  );
+}
+```
+
+This composes the providers; it is not a complete navigator. Your host must also supply presentation components, gesture attachment, transition lifecycle handling, navigation actions, and the normal gesture-handler and safe-area context. Mounting the providers alone does not start an opening animation.
+
+## BuilderProvider
+
+Builder connects the host's navigation model to the transition system. It keeps the current, previous, and next descriptors available and derives the screen keys, source/destination pair keys, and facts such as whether this is the first or topmost screen.
+
+It does not allocate animation progress or render a screen's descriptor. Its `children` determine what is rendered. When used inside Blank Stack, it also registers the screen's relationships in the stack's topology.
+
+### Props
+
+The package root exports `BuilderProviderProps` for creating an owned provider:
+
+| Prop | Type | Required | Meaning |
+| --- | --- | --- | --- |
+| `routeKey` | `string` | Yes | Identifies this screen's store. Use the current route's unique key, matching `descriptors.current.route.key`. Keep it stable for that route's lifetime. |
+| `descriptors` | `{ current, previous?, next? }` | Yes | Describes this screen and the screens immediately below and above it. |
+| `children` | `ReactNode` | Yes | The subtree that receives the screen's identity and descriptors, normally beginning with `MotionProvider`. |
+
+A route key identifies a particular screen instance. It is different from a route name such as `"Profile"`, which may appear more than once in a stack, and from the optional `transitionKey` used for named animation lookup.
+
+### Descriptors
+
+| Field | Required | Meaning |
+| --- | --- | --- |
+| `current` | Yes | The descriptor for the screen this provider owns. |
+| `previous` | No | The screen immediately below it. Omit when there is no previous screen. |
+| `next` | No | The screen immediately above it, including an outgoing screen while the host retains it for its closing animation. Omit when there is no next screen. |
+
+Each descriptor has this structure:
+
+| Field | Required | Meaning |
+| --- | --- | --- |
+| `route` | Yes | An object with `key`, `name`, and optional `params`. Supplies screen identity and the route data available to interpolation. |
+| `navigation` | Yes | The host navigation object. It provides `getState()` and `dispatch()`; `addListener()` and `emit()` are optional in the base contract. |
+| `options` | Yes | The screen's `ScreenTransitionConfig`, including its interpolator, gesture settings, snap points, and other transition options. An empty object is valid. |
+| `render` | No | A function returning the screen element or `null`. Builder stores this with the descriptor; the host decides when to call it. |
+
+`navigation.getState()` supplies the navigator's `key`, `index`, and `routes`, where each route has a `key`. Builder uses this state to determine whether the current screen is the first route. `dispatch(action)` is the host's navigation action entry point.
+
+The descriptor shape is accessible through the public prop type:
+
+```tsx
+type ScreenDescriptor = BuilderProviderProps["descriptors"]["current"];
+```
+
+Update descriptors when routes, params, or screen options change. Stable route identity does not mean the descriptor must stay frozen. For A → B → C, B receives A as `previous` and C as `next`; those relationships change as the host pushes and removes routes.
+
+## MotionProvider
+
+Motion owns the live state of one screen. It creates the shared values used for transition progress, gesture movement, snap targets, measurement readiness, and pending lifecycle work. It also resolves the current screen's options and constructs its pan and pinch gestures.
+
+Motion reads its identity and configuration from Builder, so it belongs beneath `BuilderProvider`. It wraps its children in a flex-filling animated view that controls readiness and visibility, taking ancestor readiness into account.
+
+The gesture objects still need to be attached by the presentation layer. The built-in integrations do this for you. Motion also leaves navigation decisions to the host: a gesture can request dismissal, but the provider does not choose which route action to dispatch.
+
+### Props
+
+The package root exports `MotionProviderProps`:
+
+| Prop | Type | Required | Meaning |
+| --- | --- | --- | --- |
+| `children` | `ReactNode` | Yes | The screen subtree, normally containing `OrchestratorProvider` and the host's lifecycle component. |
+| `onDismissRequest` | `() => void` | No | Called on the React thread when a pan or pinch release commits to dismissal. Connect this to the host's dismissal handling. |
+
+`onDismissRequest` receives no arguments and its return value is not used. A cancelled gesture does not request dismissal. If the callback is omitted, Motion has no host callback through which to request route removal.
+
+The host must coordinate the closing animation with route removal. The callback is not a signal that closing has already finished. Programmatic back actions and backdrop presses also need the host's dismissal wiring; passing this prop only connects Motion's gesture requests.
+
+### Read the motion store
+
+`useMotionStore` is exported from the package root. Its store has four top-level fields:
+
+| Field | Meaning |
+| --- | --- |
+| `options` | Resolved screen options used by the motion runtime, including a shared representation for worklets. |
+| `gestures` | The screen's `panGesture`, `pinchGesture`, combined `detectorGesture`, and scroll/ownership coordination information. |
+| `state` | The screen's animation, gesture, snap, and lifecycle values, together with route metadata and transition options. |
+| `isScreenReady` | A shared boolean indicating whether this screen and its ancestors are ready. It also becomes false after visual close. |
+
+Select a value inside a component and read it on the UI thread:
+
+```tsx
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import { useMotionStore } from "react-native-screen-transitions";
+
+function MotionOpacity({ children }: { children: React.ReactNode }) {
+  const progress = useMotionStore((store) => store.state.transitionProgress);
+  const style = useAnimatedStyle(() => ({ opacity: progress.get() }));
+
+  return <Animated.View style={style}>{children}</Animated.View>;
+}
+```
+
+The selector subscribes to the selected store value. It does not rerender React whenever the selected shared value changes; the animated style observes those updates.
+
+Some similarly named state fields serve different purposes:
+
+| State field | Meaning |
+| --- | --- |
+| `transitionProgress` | The committed transition or snap progress, excluding live gesture displacement. |
+| `visualProgress` | The hydrated visual progress, including gesture effects, used when calculating stack progress. |
+| `targetProgress` | The destination progress for a transition or snap. |
+| `animationProgress` | A directional completion clock: increasing transitions run from 0 to 1, decreasing transitions from 1 to 0. This is not the sheet's snap fraction. |
+| `entering`, `closing` | Shared numeric flags describing opening and closing state. |
+| `progressAnimating`, `progressSettled`, `willAnimate` | Runtime flags used to coordinate animation execution, settling, and handoff. |
+| `resolvedAutoSnapPoint`, `measuredContentLayout` | Measurement state for content-sized or named-container snap points. |
+| `pendingLifecycleRequestKind`, `pendingLifecycleRequestTarget`, `pendingLifecycleStartBlockCount` | Pending open/close work and the blockers that prevent it from starting. |
+| `actions` | Runtime operations to request or clear lifecycle work and manage its start blockers. |
+
+The state also includes gesture translation, scale, velocity, raw input, and gesture snapshots. These are exposed because the providers currently share the runtime's internal state structure. Their presence does not make each field an independent animation control: changing one flag or progress value can leave related values inconsistent. Prefer [`snapTo`](/api/snap-to), [transition blocking](/api/transition-blocking), and the host's lifecycle handling for those operations.
+
+For ordinary animation code, [`useScreenAnimation`](/api/use-screen-animation) gives you the assembled interpolation values, including `current`, `next`, and `stackProgress`. Use the lower-level Motion state when implementing the host behavior that produces those values.
+
+`useMotionStore` also accepts a route key before the selector to read a registered screen store.
+
+## OrchestratorProvider
+
+Orchestrator turns motion state into presentation. It reads the local Motion state and neighboring screens' registered Motion states, builds the interpolation frame, and derives values such as `active`, `inactive`, combined `progress`, and `stackProgress`.
+
+It selects and evaluates the relevant screen interpolator, resolves named style and prop slots, and makes those results available to transition components. It also creates the bounds accessor, prepares source/destination Boundary presentation, and registers cross-screen gesture ownership when the host supplies the necessary relationships.
+
+In its normal mode, Orchestrator belongs beneath Builder and Motion. It passes through its children without adding its own native wrapper. The presentation components consume its results and apply them to views.
+
+### Props
+
+The package root exports `OrchestratorProviderProps`:
+
+| Prop | Type | Required | Meaning |
+| --- | --- | --- | --- |
+| `children` | `ReactNode` | Yes | Components that consume this screen's interpolation and resolved presentation. |
+| `screenKey` | `string` | No | Reuses an existing screen's registered Orchestrator store instead of creating another interpolation pipeline. This is a route key, not a `transitionKey`. |
+
+Without `screenKey`, the provider creates orchestration for the current Builder/Motion context. With `screenKey`, it supplies the selected existing store to its children. It does not create another screen, start another animation, or rebuild that screen's interpolation.
+
+### Reuse an existing screen context
+
+All three generated provider components accept a separate reuse form with `screenKey` and optional `children`. For Builder and Motion, this form is part of the component's accepted props rather than the exported owned-provider prop type. `OrchestratorProviderProps` explicitly includes `screenKey`.
+
+This is useful when rendering content elsewhere in the tree that should share an existing screen's context:
+
+```tsx
+<BuilderProvider screenKey={route.key}>
+  <MotionProvider screenKey={route.key}>
+    <OrchestratorProvider screenKey={route.key}>
+      <DetachedScreenContent />
+    </OrchestratorProvider>
+  </MotionProvider>
+</BuilderProvider>
+```
+
+In this form, Builder does not need `routeKey` or `descriptors`, and Motion does not create gestures or apply `onDismissRequest`. The original provider owns that configuration. Use the normal form to create state and the reuse form to consume it.
+
+Before the target store becomes available, the reuse provider renders nothing. Once it has found a store, it retains that context if the original registration disappears, allowing departing presentation such as an overlay to finish. Reusing a store does not keep its original React effects running or resume a paused screen.
+
+### Orchestration output
+
+The orchestration state brings together:
+
+| Field | Meaning |
+| --- | --- |
+| `screenInterpolatorProps` | The derived interpolation frame containing the screen states, progress, layouts, and insets. |
+| `currentInterpolator`, `nextInterpolator` | The configured interpolation functions participating in this screen relationship. |
+| `selectedInterpolatorOptions` | The currently selected interpolator owner and its option overrides. |
+| `boundsAccessor` | Geometry access used by `bounds(id)` and the bounds transition helpers. |
+| `pairPresentation` | Coordinated source and destination output for Boundary pairs that use portal presentation. |
+| `slotsMap` | Resolved named styles and props consumed by transition-aware components. |
+
+These fields describe the current internal division of work. The package root exports `OrchestratorProvider` and its prop type, but not the internal Orchestrator store hooks. Application components normally consume the result through `useScreenAnimation`, `Transition.View`, and other transition-aware components.
+
+## Blank Stack host primitives
+
+The package root also exports:
+
+- `BlankStackProvider`, with `BlankStackProviderProps`
+- `BlankStackView`
+- `useBlankStackStore`, with `BlankStackStoreValue`
+
+`BlankStackProvider` accepts `state`, `navigation`, and `descriptors` from the host navigator. `BlankStackView` renders that provider's scenes, Activity boundaries, overlays, and per-screen providers. `useBlankStackStore(selector)` reads the surrounding stack's routes and scene state.
+
+These primitives let a navigator integration supply navigation state while reusing Blank Stack's presentation. They do not replace the host router or its navigation container.
+
+## Our goal
+
+The goal is to make Screen Transitions reusable across different navigators and, eventually, in components that do not need navigation at all. The same building blocks could help power interactive cards, custom sheets, or other components that combine gestures and motion.
+
+These providers are still closely tied to Blank Stack. Exposing them is a first step toward separating the reusable motion behavior from the assumptions of a particular navigator. As we understand what other uses need, we can make that separation clearer and make advanced gesture and motion components easier to build.
+
+That is the direction we are working toward. The current providers are an experimental starting point, and broader use outside navigation is still a goal.

@@ -9,14 +9,14 @@ import {
 	shouldDismissFromPinch,
 	shouldDismissFromProjection,
 	toProgressVelocity,
-} from "../../../providers/screen/gestures/shared/physics";
-import { determineDismissal } from "../../../providers/screen/gestures/shared/targets";
-import { trackPanGesture } from "../../../providers/screen/gestures/pan/behavior/pan-lifecycle";
-import { resolvePanRelease } from "../../../providers/screen/gestures/pan/behavior/pan-release";
-import { trackPinchGesture } from "../../../providers/screen/gestures/pinch/behavior/pinch-lifecycle";
-import { resolvePinchRelease } from "../../../providers/screen/gestures/pinch/behavior/pinch-release";
-import { applyGestureSensitivityToRawChange } from "../../../providers/screen/gestures/hooks/use-gesture-sensitivity";
-import type { ScreenOptionsContextValue } from "../../../providers/screen/options";
+} from "../../../providers/motion/gestures/shared/physics";
+import { determineDismissal } from "../../../providers/motion/gestures/shared/targets";
+import { trackPanGesture } from "../../../providers/motion/gestures/pan/behavior/pan-lifecycle";
+import { resolvePanRelease } from "../../../providers/motion/gestures/pan/behavior/pan-release";
+import { trackPinchGesture } from "../../../providers/motion/gestures/pinch/behavior/pinch-lifecycle";
+import { resolvePinchRelease } from "../../../providers/motion/gestures/pinch/behavior/pinch-release";
+import { applyGestureSensitivityToRawChange } from "../../../providers/motion/gestures/ownership/hooks/use-gesture-sensitivity";
+import type { ScreenOptionsContextValue } from "../../../providers/motion/options";
 
 type Directions = {
 	horizontal: boolean;
@@ -106,6 +106,7 @@ const createPinchReleaseRuntime = (
 					progressBaseline: { get: () => 1 },
 					progressDeltaX: { get: () => 0 },
 					progressDeltaY: { get: () => 0 },
+					carry: { x: { get: () => 0 }, y: { get: () => 0 }, normX: { get: () => 0 }, normY: { get: () => 0 } },
 					snapshot: {
 						x: { get: () => 0 },
 						y: { get: () => 0 },
@@ -238,6 +239,7 @@ const createGestureStore = () =>
 			progressBaseline: createSharedValue(0),
 			progressDeltaX: createSharedValue(0),
 			progressDeltaY: createSharedValue(0),
+			carry: { x: createSharedValue(0), y: createSharedValue(0), normX: createSharedValue(0), normY: createSharedValue(0) },
 			lockedSnapPoint: createSharedValue(null),
 			snapshot: createGestureSnapshotStore(),
 		},

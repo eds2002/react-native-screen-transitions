@@ -1,11 +1,9 @@
-name: Auto Close Issue Workflow
+name: Ask for a reproduction
 
 on:
   issues:
     types:
       - opened
-      - reopened
-      - edited
 
 env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -14,15 +12,17 @@ env:
   REPO: ${{ github.repository }}
 
 jobs:
-  autoclose:
-    if: ${{ !contains(github.event.issue.body, 'snack.expo.dev') && !contains(github.event.issue.body, 'github.com') }}
+  ask-for-repro:
+    # Bug reports without an Expo Snack or GitHub repository link get a reminder and a label; they
+    # stay open. Feature requests and reports with a link are left alone.
+    if: ${{ contains(github.event.issue.title, '[Bug]') && !contains(github.event.issue.body, 'snack.expo.dev') && !contains(github.event.issue.body, 'github.com') }}
     runs-on: ubuntu-latest
     permissions:
       issues: write
     steps:
-      - name: Close Issue
-        run: gh issue close "$NUMBER" --comment "Hello @$USER :wave:, we require a reproduction for every bug report. Please provide an Expo Snack link (preferred) or a GitHub repository if the issue needs a dev build. This issue is being closed automatically because no reproduction link was detected." --repo "$REPO"
+      - name: Ask for a reproduction
+        run: gh issue comment "$NUMBER" --body "Hey @$USER :wave:, thanks for the report! Could you add a reproduction? An Expo Snack link is ideal, or a small GitHub repository if it needs a dev build. It makes bugs much faster to track down." --repo "$REPO"
       - name: Label Issue
-        run: gh issue edit "$NUMBER" --add-label "invalid" --repo "$REPO"
-      - name: Lock Issue
-        run: gh issue lock "$NUMBER" -r "spam" --repo "$REPO"
+        run: |
+          gh label create "needs reproduction" --color FBCA04 --description "Waiting for an Expo Snack or repository that reproduces the bug" --force --repo "$REPO"
+          gh issue edit "$NUMBER" --add-label "needs reproduction" --repo "$REPO"

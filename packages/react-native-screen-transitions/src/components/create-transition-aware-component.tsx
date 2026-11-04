@@ -1,14 +1,16 @@
 /** biome-ignore-all lint/style/noNonNullAssertion: <This helper is usually being used inside a transitionable stack> */
 import type React from "react";
 import { type ComponentType, forwardRef, memo } from "react";
+import type { LayoutChangeEvent } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated, { useComposedEventHandler } from "react-native-reanimated";
 import {
 	ScrollMetadataOwnerProvider,
 	useScrollGestureCoordination,
-} from "../providers/screen/gestures/scroll-coordination";
-import { useSlotProps, useSlotStyles } from "../providers/screen/styles";
+} from "../providers/motion/gestures/scroll-coordination";
+import { useSlotProps, useSlotStyles } from "../providers/orchestrator/styles";
 import type { TransitionAwareProps } from "../types/screen.types";
+import { useContentLayout } from "./screen-layers/hooks/use-content-layout";
 
 interface CreateTransitionAwareComponentOptions {
 	isScrollable?: boolean;
@@ -110,17 +112,27 @@ export function createTransitionAwareComponent<P extends object>(
 			children,
 			style,
 			styleId,
+			onLayout,
 			animatedProps: userAnimatedProps,
 			...rest
 		} = props as any;
 
 		const associatedStyles = useSlotStyles(styleId);
 		const associatedProps = useSlotProps(styleId);
+		const measureLayout = useContentLayout(styleId);
 
 		return (
 			<AnimatedComponent
 				{...(rest as any)}
 				ref={ref}
+				onLayout={
+					measureLayout
+						? (event: LayoutChangeEvent) => {
+								measureLayout(event);
+								onLayout?.(event);
+							}
+						: onLayout
+				}
 				style={[style, associatedStyles]}
 				animatedProps={userAnimatedProps ?? associatedProps}
 			>

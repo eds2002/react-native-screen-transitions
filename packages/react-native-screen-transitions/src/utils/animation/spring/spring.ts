@@ -1,8 +1,9 @@
-import type {
-	Animation,
-	AnimationCallback,
-	ReduceMotion,
-} from "react-native-reanimated";
+import type { Animation, AnimationCallback } from "react-native-reanimated";
+import {
+	defineInternalAnimation,
+	getReduceMotionForAnimation,
+	startupStep,
+} from "../define-animation";
 import type { AnimationProgressDriver, AnimationStateCallback } from "../state";
 import type { SpringConfig } from "./springConfigs";
 import type {
@@ -27,9 +28,6 @@ import {
 
 type Timestamp = number;
 
-const REACT_NATIVE_RUNTIME_KIND = 1;
-const REDUCE_MOTION_SYSTEM = "system";
-const REDUCE_MOTION_ALWAYS = "always";
 const DEFAULT_SPRING_SETTLE_DISTANCE = 0.001;
 const MAX_UNFINISHED_ANIMATION_PROGRESS = 1 - 1e-6;
 
@@ -45,59 +43,6 @@ const DEFAULT_SPRING_CONFIG = {
 	reduceMotion: undefined,
 	clamp: undefined,
 } as const satisfies DefaultSpringConfig;
-
-const getRuntimeKind = () => {
-	"worklet";
-	return (globalThis as { __RUNTIME_KIND?: number }).__RUNTIME_KIND;
-};
-
-const getReduceMotionForAnimation = (config?: ReduceMotion) => {
-	"worklet";
-	if (!config || config === REDUCE_MOTION_SYSTEM) {
-		return undefined;
-	}
-
-	return config === REDUCE_MOTION_ALWAYS;
-};
-
-const defineSpringAnimation = <TAnimation extends Animation<TAnimation>>(
-	_starting: number,
-	factory: () => TAnimation,
-	onReducedMotion?: () => void,
-): TAnimation => {
-	"worklet";
-	const create = (() => {
-		"worklet";
-		const animation = factory();
-		const baseOnStart = animation.onStart;
-
-		animation.onStart = (
-			animation: TAnimation,
-			value: Parameters<TAnimation["onStart"]>[1],
-			timestamp: Timestamp,
-			previousAnimation: Parameters<TAnimation["onStart"]>[3],
-		) => {
-			"worklet";
-			if (animation.reduceMotion) {
-				onReducedMotion?.();
-				animation.current = animation.toValue;
-				animation.onFrame = () => true;
-				return;
-			}
-
-			baseOnStart(animation, value, timestamp, previousAnimation);
-		};
-
-		return animation;
-	}) as (() => TAnimation) & { __isAnimationDefinition?: true };
-
-	if (getRuntimeKind() !== REACT_NATIVE_RUNTIME_KIND) {
-		return create();
-	}
-
-	create.__isAnimationDefinition = true;
-	return create as unknown as TAnimation;
-};
 
 type withSpringType = (
 	toValue: number,
@@ -133,7 +78,7 @@ export const withInternalSpring = ((
 	"worklet";
 
 	// biome-ignore format: Keep this Reanimated fork aligned with its upstream layout.
-	return defineSpringAnimation<SpringAnimation>(toValue, () => {
+	return defineInternalAnimation<SpringAnimation>(toValue, () => {
 		"worklet";
 		const config: DefaultSpringConfig & SpringConfigInner = safeMergeConfigs<
 			DefaultSpringConfig & SpringConfigInner
@@ -188,7 +133,10 @@ export const withInternalSpring = ((
 			}
 			const { lastTimestamp, velocity } = animation;
 
-			const deltaTime = Math.min(Math.max(now - lastTimestamp, 0), 64);
+			const deltaTime = startupStep(
+				animation,
+				Math.min(Math.max(now - lastTimestamp, 0), 64),
+			);
 			animation.lastTimestamp = now;
 			animation.animationProgressElapsed += deltaTime;
 
@@ -339,6 +287,7 @@ export const withInternalSpring = ((
 			animationProgress?.value.set(animationProgress.from);
 
 			animation.lastTimestamp = previousAnimation?.lastTimestamp || now;
+			animation.startupFrames = 0;
 
 			animation.startTimestamp = triggeredTwice
 				? previousAnimation?.startTimestamp || now
@@ -371,6 +320,7 @@ export const withInternalSpring = ((
 			initialEnergy: 0,
 			animationProgressElapsed: 0,
 			animationProgressDuration: 0,
+			startupFrames: 0,
 			reduceMotion: getReduceMotionForAnimation(config.reduceMotion),
 		} as SpringAnimation;
 

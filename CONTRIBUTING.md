@@ -7,7 +7,7 @@ We want this community to be friendly and respectful to each other. Please follo
 This repo is a monorepo managed with Bun workspaces.
 
 - `packages/react-native-screen-transitions` – the published library (built with `react-native-builder-bob`).
-- `apps/e2e` – Expo app for interactive transition demos and e2e testing with Maestro.
+- `apps/harness` – Expo app with one lab per library mechanism, driven by the visual e2e suite (`apps/harness/e2e`, see its README).
 
 ## Development workflow
 
@@ -21,34 +21,50 @@ bun install
 
 ### 2. Build the library
 
-Compile the library before running the e2e app:
+Compile the library:
 
 ```sh
 bun run build
 ```
 
-### 3. Run the e2e app
+### 3. Run the harness app
+
+The harness bundles the library from source, so it doesn't need a build:
 
 ```sh
-cd apps/e2e
-npx expo run:ios   # or expo run:android
+cd apps/harness
+npx expo run:ios --configuration Release   # or expo run:android --variant release
 ```
 
 ## Quality checks
 
-We use TypeScript, Biome (lint + format), Bun tests, and Maestro for e2e. Make sure everything passes before sending a PR.
+We use TypeScript, Biome (lint + format), Bun tests, and a visual e2e suite driven by Argent.
+Make sure everything passes before sending a PR.
+
+Behavior is checked visually: the e2e suite records each scenario on a simulator or emulator and flags
+blanks, flickers and jumps frame by frame. Unit tests cover what a recording can't pin down: pure logic
+(gesture physics, snap targets, bounds math, route reconciliation), public API contracts, and the
+frame-by-frame harness that checks the same visual invariants in CI. Don't add tests that only pin
+implementation wiring (subscription identity, re-render counts); they break on refactors and catch
+nothing a user would see.
 
 ```sh
 # From repo root
 bun run lint       # biome check
 bun run typecheck  # tsc --noEmit
 bun test           # unit tests
+bun run test:harness  # frame-by-frame harness tests, one process per file
+bun run test       # both
 
-# E2e tests (requires Maestro CLI + iOS simulator)
-cd apps/e2e
-npx expo run:ios --configuration Release
-maestro test .maestro/complete.yaml
+# Visual e2e (Release harness app on a booted simulator or emulator, Argent CLI)
+apps/harness/e2e/argent/run.sh <simulator UDID or adb serial> [name filter]
 ```
+
+Tests share a process. For file-specific module overrides, use `createModuleMock`
+from the library’s `src/__tests__/helpers/mock-module.ts` and await each replacement. It preserves
+unmodified exports and restores replacements after the file finishes. Keep shared
+native dependency stubs in `test/setup.ts`; direct `mock.module()` calls in test
+files leak into other tests.
 
 Biome auto-fixes many issues:
 

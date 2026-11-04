@@ -7,9 +7,9 @@ import {
 	withTiming,
 } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
-import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
-import { useBlankStackStore } from "../../../../providers/stack/blank-stack.provider";
-import { AnimationStore } from "../../../../stores/animation.store";
+import { useBlankStackStore } from "../../../../navigators/blank-stack/state/blank-stack.provider";
+import { useBuilderStore } from "../../../../providers/builder";
+import { useMotionStore } from "../../../../providers/motion";
 import {
 	createScreenPairKey,
 	getSourceScreenKeyFromPairKey,
@@ -21,7 +21,6 @@ import {
 import { getLink } from "../../../../stores/bounds/internals/links";
 import { pairs } from "../../../../stores/bounds/internals/state";
 import type { BoundTag } from "../../../../stores/bounds/types";
-import { SystemStore } from "../../../../stores/system.store";
 import { logger } from "../../../../utils/logger";
 import type { MeasureBoundary } from "../../types";
 import { getInitialDestinationMeasurementSignal } from "../../utils/destination-signals";
@@ -35,6 +34,7 @@ const HANDSHAKE_RETRY_DELAY_MS = 16;
  * so the open proceeds without that boundary.
  */
 const MAX_HANDSHAKE_RETRIES = 20;
+const EMPTY_SCENES: never[] = [];
 
 interface UseInitialDestinationMeasurementParams {
 	boundTag: BoundTag;
@@ -48,11 +48,11 @@ export const useInitialDestinationMeasurement = ({
 	measureBoundary,
 }: UseInitialDestinationMeasurementParams) => {
 	const { tag, linkKey, group } = boundTag;
-	const currentScreenKey = useDescriptorsStore(
+	const currentScreenKey = useBuilderStore(
 		(s) => s.derivations.currentScreenKey,
 	);
-	const nextScreenKey = useDescriptorsStore((s) => s.derivations.nextScreenKey);
-	const destinationPairKey = useDescriptorsStore(
+	const nextScreenKey = useBuilderStore((s) => s.derivations.nextScreenKey);
+	const destinationPairKey = useBuilderStore(
 		(s) => s.derivations.destinationPairKey,
 	);
 	const destinationEnabled = enabled && !nextScreenKey;
@@ -60,7 +60,9 @@ export const useInitialDestinationMeasurement = ({
 	const preferredSourceScreenKey = destinationPairKey
 		? getSourceScreenKeyFromPairKey(destinationPairKey)
 		: undefined;
-	const stackScenes = useBlankStackStore((store) => store.scenes);
+	const stackScenes = useBlankStackStore((store) =>
+		canReceiveDestination ? store.scenes : EMPTY_SCENES,
+	);
 	// A retained closing screen can still have registered boundaries, but it
 	// cannot own a new transition link.
 	const closingSourceScreenKeys = useMemo(
@@ -70,14 +72,11 @@ export const useInitialDestinationMeasurement = ({
 				.map((scene) => scene.route.key),
 		[stackScenes],
 	);
-	const progress = AnimationStore.getValue(
-		currentScreenKey,
-		"transitionProgress",
-	);
+	const progress = useMotionStore((store) => store.state.transitionProgress);
 
-	const {
-		actions: { blockLifecycleStart, unblockLifecycleStart },
-	} = SystemStore.getBag(currentScreenKey);
+	const { blockLifecycleStart, unblockLifecycleStart } = useMotionStore(
+		(store) => store.state.actions,
+	);
 
 	const isBlockingLifecycleStart = useSharedValue(0);
 	const retryToken = useSharedValue(0);

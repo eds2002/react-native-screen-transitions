@@ -124,7 +124,6 @@ export function RootNavigator() {
   name="Detail"
   component={DetailScreen}
   options={{
-    navigationMaskEnabled: true,
     transitionSpec: Transition.Specs.Zoom,
     screenStyleInterpolator: ({ bounds }) => {
       "worklet";
@@ -136,7 +135,7 @@ export function RootNavigator() {
       title="detail-options.tsx"
     />
 
-    `navigationMaskEnabled` is what lets the library manage the reveal mask for navigation zoom. It requires `@react-native-masked-view/masked-view`, which is covered in [Installation](/installation).
+    Navigation zoom returns built-in `clip` geometry automatically. No additional clipping dependency is required.
   </Step>
 
   <Step

@@ -1,22 +1,19 @@
-import type { ScreenInterpolatorFrame } from "../../../providers/screen/animation/helpers/pipeline";
-import { createInterpolatorScope } from "../../../providers/screen/styles/helpers/create-interpolator-scope";
-import { normalizeSlots } from "../../../providers/screen/styles/helpers/normalize-slots";
-import { selectInterpolatorFrame } from "../../../providers/screen/styles/helpers/select-interpolator-frame";
+import type { ScreenInterpolatorFrame } from "../../../providers/orchestrator/helpers/pipeline";
+import { createInterpolatorScope } from "../../../providers/orchestrator/styles/helpers/create-interpolator-scope";
+import { normalizeSlots } from "../../../providers/orchestrator/styles/helpers/normalize-slots";
+import { selectInterpolatorFrame } from "../../../providers/orchestrator/styles/helpers/select-interpolator-frame";
 import type {
 	NormalizedTransitionSlotStyle,
 	ScreenStyleInterpolator,
-	ScreenTransitionAccessor,
 } from "../../../types/animation.types";
 import { logger } from "../../../utils/logger";
 
 export const runOverlaySlotInterpolator = ({
 	frame,
 	interpolator,
-	transition,
 }: {
 	frame: ScreenInterpolatorFrame;
 	interpolator: ScreenStyleInterpolator | undefined;
-	transition: ScreenTransitionAccessor;
 }): NormalizedTransitionSlotStyle | undefined => {
 	"worklet";
 
@@ -29,7 +26,6 @@ export const runOverlaySlotInterpolator = ({
 			createInterpolatorScope({
 				frame,
 				selectedFrame: selectInterpolatorFrame(frame, false),
-				transition,
 			}),
 		);
 

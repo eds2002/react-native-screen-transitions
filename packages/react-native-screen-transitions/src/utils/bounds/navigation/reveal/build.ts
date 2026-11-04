@@ -1,5 +1,4 @@
 import { interpolate } from "react-native-reanimated";
-import { NAVIGATION_MASK_ELEMENT_STYLE_ID } from "../../../../constants";
 import { createBoundsAccessorCore } from "../../helpers/create-bounds-accessor-core";
 import { getSourceBorderRadius } from "../helpers";
 import {
@@ -10,20 +9,19 @@ import {
 	CONTENT_ENTERING_OPACITY_RANGE,
 	CONTENT_SHADOW_OPACITY_OUTPUT,
 	DISMISS_SCALE_ORBIT_DEPTH,
-	DRAG_MASK_HEIGHT_COLLAPSE_END,
-	HORIZONTAL_DRAG_MASK_COLLAPSE_SCALE,
+	DRAG_CLIP_HEIGHT_COLLAPSE_END,
+	HORIZONTAL_DRAG_CLIP_COLLAPSE_SCALE,
 	IDENTITY_DRAG_SCALE_OUTPUT,
 	REVEAL_BACKGROUND_SCALE,
 	REVEAL_BORDER_RADIUS,
 	REVEAL_SHADOW_OFFSET,
-	REVEAL_USES_TRANSFORM_MASK,
 	UNFOCUSED_ELEMENT_OPACITY_OUTPUT,
 	ZERO_TO_ONE_RANGE,
 } from "./config";
 import {
 	interpolateClamped,
 	mixUnit,
-	resolveAspectRatioMaskHeight,
+	resolveAspectRatioClipHeight,
 	resolveDismissScaleHandoff,
 	resolveRevealContentBaseTransform,
 	resolveRevealDirectionalDragScale,
@@ -66,15 +64,10 @@ export function buildRevealStyles({
 		revealOptions?.velocityDepth ?? DISMISS_SCALE_ORBIT_DEPTH;
 	const disablePointerEventsTillElementTransition =
 		revealOptions?.disablePointerEventsTillElementTransition ?? true;
-	const maskSizingMode = revealOptions?.maskSizingMode ?? "auto";
 	const backgroundScale =
 		revealOptions?.backgroundScale ?? REVEAL_BACKGROUND_SCALE;
 	const shouldBackgroundScaleResetOnSettled =
 		revealOptions?.shouldBackgroundScaleResetOnSettled ?? true;
-	const usesTransformMask =
-		maskSizingMode === "auto"
-			? REVEAL_USES_TRANSFORM_MASK
-			: maskSizingMode === "transform";
 
 	const bounds = createBoundsAccessorCore({
 		getProps: () => props,
@@ -140,7 +133,7 @@ export function buildRevealStyles({
 			progress: transitionProgress,
 		});
 
-		const maskRaw = scopedBounds.values({
+		const clipRaw = scopedBounds.values({
 			scaleMode: "uniform",
 			method: "size",
 			space: "absolute",
@@ -148,21 +141,21 @@ export function buildRevealStyles({
 			progress: transitionProgress,
 		});
 
-		const maskBorderRadius = mixUnit(
+		const clipBorderRadius = mixUnit(
 			sourceBorderRadius,
 			borderRadius,
 			activeTransitionProgress,
 		);
-		const maskBorderCurve = borderContinuous
+		const clipBorderCurve = borderContinuous
 			? ("continuous" as const)
 			: undefined;
 
-		const maskSizeMultiplier = props.active.closing
+		const clipSizeMultiplier = props.active.closing
 			? mixUnit(0.9, 1, activeTransitionProgress)
 			: 1;
 
-		const maskWidth = Math.max(1, maskRaw.width * maskSizeMultiplier);
-		const maskHeight = Math.max(1, maskRaw.height * maskSizeMultiplier);
+		const clipWidth = Math.max(1, clipRaw.width * clipSizeMultiplier);
+		const clipHeight = Math.max(1, clipRaw.height * clipSizeMultiplier);
 
 		const contentBaseScale = contentRaw.scale;
 		const safeContentBaseScale = resolveSafeScale(contentBaseScale);
@@ -205,97 +198,72 @@ export function buildRevealStyles({
 			? 1 - activeTransitionProgress
 			: 0;
 
-		const maskHeightCollapseDrag =
+		const clipHeightCollapseDrag =
 			isHorizontalDismiss || isVerticalDismiss
 				? Math.max(
 						0,
 						isHorizontalDismiss
-							? liveHorizontalDismissDrag * HORIZONTAL_DRAG_MASK_COLLAPSE_SCALE
+							? liveHorizontalDismissDrag * HORIZONTAL_DRAG_CLIP_COLLAPSE_SCALE
 							: 0,
 						isVerticalDismiss ? liveVerticalDismissDrag : 0,
 						dismissProgressDrag,
 					)
 				: 0;
 
-		const maskAspectBounds = link.initialSource?.bounds ?? link.source.bounds;
-		const minMaskHeight = resolveAspectRatioMaskHeight({
-			maskWidth,
-			maskHeight,
-			targetWidth: maskAspectBounds.width,
-			targetHeight: maskAspectBounds.height,
+		const clipAspectBounds = link.initialSource?.bounds ?? link.source.bounds;
+		const minClipHeight = resolveAspectRatioClipHeight({
+			clipWidth,
+			clipHeight,
+			targetWidth: clipAspectBounds.width,
+			targetHeight: clipAspectBounds.height,
 		});
 
-		const renderedMaskHeight = interpolateClamped(
-			maskHeightCollapseDrag,
+		const renderedClipHeight = interpolateClamped(
+			clipHeightCollapseDrag,
 			0,
-			DRAG_MASK_HEIGHT_COLLAPSE_END,
-			maskHeight,
-			minMaskHeight,
+			DRAG_CLIP_HEIGHT_COLLAPSE_END,
+			clipHeight,
+			minClipHeight,
 		);
 
-		const maskCenterX = maskWidth / 2;
-		const maskCenterY = renderedMaskHeight / 2;
-		const maskCenteringOffsetX = (maskRaw.width - maskWidth) / 2;
-		const maskCenteringOffsetY = (maskRaw.height - maskHeight) / 2;
+		const clipCenteringOffsetX = (clipRaw.width - clipWidth) / 2;
+		const clipCenteringOffsetY = (clipRaw.height - clipHeight) / 2;
 		const verticalCollapseOffsetY =
 			initialGesture === "vertical-inverted"
-				? maskHeight - renderedMaskHeight
+				? clipHeight - renderedClipHeight
 				: 0;
 
 		const contentCenterX = screenLayout.width / 2;
 		const contentCenterY = screenLayout.height / 2;
 
-		// The mask lives inside the transformed content container. Compensate only
+		// The clip lives inside the transformed content container. Compensate only
 		// for the reveal's base content scale; drag scale should be inherited from
 		// the same parent transform as the screen content.
-		const compensatedMaskTranslateX =
-			(maskRaw.translateX -
+		const compensatedClipTranslateX =
+			(clipRaw.translateX -
 				contentRaw.translateX +
-				maskCenteringOffsetX +
-				(1 - contentBaseScale) * (maskCenterX - contentCenterX)) /
+				clipCenteringOffsetX -
+				(1 - contentBaseScale) * contentCenterX) /
 			safeContentBaseScale;
 
-		const compensatedMaskTranslateY =
-			(maskRaw.translateY -
+		const compensatedClipTranslateY =
+			(clipRaw.translateY -
 				contentRaw.translateY +
-				maskCenteringOffsetY +
-				verticalCollapseOffsetY +
-				(1 - contentBaseScale) * (maskCenterY - contentCenterY)) /
+				clipCenteringOffsetY +
+				verticalCollapseOffsetY -
+				(1 - contentBaseScale) * contentCenterY) /
 			safeContentBaseScale;
 
-		const compensatedMaskScale = 1 / safeContentBaseScale;
-		const maskBaseWidth = Math.max(1, screenLayout.width);
-		const maskBaseHeight = Math.max(1, screenLayout.height);
-		const maskScaleX = maskWidth / maskBaseWidth;
-		const maskScaleY = renderedMaskHeight / maskBaseHeight;
-		const transformMaskTranslateX =
-			compensatedMaskTranslateX + (maskWidth - maskBaseWidth) / 2;
-		const transformMaskTranslateY =
-			compensatedMaskTranslateY + (renderedMaskHeight - maskBaseHeight) / 2;
-		const maskElementStyle = usesTransformMask
-			? {
-					width: maskBaseWidth,
-					height: maskBaseHeight,
-					borderRadius: props.active.settled ? 0 : maskBorderRadius,
-					borderCurve: maskBorderCurve,
-					transform: [
-						{ translateX: transformMaskTranslateX },
-						{ translateY: transformMaskTranslateY },
-						{ scaleX: maskScaleX * compensatedMaskScale },
-						{ scaleY: maskScaleY * compensatedMaskScale },
-					],
-				}
-			: {
-					width: maskWidth,
-					height: renderedMaskHeight,
-					borderRadius: props.active.settled ? 0 : maskBorderRadius,
-					borderCurve: maskBorderCurve,
-					transform: [
-						{ translateX: compensatedMaskTranslateX },
-						{ translateY: compensatedMaskTranslateY },
-						{ scale: compensatedMaskScale },
-					],
-				};
+		const clip = {
+			x: compensatedClipTranslateX,
+			y: compensatedClipTranslateY,
+			width: clipWidth / safeContentBaseScale,
+			height: renderedClipHeight / safeContentBaseScale,
+			borderRadius: props.active.settled
+				? 0
+				: clipBorderRadius / safeContentBaseScale,
+			borderCurve: clipBorderCurve,
+		};
 
 		const elementOffsetX = initialDestinationTarget
 			? initialDestinationTarget.pageX - link.destination.bounds.pageX
@@ -364,9 +332,7 @@ export function buildRevealStyles({
 							),
 				},
 			},
-			[NAVIGATION_MASK_ELEMENT_STYLE_ID]: {
-				style: maskElementStyle,
-			},
+			clip,
 			[link.id]: {
 				style: {
 					transform: [{ translateX: elementTX }, { translateY: elementY }],

@@ -71,6 +71,24 @@ This screen opens at the second detent, `0.5`.
 />
 ```
 
+To measure a specific container, put its `styleId` directly in `snapPoints`:
+
+```tsx
+// Screen options
+{
+  snapPoints: ["profile-header", 1],
+}
+
+// Screen content
+<Transition.View styleId="profile-header">
+  <Banner />
+  <ProfileSection />
+  <ProfileButtons />
+</Transition.View>
+```
+
+The container's height determines the auto snap point, capped at the screen height. Its position is ignored. Use one matching container per screen and mount it during initial layout: opening at `"auto"` waits for that measurement. Subsequent layout changes update the auto detent using the existing auto-sizing behavior. Use `"auto"` instead of a custom style ID to measure the entire screen content. Use one measured entry (`"auto"` or a style ID) per list. The resolved height is sorted with the numeric snap points.
+
 ## Reading Target Snap State
 
 The selected target detent lives on `current.snapIndex`:

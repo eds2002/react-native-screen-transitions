@@ -16,6 +16,7 @@ import type {
 	ScreenAnimationTarget,
 	ScreenGestureTarget,
 	ScreenInterpolationProps,
+	ScreenStyleInterpolator,
 	ScreenSurfaceComponent,
 	ScreenSurfaceComponentProps,
 	ScreenTransitionConfig,
@@ -25,6 +26,7 @@ import type {
 	ScrollGestureAxisState,
 	ScrollGestureState,
 	ScrollMetadataState,
+	TransitionClip,
 	TransitionInterpolatedStyle,
 	TransitionSlotStyle,
 	TransitionSpec,
@@ -53,6 +55,26 @@ const slotStyle: TransitionSlotStyle = {
 };
 
 const nestedInterpolatedStyle: TransitionInterpolatedStyle = {
+	clip: {
+		x: 0,
+		y: 0,
+		width: 390,
+		height: 400,
+		borderRadius: 24,
+		borderCurve: "continuous",
+		borderTopLeftRadius: 12,
+		borderTopRightRadius: 12,
+		borderBottomLeftRadius: 12,
+		borderBottomRightRadius: 12,
+		borderTopStartRadius: 12,
+		borderTopEndRadius: 12,
+		borderBottomStartRadius: 12,
+		borderBottomEndRadius: 12,
+		borderStartStartRadius: 12,
+		borderStartEndRadius: 12,
+		borderEndStartRadius: 12,
+		borderEndEndRadius: 12,
+	},
 	content: slotStyle,
 	surface: slotStyle,
 	backdrop: {
@@ -94,6 +116,8 @@ function usePublicApiHooksTypecheck() {
 		useScreenAnimation({ depth: -1 });
 	const childAnimation: DerivedValue<ScreenInterpolationProps | null> =
 		useScreenAnimation({ depth: 1 });
+	const keyedAnimation: DerivedValue<ScreenInterpolationProps | null> =
+		useScreenAnimation("feed");
 	const inheritedGesture = useScreenGesture();
 	const ancestorGesture = useScreenGesture({ depth: -1 });
 
@@ -102,6 +126,7 @@ function usePublicApiHooksTypecheck() {
 		selfTargetAnimation,
 		ancestorAnimation,
 		childAnimation,
+		keyedAnimation,
 		inheritedGesture,
 		ancestorGesture,
 	};
@@ -114,17 +139,6 @@ void transitionDepthTarget;
 const scopedBounds = interpolationProps.bounds({ id: 42 });
 const tagScopedBounds = interpolationProps.bounds("group:hero");
 const numericBoundsResult = scopedBounds.styles();
-const parentTransition = interpolationProps.transition({ depth: -1 });
-const grandparentTransition = interpolationProps.transition({ depth: -2 });
-const selfTransition = interpolationProps.transition({ depth: 0 });
-const childTransition = interpolationProps.transition({ depth: 1 });
-const grandchildTransition = interpolationProps.transition({ depth: 2 });
-const rootTransitionBounds = interpolationProps
-	.transition({ depth: -2 })
-	?.bounds({ id: 42 });
-const leafTransitionBounds = interpolationProps
-	.transition({ depth: 2 })
-	?.bounds({ id: 42 });
 const offsetBoundsResult = scopedBounds.styles({
 	offset: { x: 10, y: -10 },
 });
@@ -265,7 +279,7 @@ const optionsInterpolatedStyle: TransitionInterpolatedStyle = {
 };
 const invalidMaskRuntimeOptions: TransitionInterpolatedStyle = {
 	options: {
-		// @ts-expect-error navigationMaskEnabled must be configured as a static screen option.
+		// @ts-expect-error the deprecated navigationMaskEnabled option is not a runtime option.
 		navigationMaskEnabled: true,
 	},
 };
@@ -442,13 +456,6 @@ const publicApiTypecheck = {
 	nestedInterpolatedStyle,
 	gestureTarget,
 	animationTarget,
-	parentTransition,
-	grandparentTransition,
-	selfTransition,
-	childTransition,
-	grandchildTransition,
-	rootTransitionBounds,
-	leafTransitionBounds,
 	numericBoundsResult,
 	offsetBoundsResult,
 	absoluteRawBoundsResult,
@@ -479,3 +486,37 @@ const publicApiTypecheck = {
 };
 
 void publicApiTypecheck;
+
+// Clip keeps a strict geometry contract even alongside arbitrary style IDs.
+const validClip: TransitionClip = {
+	x: 0,
+	y: 0,
+	width: 100,
+	height: 200,
+	borderTopLeftRadius: 24,
+	borderBottomEndRadius: 12,
+};
+const invalidClipProperty: TransitionClip = {
+	...validClip,
+	// @ts-expect-error Clip accepts geometry and corner styles, not arbitrary view styles.
+	opacity: 0.5,
+};
+const invalidClipRadius: TransitionClip = {
+	...validClip,
+	// @ts-expect-error Corner radii cannot be booleans.
+	borderTopRightRadius: true,
+};
+const incompleteClip: TransitionInterpolatedStyle = {
+	// @ts-expect-error Clip requires both rectangle dimensions.
+	clip: { x: 0, y: 0, width: 100 },
+};
+const invalidClipInterpolator: ScreenStyleInterpolator = () => ({
+	// @ts-expect-error Interpolator callbacks must also return numeric clip dimensions.
+	clip: { ...validClip, width: "100%" },
+});
+void [
+	invalidClipProperty,
+	invalidClipRadius,
+	incompleteClip,
+	invalidClipInterpolator,
+];

@@ -5,11 +5,11 @@ import type {
 	PanGestureEvent,
 	PanGestureRuntime,
 	PanReleaseResult,
-} from "../../../providers/screen/gestures/types";
+} from "../../../providers/motion/gestures/types";
 import {
 	buildPanReleasePlan,
 	resolveSnapPanRelease,
-} from "../../../providers/screen/gestures/pan/behavior/pan-release";
+} from "../../../providers/motion/gestures/pan/behavior/pan-release";
 
 const dimensions = {
 	width: 400,
@@ -114,6 +114,7 @@ const createSnapRuntime = ({
 					progressBaseline: shared(baseline),
 					progressDeltaX: shared(0),
 					progressDeltaY: shared(0),
+					carry: { x: shared(0), y: shared(0), normX: shared(0), normY: shared(0) },
 					lockedSnapPoint: shared<number | null>(lockedSnapPoint),
 					snapshot: createGestureSnapshotStore(),
 				},

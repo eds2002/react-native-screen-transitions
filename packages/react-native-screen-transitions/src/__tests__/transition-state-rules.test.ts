@@ -4,8 +4,8 @@ import {
 	createScreenTransitionState,
 	DEFAULT_SCREEN_TRANSITION_OPTIONS,
 } from "../constants";
-import { hydrateTransitionState } from "../providers/screen/animation/helpers/hydrate-transition-state";
-import type { BuiltState } from "../providers/screen/animation/helpers/hydrate-transition-state/types";
+import { hydrateTransitionState } from "../providers/motion/animation/helpers/hydrate-transition-state";
+import type { BuiltState } from "../providers/motion/animation/helpers/hydrate-transition-state/types";
 import type { ScreenTransitionOptions } from "../types/animation.types";
 
 const shared = <T>(initialValue: T): SharedValue<T> => {
@@ -114,6 +114,7 @@ const createGestureStore = (
 			progressBaseline: shared(0),
 			progressDeltaX: shared(overrides.progressDeltaX ?? 0),
 			progressDeltaY: shared(overrides.progressDeltaY ?? 0),
+			carry: { x: shared(0), y: shared(0), normX: shared(0), normY: shared(0) },
 			lockedSnapPoint: shared(null),
 			snapshot: createGestureSnapshotStore({
 				x: overrides.snapshotX,

@@ -2,11 +2,11 @@ import { describe, expect, it } from "bun:test";
 import {
 	resolvePinchRelease,
 	resolveSnapPinchRelease,
-} from "../../../providers/screen/gestures/pinch/behavior/pinch-release";
+} from "../../../providers/motion/gestures/pinch/behavior/pinch-release";
 import type {
 	PinchGestureEvent,
 	PinchGestureRuntime,
-} from "../../../providers/screen/gestures/types";
+} from "../../../providers/motion/gestures/types";
 
 const shared = <T>(initial: T) => {
 	let value = initial;
@@ -84,6 +84,7 @@ const createSnapRuntime = ({
 					progressBaseline: shared(baseline),
 					progressDeltaX: shared(0),
 					progressDeltaY: shared(0),
+					carry: { x: shared(0), y: shared(0), normX: shared(0), normY: shared(0) },
 					lockedSnapPoint: shared<number | null>(lockedSnapPoint),
 					snapshot: createGestureSnapshotStore(),
 				},

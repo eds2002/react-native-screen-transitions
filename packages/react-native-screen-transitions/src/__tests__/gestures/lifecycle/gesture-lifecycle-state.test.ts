@@ -1,3 +1,13 @@
+import {
+	BuilderProvider,
+	useBuilderStore,
+} from "../../../providers/builder";
+import {
+	MotionProvider,
+	useMotionStore,
+} from "../../../providers/motion";
+import { mountMotionValues } from "../../helpers/mount-motion-values";
+import { mountMotionTransitionValues } from "../../helpers/mount-transition-values";
 import { afterEach, describe, expect, it } from "bun:test";
 import React from "react";
 import { act, create } from "react-test-renderer";
@@ -6,33 +16,28 @@ import {
 	createScreenTransitionState,
 	DEFAULT_SCREEN_TRANSITION_OPTIONS,
 } from "../../../constants";
-import { hydrateTransitionState } from "../../../providers/screen/animation/helpers/hydrate-transition-state";
-import type { BuiltState } from "../../../providers/screen/animation/helpers/hydrate-transition-state/types";
+import { hydrateTransitionState } from "../../../providers/motion/animation/helpers/hydrate-transition-state";
+import type { BuiltState } from "../../../providers/motion/animation/helpers/hydrate-transition-state/types";
 import {
 	finalizePanRelease,
 	startPanBase,
 	trackPanGesture,
-} from "../../../providers/screen/gestures/pan/behavior/pan-lifecycle";
-import type { GestureCompositionOwner } from "../../../providers/screen/gestures/types";
+} from "../../../providers/motion/gestures/pan/behavior/pan-lifecycle";
+import type { GestureCompositionOwner } from "../../../providers/motion/gestures/types";
 import {
 	finalizePinchRelease,
 	startPinchBase,
-} from "../../../providers/screen/gestures/pinch/behavior/pinch-lifecycle";
+} from "../../../providers/motion/gestures/pinch/behavior/pinch-lifecycle";
 import {
 	updateAbsolutePinchFocalPoint,
 	updatePinchRotation,
-} from "../../../providers/screen/gestures/pinch/activation/use-pinch-activation";
-import { useTransitionStartController } from "../../../components/screen-lifecycle/hooks/use-transition-start-controller";
-import type { AnimationStoreMap } from "../../../stores/animation.store";
-import { AnimationStore } from "../../../stores/animation.store";
-import type { GestureStoreMap } from "../../../stores/gesture.store";
-import { GestureStore } from "../../../stores/gesture.store";
-import {
-	LifecycleTransitionRequestKind,
-	SystemStore,
-} from "../../../stores/system.store";
+} from "../../../providers/motion/gestures/pinch/activation/use-pinch-activation";
+import { useTransitionStartController } from "../../../navigators/blank-stack/components/lifecycle/hooks/use-transition-start-controller";
+import type { MotionAnimationValues } from "../../../providers/motion/types";
+import type { MotionGestureValues } from "../../../providers/motion/types";
+import { LifecycleTransitionRequestKind } from "../../../providers/motion/hooks/use-transition-values";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
-import { useCloseCompletion } from "../../../components/screen-lifecycle/hooks/use-close-completion";
+import { useCloseCompletion } from "../../../navigators/blank-stack/components/lifecycle/hooks/use-close-completion";
 
 const originalRequestAnimationFrame = globalThis.requestAnimationFrame;
 
@@ -72,7 +77,7 @@ const createGestureSnapshotStore = () => ({
 	active: shared(null),
 });
 
-const createGestureStore = (): GestureStoreMap => {
+const createGestureStore = (): MotionGestureValues => {
 	const normX = shared(0);
 	const normY = shared(0);
 	const dismissing = shared(0);
@@ -104,6 +109,7 @@ const createGestureStore = (): GestureStoreMap => {
 			progressBaseline: shared(0),
 			progressDeltaX: shared(0),
 			progressDeltaY: shared(0),
+			carry: { x: shared(0), y: shared(0), normX: shared(0), normY: shared(0) },
 			lockedSnapPoint: shared(null),
 			snapshot: createGestureSnapshotStore(),
 		},
@@ -118,7 +124,7 @@ const createGestureStore = (): GestureStoreMap => {
 	};
 };
 
-const createAnimations = (): AnimationStoreMap => ({
+const createAnimations = (): MotionAnimationValues => ({
 	transitionProgress: shared(1),
 	visualProgress: shared(1),
 	willAnimate: shared(0),
@@ -149,7 +155,7 @@ const createRuntime = (
 				animationProgress: shared(0),
 			},
 		},
-		};
+	};
 
 	return { runtime: runtime as any, gestures, animations };
 };
@@ -158,9 +164,9 @@ let storedRuntimeId = 0;
 
 const createStoredRuntime = () => {
 	const routeKey = `gesture-lifecycle-${storedRuntimeId++}`;
-	const animations = AnimationStore.getBag(routeKey);
-	const gestures = GestureStore.getBag(routeKey);
-	const system = SystemStore.getBag(routeKey);
+	const animations = mountMotionValues();
+	const gestures = animations;
+	const system = mountMotionTransitionValues();
 	const runtime = {
 		participation: { canDismiss: true, effectiveSnapPoints: {} },
 		policy: { gestureReleaseVelocityScale: 1 },
@@ -172,21 +178,19 @@ const createStoredRuntime = () => {
 		runtime: runtime as any,
 		gestures,
 		animations,
-		clear: () => {
-			AnimationStore.clearBag(routeKey);
-			GestureStore.clearBag(routeKey);
-			SystemStore.clearBag(routeKey);
-		},
 	};
 };
 
-const exposeToInterpolator = ({
-	runtime,
-	gestures,
-	animations,
-}: ReturnType<typeof createRuntime>, sortedNumericSnapPoints: number[] = []) => {
+const exposeToInterpolator = (
+	{ runtime, gestures, animations }: ReturnType<typeof createRuntime>,
+	sortedNumericSnapPoints: number[] = [],
+) => {
 	let observed: ReturnType<typeof hydrateTransitionState> | undefined;
-	const screenStyleInterpolator = ({ current }: { current: typeof observed }) => {
+	const screenStyleInterpolator = ({
+		current,
+	}: {
+		current: typeof observed;
+	}) => {
 		observed = current;
 		return null;
 	};
@@ -262,31 +266,41 @@ afterEach(() => {
 describe("gesture lifecycle state", () => {
 	it("does not pulse willAnimate when an entering screen starts its initial open", () => {
 		const raf = installDeferredAnimationFrame();
-		const animations = createAnimations();
-		const system = SystemStore.getBag("initial-open-contract");
-		animations.entering.set(1);
-		system.actions.requestLifecycleTransition(
-			LifecycleTransitionRequestKind.Open,
-			1,
-		);
-
+		let animations: MotionAnimationValues;
+		const current = {
+			route: { key: "initial-open-contract", name: "initial-open-contract" },
+			options: {},
+			navigation: {
+				getState: () => ({ routes: [{ key: "initial-open-contract" }] }),
+			},
+		} as any;
 		const Harness = () => {
-			useTransitionStartController({
-				current: {
-					route: { key: "initial-open-contract" },
-					options: {},
-				} as any,
-				animations,
-				system,
-			});
+			animations = useMotionStore((store) => store.state);
+			const system = useMotionStore((store) => store.state);
+			useTransitionStartController({ current, animations, system });
+			React.useLayoutEffect(() => {
+				animations.entering.set(1);
+				system.actions.requestLifecycleTransition(
+					LifecycleTransitionRequestKind.Open,
+					1,
+				);
+			}, []);
 			return null;
 		};
-
+		let renderer: ReturnType<typeof create>;
 		act(() => {
-			create(React.createElement(Harness));
+			renderer = create(
+				React.createElement(BuilderProvider, {
+					routeKey: current.route.key,
+					descriptors: { current },
+					children: React.createElement(MotionProvider, {
+						children: React.createElement(Harness),
+					}),
+				}),
+			);
 		});
-
-		expect(animations.willAnimate.get()).toBe(0);
+		expect(animations!.willAnimate.get()).toBe(0);
+		act(() => renderer.unmount());
 		raf.restore();
 	});
 
@@ -386,7 +400,9 @@ describe("gesture lifecycle state", () => {
 			animationProgress: runtime.stores.system.animationProgress,
 		});
 
-		expect(exposeToInterpolator({ runtime, gestures, animations })).toMatchObject({
+		expect(
+			exposeToInterpolator({ runtime, gestures, animations }),
+		).toMatchObject({
 			willAnimate: 1,
 			closing: 1,
 			animating: 0,
@@ -395,7 +411,9 @@ describe("gesture lifecycle state", () => {
 		raf.flush();
 		raf.restore();
 
-		expect(exposeToInterpolator({ runtime, gestures, animations })).toMatchObject({
+		expect(
+			exposeToInterpolator({ runtime, gestures, animations }),
+		).toMatchObject({
 			closing: 1,
 			willAnimate: 0,
 			animating: 1,
@@ -520,7 +538,9 @@ describe("gesture lifecycle state", () => {
 
 		startPanBase(runtime);
 
-		expect(exposeToInterpolator({ runtime, gestures, animations })).toMatchObject({
+		expect(
+			exposeToInterpolator({ runtime, gestures, animations }),
+		).toMatchObject({
 			willAnimate: 1,
 			animating: 0,
 			gesture: { dragging: 1, initiator: "vertical" },
@@ -529,7 +549,9 @@ describe("gesture lifecycle state", () => {
 		raf.flush();
 		raf.restore();
 
-		expect(exposeToInterpolator({ runtime, gestures, animations })).toMatchObject({
+		expect(
+			exposeToInterpolator({ runtime, gestures, animations }),
+		).toMatchObject({
 			willAnimate: 0,
 			animating: 1,
 		});
@@ -561,7 +583,9 @@ describe("gesture lifecycle state", () => {
 
 		startPanBase(runtime);
 
-		expect(exposeToInterpolator({ runtime, gestures, animations })).toMatchObject({
+		expect(
+			exposeToInterpolator({ runtime, gestures, animations }),
+		).toMatchObject({
 			willAnimate: 0,
 			gesture: { dragging: 1 },
 		});
@@ -1002,7 +1026,6 @@ describe("gesture lifecycle state", () => {
 		} finally {
 			Reflect.deleteProperty(globalThis, "__reanimatedDeferredTimingCallbacks");
 			raf.restore();
-			state.clear();
 		}
 	});
 
@@ -1295,5 +1318,4 @@ describe("gesture lifecycle state", () => {
 		expect(gestures.pinchOriginX.get()).toBe(0);
 		expect(gestures.pinchOriginY.get()).toBe(0);
 	});
-
 });

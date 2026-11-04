@@ -55,6 +55,8 @@ globalThis.resetMutableRegistry = () => {
 
 mock.module("react-native", () => ({
 	View: "View",
+	Pressable: "Pressable",
+	I18nManager: { isRTL: false },
 	NativeComponentRegistry: {
 		get: (name: string) => name,
 	},
@@ -68,10 +70,80 @@ mock.module("react-native", () => ({
 		absoluteFill: {},
 		absoluteFillObject: {},
 		create: <T>(styles: T) => styles,
+		flatten: (style: unknown): any =>
+			Array.isArray(style)
+				? Object.assign({}, ...style.flat(Infinity).filter(Boolean))
+				: style,
 	},
 }));
-mock.module("react-native-gesture-handler", () => ({}));
+function createTestGesture() {
+	const gesture: Record<string, any> = { config: {} };
+	for (const name of [
+		"enabled",
+		"manualActivation",
+		"averageTouches",
+		"onTouchesDown",
+		"onTouchesMove",
+		"onStart",
+		"onUpdate",
+		"onEnd",
+	]) {
+		gesture[name] = (value: unknown) => {
+			gesture.config[name] = value;
+			return gesture;
+		};
+	}
+	return gesture;
+}
+
+mock.module("react-native-gesture-handler", () => ({
+	GestureHandlerRootView: "GestureHandlerRootView",
+	GestureDetector: ({ children }: { children: React.ReactNode }) => children,
+	Gesture: {
+		Pan: createTestGesture,
+		Pinch: createTestGesture,
+		Simultaneous: (...gestures: unknown[]) => gestures,
+		Native: () => ({
+			config: { enabled: true } as Record<string, unknown>,
+			enabled(value: boolean) {
+				this.config.enabled = value;
+				return this;
+			},
+			onTouchesDown(callback: unknown) {
+				this.config.onTouchesDown = callback;
+				return this;
+			},
+			onTouchesUp(callback: unknown) {
+				this.config.onTouchesUp = callback;
+				return this;
+			},
+			onTouchesCancelled(callback: unknown) {
+				this.config.onTouchesCancelled = callback;
+				return this;
+			},
+			requireExternalGestureToFail(...gestures: unknown[]) {
+				this.config.requireToFail = [
+					...((this.config.requireToFail as unknown[] | undefined) ?? []),
+					...gestures,
+				];
+				return this;
+			},
+			simultaneousWithExternalGesture(...gestures: unknown[]) {
+				this.config.simultaneousHandlers = [
+					...((this.config.simultaneousHandlers as unknown[] | undefined) ??
+						[]),
+					...gestures,
+				];
+				return this;
+			},
+		}),
+	},
+}));
 mock.module("react-native-worklets", () => ({
+	runOnUISync: <T extends (...args: any[]) => any>(
+		callback: T,
+		...args: Parameters<T>
+	) => callback(...args),
 	scheduleOnRN: <T extends (...args: any[]) => any>(
 		callback: T,
 		...args: Parameters<T>
@@ -83,6 +155,11 @@ mock.module("react-native-worklets", () => ({
 }));
 mock.module("react-native-reanimated", () => ({
 	makeMutable: createTestMutable,
+	useAnimatedRef: () => React.useRef(null),
+	isSharedValue: (value: any) =>
+		value != null &&
+		typeof value.get === "function" &&
+		typeof value.set === "function",
 	createAnimatedComponent,
 	default: {
 		View: "AnimatedView",
@@ -130,6 +207,8 @@ mock.module("react-native-reanimated", () => ({
 	}),
 	useAnimatedStyle: <T>(factory: () => T) => factory(),
 	useAnimatedProps: <T>(factory: () => T) => factory(),
+	useAnimatedScrollHandler: <T>(handlers: T) => handlers,
+	useComposedEventHandler: (handlers: unknown[]) => handlers.filter(Boolean),
 	useAnimatedReaction: (
 		prepare: () => unknown,
 		react: (value: unknown, previousValue: unknown) => void,
@@ -174,3 +253,46 @@ mock.module("react-native-reanimated", () => ({
 		return (...args: A): T => worklet(...args);
 	},
 }));
+
+mock.module("react-native-safe-area-context", () => ({
+	useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+	SafeAreaProvider: ({ children }: { children: React.ReactNode }) => children,
+	SafeAreaInsetsContext: React.createContext(null),
+}));
+
+mock.module("react-native-teleport", () => ({
+	Portal: ({ children }: { children: React.ReactNode }) => children,
+	PortalHost: (props: Record<string, unknown>) =>
+		React.createElement("native-host", props),
+	PortalProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+// The library's timing animation (a fork of withTiming, utils/animation/timing) runs frame by frame,
+// which these shared-value stand-ins don't do. Unit tests keep the mocked withTiming's behaviour
+// above: finish at once (or when deferred), and set the progress clock to its end. The fork itself
+// is tested by importing utils/animation/timing/timing directly.
+mock.module(
+	"../packages/react-native-screen-transitions/src/utils/animation/timing/index.ts",
+	() => ({
+		withInternalTiming: (
+			toValue: number,
+			config?: Record<string, unknown>,
+			callback?: (state: { finished: boolean; settled: boolean }) => void,
+			animationProgress?: {
+				value: { set: (value: number) => void };
+				from: number;
+				to: number;
+			},
+		) => {
+			const { withTiming } = require("react-native-reanimated");
+			if (animationProgress) {
+				animationProgress.value.set(animationProgress.from);
+				animationProgress.value.set(withTiming(animationProgress.to, config));
+			}
+			return withTiming(toValue, config, (finished?: boolean) => {
+				const didFinish = finished === true;
+				callback?.({ finished: didFinish, settled: didFinish });
+			});
+		},
+	}),
+);

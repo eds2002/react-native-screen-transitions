@@ -1,8 +1,8 @@
 ---
 title: "Layers"
 pageTitle: "Layers"
-summary: "Understand reserved transition layers, including overlays, screen content, surfaces, backdrops, and navigation masks."
-description: "Understand reserved transition layers, including overlays, screen content, surfaces, backdrops, and navigation masks."
+summary: "Understand reserved transition layers, including overlays, screen content, surfaces, backdrops, and clipping."
+description: "Understand reserved transition layers, including overlays, screen content, surfaces, backdrops, and clipping."
 eyebrow: "Core Concepts"
 group: "Core Concepts"
 order: 9
@@ -19,31 +19,24 @@ The layer keys are:
 - `backdrop`
 - `content`
 - `surface`
-- `NAVIGATION_MASK_CONTAINER_STYLE_ID`
-- `NAVIGATION_MASK_ELEMENT_STYLE_ID`
+- `clip` (rectangle geometry)
 
 Any other key is treated as an element target and matched against a `styleId` on a transition-aware component such as `Transition.View` or `Transition.Pressable`.
 
 ## Layer Map
 
 ```tsx
-import {
-  NAVIGATION_MASK_CONTAINER_STYLE_ID,
-  NAVIGATION_MASK_ELEMENT_STYLE_ID,
-} from "react-native-screen-transitions";
-
 return {
   overlay: { style: { ... }, props: { ... } },
   backdrop: { style: { ... }, props: { ... } },
   content: { style: { ... }, props: { ... } },
   surface: { style: { ... }, props: { ... } },
-  [NAVIGATION_MASK_CONTAINER_STYLE_ID]: { style: { ... } },
-  [NAVIGATION_MASK_ELEMENT_STYLE_ID]: { style: { ... } },
+  clip: { x: 0, y: 0, width: 300, height: 400, borderRadius: 24 },
   ["hero-card"]: { style: { ... }, props: { ... } },
 };
 ```
 
-Each slot also supports shorthand style-only output:
+Style slots also support shorthand style-only output. `clip` takes geometry directly:
 
 ```tsx
 return {
@@ -61,7 +54,7 @@ Most layers render inside `screen-container` in this order:
 
 1. `backdrop`
 2. `content`
-3. optional navigation mask wrapper when `navigationMaskEnabled` is enabled
+3. stable clipping viewport and content compensation view
 4. `surface`
 5. screen children and any matching `styleId` targets
 6. shared-element fallback content outside the surface
@@ -258,61 +251,36 @@ return {
 
 These keys apply only to transition-aware components created by the library such as `Transition.View`, `Transition.Pressable`, `Transition.ScrollView`, and `Transition.FlatList`.
 
-## Navigation Mask Layers
+## Clipping
 
-When `navigationMaskEnabled` is enabled and `@react-native-masked-view/masked-view` is installed, the content layer is wrapped in a masked container.
-
-Two exported reserved ids control that wrapper:
-
-- `NAVIGATION_MASK_CONTAINER_STYLE_ID`
-- `NAVIGATION_MASK_ELEMENT_STYLE_ID`
-
-Use them directly in the interpolator:
+`clip` is a reserved interpolator key that defines the visible rectangle in the content layer's local coordinates, before its transform. It uses built-in React Native views and requires no enable option or additional dependency.
 
 ```tsx
-import {
-  NAVIGATION_MASK_CONTAINER_STYLE_ID,
-  NAVIGATION_MASK_ELEMENT_STYLE_ID,
-} from "react-native-screen-transitions";
-
-<Stack.Screen
-  name="Sheet"
-  component={SheetScreen}
-  options={{
-    navigationMaskEnabled: true,
-    screenStyleInterpolator: ({ current, progress }) => {
-      "worklet";
-
-      const { height } = current.layouts.screen;
-      const sheetHeight = interpolate(progress, [0, 1], [height * 0.6, height]);
-
-      return {
-        [NAVIGATION_MASK_CONTAINER_STYLE_ID]: {
-          style: {
-            transform: [{ translateY: height - sheetHeight }],
-          },
-        },
-        [NAVIGATION_MASK_ELEMENT_STYLE_ID]: {
-          style: {
-            width: "100%",
-            height: sheetHeight,
-            borderRadius: interpolate(progress, [0, 1], [32, 0]),
-            backgroundColor: "white",
-          },
-        },
-      };
+screenStyleInterpolator: ({ current, progress }) => {
+  "worklet";
+  const { width, height } = current.layouts.screen;
+  const visibleHeight = interpolate(progress, [0, 1], [height * 0.6, height]);
+  return {
+    clip: {
+      x: 0,
+      y: height - visibleHeight,
+      width,
+      height: visibleHeight,
+      borderRadius: interpolate(progress, [0, 1], [32, 0]),
     },
-  }}
-/>
+  };
+}
 ```
 
-`NAVIGATION_MASK_CONTAINER_STYLE_ID` styles the masked content container. `NAVIGATION_MASK_ELEMENT_STYLE_ID` styles the mask element itself.
+`x`, `y`, `width`, and `height` are required numeric values. `borderRadius` and `borderCurve` are optional. The library keeps content at its original layout size and compensates for the viewport's movement. Omitting `clip` disables clipping and clears the previous rectangle. Clipping is local to each screen and does not inherit from a parent navigator.
 
-Treat both ids as reserved layer keys. Do not reuse them as custom `styleId` values.
+`clip` accepts geometry directly, without `style` or `props` buckets. It supports rectangular and rounded rectangular clipping, not arbitrary alpha masks.
+
+`navigationMaskEnabled`, `NAVIGATION_MASK_CONTAINER_STYLE_ID`, and `NAVIGATION_MASK_ELEMENT_STYLE_ID` are deprecated and ignored. Replace custom mask output with `clip`; move intended screen transforms to `content`.
 
 ## Props vs Style
 
-Every slot supports both animated styles and animated props:
+Style slots support both animated styles and animated props. The `clip` geometry field is separate:
 
 ```tsx
 return {

@@ -1,0 +1,96 @@
+import { scheduleOnUI } from "react-native-worklets";
+import { getMotionStore } from "../providers/motion";
+import type { HistoryEntry } from "../stores/history.store";
+import { animateToProgress } from "../utils/animation/animate-to-progress";
+import { resolveSnapTransitionSpec } from "../utils/animation/resolve-snap-transition-spec";
+import { logger } from "../utils/logger";
+import { resolveSnapTargetEntry } from "./helpers/resolve-snap-target";
+
+const getSortedSnapPoints = (
+	descriptor: HistoryEntry["descriptor"],
+): number[] | null => {
+	const snapPoints = descriptor.options?.snapPoints;
+	if (!snapPoints || snapPoints.length === 0) return null;
+
+	// Resolve 'auto' to the measured fraction owned by Motion
+	const autoVal = getMotionStore(
+		descriptor.route.key,
+	).state.resolvedAutoSnapPoint.get();
+
+	const resolved = snapPoints
+		.map((p) => (typeof p === "string" ? autoVal : p))
+		.filter((p): p is number => typeof p === "number" && p > 0);
+
+	return resolved.length > 0 ? resolved.sort((a, b) => a - b) : null;
+};
+
+export function snapDescriptorToIndex(
+	descriptor: HistoryEntry["descriptor"],
+	index: number,
+): boolean {
+	const sorted = getSortedSnapPoints(descriptor);
+	if (!sorted) {
+		logger.warn("snapTo: target screen has no snapPoints");
+		return false;
+	}
+
+	if (index < 0 || index >= sorted.length) {
+		logger.warn(
+			`snapTo: index ${index} out of bounds (0-${sorted.length - 1})`,
+		);
+		return false;
+	}
+
+	const targetProgress = sorted[index];
+	const animations = getMotionStore(descriptor.route.key).state;
+	const {
+		targetProgress: targetProgressValue,
+		animationProgress: animationProgressValue,
+	} = animations;
+
+	scheduleOnUI(() => {
+		"worklet";
+		const currentProgress = animations.transitionProgress.get();
+
+		animateToProgress({
+			target: targetProgress,
+			markEntering: false,
+			animations,
+			targetProgress: targetProgressValue,
+			animationProgress: animationProgressValue,
+			spec: resolveSnapTransitionSpec(
+				descriptor.options.transitionSpec,
+				targetProgress < currentProgress ? "collapse" : "expand",
+			),
+		});
+	});
+
+	return true;
+}
+
+/**
+ * Programmatically snap the currently focused screen to a specific snap point.
+ *
+ * @param index - The index of the snap point to snap to (0-based, sorted ascending)
+ *
+ * @example
+ * ```tsx
+ * import { snapTo } from 'react-native-screen-transitions';
+ *
+ * // Snap to the first (smallest) snap point
+ * snapTo(0);
+ *
+ * // Snap to the last (largest) snap point
+ * snapTo(2); // if there are 3 snap points
+ * ```
+ */
+export function snapTo(index: number): void {
+	const screenWithSnapPoints = resolveSnapTargetEntry();
+
+	if (!screenWithSnapPoints) {
+		logger.warn("snapTo: No screens with snapPoints in history");
+		return;
+	}
+
+	snapDescriptorToIndex(screenWithSnapPoints.descriptor, index);
+}

@@ -6,6 +6,7 @@ import {
 	type SpringConfig,
 	withInternalSpring,
 } from "../../utils/animation/spring";
+import { withInternalTiming } from "../../utils/animation/timing/timing";
 
 type SpringAnimationRuntime = {
 	onStart: (
@@ -34,6 +35,34 @@ const shared = <T>(initialValue: T): SharedValue<T> => {
 };
 
 describe("internal withSpring", () => {
+	test("a stall before its first frames is not billed to the motion (heavy screen mounting)", () => {
+		const make = () => {
+			const definition = withInternalSpring(1, { stiffness: 1000, damping: 500, mass: 3 }) as unknown;
+			const animation = (typeof definition === "function" ? definition() : definition) as SpringAnimationRuntime & { current: number };
+			animation.onStart(animation, 0, 0, undefined);
+			return animation;
+		};
+		const frame = 1000 / 60;
+		// Normal start: one frame per vsync.
+		const normal = make();
+		normal.onFrame(normal, frame);
+		// The UI thread was busy for four frames before the first frame ran.
+		const stalled = make();
+		stalled.onFrame(stalled, frame * 5);
+		expect(stalled.current).toBeCloseTo(normal.current, 6);
+		// After the first frames, a long frame advances by its real duration (up to the 64 ms cap) again.
+		for (let i = 2; i <= 3; i++) {
+			normal.onFrame(normal, frame * i);
+			stalled.onFrame(stalled, frame * (i + 4));
+		}
+		const before = stalled.current;
+		stalled.onFrame(stalled, frame * 7 + 48);
+		const longStep = stalled.current - before;
+		const beforeNormal = normal.current;
+		normal.onFrame(normal, frame * 4);
+		expect(longStep).toBeGreaterThan((normal.current - beforeNormal) * 2);
+	});
+
 	test("keeps release velocity that initially points away from the target", () => {
 		const definition = withInternalSpring(0, { velocity: 2500 }) as unknown;
 		const animation =
@@ -193,5 +222,59 @@ describe("internal withSpring", () => {
 
 		expect(animationProgress.get()).toBe(0);
 		expect(springAnimation.onFrame(springAnimation, 0)).toBe(true);
+	});
+});
+
+describe("internal withTiming", () => {
+	type TimingRuntime = SpringAnimationRuntime & { current: number };
+	const make = (config: { duration?: number; easing?: (t: number) => number }, clock?: SharedValue<number>) => {
+		const definition = withInternalTiming(100, config, undefined, clock ? { value: clock, from: 0, to: 1 } : undefined) as unknown;
+		const animation = (typeof definition === "function" ? definition() : definition) as TimingRuntime;
+		animation.onStart(animation, 0, 0, undefined);
+		return animation;
+	};
+	const linear = (t: number) => t;
+	const frame = 1000 / 60;
+
+	test("follows elapsed time through the easing, like Reanimated's withTiming", () => {
+		const animation = make({ duration: 300, easing: linear });
+		animation.onFrame(animation, frame);
+		animation.onFrame(animation, frame * 2);
+		animation.onFrame(animation, frame * 3);
+		animation.onFrame(animation, 150);
+		expect(animation.current).toBeCloseTo(50, 6);
+		expect(animation.onFrame(animation, 300)).toBe(true);
+		expect(animation.current).toBe(100);
+	});
+
+	test("a stall before its first frames is not billed to the motion", () => {
+		const normal = make({ duration: 300, easing: linear });
+		normal.onFrame(normal, frame);
+		const stalled = make({ duration: 300, easing: linear });
+		stalled.onFrame(stalled, frame * 5);
+		expect(stalled.current).toBeCloseTo(normal.current, 6);
+	});
+
+	test("a new timing towards the same value after one finished starts from the beginning", () => {
+		const finished = make({ duration: 100, easing: linear });
+		finished.onFrame(finished, 100);
+		const definition = withInternalTiming(100, { duration: 100, easing: linear }) as unknown;
+		const next = (typeof definition === "function" ? definition() : definition) as TimingRuntime;
+		next.onStart(next, 0, 200, finished);
+		next.onFrame(next, 200 + frame);
+		expect(next.current).toBeLessThan(100);
+	});
+
+	test("drives the linear progress clock from the same frames and finishes it", () => {
+		const clock = shared(0);
+		const animation = make({ duration: 200, easing: (t) => t * t }, clock);
+		animation.onFrame(animation, frame);
+		animation.onFrame(animation, frame * 2);
+		animation.onFrame(animation, frame * 3);
+		animation.onFrame(animation, 100);
+		expect(clock.get()).toBeCloseTo(0.5, 6);
+		expect(animation.current).toBeCloseTo(25, 6);
+		animation.onFrame(animation, 200);
+		expect(clock.get()).toBe(1);
 	});
 });

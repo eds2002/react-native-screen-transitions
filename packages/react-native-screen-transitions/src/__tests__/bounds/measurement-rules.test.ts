@@ -364,7 +364,7 @@ describe("bounds client measurement contract", () => {
 		const correct = (measured: Snapshot["bounds"]) =>
 			correctMeasuredBoundsForVisibilityGate({
 				measured,
-				visibilityBlocked: true,
+				isScreenReady: false,
 				visibilityBlockOffset,
 				viewportWidth: 400,
 				viewportHeight: 800,
@@ -391,7 +391,7 @@ describe("bounds client measurement contract", () => {
 		expect(
 			correctMeasuredBoundsForVisibilityGate({
 				measured,
-				visibilityBlocked: false,
+				isScreenReady: true,
 				visibilityBlockOffset: 1601,
 				viewportWidth: 400,
 				viewportHeight: 800,
@@ -408,7 +408,7 @@ describe("bounds client measurement contract", () => {
 		expect(
 			correctMeasuredBoundsForVisibilityGate({
 				measured,
-				visibilityBlocked: false,
+				isScreenReady: true,
 				visibilityBlockOffset: 1601,
 				viewportWidth: 400,
 				viewportHeight: 800,

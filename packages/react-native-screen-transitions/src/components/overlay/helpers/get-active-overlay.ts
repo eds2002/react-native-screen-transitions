@@ -2,8 +2,6 @@ import type { BaseStackScene } from "../../../types/stack.types";
 
 type StackScene = BaseStackScene;
 
-import { isOverlayVisible } from "../../../utils/overlay/visibility";
-
 export type FloatOverlayEntry = {
 	scene: StackScene;
 	overlayIndex: number;
@@ -19,7 +17,6 @@ export type FloatOverlayTransitionEntry = FloatOverlayEntry & {
  */
 export function getFloatOverlayStack(
 	scenes: StackScene[],
-	transitionsAlwaysOn: boolean,
 ): FloatOverlayEntry[] {
 	const candidates: FloatOverlayEntry[] = [];
 
@@ -27,11 +24,7 @@ export function getFloatOverlayStack(
 		const scene = scenes[index];
 		const options = scene?.descriptor?.options;
 
-		if (!transitionsAlwaysOn && !options?.enableTransitions) {
-			continue;
-		}
-
-		if (isOverlayVisible(options)) {
+		if (options?.overlay && options?.overlayShown !== false) {
 			candidates.push({ scene, overlayIndex: index });
 		}
 	}

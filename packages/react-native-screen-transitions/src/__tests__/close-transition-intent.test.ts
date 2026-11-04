@@ -6,7 +6,7 @@ import {
 import {
 	doesNavigatorOwnCloseAction,
 	shouldInterceptClose,
-} from "../components/screen-lifecycle/hooks/helpers/close-interception-rules";
+} from "../adapters/with-screen-transitions/lifecycle/close-interception-rules";
 
 describe("close transition intent", () => {
 	it("only lets the focused route own a multi-route close animation", () => {

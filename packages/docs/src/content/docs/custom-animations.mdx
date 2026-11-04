@@ -82,36 +82,54 @@ In practice:
 | `stackProgress` | Accumulated progress from this screen upward through the stack |
 | `focused` | `true` when there is no `next` screen above `current` |
 | `bounds` | Bounds accessor for shared-element and navigation zoom helpers |
-| `transition` | Worklet-safe accessor for the current, ancestor, or descendant transition scope |
 | `insets` | Safe-area insets |
 | `layouts` | Layout measurements for the current screen |
 
 </PropertyTable>
 
-## Related Transition Scopes
+## Stack progress
 
-Use `transition()` when an interpolator needs animation state from another screen transition scope:
+`stackProgress` sums the visual progress of the current screen and every route above it in the same navigator. It includes live gesture movement and fractional snap positions; it is not simply the route count. A closing screen contributes its decreasing progress until it is removed.
+
+For three fully open screens `A → B → C`, the values are `3` for A, `2` for B, and `1` for C. When C closes, A moves from `3` toward `2` and B moves from `2` toward `1`.
+
+Use it for a persistent progress indicator or a screen that moves as a flow grows:
 
 ```tsx
-screenStyleInterpolator: ({ transition }) => {
-  "worklet";
+function FlowProgress() {
+  const animation = useScreenAnimation();
+  const style = useAnimatedStyle(() => ({
+    width: `${interpolate(animation.get().stackProgress, [1, 4], [0, 100], "clamp")}%`,
+  }));
 
-  const parent = transition({ depth: -1 });
-  const parentProgress = parent?.progress ?? 1;
-
-  return {
-    content: {
-      style: {
-        opacity: interpolate(parentProgress, [0, 1], [0.8, 1], "clamp"),
-      },
-    },
-  };
-};
+  return <Animated.View style={[{ height: 4, backgroundColor: "white" }, style]} />;
+}
 ```
 
-Calling `transition()` without a target, or with `depth: 0`, returns the current scope. Negative depths resolve ancestors and positive depths resolve descendants. The accessor returns `null` when the requested scope is unavailable.
+Import `useScreenAnimation` from `react-native-screen-transitions` and `Animated`, `interpolate`, and `useAnimatedStyle` from `react-native-reanimated`. Mount this example inside the first screen of a four-screen flow and give that screen `inactiveBehavior: "keep"` so its animation reader keeps running while covered.
 
-Returned scopes expose the same interpolation state, including `current`, `previous`, `next`, `active`, `inactive`, `progress`, `stackProgress`, `bounds`, and another relative `transition()` accessor.
+Use `hide` or `pause` for other screens that should retain their state. See [Inactive Behavior](/inactive-behavior).
+
+## Related Transition Scopes
+
+Use [`useScreenAnimation`](/api/use-screen-animation) inside a component to read another transition scope:
+
+```tsx
+const parentAnimation = useScreenAnimation({ depth: -1 });
+
+const style = useAnimatedStyle(() => ({
+  opacity: interpolate(
+    parentAnimation.get()?.progress ?? 1,
+    [0, 1],
+    [0.8, 1],
+    "clamp",
+  ),
+}));
+```
+
+Negative depths resolve ancestors and positive depths resolve descendants. You can also pass a screen's unique `transitionKey`, such as `useScreenAnimation("feed")`. Non-current targets can return `null`.
+
+The interpolator's `transition()` accessor was removed in 4.1. Call the hook in a component under a transition scope, not inside `screenStyleInterpolator`. See the [4.1 migration note](/changelog/updating-to-4-1).
 
 Each screen state object contains the same fields:
 
@@ -218,7 +236,7 @@ screenStyleInterpolator: ({ active, progress }) => {
 };
 ```
 
-Use this for values that must change per frame on the UI thread, such as dynamic `gestureSensitivity`. Use `navigation.setOptions()` for React-side option changes such as toggling `gestureEnabled` or switching `gestureDirection` while a screen stays mounted. Structural options such as `navigationMaskEnabled` and `gestureTracking` must stay on the static screen options.
+Use this for values that must change per frame on the UI thread, such as dynamic `gestureSensitivity`. Use `navigation.setOptions()` for React-side option changes such as toggling `gestureEnabled` or switching `gestureDirection` while a screen stays mounted. Structural options such as `gestureTracking` must stay on the static screen options.
 
 Supported runtime option keys are:
 

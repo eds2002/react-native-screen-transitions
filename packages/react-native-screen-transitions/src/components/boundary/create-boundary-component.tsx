@@ -10,11 +10,7 @@ import {
 	BOUNDARY_TARGET_ACTIVE_PROP,
 	BoundaryTarget,
 } from "./components/boundary-target";
-import {
-	BoundaryContentPortal,
-	BoundaryContentPortalHost,
-} from "./portal/components/boundary-content-portal";
-import { BoundaryPortal } from "./portal/components/boundary-portal";
+import { Portal } from "./portal/components/portal";
 import { BoundaryRootProvider } from "./providers/boundary-root.provider";
 import type { BoundaryComponentProps } from "./types";
 import { resolveBoundaryTarget } from "./utils/resolve-boundary-target";
@@ -50,6 +46,12 @@ export function createBoundaryComponent<P extends object>(
 			children,
 			...rest
 		} = props as any;
+
+		const config = useMemo(
+			() => ({ anchor, scaleMode, target, method }),
+			[anchor, scaleMode, target, method],
+		);
+
 		const targetResolution = useMemo(() => {
 			return resolveBoundaryTarget(children, {
 				isTarget: (element) => element.type === BoundaryTarget,
@@ -59,13 +61,14 @@ export function createBoundaryComponent<P extends object>(
 					} as any),
 			});
 		}, [children]);
+
 		const targetStyle = (
 			targetResolution.target?.props as { style?: unknown } | undefined
 		)?.style;
 
 		return (
 			<BoundaryRootProvider
-				config={{ anchor, scaleMode, target, method }}
+				config={config}
 				enabled={enabled}
 				escapeClipping={escapeClipping}
 				forwardedRef={forwardedRef}
@@ -78,7 +81,8 @@ export function createBoundaryComponent<P extends object>(
 				targetStyle={targetStyle}
 			>
 				{(root) => (
-					<BoundaryPortal
+					<Portal
+						mode="escapeClipping"
 						boundaryId={root.boundTag.tag}
 						enabled={root.shouldRenderBoundaryRootThroughPortal}
 						placeholderRef={root.measurementRef}
@@ -89,20 +93,15 @@ export function createBoundaryComponent<P extends object>(
 							style={[style, root.attachedStyle]}
 							collapsable={false}
 						>
-							<BoundaryContentPortalHost
+							<Portal
+								mode="handoff"
 								boundaryId={root.boundTag.tag}
 								enabled={root.shouldRenderHandoffHost}
-								screenKey={root.currentScreenKey}
 							>
-								<BoundaryContentPortal
-									boundaryId={root.boundTag.tag}
-									enabled={root.shouldRenderHandoffHost}
-								>
-									{targetResolution.children}
-								</BoundaryContentPortal>
-							</BoundaryContentPortalHost>
+								{targetResolution.children}
+							</Portal>
 						</AnimatedComponent>
-					</BoundaryPortal>
+					</Portal>
 				)}
 			</BoundaryRootProvider>
 		);

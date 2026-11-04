@@ -13,7 +13,7 @@ import type {
 import {
 	BlankStackNavigator,
 	type BlankStackStandardNavigatorProps,
-} from "../create-blank-stack-navigator";
+} from "../blank-stack/create-blank-stack-navigator";
 
 interface BlankStackStandardTypeBag extends StandardNavigationTypeBagBase {
 	State: StackNavigationState<this["ParamList"]>;
@@ -44,3 +44,5 @@ export type {
 	BlankStackScreenProps,
 	InactiveBehavior,
 } from "../../types/blank-stack.types";
+
+export type { BlankStackStandardNavigatorProps } from "../blank-stack/create-blank-stack-navigator";

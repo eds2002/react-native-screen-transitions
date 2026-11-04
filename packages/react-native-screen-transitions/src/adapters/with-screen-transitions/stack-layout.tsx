@@ -1,16 +1,21 @@
 import type { NavigationState, Route } from "@react-navigation/native";
-import { useMemo } from "react";
+import { memo, type ReactNode, useMemo } from "react";
+import { StyleSheet } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Overlay } from "../../components/overlay";
-import { ScreenComposer } from "../../providers/screen/screen-composer";
-import { BlankStackStoreProvider } from "../../providers/stack/blank-stack.provider";
-import { StackCoreProvider } from "../../providers/stack/core.provider";
+import { ScreenLayers } from "../../components/screen-layers";
+import { useNavigationHelpers } from "../../navigators/blank-stack/hooks/use-navigation-helpers";
+import { BlankStackStoreProvider } from "../../navigators/blank-stack/state/blank-stack.provider";
+import { BuilderProvider } from "../../providers/builder";
+import { MotionProvider } from "../../providers/motion";
+import { OrchestratorProvider } from "../../providers/orchestrator";
 import type { BaseStackDescriptor, BaseStackRoute } from "../../types";
-import { isOverlayVisible } from "../../utils/overlay/visibility";
 import {
 	ScreenTransitionsAdapterProvider,
 	type ScreenTransitionsAdapterScene,
 	useScreenTransitionsAdapterContext,
 } from "./context";
+import { NativeStackLifecycle } from "./lifecycle";
 import {
 	type AdapterDescriptorOptions,
 	resolveAdapterTransitionOptions,
@@ -109,9 +114,8 @@ function buildTransitionStackState({
 
 		if (
 			!shouldShowFloatOverlay &&
-			(normalizedDescriptor.options as AdapterDescriptorOptions)
-				.enableTransitions &&
-			isOverlayVisible(normalizedDescriptor.options)
+			normalizedDescriptor.options.overlay &&
+			normalizedDescriptor.options.overlayShown !== false
 		) {
 			shouldShowFloatOverlay = true;
 		}
@@ -171,7 +175,7 @@ function ScreenTransitionsStackContent({
 	return (
 		<ScreenTransitionsAdapterProvider value={adapterContextValue}>
 			<BlankStackStoreProvider value={blankStackValue}>
-				<Overlay.Float />
+				<Overlay />
 				{children}
 			</BlankStackStoreProvider>
 		</ScreenTransitionsAdapterProvider>
@@ -182,11 +186,29 @@ export function ScreenTransitionsStackLayout(
 	props: ScreenTransitionsStackContentProps,
 ) {
 	return (
-		<StackCoreProvider config={{ TRANSITIONS_ALWAYS_ON: false }}>
+		<GestureHandlerRootView style={styles.container}>
 			<ScreenTransitionsStackContent {...props} />
-		</StackCoreProvider>
+		</GestureHandlerRootView>
 	);
 }
+
+const NativeSceneMotion = memo(function NativeSceneMotion({
+	children,
+}: {
+	children: ReactNode;
+}) {
+	const { requestDismiss } = useNavigationHelpers();
+	return (
+		<MotionProvider onDismissRequest={requestDismiss}>
+			<OrchestratorProvider>
+				<ScreenLayers onDismissRequest={requestDismiss}>
+					{children}
+				</ScreenLayers>
+			</OrchestratorProvider>
+			<NativeStackLifecycle />
+		</MotionProvider>
+	);
+});
 
 export function ScreenTransitionsScreenLayout({
 	screenLayout,
@@ -201,19 +223,28 @@ export function ScreenTransitionsScreenLayout({
 		? screenLayout(screenLayoutArgs)
 		: screenLayoutArgs.children;
 
-	if (sceneIndex === undefined) {
+	const scene = sceneIndex === undefined ? undefined : scenes[sceneIndex];
+	const descriptors = useMemo(
+		() =>
+			scene
+				? {
+						current: scene.descriptor,
+						previous: scene.previousDescriptor,
+						next: scene.nextDescriptor,
+					}
+				: undefined,
+		[scene],
+	);
+
+	if (!scene || !descriptors) {
 		return <>{children}</>;
 	}
 
-	const scene = scenes[sceneIndex];
-
 	return (
-		<ScreenComposer
-			previous={scene.previousDescriptor}
-			current={scene.descriptor}
-			next={scene.nextDescriptor}
-		>
-			{children}
-		</ScreenComposer>
+		<BuilderProvider routeKey={scene.route.key} descriptors={descriptors}>
+			<NativeSceneMotion>{children}</NativeSceneMotion>
+		</BuilderProvider>
 	);
 }
+
+const styles = StyleSheet.create({ container: { flex: 1 } });

@@ -1,0 +1,167 @@
+import { useCallback, useMemo } from "react";
+import type {
+	GestureStateManager,
+	GestureTouchEvent,
+} from "react-native-gesture-handler";
+import { type SharedValue, useSharedValue } from "react-native-reanimated";
+import { GestureActivationState } from "../../../../../types/gesture.types";
+import type { Direction } from "../../../../../types/ownership.types";
+import { useBuilderStore } from "../../../../builder";
+import { useScreenRelationships } from "../../../../builder/topology";
+import { useOptionalMotionStore } from "../../..";
+import type { ScreenOptionsContextValue } from "../../../options";
+import { resolvePanRuntime } from "../../shared/runtime";
+import type {
+	GestureCompositionOwner,
+	GestureDimensions,
+	GestureOwnerMap,
+	PanGestureRuntime,
+	ScrollGestureState,
+} from "../../types";
+import { resolvePanActivationMoveDecision } from "./pan-activation-decision";
+import type { PanTouchPoint } from "./pan-activation-rules";
+
+interface UsePanActivationProps {
+	scrollState: SharedValue<ScrollGestureState | null>;
+	gestureOwners: SharedValue<GestureOwnerMap>;
+	runtime: SharedValue<PanGestureRuntime>;
+	screenOptions: ScreenOptionsContextValue;
+	dimensions: GestureDimensions;
+	gestureCompositionOwner: SharedValue<GestureCompositionOwner>;
+}
+
+export const usePanActivation = ({
+	scrollState,
+	gestureOwners,
+	runtime,
+	screenOptions,
+	dimensions,
+	gestureCompositionOwner,
+}: UsePanActivationProps) => {
+	const currentScreenKey = useBuilderStore(
+		(store) => store.derivations.currentScreenKey,
+	);
+	const { parentScreenKey } = useScreenRelationships();
+
+	const ancestorDismissing = useOptionalMotionStore(
+		parentScreenKey ?? null,
+		(store) => store.state.dismissing,
+	);
+
+	const initialTouch = useSharedValue<PanTouchPoint>({ x: 0, y: 0 });
+
+	const gestureActivationState = useSharedValue<GestureActivationState>(
+		GestureActivationState.PENDING,
+	);
+	const pendingDirection = useSharedValue<Direction | null>(null);
+
+	const onTouchesDown = useCallback(
+		(
+			event: GestureTouchEvent,
+			stateManager: GestureStateManager | undefined,
+		) => {
+			"worklet";
+			const { participation } = resolvePanRuntime(
+				runtime.get(),
+				screenOptions.get(),
+			);
+
+			if (!participation.canTrackGesture) {
+				gestureActivationState.set(GestureActivationState.FAILED);
+				pendingDirection.set(null);
+				stateManager?.fail();
+				return;
+			}
+
+			const firstTouch = event.changedTouches[0];
+			initialTouch.set({
+				x: firstTouch.x,
+				y: firstTouch.y,
+				absoluteX: firstTouch.absoluteX,
+				absoluteY: firstTouch.absoluteY,
+			});
+			gestureActivationState.set(GestureActivationState.PENDING);
+			pendingDirection.set(null);
+		},
+		[
+			gestureActivationState,
+			initialTouch,
+			pendingDirection,
+			runtime,
+			screenOptions,
+		],
+	);
+
+	const onTouchesMove = useCallback(
+		(event: GestureTouchEvent, stateManager: GestureStateManager) => {
+			"worklet";
+
+			const currentActivationState = gestureActivationState.get();
+			const resolvedRuntime = resolvePanRuntime(
+				runtime.get(),
+				screenOptions.get(),
+			);
+
+			// If another gesture owns this composition, let pan join as a
+			// companion tracker instead of running normal pan activation gates.
+			if (
+				gestureCompositionOwner.get() !== null &&
+				resolvedRuntime.participation.canTrackGesture &&
+				resolvedRuntime.policy.enabled
+			) {
+				stateManager.activate();
+				return;
+			}
+
+			const decision = resolvePanActivationMoveDecision({
+				event,
+				runtime: resolvedRuntime,
+				dimensions,
+				initialTouch: initialTouch.get(),
+				activationState: currentActivationState,
+				ancestorDismissing: Boolean(ancestorDismissing?.get()),
+				gestureOwners: gestureOwners.get(),
+				currentScreenKey,
+				scrollState: scrollState.get(),
+			});
+
+			if (decision.nextActivationState !== currentActivationState) {
+				gestureActivationState.set(decision.nextActivationState);
+			}
+
+			if (decision.action === "fail") {
+				pendingDirection.set(null);
+				stateManager.fail();
+				return;
+			}
+
+			if (decision.action === "wait") {
+				return;
+			}
+
+			if (decision.direction) {
+				pendingDirection.set(decision.direction);
+			}
+
+			stateManager.activate();
+		},
+		[
+			ancestorDismissing,
+			currentScreenKey,
+			dimensions,
+			gestureActivationState,
+			initialTouch,
+			pendingDirection,
+			gestureOwners,
+			runtime,
+			screenOptions,
+			scrollState,
+			gestureCompositionOwner,
+		],
+	);
+
+	return useMemo(
+		() => ({ onTouchesDown, onTouchesMove, pendingDirection }),
+		[onTouchesDown, onTouchesMove, pendingDirection],
+	);
+};

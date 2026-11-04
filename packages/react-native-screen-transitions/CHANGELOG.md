@@ -1,5 +1,68 @@
 # Changelog
 
+## [4.1.0](https://github.com/eds2002/react-native-screen-transitions/compare/v4.1.0-rc.0...v4.1.0) (2026-11-04)
+
+### Features
+
+* **animation:** fork withTiming as withInternalTiming ([277d270](https://github.com/eds2002/react-native-screen-transitions/commit/277d270a390611cca95ddfb492289e3f3bdfc4a1))
+* **harness:** add an on-device harness app with one lab per mechanism ([a4f63a1](https://github.com/eds2002/react-native-screen-transitions/commit/a4f63a18360e979454675e4de48442e86144120f))
+* **harness:** annotated bug clips from recorded runs ([d76def3](https://github.com/eds2002/react-native-screen-transitions/commit/d76def3a70eabf4da4264aa8641b9af896b440da))
+* **harness:** debug bridge exposing transition state to Argent ([b5a700d](https://github.com/eds2002/react-native-screen-transitions/commit/b5a700d22cb93d76d81162bec001de2c2ae73bd5))
+* **harness:** e2e scenarios for gestures, ownership and sheets with a review page ([dc68641](https://github.com/eds2002/react-native-screen-transitions/commit/dc686414640866d361fc0ded3c198c4b78a5c162))
+* **harness:** heavy-screen lab and a pop-in check ([c03a64c](https://github.com/eds2002/react-native-screen-transitions/commit/c03a64c1eb3f7347015549063de12ae764977581))
+* **harness:** push/pop spam scenario with a cooldown sweep ([c784aa9](https://github.com/eds2002/react-native-screen-transitions/commit/c784aa9e49aaab61deb838ea185e917347532c93))
+* **harness:** tell crossing screens apart in recordings ([6e92114](https://github.com/eds2002/react-native-screen-transitions/commit/6e921147e4b9f84aedf17fb8a049a9ea226bc455))
+* **harness:** visual e2e checks for blanks, flickers and jumps ([f512471](https://github.com/eds2002/react-native-screen-transitions/commit/f512471b81c0921c47458c69fe6f56000826b91f))
+
+### Bug Fixes
+
+* align standard navigation dependency ([160bfe2](https://github.com/eds2002/react-native-screen-transitions/commit/160bfe25354614b07593dcbcadc727ab1c00981d))
+* **animation:** don't bill a stall at a spring's start to its motion ([f67bb43](https://github.com/eds2002/react-native-screen-transitions/commit/f67bb431cd108839c5dfbf8a829274bec617836b))
+* **blank-stack:** don't crash when a removed route's row re-renders ([97bf2a2](https://github.com/eds2002/react-native-screen-transitions/commit/97bf2a21e75dda5664b05ce80618c6130668b2a2))
+* **blank-stack:** don't nest a SafeAreaProvider inside another ([2367624](https://github.com/eds2002/react-native-screen-transitions/commit/2367624fa5addbc5011915a4ef60573318ca3043))
+* **blank-stack:** hand a screen over smoothly when a push lands mid-pop ([f1a82ac](https://github.com/eds2002/react-native-screen-transitions/commit/f1a82acb529910794737f9d020e5c9eead2019ab))
+* **blank-stack:** keep a closing screen when navigation changes mid-close ([7eab97f](https://github.com/eds2002/react-native-screen-transitions/commit/7eab97fbdae0042ec7ea27ebd9e499efd0d6795f))
+* **blank-stack:** keep the order routes started closing when one is kept ([61d9092](https://github.com/eds2002/react-native-screen-transitions/commit/61d9092ffa7d56d56d9ecfaed717de41d61426d9))
+* **blank-stack:** render the fresh descriptor when route params change, so deep links into nested stacks work again ([1365a95](https://github.com/eds2002/react-native-screen-transitions/commit/1365a950), [#159](https://github.com/eds2002/react-native-screen-transitions/pull/159), thanks @ptrnk0)
+* **gestures:** continue a re-grabbed drag from where the screen is ([41c652b](https://github.com/eds2002/react-native-screen-transitions/commit/41c652b65dccb4ad8fc8315bca7fa0275b5d2be1))
+* **gestures:** judge pan activation by the finger's movement on screen ([27e2942](https://github.com/eds2002/react-native-screen-transitions/commit/27e29427c19c0ece2b09a94ff3c1e2d4fd83dce6))
+* **gestures:** keep a locked, non-dismissable sheet still under a drag ([747134d](https://github.com/eds2002/react-native-screen-transitions/commit/747134deaef1b20d6800137943e16f3150754241))
+* **gestures:** stop a sheet's running animation when a drag grabs it ([68cb7a3](https://github.com/eds2002/react-native-screen-transitions/commit/68cb7a32ddd054e7fb223e08ab3b20db422bcc34))
+* **harness:** scroll the lab list ([abb9842](https://github.com/eds2002/react-native-screen-transitions/commit/abb98421067c61d54cf78e4577dbd7d5f81ccdb4))
+* **motion:** show an entering screen on the first frame of its open ([7d0f02a](https://github.com/eds2002/react-native-screen-transitions/commit/7d0f02ab55da68413a1476a82975c581377e50ba))
+* **motion:** start the initial stack screen visible, so a lost UI-thread update can't leave the app blank ([587b75e](https://github.com/eds2002/react-native-screen-transitions/commit/587b75ec), [#161](https://github.com/eds2002/react-native-screen-transitions/pull/161), thanks @ptrnk0)
+* **orchestrator:** don't count a screen's own entry twice when covered mid-open ([d18520f](https://github.com/eds2002/react-native-screen-transitions/commit/d18520f3135b59852119937ed0bf259f163df1cb))
+* pin compatible changelog preset for releases ([c947b7c](https://github.com/eds2002/react-native-screen-transitions/commit/c947b7c15734430018871ccd269410072cb9f855))
+* preserve closing scenes and escaped boundary layout ([67b7a5d](https://github.com/eds2002/react-native-screen-transitions/commit/67b7a5d0b6757ef3e6fffe9b3d1c745e3f4542b0))
+
+### Performance Improvements
+
+* cut per-frame UI-thread work in transitions ([06f7d19](https://github.com/eds2002/react-native-screen-transitions/commit/06f7d19d35b7e575dc6c5aad7e8d906eef793c2a))
+
+## 4.1.0 (Unreleased)
+
+### Features
+
+* **Custom hosts:** export `BuilderProvider`, `MotionProvider`, `OrchestratorProvider`, their prop types, and `useMotionStore`. Hosts can compose screen motion and styles while supplying their own descriptors and navigation lifecycle.
+* **Animation lookup:** add `transitionKey` to screen options and support `useScreenAnimation("key")` for observing a named mounted screen. Keys must be unique among mounted screens; unavailable targets return `null`.
+* **Native-stack adapter:** accept navigator factories in `withScreenTransitions` for dynamic and static configuration, with inferred route params and transition options. Existing navigator-object usage remains supported.
+* **Snap points:** accept a transition component's `styleId` as a measured snap point, so a sheet can size itself to a specific container instead of its entire content.
+
+### Fixes
+
+* Remove retained replacement routes after the incoming screen finishes opening.
+* Keep inactive screens paused as stacks grow and preserve their paint driver's progress while its provider is disconnected.
+* Preserve scroll state across screen activity changes.
+* Retain visible Boundary handoff content and reduce repeated lifecycle updates.
+* Coordinate readiness and visibility across nested screens, including measurement blocking and completed close animations.
+* Provide safe-area context within Blank Stack using the host's inset values.
+* Restore backdrop touch passthrough.
+
+### Migration notes
+
+* Remove `ScreenInterpolationProps.transition` and the exported `ScreenTransitionAccessor` type. Read another screen's animation from a component with `useScreenAnimation({ depth: -1 })`, `useScreenAnimation({ depth: 1 })`, or `useScreenAnimation("key")`. These hooks cannot be called inside `screenStyleInterpolator` or another worklet. Code using the removed accessor needs updating.
+* The native-stack factory overload is additive. `withScreenTransitions(createNativeStackNavigator())` continues to work; static configuration uses `withScreenTransitions(createNativeStackNavigator)({ screens: ... })`.
+
 ## [4.0.0](https://github.com/eds2002/react-native-screen-transitions/compare/v4.0.0-alpha.10...v4.0.0) (2026-08-27)
 
 ## [3.8.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.8.0-beta.1...v3.8.0) (2026-06-21)

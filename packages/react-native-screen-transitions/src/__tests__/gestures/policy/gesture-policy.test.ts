@@ -3,7 +3,7 @@ import {
 	resolveGestureCanTrack,
 	resolvePanPolicy,
 	resolvePinchPolicy,
-} from "../../../providers/screen/gestures/shared/policy";
+} from "../../../providers/motion/gestures/shared/policy";
 
 describe("resolveGestureCanTrack", () => {
 	it("keeps first screens from tracking gestures", () => {

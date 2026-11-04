@@ -4,9 +4,9 @@ import {
 	createScreenTransitionState,
 	DEFAULT_SCREEN_TRANSITION_OPTIONS,
 } from "../constants";
-import type { GestureStoreMap } from "../stores/gesture.store";
-import { buildScreenTransitionOptions } from "../providers/screen/animation/helpers/build-screen-transition-options";
-import { hydrateTransitionState } from "../providers/screen/animation/helpers/hydrate-transition-state";
+import type { MotionGestureValues } from "../providers/motion/types";
+import { buildScreenTransitionOptions } from "../providers/motion/animation/helpers/build-screen-transition-options";
+import { hydrateTransitionState } from "../providers/motion/animation/helpers/hydrate-transition-state";
 
 const shared = <T>(initial: T): SharedValue<T> => {
 	let value = initial;
@@ -44,7 +44,7 @@ const createGestureSnapshotStore = () => ({
 	active: shared(null),
 });
 
-const createGestureStore = (): GestureStoreMap => ({
+const createGestureStore = (): MotionGestureValues => ({
 	x: shared(0),
 	y: shared(0),
 	normX: shared(0),
@@ -70,6 +70,7 @@ const createGestureStore = (): GestureStoreMap => ({
 		progressBaseline: shared(0),
 		progressDeltaX: shared(0),
 		progressDeltaY: shared(0),
+		carry: { x: shared(0), y: shared(0), normX: shared(0), normY: shared(0) },
 		lockedSnapPoint: shared(null),
 		snapshot: createGestureSnapshotStore(),
 	},
@@ -191,7 +192,7 @@ describe("hydrateTransitionState snap indices", () => {
 			>[2],
 		);
 
-		expect(hydrated.options.navigationMaskEnabled).toBe(false);
+		expect(hydrated.options.navigationMaskEnabled).toBeUndefined();
 		expect(hydrated.options.gestureTracking).toBe("always");
 		expect(hydrated.options.gestureSensitivity).toBe(0.5);
 		expect("navigationMaskEnabled" in hydrated.layouts).toBe(false);
@@ -204,10 +205,10 @@ describe("hydrateTransitionState snap indices", () => {
 		});
 
 		const hydrated = hydrateTransitionState(
-				{
-					transitionProgress: shared(0.5),
-					visualProgress: shared(0.5),
-					stackProgress: shared(0.5),
+			{
+				transitionProgress: shared(0.5),
+				visualProgress: shared(0.5),
+				stackProgress: shared(0.5),
 				willAnimate: shared(0),
 				closing: shared(0),
 				progressAnimating: shared(0),
@@ -240,10 +241,10 @@ describe("hydrateTransitionState snap indices", () => {
 		});
 
 		const hydrated = hydrateTransitionState(
-				{
-					transitionProgress: shared(0.45),
-					visualProgress: shared(0.45),
-					stackProgress: shared(0.45),
+			{
+				transitionProgress: shared(0.45),
+				visualProgress: shared(0.45),
+				stackProgress: shared(0.45),
 				willAnimate: shared(0),
 				closing: shared(0),
 				progressAnimating: shared(0),
@@ -332,10 +333,10 @@ describe("hydrateTransitionState snap indices", () => {
 			},
 			horizontal: null,
 		};
-			const builtState = {
-				transitionProgress: shared(1),
-				visualProgress: shared(1),
-				stackProgress: shared(1),
+		const builtState = {
+			transitionProgress: shared(1),
+			visualProgress: shared(1),
+			stackProgress: shared(1),
 			willAnimate: shared(0),
 			closing: shared(0),
 			progressAnimating: shared(0),

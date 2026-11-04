@@ -5,8 +5,6 @@
 .expo/
 dist/
 lib/
-!apps/e2e/lib/
-!apps/e2e/lib/**
 !packages/docs/src/lib/
 !packages/docs/src/lib/**
 web-build/

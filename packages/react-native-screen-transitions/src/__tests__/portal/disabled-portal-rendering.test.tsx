@@ -1,35 +1,28 @@
+import { createModuleMock } from "../helpers/mock-module";
 import { beforeAll, beforeEach, describe, expect, it, mock } from "bun:test";
-import type { ComponentType, ReactNode } from "react";
+import { createElement, type ComponentType, type ReactNode } from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT =
 	true;
 
-const useBoundaryPortalAttachment = mock(() => ({ teleportProps: {} }));
-const useBoundaryContentPortalAttachment = mock(() => ({
-	teleportProps: {},
-}));
+(globalThis as any).__DEV__ = false;
 
-mock.module(
+const usePortalDestination = mock(() => ({teleportProps:{},localHostName:"screen:card"}));
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule(
 	"../../components/boundary/portal/teleport",
 	() => ({
 		isTeleportAvailable: true,
 		NativePortal: ({ children }: { children: ReactNode }) => children,
-		NativePortalHost: null,
+		NativePortalHost: (props: any) => createElement("native-host", props),
 		NativePortalProvider: null,
 		PORTAL_POINTER_EVENTS: "box-none",
 	}),
 );
-mock.module(
-	"../../components/boundary/portal/components/boundary-portal/hooks/use-boundary-portal-attachment",
-	() => ({ useBoundaryPortalAttachment }),
-);
-mock.module(
-	"../../components/boundary/portal/components/boundary-content-portal/hooks/use-boundary-content-portal-attachment",
-	() => ({ useBoundaryContentPortalAttachment }),
-);
-mock.module(
-	"../../components/boundary/portal/components/boundary-portal/hooks/use-placeholder-styles",
+await mockModule("../../components/boundary/portal/hooks/use-portal-destination", () => ({usePortalDestination}));
+await mockModule(
+	"../../components/boundary/portal/hooks/use-placeholder-styles",
 	() => ({
 		usePlaceholderStyles: () => ({
 			handleOnLayout: () => {},
@@ -50,18 +43,11 @@ let BoundaryContentPortal: ComponentType<{
 }>;
 
 beforeAll(async () => {
-	({ BoundaryPortal } = await import(
-		"../../components/boundary/portal/components/boundary-portal"
-	));
-	({ BoundaryContentPortal } = await import(
-		"../../components/boundary/portal/components/boundary-content-portal"
-	));
+ const {Portal} = await import("../../components/boundary/portal/components/portal");
+ BoundaryPortal = props => createElement(Portal, {...props,mode:"escapeClipping"});
+ BoundaryContentPortal = props => createElement(Portal, {...props,mode:"handoff"});
 });
-
-beforeEach(() => {
-	useBoundaryPortalAttachment.mockClear();
-	useBoundaryContentPortalAttachment.mockClear();
-});
+beforeEach(() => {usePortalDestination.mockClear();});
 
 describe("disabled boundary portals", () => {
 	it("renders a boundary portal inline without preparing an attachment", () => {
@@ -76,7 +62,7 @@ describe("disabled boundary portals", () => {
 		});
 
 		expect(renderer!.toJSON()).toBe("inline content");
-		expect(useBoundaryPortalAttachment).not.toHaveBeenCalled();
+		expect(usePortalDestination).not.toHaveBeenCalled();
 	});
 
 	it("renders a content portal inline without preparing an attachment", () => {
@@ -91,6 +77,17 @@ describe("disabled boundary portals", () => {
 		});
 
 		expect(renderer!.toJSON()).toBe("inline content");
-		expect(useBoundaryContentPortalAttachment).not.toHaveBeenCalled();
+		expect(usePortalDestination).not.toHaveBeenCalled();
 	});
+});
+
+it("mounts the handoff receiver beside the payload without a layout wrapper", () => {
+ let renderer: ReactTestRenderer;
+ act(() => {renderer=create(<BoundaryContentPortal boundaryId="card" enabled>payload</BoundaryContentPortal>);});
+ const output = renderer!.toJSON() as any[];
+ expect(output[0]).toBe("payload");
+ expect(output[1].type).toBe("native-host");
+ expect(output[1].props.name).toBe("screen:card");
+ expect(output[1].props.pointerEvents).toBe("box-none");
+ act(() => renderer!.unmount());
 });

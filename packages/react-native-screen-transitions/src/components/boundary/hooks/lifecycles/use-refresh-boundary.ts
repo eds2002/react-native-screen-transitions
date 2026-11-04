@@ -1,6 +1,6 @@
 import { useAnimatedReaction } from "react-native-reanimated";
-import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
-import { AnimationStore } from "../../../../stores/animation.store";
+import { useBuilderStore } from "../../../../providers/builder";
+import { useOptionalMotionStore } from "../../../../providers/motion";
 import {
 	getPairKeyForDestination,
 	getPairKeyForSource,
@@ -22,31 +22,34 @@ export const useRefreshBoundary = ({
 	measureBoundary,
 }: UseRefreshBoundaryParams) => {
 	const { linkKey, group } = boundTag;
-	const currentScreenKey = useDescriptorsStore(
+	const currentScreenKey = useBuilderStore(
 		(s) => s.derivations.currentScreenKey,
 	);
-	const nextScreenKey = useDescriptorsStore((s) => s.derivations.nextScreenKey);
+	const nextScreenKey = useBuilderStore((s) => s.derivations.nextScreenKey);
 	// Source-side boundaries refresh from the next screen's lifecycle pulse.
 	// Destination-side boundaries have no next screen, so they refresh from self.
 	const refreshScreenKey = nextScreenKey ?? currentScreenKey;
-	const refreshWillAnimate = AnimationStore.getValue(
+	const willAnimate = useOptionalMotionStore(
 		refreshScreenKey,
-		"willAnimate",
+		(store) => store.state.willAnimate,
 	);
-	const refreshSettled = AnimationStore.getValue(
+	const progressSettled = useOptionalMotionStore(
 		refreshScreenKey,
-		"progressSettled",
+		(store) => store.state.progressSettled,
 	);
-	const refreshClosing = AnimationStore.getValue(refreshScreenKey, "closing");
+	const closing = useOptionalMotionStore(
+		refreshScreenKey,
+		(store) => store.state.closing,
+	);
 
 	useAnimatedReaction(
 		() => {
 			"worklet";
 
-			if (!enabled) return null;
+			if (!enabled || !willAnimate || !progressSettled || !closing) return null;
 
-			const shouldRefresh = !!refreshWillAnimate.get();
-			const settled = !!refreshSettled.get();
+			const shouldRefresh = !!willAnimate.get();
+			const settled = !!progressSettled.get();
 			// A group's active member can change while the transition is settled
 			// (for example, paging a destination gallery). Let that member publish
 			// fresh bounds even though there is no willAnimate lifecycle pulse yet.
@@ -67,7 +70,7 @@ export const useRefreshBoundary = ({
 				group,
 				shouldRefresh,
 				settled,
-				closing: !!refreshClosing.get(),
+				closing: !!closing.get(),
 				linkState: pairs.get(),
 			});
 		},

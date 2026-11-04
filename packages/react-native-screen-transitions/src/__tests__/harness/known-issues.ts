@@ -1,0 +1,65 @@
+/**
+ * Library behavior the harness has found and that is not fixed yet. Each entry
+ * explains a group of violations; the catalog test fails on any violation no
+ * entry explains, and on an entry that no longer matches anything (fixed:
+ * delete it). Inspect one with `SCENARIO="<name>" bun test inspect`.
+ */
+import type { Violation } from "./invariants";
+
+export type KnownIssue = {
+	id: string;
+	summary: string;
+	matches: (scenario: string, violation: Violation) => boolean;
+};
+
+const sequenceOf = (scenario: string) => scenario.split(" / ")[2];
+const transitionOf = (scenario: string) => scenario.split(" / ")[0];
+
+export const KNOWN_ISSUES: KnownIssue[] = [
+	{
+		id: "interrupted-navigation",
+		summary:
+			"A push landing during another push still steps the screens: the first screen's progress is " +
+			"driven below 0, so it jumps off-screen and flies back in (rapid, rapid-push-pop). A push during a " +
+			"pop is continuous: the closing screen stays and finishes, and the screen underneath follows " +
+			"whichever of the two covers it more.",
+		matches: (scenario, v) =>
+			["rapid", "rapid-push-pop"].includes(sequenceOf(scenario)) &&
+			["vanish", "spike", "teleport", "flash", "turns-back"].includes(v.rule),
+	},
+	{
+		id: "zoom-pinch-background-snap",
+		summary:
+			"Pinch-dismissing a zoom: while pinching, the screen underneath stays at full size; on release it snaps to " +
+			"its zoom background scale (0.94, a 52 px step) in one frame, then animates back. A swipe dismiss scales " +
+			"it continuously.",
+		matches: (scenario, v) =>
+			scenario.startsWith("bounds-zoom") && scenario.endsWith("/ pinch-dismiss") && v.rule === "spike" && v.scene === "A",
+	},
+	{
+		id: "reveal-dismiss-source-jump",
+		summary:
+			"(reveal() is deprecated in favour of zoom(); not planned to fix.) "+
+			"After swiping away a reveal, the source boundary on the screen underneath stays 29 px off its layout " +
+			"position through the close and snaps back when the revealed screen is removed. (Its release also turns " +
+			"back by 1-2 px.)",
+		matches: (scenario, v) =>
+			scenario.startsWith("bounds-reveal") && ["element-spike", "turns-back"].includes(v.rule),
+	},
+	{
+		id: "reveal-opacity-overflow",
+		summary:
+			"(reveal() is deprecated in favour of zoom(); not planned to fix.) "+
+			"navigation.reveal() gives the revealed screen's content an unclamped opacity (up to 1.37, and about 4 " +
+			"near the end of opening). React Native clamps it, so nothing visible; it points at an unclamped interpolation.",
+		matches: (scenario, v) => scenario.startsWith("bounds-reveal") && v.rule === "style-range",
+	},
+	{
+		id: "zoom-to-bound-close-unverified",
+		summary:
+			"zoom({ target: 'bound' }): on close the destination boundary stays at its own rect until the screen is " +
+			"removed instead of shrinking back to the source. Unverified: may be the harness's measure() or inset " +
+			"handling (zoom mixes window and safe-area coordinates); confirm on a device.",
+		matches: (scenario, v) => scenario === "bounds-zoom-to-bound / zoom-spec / open-close" && v.rule === "trajectory",
+	},
+];

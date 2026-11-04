@@ -1,14 +1,21 @@
-import { beforeAll, beforeEach, describe, expect, it, mock } from "bun:test";
+import { createModuleMock } from "../helpers/mock-module";
+import { MotionProvider, getMotionStore } from "../../providers/motion";
+import { beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import type { BoundTag } from "../../stores/bounds/types";
 import { BoundStore } from "../../stores/bounds";
 import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
-import { SystemStore } from "../../stores/system.store";
 
-(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT =
-	true;
+(
+	globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
+).IS_REACT_ACT_ENVIRONMENT = true;
 
+const options = {};
 const descriptorState = {
+	options,
+	descriptors: {
+		current: { route: { key: "screen-b", name: "screen-b" }, options },
+	},
 	derivations: {
 		currentScreenKey: "screen-b",
 		nextScreenKey: undefined as string | undefined,
@@ -20,15 +27,16 @@ let stackState = {
 	scenes: [] as Array<{ activity: string; route: { key: string } }>,
 };
 
-mock.module("../../providers/screen/descriptors", () => ({
-	useDescriptorsStore: <T,>(selector: (state: typeof descriptorState) => T) =>
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("../../providers/builder", () => ({
+	useOptionalBuilderStore: () => null,
+	useBuilderStore: <T,>(selector: (state: typeof descriptorState) => T) =>
 		selector(descriptorState),
 }));
 
-mock.module("../../providers/stack/blank-stack.provider", () => ({
-	useBlankStackStore: <T,>(
-		selector: (state: typeof stackState) => T,
-	) => selector(stackState),
+await mockModule("../../navigators/blank-stack/state/blank-stack.provider", () => ({
+	useBlankStackStore: <T,>(selector: (state: typeof stackState) => T) =>
+		selector(stackState),
 }));
 
 let useInitialDestinationMeasurement: typeof import("../../components/boundary/hooks/lifecycles/use-initial-destination-measurement").useInitialDestinationMeasurement;
@@ -64,7 +72,7 @@ describe("initial destination measurement lifecycle", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 		const measurements: string[] = [];
 
-		function Fixture({
+		function Measurement({
 			boundTag,
 			revision,
 		}: {
@@ -76,31 +84,31 @@ describe("initial destination measurement lifecycle", () => {
 				enabled: true,
 				measureBoundary: ({ pairKey: measuredPairKey }) => {
 					measurements.push(`${revision}:${measuredPairKey}`);
-					BoundStore.link.setDestination(
-						measuredPairKey,
-						"card",
-						"screen-b",
-						{
-							x: 30,
-							y: 40,
-							pageX: 30,
-							pageY: 40,
-							width: 200,
-							height: 200,
-						},
-					);
+					BoundStore.link.setDestination(measuredPairKey, "card", "screen-b", {
+						x: 30,
+						y: 40,
+						pageX: 30,
+						pageY: 40,
+						width: 200,
+						height: 200,
+					});
 				},
 			});
 			return null;
 		}
 
+		function Fixture(props: Parameters<typeof Measurement>[0]) {
+			return (
+				<MotionProvider>
+					<Measurement {...props} />
+				</MotionProvider>
+			);
+		}
+
 		let renderer: ReactTestRenderer;
 		act(() => {
 			renderer = create(
-				<Fixture
-					boundTag={{ tag: "card", linkKey: "card" }}
-					revision={1}
-				/>,
+				<Fixture boundTag={{ tag: "card", linkKey: "card" }} revision={1} />,
 			);
 		});
 
@@ -109,16 +117,14 @@ describe("initial destination measurement lifecycle", () => {
 		};
 		act(() => {
 			renderer!.update(
-				<Fixture
-					boundTag={{ tag: "card", linkKey: "card" }}
-					revision={2}
-				/>,
+				<Fixture boundTag={{ tag: "card", linkKey: "card" }} revision={2} />,
 			);
 		});
 
 		expect(measurements).toEqual([`1:${pairKey}`]);
 		expect(
-			SystemStore.getValue("screen-b", "pendingLifecycleStartBlockCount").get(),
+			getMotionStore("screen-b").state.pendingLifecycleStartBlockCount.get(),
 		).toBe(0);
+		act(() => renderer.unmount());
 	});
 });

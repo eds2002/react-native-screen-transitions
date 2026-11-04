@@ -2,7 +2,7 @@ import type {
 	NavigatorTypeBagBase,
 	TypedNavigator,
 } from "@react-navigation/native";
-import type { ComponentType, ReactNode } from "react";
+import type { ReactNode } from "react";
 import {
 	Children,
 	cloneElement,
@@ -11,6 +11,7 @@ import {
 	useCallback,
 	useMemo,
 } from "react";
+import type { ScreenTransitionsFactory } from "./factory-types";
 import type {
 	NativeStackAdapterOptionInput,
 	NativeStackAdapterOptions,
@@ -104,6 +105,66 @@ export function adaptNavigatorChildren(children: ReactNode): ReactNode {
 	});
 }
 
+function adaptStaticConfig(config: Record<string, any>): Record<string, any> {
+	const adaptScreens = (screens: Record<string, any>) =>
+		Object.fromEntries(
+			Object.entries(screens).map(([name, screen]) => [
+				name,
+				screen && typeof screen === "object" && "screen" in screen
+					? {
+							...screen,
+							options: adaptNativeStackTransitionOptions(screen.options),
+							...(typeof screen.layout === "function"
+								? { layout: createTransitionScreenLayout(screen.layout) }
+								: {}),
+						}
+					: screen,
+			]),
+		);
+
+	// Preserve screens/groups insertion order: it determines the initial route.
+	const adapted = { ...config };
+	if (config.screens) adapted.screens = adaptScreens(config.screens);
+	if (config.groups) {
+		adapted.groups = Object.fromEntries(
+			Object.entries(config.groups).map(([name, value]) => {
+				const group = value as Record<string, any>;
+				return [
+					name,
+					{
+						...group,
+						screens: adaptScreens(group.screens),
+						screenOptions: adaptNativeStackTransitionOptions(
+							group.screenOptions,
+						),
+						...(typeof group.screenLayout === "function"
+							? {
+									screenLayout: createTransitionScreenLayout(
+										group.screenLayout,
+									),
+								}
+							: {}),
+					},
+				];
+			}),
+		);
+	}
+	adapted.screenOptions = adaptNativeStackTransitionOptions(
+		config.screenOptions,
+	);
+	adapted.layout = (layoutArgs: NavigatorLayoutArgs) => (
+		<ScreenTransitionsStackLayout
+			layout={config.layout}
+			layoutArgs={layoutArgs}
+		/>
+	);
+	adapted.screenLayout = createTransitionScreenLayout(config.screenLayout);
+	return adapted;
+}
+
+export function withScreenTransitions<TBag extends NavigatorTypeBagBase>(
+	factory: () => TypedNavigator<TBag, unknown>,
+): ScreenTransitionsFactory<TBag>;
 export function withScreenTransitions<
 	TBag extends NavigatorTypeBagBase,
 	TConfig,
@@ -114,9 +175,21 @@ export function withScreenTransitions<
 	TNavigator extends NavigatorWithScreenTransitions,
 >(navigator: TNavigator): TNavigator;
 export function withScreenTransitions(
-	navigator: NavigatorWithScreenTransitions,
+	navigator: NavigatorWithScreenTransitions | ((config?: any) => any),
 ): any {
-	const BaseNavigator = navigator.Navigator as ComponentType<any>;
+	if (typeof navigator === "function" && !("Navigator" in navigator)) {
+		return (config?: Record<string, any>) =>
+			config == null
+				? withScreenTransitions(navigator())
+				: navigator(adaptStaticConfig(config));
+	}
+	const BaseNavigator = (navigator as NavigatorWithScreenTransitions)
+		?.Navigator;
+	if (!BaseNavigator) {
+		throw new Error(
+			"withScreenTransitions requires a navigator with a Navigator component. Pass the navigator factory itself for static configuration: withScreenTransitions(createNativeStackNavigator)({ screens: ... }).",
+		);
+	}
 
 	const Navigator = forwardRef<unknown, ScreenTransitionsNavigatorProps>(
 		function ScreenTransitionsNavigator(

@@ -86,13 +86,13 @@ export const isMeasurementInViewport = (
 
 export const correctMeasuredBoundsForVisibilityGate = ({
 	measured,
-	visibilityBlocked,
+	isScreenReady,
 	visibilityBlockOffset,
 	viewportWidth,
 	viewportHeight,
 }: {
 	measured: MeasuredDimensions;
-	visibilityBlocked: boolean;
+	isScreenReady: boolean;
 	visibilityBlockOffset: number;
 	viewportWidth: number;
 	viewportHeight: number;
@@ -100,7 +100,7 @@ export const correctMeasuredBoundsForVisibilityGate = ({
 	"worklet";
 
 	if (
-		!visibilityBlocked ||
+		isScreenReady ||
 		visibilityBlockOffset <= 0 ||
 		isMeasurementInViewport(measured, viewportWidth, viewportHeight)
 	) {

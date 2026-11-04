@@ -201,7 +201,7 @@ describe("zoom pan drag tuning", () => {
 		expect(resolveZoomDismissalNorm(0.4, true)).toBe(-0.4);
 	});
 
-	it("uses horizontal motion as the primary axis without collapsing the mask", () => {
+	it("uses horizontal motion as the primary axis without collapsing the clip", () => {
 		const handoff = {
 			x: 120,
 			y: 40,
@@ -289,7 +289,7 @@ describe("zoom pan drag tuning", () => {
 		);
 		expect(drag.gestureScale).toBeLessThan(1);
 		expect(drag.dismissNorm).toBe(0.4);
-		expect(drag.collapsesMask).toBe(false);
+		expect(drag.collapsesClip).toBe(false);
 
 		const softenedDrag = resolveZoomDragState({
 			gesture,
@@ -334,7 +334,7 @@ describe("zoom pan drag tuning", () => {
 		expect(inverseDrag.dragX).toBeLessThan(0);
 		expect(inverseDrag.gestureScale).toBeLessThan(1);
 		expect(inverseDrag.dismissNorm).toBe(0.4);
-		expect(inverseDrag.collapsesMask).toBe(false);
+		expect(inverseDrag.collapsesClip).toBe(false);
 	});
 
 	it("applies direct translation, scale, and rotation to pinch-in", () => {
@@ -410,7 +410,7 @@ describe("zoom pan drag tuning", () => {
 		expect(pinch.gestureScale).toBe(gesture.scale);
 		expect(pinch.rotation).toBe(gesture.rotation);
 		expect(pinch.dismissNorm).toBe(0.3);
-		expect(pinch.collapsesMask).toBe(false);
+		expect(pinch.collapsesClip).toBe(false);
 
 		const outwardHandoff = {
 			...handoff,
@@ -656,7 +656,7 @@ describe("zoom source tracking", () => {
 				current: {
 					route: { key: "screen-b" },
 					transitionProgress: progress,
-					options: { navigationMaskEnabled: true },
+					options: {},
 				},
 				} as any,
 			zoomOptions: {},
@@ -670,7 +670,7 @@ describe("zoom source tracking", () => {
 				current: {
 					route: { key: "screen-a" },
 					transitionProgress: 1,
-					options: { navigationMaskEnabled: true },
+					options: {},
 				},
 				next: {
 					route: { key: "screen-b" },
@@ -817,7 +817,7 @@ describe("zoom source tracking", () => {
 					current: {
 						route: { key: "screen-b" },
 						transitionProgress: progress,
-						options: { navigationMaskEnabled: true },
+						options: {},
 					},
 				} as any,
 				zoomOptions: {},

@@ -140,7 +140,7 @@ options={{
 
 v3.6 adds `bounds({ id }).navigation.reveal()` for masked source-to-container navigation transitions.
 
-Reveal requires a source boundary, a matching destination boundary, and the static `navigationMaskEnabled` screen option. The helper exposes tuning options such as `borderRadius`, `borderContinuous`, `maxSensitivity`, `velocityDepth`, `disablePointerEventsTillElementTransition`, and `maskSizingMode`.
+Reveal requires a source boundary and a matching destination boundary. Current versions use built-in clipping; `navigationMaskEnabled` and `maskSizingMode` are deprecated and ignored. The helper exposes tuning options such as `borderRadius`, `borderContinuous`, `maxSensitivity`, `velocityDepth`, `disablePointerEventsTillElementTransition`, and `maskSizingMode`.
 
 Read the full setup in [Reveal](/reveal).
 

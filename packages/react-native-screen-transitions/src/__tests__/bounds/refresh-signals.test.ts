@@ -1,13 +1,11 @@
+import { mountMotionValues } from "../helpers/mount-motion-values";
+import { mountMotionTransitionValues } from "../helpers/mount-transition-values";
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { getRefreshBoundarySignal } from "../../components/boundary/utils/refresh-signals";
-import { applyMeasuredBoundsWrites } from "../../providers/helpers/measured-bounds-writes";
-import { startPanBase } from "../../providers/screen/gestures/pan/behavior/pan-lifecycle";
-import { AnimationStore } from "../../stores/animation.store";
+import { startPanBase } from "../../providers/motion/gestures/pan/behavior/pan-lifecycle";
 import { BoundStore } from "../../stores/bounds";
 import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { pairs } from "../../stores/bounds/internals/state";
-import { GestureStore } from "../../stores/gesture.store";
-import { SystemStore } from "../../stores/system.store";
 
 const originalRequestAnimationFrame = globalThis.requestAnimationFrame;
 
@@ -275,9 +273,9 @@ describe("refresh boundary signals", () => {
 	it("refreshes and resolves the active group member at the interactive-dismiss pulse", () => {
 		const pairKey = createScreenPairKey("palette", "detail");
 		const routeKey = "detail-boundary-refresh";
-		const animations = AnimationStore.getBag(routeKey);
-		const gestures = GestureStore.getBag(routeKey);
-		const system = SystemStore.getBag(routeKey);
+		const animations = mountMotionValues();
+		const gestures = animations;
+		const system = mountMotionTransitionValues();
 		const runtime = {
 			participation: { canDismiss: true, effectiveSnapPoints: {} },
 			policy: { gestureReleaseVelocityScale: 1 },
@@ -309,11 +307,7 @@ describe("refresh boundary signals", () => {
 				{},
 				"colors",
 			);
-			BoundStore.link.setActiveGroupId(
-				pairKey,
-				"colors",
-				"electric-violet",
-			);
+			BoundStore.link.setActiveGroupId(pairKey, "colors", "electric-violet");
 			BoundStore.link.setActiveGroupId(pairKey, "colors", "hot-coral");
 
 			expect(
@@ -349,15 +343,16 @@ describe("refresh boundary signals", () => {
 				throw new Error("Expected a source refresh signal for Hot Coral");
 			}
 
-			applyMeasuredBoundsWrites({
-				entryTag: "colors:hot-coral",
-				linkId: "hot-coral",
-				group: "colors",
-				currentScreenKey: "palette",
-				measured: hotCoral,
-				preparedStyles: {},
-				linkWrite: signal,
-			});
+			BoundStore.entry.set("colors:hot-coral", "palette", { bounds: hotCoral });
+			BoundStore.link.setSource(
+				signal.pairKey,
+				"hot-coral",
+				"palette",
+				hotCoral,
+				{},
+				"colors",
+				{},
+			);
 
 			expect(
 				BoundStore.link.getPair("colors:hot-coral", {
@@ -367,9 +362,6 @@ describe("refresh boundary signals", () => {
 				}).sourceBounds,
 			).toEqual(hotCoral);
 		} finally {
-			AnimationStore.clearBag(routeKey);
-			GestureStore.clearBag(routeKey);
-			SystemStore.clearBag(routeKey);
 		}
 	});
 });

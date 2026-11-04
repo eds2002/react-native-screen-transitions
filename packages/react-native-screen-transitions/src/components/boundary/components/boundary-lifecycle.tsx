@@ -1,9 +1,14 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import type { View } from "react-native";
 import type { AnimatedRef } from "react-native-reanimated";
-import { useDescriptorsStore } from "../../../providers/screen/descriptors";
+import { useBuilderStore } from "../../../providers/builder";
 import type { BoundTag } from "../../../stores/bounds/types";
-import { useBoundaryMeasurement } from "../hooks/use-boundary-measurement";
+import { prepareStyleForBounds } from "../../../utils/bounds/helpers/styles/styles";
+import { useBoundaryPresence } from "../hooks/lifecycles/use-boundary-presence";
+import { useInitialDestinationMeasurement } from "../hooks/lifecycles/use-initial-destination-measurement";
+import { useInitialSourceMeasurement } from "../hooks/lifecycles/use-initial-source-measurement";
+import { useRefreshBoundary } from "../hooks/lifecycles/use-refresh-boundary";
+import { useMeasurer } from "../hooks/use-measurer";
 import type {
 	BoundaryConfigProps,
 	BoundaryLocalMeasurementValue,
@@ -32,21 +37,52 @@ export const BoundaryLifecycle = memo(function BoundaryLifecycle({
 	measuredRef,
 	style,
 }: BoundaryLifecycleProps) {
-	const hasConfiguredInterpolator = useDescriptorsStore(
+	const hasConfiguredInterpolator = useBuilderStore(
 		(s) => s.derivations.hasConfiguredInterpolator,
 	);
 
-	useBoundaryMeasurement({
-		boundTag,
+	const runtimeEnabled = enabled && hasConfiguredInterpolator;
+	const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
+
+	const measureBoundary = useMeasurer({
 		enabled,
-		runtimeEnabled: enabled && hasConfiguredInterpolator,
+		boundTag,
 		currentScreenKey,
-		measuredRef,
-		style,
+		preparedStyles,
+		measuredAnimatedRef: measuredRef,
 		handoff,
 		escapeClipping,
 		localMeasurement,
-		config,
+	});
+
+	// Presence and source capture must not depend on this screen owning an
+	// interpolator: a nested source can participate in a transition owned by a
+	// different navigator.
+	useBoundaryPresence({
+		enabled,
+		boundTag,
+		currentScreenKey,
+		boundaryConfig: config,
+		handoff,
+		escapeClipping,
+	});
+
+	useInitialSourceMeasurement({
+		enabled,
+		measureBoundary,
+		boundTag,
+	});
+
+	useInitialDestinationMeasurement({
+		boundTag,
+		enabled: runtimeEnabled,
+		measureBoundary,
+	});
+
+	useRefreshBoundary({
+		enabled: runtimeEnabled,
+		boundTag,
+		measureBoundary,
 	});
 
 	return null;

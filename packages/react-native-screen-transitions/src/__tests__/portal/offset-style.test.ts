@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { resolvePortalOffsetStyle } from "../../components/boundary/portal/components/boundary-portal/helpers/offset-style";
+import { resolvePortalOffsetStyle } from "../../components/boundary/portal/helpers/offset-style";
 
 const createBounds = (x = 0, y = 0, width = 100, height = 100) => ({
 	x,

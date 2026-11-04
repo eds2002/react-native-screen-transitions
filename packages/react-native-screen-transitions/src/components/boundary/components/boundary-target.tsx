@@ -1,16 +1,9 @@
 import type React from "react";
 import { memo, useLayoutEffect } from "react";
 import Animated from "react-native-reanimated";
-import {
-	useComposedSlotStyles,
-	useSlotLayoutStyles,
-} from "../../../providers/screen/styles";
 import { logger } from "../../../utils/logger";
-import {
-	BoundaryContentPortal,
-	BoundaryContentPortalHost,
-} from "../portal/components/boundary-content-portal";
-import { BoundaryPortal } from "../portal/components/boundary-portal";
+import { useComposedBoundaryStyle } from "../hooks/use-composed-boundary-style";
+import { Portal } from "../portal/components/portal";
 import {
 	TARGET_OUTSIDE_ROOT_WARNING,
 	useOptionalBoundaryRootStore,
@@ -44,16 +37,13 @@ const BoundaryTargetInner = (props: InternalBoundaryTargetProps) => {
 	const shouldEscapeTargetToScreenHost =
 		isActiveTarget && portalRuntime?.escapeClipping === true;
 
-	const shouldApplyAssociatedStyleInline =
-		isActiveTarget && portalRuntime?.escapeClipping !== true;
-	const shouldApplyPortalLayoutStyle =
-		isActiveTarget && portalRuntime?.escapeClipping === true;
-
-	const associatedTargetStyles = useComposedSlotStyles(
-		rootContext?.boundTag.tag,
+	const associatedTargetStyles = useComposedBoundaryStyle(
+		rootContext?.slotsMap,
+		boundaryId,
 		style,
+		shouldEscapeTargetToScreenHost ? "layout" : "full",
 	);
-	const portalLayoutStyle = useSlotLayoutStyles(rootContext?.boundTag.tag);
+
 	const measurementRef = isActiveTarget
 		? rootContext.measurementRef
 		: undefined;
@@ -65,7 +55,8 @@ const BoundaryTargetInner = (props: InternalBoundaryTargetProps) => {
 	}, [rootContext]);
 
 	return (
-		<BoundaryPortal
+		<Portal
+			mode="escapeClipping"
 			boundaryId={boundaryId ?? ""}
 			enabled={shouldEscapeTargetToScreenHost}
 			placeholderRef={measurementRef}
@@ -74,27 +65,14 @@ const BoundaryTargetInner = (props: InternalBoundaryTargetProps) => {
 				{...rest}
 				pointerEvents={pointerEvents}
 				ref={shouldEscapeTargetToScreenHost ? undefined : measurementRef}
-				style={[
-					style,
-					shouldApplyAssociatedStyleInline ? associatedTargetStyles : undefined,
-					shouldApplyPortalLayoutStyle ? portalLayoutStyle : undefined,
-				]}
+				style={[style, isActiveTarget ? associatedTargetStyles : undefined]}
 				collapsable={false}
 			>
-				<BoundaryContentPortalHost
-					boundaryId={boundaryId ?? ""}
-					enabled={handoffEnabled}
-					screenKey={rootContext?.currentScreenKey ?? ""}
-				>
-					<BoundaryContentPortal
-						boundaryId={boundaryId}
-						enabled={handoffEnabled}
-					>
-						{children}
-					</BoundaryContentPortal>
-				</BoundaryContentPortalHost>
+				<Portal mode="handoff" boundaryId={boundaryId} enabled={handoffEnabled}>
+					{children}
+				</Portal>
 			</Animated.View>
-		</BoundaryPortal>
+		</Portal>
 	);
 };
 

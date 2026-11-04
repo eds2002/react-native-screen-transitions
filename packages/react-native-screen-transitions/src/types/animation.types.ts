@@ -171,11 +171,7 @@ export type ScreenTransitionDepthTarget = {
 	depth: number;
 };
 
-export type ScreenTransitionTarget = ScreenTransitionDepthTarget;
-
-export type ScreenTransitionAccessor = (
-	target?: ScreenTransitionTarget,
-) => ScreenInterpolationProps | null;
+export type ScreenTransitionTarget = ScreenTransitionDepthTarget | string;
 
 export interface ScreenInterpolationProps {
 	/**
@@ -236,20 +232,6 @@ export interface ScreenInterpolationProps {
 	 * Function that provides access to bounds helpers for shared screen transitions.
 	 */
 	bounds: BoundsAccessor;
-
-	/**
-	 * Resolves interpolation props for this screen's transition timeline or an
-	 * ancestor/descendant transition timeline.
-	 *
-	 * Calling without a target returns the current transition.
-	 * `transition({ depth: -1 })` returns the immediate parent transition.
-	 * `transition({ depth: 1 })` returns the immediate child transition.
-	 * `transition({ depth: 0 })` returns the current transition.
-	 *
-	 * When called from a returned transition scope, targets are resolved relative
-	 * to that scope.
-	 */
-	transition: ScreenTransitionAccessor;
 
 	/**
 	 * The screen state that is currently driving the transition (either current or next, whichever is focused).
@@ -321,7 +303,7 @@ export type TransitionSlotStyle = AnimatedViewStyle | TransitionSlotDefinition;
  *
  * These values are not style slots. They are derived per frame and consumed by
  * the transition runtime. Structural options that change the React tree, such
- * as `navigationMaskEnabled`, must be configured statically on the screen.
+ * as `gestureTracking`, must be configured statically on the screen.
  *
  * If `gestureSensitivity` is derived from the current gesture, prefer
  * `active.gesture.raw` so the sensitivity calculation does not feed back into
@@ -330,6 +312,30 @@ export type TransitionSlotStyle = AnimatedViewStyle | TransitionSlotDefinition;
 export type TransitionInterpolatorOptions = Omit<
 	ScreenTransitionOptions,
 	"navigationMaskEnabled" | "gestureTracking"
+>;
+
+/** A clipping rectangle in the content layer's local coordinates. */
+export type TransitionClip = {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+} & Pick<
+	ViewStyle,
+	| "borderRadius"
+	| "borderCurve"
+	| "borderTopLeftRadius"
+	| "borderTopRightRadius"
+	| "borderBottomLeftRadius"
+	| "borderBottomRightRadius"
+	| "borderTopStartRadius"
+	| "borderTopEndRadius"
+	| "borderBottomStartRadius"
+	| "borderBottomEndRadius"
+	| "borderStartStartRadius"
+	| "borderStartEndRadius"
+	| "borderEndStartRadius"
+	| "borderEndEndRadius"
 >;
 
 /**
@@ -347,6 +353,7 @@ export type NormalizedTransitionSlotStyle = {
  * All slots use the explicit `{ style, props }` shape.
  */
 export type NormalizedTransitionInterpolatedStyle = {
+	clip?: { style?: Partial<TransitionClip> };
 	/** Animated style and props for the main screen content view. */
 	content?: NormalizedTransitionSlotStyle;
 	/** Animated style and props for the backdrop layer between screens. */
@@ -363,6 +370,8 @@ export type NormalizedTransitionInterpolatedStyle = {
  * The return type of `screenStyleInterpolator`.
  */
 export type TransitionInterpolatedStyle = {
+	/** Visible rectangle. Omit to disable clipping. Content retains its layout size. */
+	clip?: TransitionClip;
 	/**
 	 * Runtime options for the current frame.
 	 *
@@ -381,12 +390,16 @@ export type TransitionInterpolatedStyle = {
 	content?: TransitionSlotStyle;
 	/** Animated style and props for the backdrop layer between screens. */
 	backdrop?: TransitionSlotStyle;
-	/** Animated style and props for the navigation mask container layer. */
+	/** @deprecated Ignored. Return `clip` geometry instead. */
 	[NAVIGATION_MASK_CONTAINER_STYLE_ID]?: TransitionSlotStyle;
-	/** Animated style and props for the navigation mask element layer. */
+	/** @deprecated Ignored. Return `clip` geometry instead. */
 	[NAVIGATION_MASK_ELEMENT_STYLE_ID]?: TransitionSlotStyle;
 	/** Custom styles/props by id for Transition.View components. */
-	[id: string]: TransitionSlotStyle | TransitionInterpolatorOptions | undefined;
+	[id: string]:
+		| TransitionSlotStyle
+		| TransitionInterpolatorOptions
+		| TransitionClip
+		| undefined;
 };
 
 /**

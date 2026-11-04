@@ -57,7 +57,7 @@ export type GestureTracking = "auto" | "never" | "always";
  * A single snap point value. Either a fraction of screen height (0–1) or
  * `'auto'` to snap to the intrinsic height of the screen content.
  */
-export type SnapPoint = number | "auto";
+export type SnapPoint = number | "auto" | (string & {});
 
 export type BackdropBehavior = "block" | "passthrough" | "dismiss" | "collapse";
 
@@ -206,6 +206,16 @@ export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 
 export type ScreenTransitionConfig = {
 	/**
+	 * Globally identifies this mounted screen for keyed animation observation.
+	 *
+	 * The key must be unique among mounted screens.
+	 *
+	 * @example
+	 * options={{ transitionKey: "feed" }}
+	 */
+	transitionKey?: string;
+
+	/**
 	 * The user-provided function to calculate styles based on animation progress.
 	 *
 	 * Return `null`, `undefined`, or `{}` to apply no transition styles for the
@@ -218,14 +228,7 @@ export type ScreenTransitionConfig = {
 	 */
 	transitionSpec?: TransitionSpec;
 
-	/**
-	 * Pre-mounts the masked view wrapper so navigation bounds masking
-	 * (e.g. `bounds().navigation.zoom()`) is ready from the first frame.
-	 *
-	 * Requires `@react-native-masked-view/masked-view` to be installed.
-	 *
-	 * @default false
-	 */
+	/** @deprecated Ignored. Return `clip` from the interpolator to enable clipping. */
 	navigationMaskEnabled?: boolean;
 
 	/**

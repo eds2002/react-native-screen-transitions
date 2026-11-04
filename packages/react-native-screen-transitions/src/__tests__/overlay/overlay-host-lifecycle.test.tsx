@@ -1,4 +1,5 @@
-import { describe, expect, it, mock } from "bun:test";
+import { createModuleMock } from "../helpers/mock-module";
+import { describe, expect, it } from "bun:test";
 import {
 	createContext,
 	type ComponentType,
@@ -7,24 +8,20 @@ import {
 	useEffect,
 	useState,
 } from "react";
-import {
-	act,
-	create,
-	type ReactTestRenderer,
-} from "react-test-renderer";
+import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { View } from "react-native";
-import type { ScreenAnimationContextValue } from "../../providers/screen/animation/animation.provider";
-import type { ScreenSlotContextValue } from "../../providers/screen/styles/slot.provider";
+import type { OrchestratorState } from "../../providers/orchestrator/orchestrator.provider";
 
-(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT =
-	true;
+(
+	globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
+).IS_REACT_ACT_ENVIRONMENT = true;
 
-const animationStores = new Map<string, ScreenAnimationContextValue>();
-const slotStores = new Map<string, ScreenSlotContextValue>();
-const ScreenAnimationContext = createContext<ScreenAnimationContextValue | null>(
-	null,
-);
-const ScreenSlotContext = createContext<ScreenSlotContextValue | null>(null);
+const animationStores = new Map<string, OrchestratorState>();
+const motionStores = new Map<
+	string,
+	{ isScreenReady: ReturnType<typeof shared<boolean>> }
+>();
+const ScreenAnimationContext = createContext<OrchestratorState | null>(null);
 let stackState: {
 	scenes: unknown[];
 	focusedIndex: number;
@@ -32,94 +29,92 @@ let stackState: {
 	routes: Array<{ key: string; name: string }>;
 };
 
-const useScreenAnimationStore = (key?: string | null) => {
-	const localStore = useContext(ScreenAnimationContext);
-	return typeof key === "string"
-		? (animationStores.get(key) ?? null)
-		: localStore;
-};
-
-const useScreenSlotStore = <Selected,>(
-	keyOrSelector?:
-		| string
-		| null
-		| ((store: ScreenSlotContextValue) => Selected),
-	selector?: (store: ScreenSlotContextValue) => Selected,
+const useOrchestratorStore = <Selected,>(
+	keyOrSelector?: string | null | ((store: OrchestratorState) => Selected),
+	selector?: (store: OrchestratorState) => Selected,
 ) => {
-	const localStore = useContext(ScreenSlotContext);
+	const localStore = useContext(ScreenAnimationContext);
 	const store =
 		typeof keyOrSelector === "string"
-			? slotStores.get(keyOrSelector)
+			? (animationStores.get(keyOrSelector) ?? null)
 			: localStore;
-	if (!store) {
-		return null;
-	}
+	if (!store) return null;
 
 	const resolvedSelector =
 		typeof keyOrSelector === "function" ? keyOrSelector : selector;
 	return resolvedSelector ? resolvedSelector(store) : store;
 };
 
-mock.module("../../providers/stack/blank-stack.provider", () => ({
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+await mockModule("../../providers/motion", () => ({
+	getMotionStore: () => {
+		throw new Error("Overlay rendering should not request a snap");
+	},
+	useOptionalMotionStore: (
+		keyOrSelector: string | ((store: null) => unknown),
+		selector?: (store: {
+			isScreenReady: ReturnType<typeof shared<boolean>>;
+		}) => unknown,
+	) => {
+		if (typeof keyOrSelector === "function") return keyOrSelector(null);
+		const store = motionStores.get(keyOrSelector);
+		return store ? (selector ? selector(store) : store) : null;
+	},
+}));
+
+await mockModule("../../navigators/blank-stack/state/blank-stack.provider", () => ({
+	useOptionalBlankStackStore: (selector: (store: null) => unknown) =>
+		selector(null),
 	useBlankStackStore: () => stackState,
 }));
 
-mock.module("../../providers/screen/animation/animation.provider", () => ({
-	ScreenAnimationStoreProvider: ({
+await mockModule(
+	"../../providers/orchestrator/orchestrator.provider",
+	() => ({
+		OrchestratorProvider: ({
+			children,
+			screenKey,
+		}: {
+			children: ReactNode;
+			screenKey: string;
+		}) => (
+			<ScreenAnimationContext.Provider
+				value={animationStores.get(screenKey) ?? null}
+			>
+				{children}
+			</ScreenAnimationContext.Provider>
+		),
+		useOptionalOrchestratorStore: useOrchestratorStore,
+		useOrchestratorStore,
+	}),
+);
+
+await mockModule("../../providers/orchestrator", () => ({
+	OrchestratorProvider: ({
 		children,
-		value,
+		screenKey,
 	}: {
 		children: ReactNode;
-		value: ScreenAnimationContextValue;
+		screenKey: string;
 	}) => (
-		<ScreenAnimationContext.Provider value={value}>
+		<ScreenAnimationContext.Provider
+			value={animationStores.get(screenKey) ?? null}
+		>
 			{children}
 		</ScreenAnimationContext.Provider>
 	),
-	useOptionalScreenAnimationStore: useScreenAnimationStore,
-	useScreenAnimationStore,
-}));
-
-mock.module("../../providers/screen/animation", () => ({
-	ScreenAnimationStoreProvider: ({
-		children,
-		value,
-	}: {
-		children: ReactNode;
-		value: ScreenAnimationContextValue;
-	}) => (
-		<ScreenAnimationContext.Provider value={value}>
-			{children}
-		</ScreenAnimationContext.Provider>
-	),
-	useOptionalScreenAnimationStore: useScreenAnimationStore,
-	useScreenAnimationStore,
-}));
-
-mock.module("../../providers/screen/styles/slot.provider", () => ({
-	ScreenSlotStoreProvider: ({
-		children,
-		value,
-	}: {
-		children: ReactNode;
-		value: ScreenSlotContextValue;
-	}) => (
-		<ScreenSlotContext.Provider value={value}>
-			{children}
-		</ScreenSlotContext.Provider>
-	),
-	useOptionalScreenSlotStore: useScreenSlotStore,
-	useScreenSlotStore,
+	useOptionalOrchestratorStore: useOrchestratorStore,
+	useOrchestratorStore,
 }));
 
 const { OverlayHost } = await import(
 	"../../components/overlay/variations/overlay-host"
 );
 const { useScreenAnimation } = await import(
-	"../../providers/screen/animation/use-screen-animation"
+	"../../providers/motion/animation/use-screen-animation"
 );
 const { useSlotStyles } = await import(
-	"../../providers/screen/styles/hooks/slot-resolvers"
+	"../../providers/orchestrator/styles/hooks/slot-resolvers"
 );
 const Probe = View as ComponentType<Record<string, unknown>>;
 
@@ -130,7 +125,7 @@ const shared = <T,>(value: T) => ({
 	modify: () => {},
 });
 
-const createAnimationStore = (routeKey: string) => {
+const createAnimationStore = (routeKey: string, opacity = 0.5) => {
 	const screenInterpolatorProps = shared({
 		current: {
 			gesture: { dismissing: 0, dragging: 0, settling: 0 },
@@ -143,37 +138,15 @@ const createAnimationStore = (routeKey: string) => {
 		insets: { bottom: 0, left: 0, right: 0, top: 0 },
 		stackProgress: 1,
 	});
-	const screenInterpolatorPropsRevision = shared(0);
-
+	const boundsAccessor = (() => {}) as never;
 	return {
 		screenInterpolatorProps,
-		screenInterpolatorPropsRevision,
-		transitionSources: [
-			{
-				screenInterpolatorProps,
-				screenInterpolatorPropsRevision,
-				boundsAccessor: {},
-			},
-		],
-		transitionOriginIndex: 0,
-	} as unknown as ScreenAnimationContextValue;
+		boundsAccessor,
+		slotsMap: shared({ "overlay-probe": { style: { opacity } } }),
+	} as unknown as OrchestratorState;
 };
 
-const createSlotStore = (opacity = 0.5) =>
-	({
-		interpolatorReady: shared(1),
-		slotsMap: shared({
-			"overlay-probe": {
-				style: { opacity },
-			},
-		}),
-		visibilityBlocked: shared(false),
-	}) as unknown as ScreenSlotContextValue;
-
-const createScene = (
-	key: string,
-	overlay?: (props: never) => ReactNode,
-) => {
+const createScene = (key: string, overlay?: (props: never) => ReactNode) => {
 	const route = { key, name: key };
 	return {
 		route,
@@ -189,7 +162,7 @@ const createScene = (
 describe("OverlayHost lifecycle", () => {
 	it("keeps the owner component mounted while its driver registers", () => {
 		animationStores.clear();
-		slotStores.clear();
+		motionStores.clear();
 
 		let mounts = 0;
 		let unmounts = 0;
@@ -224,7 +197,7 @@ describe("OverlayHost lifecycle", () => {
 		const sceneA = createScene("A", StatefulOverlay as never);
 		const sceneB = createScene("B");
 		animationStores.set("A", createAnimationStore("A"));
-		slotStores.set("A", createSlotStore());
+		motionStores.set("A", { isScreenReady: shared(true) });
 		stackState = {
 			scenes: [sceneA],
 			focusedIndex: 0,
@@ -274,8 +247,8 @@ describe("OverlayHost lifecycle", () => {
 				.overlayIdentity,
 		).toBe(1);
 
-		animationStores.set("B", createAnimationStore("B"));
-		slotStores.set("B", createSlotStore(0.9));
+		animationStores.set("B", createAnimationStore("B", 0.9));
+		motionStores.set("B", { isScreenReady: shared(true) });
 		act(() => {
 			renderer!.update(
 				<OverlayHost
@@ -301,11 +274,11 @@ describe("OverlayHost lifecycle", () => {
 
 	it("defaults the host to pointer-event pass-through", () => {
 		animationStores.clear();
-		slotStores.clear();
+		motionStores.clear();
 
 		const scene = createScene("A", (() => null) as never);
 		animationStores.set("A", createAnimationStore("A"));
-		slotStores.set("A", createSlotStore());
+		motionStores.set("A", { isScreenReady: shared(true) });
 		stackState = {
 			scenes: [scene],
 			focusedIndex: 0,

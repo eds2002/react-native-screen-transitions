@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "Harness",
+    "slug": "harness",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "scheme": "harness",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.eds2002.harness",
+      "appleTeamId": "5743WD6SWX"
+    },
+    "android": {
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "package": "com.eds2002.harness"
+    }
+  }
+}

@@ -30,7 +30,7 @@ if (branch === "main") {
 }
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-const result = spawnSync("bun", ["test"], {
+const result = spawnSync("bun", ["run", "test"], {
 	cwd: repoRoot,
 	stdio: "inherit",
 });

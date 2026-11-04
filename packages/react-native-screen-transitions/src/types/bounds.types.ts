@@ -87,7 +87,7 @@ export type BoundsNavigationZoomOptions = {
 	 *
 	 * Zoom interpolates from the measured source radius to this value while the
 	 * screen is animating. This controls the visible clipping result regardless
-	 * of whether a navigation mask is enabled.
+	 * of the clipping rectangle.
 	 *
 	 * @default 64
 	 */
@@ -120,13 +120,16 @@ export type BoundsNavigationZoomOptions = {
 
 export type BoundsNavigationZoomStyle = TransitionInterpolatedStyle & {
 	content?: TransitionSlotStyle;
+	/** @deprecated Ignored. Return `clip` geometry instead. */
 	[NAVIGATION_MASK_CONTAINER_STYLE_ID]?: TransitionSlotStyle;
+	/** @deprecated Ignored. Return `clip` geometry instead. */
 	[NAVIGATION_MASK_ELEMENT_STYLE_ID]?: TransitionSlotStyle;
 };
 
+/** @deprecated `navigation.reveal()` is deprecated: use `navigation.zoom()`. */
 export type BoundsNavigationRevealOptions = {
 	/**
-	 * Destination mask border radius.
+	 * Destination clip border radius.
 	 *
 	 * Reveal interpolates from the measured source border radius to this value.
 	 *
@@ -134,7 +137,7 @@ export type BoundsNavigationRevealOptions = {
 	 */
 	borderRadius?: number;
 	/**
-	 * Whether the reveal mask should use React Native's continuous border curve.
+	 * Whether the reveal clip should use React Native's continuous border curve.
 	 *
 	 * @default true
 	 */
@@ -142,7 +145,7 @@ export type BoundsNavigationRevealOptions = {
 	/**
 	 * Maximum dynamic gesture sensitivity applied by reveal.
 	 *
-	 * Reveal lowers gesture sensitivity as the drag gets deeper so the masked
+	 * Reveal lowers gesture sensitivity as the drag gets deeper so the clipped
 	 * container can keep its source-to-destination handoff stable. This value
 	 * controls the starting/highest sensitivity in that curve.
 	 *
@@ -189,24 +192,19 @@ export type BoundsNavigationRevealOptions = {
 	 * @default true
 	 */
 	disablePointerEventsTillElementTransition?: boolean;
-	/**
-	 * How reveal should resize the navigation mask element.
-	 *
-	 * `"auto"` uses the platform default. Android defaults to transform-based
-	 * resizing to avoid masked-size animation cost, while other platforms animate
-	 * width and height. Transform-based resizing can make large border radii look
-	 * less natural on Android; use `"size"` to force width/height animation when
-	 * radius quality is more important than that optimization.
-	 *
-	 * @default "auto"
-	 */
+	/** @deprecated Ignored. Reveal uses built-in clipping on every platform. */
 	maskSizingMode?: "auto" | "transform" | "size";
 };
 
+/** @deprecated `navigation.reveal()` is deprecated: use `navigation.zoom()`. */
 export type BoundsNavigationRevealStyle = BoundsNavigationZoomStyle;
 
 export type BoundsNavigationAccessor = {
 	zoom: (options?: BoundsNavigationZoomOptions) => BoundsNavigationZoomStyle;
+	/**
+	 * @deprecated Use `zoom()`, the default navigation transition for bounds. `reveal()` keeps
+	 * working but won't get new behaviour or fixes.
+	 */
 	reveal: (
 		options?: BoundsNavigationRevealOptions,
 	) => BoundsNavigationRevealStyle;
@@ -229,9 +227,6 @@ export type BoundsAccessor = (
 	options: BoundsIdentityInput,
 ) => BoundsScopedAccessor;
 
-export type BoundsInterpolationProps = Omit<
-	ScreenInterpolationProps,
-	"bounds" | "transition"
->;
+export type BoundsInterpolationProps = Omit<ScreenInterpolationProps, "bounds">;
 
 export type { BoundsMotion, BoundsMotionFrame, BoundsMotionTransform };

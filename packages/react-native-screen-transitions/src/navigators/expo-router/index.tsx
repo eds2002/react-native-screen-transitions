@@ -9,7 +9,7 @@ import {
 	BlankStackNavigator,
 	type BlankStackStandardEventMap,
 	type BlankStackStandardNavigatorProps,
-} from "../create-blank-stack-navigator";
+} from "../blank-stack/create-blank-stack-navigator";
 
 type BlankStackExpoRouterParamList = Record<string, object | undefined>;
 

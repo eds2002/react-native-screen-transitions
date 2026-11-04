@@ -1,14 +1,12 @@
 import { interpolate } from "react-native-reanimated";
-import {
-	EPSILON,
-	NAVIGATION_MASK_ELEMENT_STYLE_ID,
-} from "../../../../constants";
+import { EPSILON } from "../../../../constants";
 import { getVisualScrollAxisDelta } from "../../../../stores/scroll.store";
 import type { ScrollMetadataState } from "../../../../types/gesture.types";
 import { createBoundsAccessorCore } from "../../helpers/create-bounds-accessor-core";
 import { computeContentTransformGeometry } from "../../helpers/geometry";
 import { getSourceBorderRadius } from "../helpers";
 import { resolveRevealContentBaseTransformFromGeometry } from "../reveal/math";
+import { resolveZoomClip, ZOOM_NAVIGATION_CLIP_BORDER_RADIUS } from "./clip";
 import {
 	ZOOM_BACKDROP_MAX_OPACITY,
 	ZOOM_BACKGROUND_SCALE,
@@ -25,10 +23,6 @@ import {
 	resolveZoomPinchFocalOffset,
 	resolveZoomTrackedSourceTransform,
 } from "./helpers";
-import {
-	resolveZoomNavigationMaskStyle,
-	ZOOM_NAVIGATION_MASK_BORDER_RADIUS,
-} from "./mask";
 import {
 	getZoomContentAnchor,
 	getZoomContentTarget,
@@ -51,7 +45,7 @@ export function buildZoomStyles({
 	const keepFocusedVisible = zoomOptions?.keepFocusedVisible === true;
 	const expandedBorderRadius = Math.max(
 		0,
-		zoomOptions?.borderRadius ?? ZOOM_NAVIGATION_MASK_BORDER_RADIUS,
+		zoomOptions?.borderRadius ?? ZOOM_NAVIGATION_CLIP_BORDER_RADIUS,
 	);
 	const backgroundScale = zoomOptions?.backgroundScale ?? ZOOM_BACKGROUND_SCALE;
 	const backdropColor = zoomOptions?.backdropColor ?? "black";
@@ -60,7 +54,6 @@ export function buildZoomStyles({
 
 	const {
 		active,
-		current,
 		focused,
 		transitionProgress,
 		layouts: { screen: screenLayout },
@@ -178,7 +171,6 @@ export function buildZoomStyles({
 				"vertical",
 			) * sourceScrollWeight;
 		const sourceBorderRadius = getSourceBorderRadius(link);
-		const navigationMaskEnabled = current.options.navigationMaskEnabled;
 		const backdropOpacity = resolveZoomBackdropOpacity({
 			transitionProgress,
 			dismissalDrag: drag.dismissNorm,
@@ -251,21 +243,19 @@ export function buildZoomStyles({
 					overflow: "hidden" as const,
 				},
 			},
-			[NAVIGATION_MASK_ELEMENT_STYLE_ID]: navigationMaskEnabled
-				? resolveZoomNavigationMaskStyle({
-						scopedBounds,
-						link,
-						sourceBounds,
-						screenLayout,
-						transitionProgress,
-						drag,
-						contentTransform: contentRaw,
-						sourceBorderRadius,
-						expandedBorderRadius,
-						active,
-						anchor: zoomContentAnchor,
-					})
-				: {},
+			clip: resolveZoomClip({
+				scopedBounds,
+				link,
+				sourceBounds,
+				screenLayout,
+				transitionProgress,
+				drag,
+				contentTransform: contentRaw,
+				sourceBorderRadius,
+				expandedBorderRadius,
+				active,
+				anchor: zoomContentAnchor,
+			}),
 		};
 	}
 

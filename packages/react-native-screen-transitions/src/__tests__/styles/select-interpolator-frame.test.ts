@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import type { ScreenInterpolatorFrame } from "../../providers/screen/animation/helpers/pipeline";
-import { selectInterpolatorFrame } from "../../providers/screen/styles/helpers/select-interpolator-frame";
+import type { ScreenInterpolatorFrame } from "../../providers/orchestrator/helpers/pipeline";
+import { selectInterpolatorFrame } from "../../providers/orchestrator/styles/helpers/select-interpolator-frame";
 
 describe("selectInterpolatorFrame", () => {
 	it("promotes the current screen to a coherent focused frame in gesture mode", () => {

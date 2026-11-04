@@ -160,7 +160,9 @@ export type GestureHandoffValues = {
 
 export type GestureValues = {
 	/**
-	 * The live horizontal translation of the gesture.
+	 * The live horizontal translation of the gesture. After a release it springs back to 0; a drag
+	 * that starts before it gets there continues from its current value, so a screen that moves with
+	 * it doesn't jump. `raw` holds the finger's own translation.
 	 */
 	x: number;
 	/**

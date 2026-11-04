@@ -10,15 +10,14 @@
 		}
 	},
 	"scripts": {
+		"test": "bun test && bun run test:harness",
+		"test:harness": "bun scripts/test-harness.ts",
 		"clean": "find . -name node_modules -type d -prune -exec rm -rf {} + && rm -f bun.lock bun.lockb && bun install --force",
-		"example:dev": "bun run --cwd apps/e2e bunx expo prebuild --clean && bun run --cwd apps/e2e bunx expo run ios -d",
 
 		"build": "bun run --cwd packages/react-native-screen-transitions build",
 		"docs:dev": "bun run --cwd packages/docs dev",
 		"docs:build": "bun run --cwd packages/docs build",
 		"docs:typecheck": "bun run --cwd packages/docs typecheck",
-		"maestro": "bun run --cwd apps/e2e maestro",
-		"maestro:verify": "bun run --cwd apps/e2e maestro:verify",
 		"knip": "bunx knip --workspace packages/react-native-screen-transitions",
 		"lint": "biome check packages/react-native-screen-transitions/src",
 		"typecheck": "tsc -p packages/react-native-screen-transitions/tsconfig.typecheck.json",
@@ -35,6 +34,7 @@
 		"@release-it/conventional-changelog": "^11.0.1",
 		"@types/bun": "^1.3.14",
 		"commitlint": "^21.0.1",
+		"conventional-changelog-conventionalcommits": "9.3.1",
 		"lefthook": "^2.1.6",
 		"react": "19.2.3",
 		"react-test-renderer": "19.2.3",

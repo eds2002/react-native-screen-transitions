@@ -1,9 +1,13 @@
-import { forwardRef } from "react";
+import {
+	type ComponentProps,
+	forwardRef,
+	type NamedExoticComponent,
+} from "react";
 import { View, type ViewProps } from "react-native";
 import { Pressable, type PressableProps } from "react-native-gesture-handler";
 import { BoundaryTarget } from "./components/boundary-target";
 import { createBoundaryComponent } from "./create-boundary-component";
-import { Host } from "./portal";
+import { PortalOverlay } from "./portal/components/portal-overlay";
 import type { BoundaryComponentProps } from "./types";
 
 export { createBoundaryComponent };
@@ -26,7 +30,6 @@ BoundaryPrimitive.displayName = "Transition.Boundary.Primitive";
 const BoundaryRoot = createBoundaryComponent(BoundaryPrimitive);
 BoundaryRoot.displayName = "Transition.Boundary";
 BoundaryTarget.displayName = "Transition.Boundary.Target";
-Host.displayName = "Transition.Boundary.Host";
 
 type BoundaryRootComponent = typeof BoundaryRoot;
 
@@ -55,12 +58,14 @@ export interface BoundaryComponent extends BoundaryRootComponent {
 	/**
 	 * Explicit host for clipping-escape placement.
 	 */
-	Host: typeof Host;
+	Host: NamedExoticComponent<
+		Omit<ComponentProps<typeof PortalOverlay>, "fallback">
+	>;
 }
 
 export type BoundaryProps = BoundaryComponentProps<BoundaryPrimitiveProps>;
 
 export const Boundary = Object.assign(BoundaryRoot, {
 	Target: BoundaryTarget,
-	Host,
+	Host: PortalOverlay,
 }) as BoundaryComponent;

@@ -1,9 +1,10 @@
 import { describe, expect, it } from "bun:test";
-import { LifecycleTransitionRequestKind } from "../../stores/system.store";
+import { LifecycleTransitionRequestKind } from "../../providers/motion/hooks/use-transition-values";
 import {
 	resolveInitialDestinationStyleGate,
 	resolveScreenVisibilityGate,
-} from "../../providers/screen/styles/helpers/visibility-gate";
+	resolveInitialVisibilityBlocked,
+} from "../../providers/motion/helpers/visibility-gate";
 
 describe("resolveScreenVisibilityGate", () => {
 	const baseState = {
@@ -74,7 +75,7 @@ describe("resolveInitialDestinationStyleGate", () => {
 	it("withholds progress-zero styles until the destination is confirmed hidden", () => {
 		const beforeVisibilityBlock = resolveInitialDestinationStyleGate({
 			shouldPrepareStyles: true,
-			isVisibilityBlocked: false,
+			isScreenReady: true,
 			stylesReady: false,
 		});
 
@@ -85,7 +86,7 @@ describe("resolveInitialDestinationStyleGate", () => {
 
 		const visibilityBlockObserved = resolveInitialDestinationStyleGate({
 			shouldPrepareStyles: true,
-			isVisibilityBlocked: true,
+			isScreenReady: false,
 			stylesReady: false,
 		});
 
@@ -96,7 +97,7 @@ describe("resolveInitialDestinationStyleGate", () => {
 
 		const destinationReady = resolveInitialDestinationStyleGate({
 			shouldPrepareStyles: true,
-			isVisibilityBlocked: true,
+			isScreenReady: false,
 			stylesReady: visibilityBlockObserved.shouldMarkStylesReady,
 		});
 
@@ -104,5 +105,34 @@ describe("resolveInitialDestinationStyleGate", () => {
 			shouldMarkStylesReady: false,
 			shouldWithholdStyles: false,
 		});
+	});
+});
+
+// From #161 (Vlad Petrenko).
+describe("resolveInitialVisibilityBlocked", () => {
+	it("starts the first screen of a stack visible", () => {
+		expect(resolveInitialVisibilityBlocked({ isFirstKey: true })).toBe(false);
+	});
+
+	it("starts the first screen blocked when it animates on initial mount", () => {
+		expect(
+			resolveInitialVisibilityBlocked({
+				isFirstKey: true,
+				animateOnInitialMount: true,
+			}),
+		).toBe(true);
+	});
+
+	it("starts pushed screens blocked until their open transition begins", () => {
+		expect(resolveInitialVisibilityBlocked({ isFirstKey: false })).toBe(true);
+	});
+
+	it("never blocks floating overlays", () => {
+		expect(
+			resolveInitialVisibilityBlocked({
+				isFloatingOverlay: true,
+				isFirstKey: false,
+			}),
+		).toBe(false);
 	});
 });
