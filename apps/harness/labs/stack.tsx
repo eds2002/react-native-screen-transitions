@@ -138,7 +138,9 @@ function BarButton({ label, testID, onPress }) {
 
 function Bar({ nav }) {
 	return (
-		<View pointerEvents="box-none" style={{ position: "absolute", left: 16, right: 16, bottom: 96, flexDirection: "row", gap: 12 }}>
+		// At a fixed fraction of the screen (top 84%), so e2e gestures can tap it at the same normalized
+		// point on every device: pop ≈ (0.26, 0.87), push ≈ (0.74, 0.87).
+		<View pointerEvents="box-none" style={{ position: "absolute", left: 16, right: 16, top: "84%", flexDirection: "row", gap: 12 }}>
 			<BarButton label="◀ pop" testID="stack-bar-pop" onPress={() => {
 					bridge.count("bar-pop");
 					if (nav.canGoBack()) nav.dispatch(StackActions.pop());
