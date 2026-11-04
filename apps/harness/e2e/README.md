@@ -14,6 +14,20 @@ open apps/harness/e2e/results/<name>/review.html
 every flagged event as a strip of the frames around it, flagged frames outlined in
 red. `results/` is gitignored.
 
+## Android
+
+The same scripts drive an Android emulator or device: pass its adb serial (`emulator-5554`) instead
+of a simulator UDID. Build and install the Release APK first:
+
+```sh
+cd apps/harness && npx expo prebuild --platform android
+cd android && ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a
+adb -s emulator-5554 install -r app/build/outputs/apk/release/app-release.apk
+```
+
+`record.sh` records with `adb shell screenrecord` at half the screen's resolution (in its own shape)
+and passes the analyzer the window size in dp.
+
 ## How a run is checked
 
 The app paints `#ff00ff` (BLANK, `labs/stamp.tsx`) behind every screen and draws

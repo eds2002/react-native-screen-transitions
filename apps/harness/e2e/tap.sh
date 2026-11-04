@@ -4,7 +4,7 @@ read x y <<< $(argent run describe --udid "$1" --json 2>/dev/null | python3 -I -
 import json, re, sys
 raw = sys.stdin.read(); raw = raw[raw.index("{"):]
 for line in json.loads(raw)["description"].splitlines():
-    m = re.search(r"id=\"([^\"]+)\"\s+\(([\d.]+), ([\d.]+), ([\d.]+), ([\d.]+)\)", line)
+    m = re.search(r"id=\"([^\"]+)\"(?:\s+\[[^\]]*\])*\s+\(([\d.]+), ([\d.]+), ([\d.]+), ([\d.]+)\)", line)
     if m and m.group(1) == sys.argv[1]:
         x, y, w, h = map(float, m.groups()[1:]); print(x + w / 2, y + h / 2); break
 ' "$2")
