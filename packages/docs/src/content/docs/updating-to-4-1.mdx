@@ -1,16 +1,29 @@
 ---
 title: "New in 4.1"
 pageTitle: "New in 4.1"
-summary: "Compose screen motion with public providers, observe named transitions, and use native-stack static configuration."
+summary: "Smoother gestures and push/pop under fast input, built-in clipping, public motion providers, named transitions, and native-stack static configuration."
 description: "Built-in clipping, experimental provider exports, named animation lookup, static navigator support, and measured snap points in 4.1."
 eyebrow: "Changelogs"
 group: "Changelogs"
 version: "v4"
 hidden: true
-changelogDate: "Unreleased"
-order: -2
+changelogDate: "November 2026"
+order: -6
 to: /changelog/updating-to-4-1
 ---
+
+## Smoother transitions and gestures
+
+4.1 was tested against a new on-device harness that records every scenario and checks it frame by frame for blank spots, flickers and jumps, on iOS and Android. These fixes came out of it:
+
+- **Push and pop:** the entering screen is visible on the first frame of its open (no blank frame). A screen that's closing no longer vanishes when navigation changes before its close finishes, and a push that lands mid-pop or mid-push hands over smoothly instead of shifting in one frame.
+- **Gestures:** grabbing a screen again while it springs back continues from where it is. Dragging the screen below right after flinging the top one away works, even while that screen is still sliding back into place.
+- **Sheets:** grabbing a sheet during a snap or its spring-back stops the animation, so the sheet stays under your finger. A snap-locked sheet that can't be dismissed no longer follows a drag.
+- **Nested stacks:** a Blank Stack inside another no longer adds a second safe-area provider, so its content stays put during drags and transitions, and dismissing a sheet in a nested stack no longer crashes.
+- **Heavy screens:** a screen with a slow first render still enters from the edge instead of appearing part-way through its animation.
+- **Navigation state:** a params-only change (a deep link into a nested navigator, `setParams`) renders the new route, and the first screen of a stack starts visible. Thanks to [@ptrnk0](https://github.com/ptrnk0) for both.
+
+Transitions also do about 13% less work per frame on the UI thread.
 
 ## Built-in clipping
 
@@ -22,9 +35,13 @@ return {
 };
 ```
 
-Omit `clip` to disable clipping. `navigation.zoom()` and `navigation.reveal()` return clipping geometry automatically on iOS and Android, using ordinary React Native views.
+Omit `clip` to disable clipping. `navigation.zoom()` returns clipping geometry automatically on iOS and Android, using ordinary React Native views.
 
 `navigationMaskEnabled` is now deprecated. MaskedView was more than this package needed for rectangular clipping; regular React Native views provide a simpler approach and performed much better on Android in our testing.
+
+## Deprecated: `navigation.reveal()`
+
+`navigation.reveal()` is deprecated in favour of `navigation.zoom()`, which covers the same shared-element expansion with built-in clipping and a dismiss gesture. `reveal()` keeps working in 4.x; move to `zoom()` when you can. See [Navigation zoom](/navigation-zoom).
 
 ## Experimental public motion providers
 
