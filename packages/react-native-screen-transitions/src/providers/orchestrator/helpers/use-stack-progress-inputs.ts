@@ -10,7 +10,7 @@ const NO_ROUTE_KEYS: readonly string[] = [];
 
 // A reader only uses its own route and the routes above it. Keep the selected
 // keys stable when the stack changes below that reader; progress stays live.
-export function createStackProgressRouteSelector(currentRouteKey: string) {
+function createStackProgressRouteSelector(currentRouteKey: string) {
 	let previous: readonly string[] = [];
 	return (
 		store: { routeKeys: readonly string[] } | null,
@@ -39,7 +39,7 @@ type ProgressInputs = {
 	epoch: SharedValue<number>;
 };
 
-export function registerStackProgressInputs(
+function registerStackProgressInputs(
 	inputs: ProgressInputs,
 	entries: readonly StackProgressEntry[],
 	listenerId: number,
@@ -66,7 +66,7 @@ export function registerStackProgressInputs(
 	revision.set((value) => value + 1);
 }
 
-export function unregisterStackProgressInputs(
+function unregisterStackProgressInputs(
 	inputs: ProgressInputs,
 	listenerId: number,
 	epoch: number,
