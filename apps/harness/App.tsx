@@ -39,6 +39,8 @@ export default function App() {
 	const [stamp, setStamp] = useState(true);
 	const url = Linking.useURL();
 	useEffect(() => {
+		// Labs can read their own options from the link that opened them (perf: ?rounds=…&loads=…).
+		if (url) globalThis.__harnessLastUrl = url;
 		const lab = url?.match(/lab\/([\w-]+)/);
 		if (lab) setOpen(lab[1]);
 		const stampMatch = url?.match(/stamp\/(on|off)/);
@@ -68,7 +70,7 @@ export default function App() {
 					<Home onOpen={setOpen} />
 				)}
 				<BridgeProbe />
-				{stamp ? <FrameStamp /> : null}
+				{stamp && lab?.id !== "perf" ? <FrameStamp /> : null}
 			</SafeAreaProvider>
 		</GestureHandlerRootView>
 	);

@@ -81,6 +81,10 @@ and 0–1 dropped frames in the app. Count drops in the app instead:
   drops start is the headroom transitions leave (on the simulator: stack ~12 ms, zoom ~10 ms)
 - `latency: { push, pop }`: median ms from a stack-bar press to the screen's first moving frame
 - add `?n=<random>` to a link opened twice in a row, or the app doesn't see it again
+- `harness://lab/perf?rounds=blank,js,native&loads=0,8,11&hz=60`: the same 10 pushes and pops through
+  the blank stack, `@react-navigation/stack` (SlideFromRightIOS, same spring) and native stack, under each
+  load; results on screen and in the app's `Documents/perf.json` (runs on a device with nothing driving it)
+- `python3 threads.py <pid>`: CPU ms per thread of a simulator app (thread 0 is the main thread)
 
 ## Showing a bug
 
