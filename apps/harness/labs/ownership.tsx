@@ -1,7 +1,7 @@
 // @ts-nocheck
 /**
  * ownership: which stack owns a swipe when stacks are nested. One setup covers
- * the e2e GestureInfo cases (apps/e2e/app/gestures/*):
+ * the GestureInfo cases of the former e2e app (apps/e2e/app/gestures/*, removed):
  *
  *   root
  *   ├─ home
