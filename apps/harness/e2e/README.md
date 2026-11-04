@@ -61,8 +61,23 @@ scenario checks the stack depth against the presses the app counted
 | `ownership-spam.sh <ms>` | ownership lab, L1 (↓) → L2 (→): short drags alternating owners `<ms>` apart, then → dismisses L2 and ↓ dismisses L1 |
 | `heavy-push.sh <cost>` | heavy lab: push a screen that burns `<cost>` ms on its first render; it must enter from the edge (no `pop-in`, no blank) |
 | `sheet-regrab.sh <ms> spring-back\|during-snap` | sheet lab: grab during the spring-back, or during a `snapTo` animation |
+| `drag-after-dismiss.sh <ms>` | stack lab: fling C away, then drag B `<ms>` later; B must start dragging |
 
 `run-all.sh` lists every run with its parameters and analyzer options.
+
+## Frame drops
+
+Gaps in a recording (`displayFrames` > 1, `hitch`) are mostly frames `simctl recordVideo`
+didn't capture, not frames the app missed: 10 pushes and pops show ~14 % gaps on video
+and 0–1 dropped frames in the app. Count drops in the app instead:
+
+- the bridge summary has `perf: { frames, dropped, late, worst }`, from a UI-thread frame
+  callback (dropped: a frame later than one refresh; late: over 1.25 refreshes; worst: ms)
+- `harness://perf/reset` starts counting (opening a lab does too), `harness://perf/hz/120`
+  for a 120 Hz device (60 Hz by default)
+- `harness://bridge/0` stops the bridge's own reports while measuring (it re-renders a hidden
+  view up to every 100 ms), `harness://bridge/1` turns them back on and refreshes the summary
+- add `?n=<random>` to a link opened twice in a row, or the app doesn't see it again
 
 ## Showing a bug
 

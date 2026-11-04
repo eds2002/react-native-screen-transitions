@@ -19,7 +19,7 @@
  */
 import { Component, useEffect, useState } from "react";
 import { View } from "react-native";
-import { makeMutable, useAnimatedReaction } from "react-native-reanimated";
+import { makeMutable, useAnimatedReaction, useFrameCallback } from "react-native-reanimated";
 import { useScreenAnimation } from "react-native-screen-transitions";
 import { scheduleOnRN } from "react-native-worklets";
 
@@ -28,6 +28,18 @@ type Frame = { t: number; key: string; name: string; progress: number };
 
 /** 0 off, 1 state changes, 2 state changes and every frame's progress. Read on the UI thread. */
 export const bridgeLevel = makeMutable(1);
+
+/**
+ * UI-thread frame monitor, counted from the app's own frame callbacks (not the recording):
+ * frames seen, frames dropped (a callback later than one refresh), late frames (over 1.25 refreshes,
+ * which can miss the display's deadline even when not counted as dropped), and the longest frame in ms.
+ * Frame callbacks also run on touch and other events between frames: ones less than half a refresh
+ * after the last frame are skipped. The refresh interval is 60 Hz unless set (harness://perf/hz/120).
+ */
+const perf = makeMutable({ frames: 0, dropped: 0, late: 0, worst: 0, vsync: 1000 / 60, last: -1 });
+const resetPerf = (hz?: number) => {
+	perf.value = { frames: 0, dropped: 0, late: 0, worst: 0, vsync: hz ? 1000 / hz : perf.value.vsync, last: -1 };
+};
 
 const state = {
 	lab: null as string | null,
@@ -77,11 +89,13 @@ const summary = () => ({
 	errors: state.errors.length,
 	frames: state.frames.length,
 	counts: state.counts,
+	perf: { frames: perf.value.frames, dropped: perf.value.dropped, late: perf.value.late, worst: Math.round(perf.value.worst * 10) / 10, vsync: Math.round(perf.value.vsync * 10) / 10 },
 });
 
 export const bridge = {
 	setLab(lab: string | null) {
 		state.counts = {};
+		resetPerf();
 		// Screens unregister themselves on unmount; mounting effects run before the shell's, so don't clear here.
 		state.lab = lab;
 		if (lab === null) state.nav = null;
@@ -135,6 +149,11 @@ globalThis.__harness = {
 	summary,
 	setLevel: (level: number) => {
 		bridgeLevel.value = level;
+		changed();
+	},
+	resetPerf: (hz?: number) => {
+		resetPerf(hz);
+		changed();
 	},
 	startRecording: () => {
 		state.frames = [];
@@ -217,6 +236,18 @@ export function ScreenReporter({ routeKey, name }: { routeKey?: string; name?: s
 /** The hidden element Argent reads in Release builds. Rendered once, by the app shell. */
 export function BridgeProbe() {
 	const [, setVersion] = useState(0);
+	useFrameCallback((frame) => {
+		"worklet";
+		const p = perf.value;
+		if (p.last < 0) {
+			perf.value = { ...p, last: frame.timestamp };
+			return;
+		}
+		const dt = frame.timestamp - p.last;
+		if (dt < p.vsync / 2) return;
+		const missed = Math.max(0, Math.round(dt / p.vsync) - 1);
+		perf.value = { frames: p.frames + 1 + missed, dropped: p.dropped + missed, late: p.late + (dt > p.vsync * 1.25 ? 1 : 0), worst: Math.max(p.worst, dt), vsync: p.vsync, last: frame.timestamp };
+	});
 	useEffect(() => {
 		let timer = null;
 		const listener = () => {

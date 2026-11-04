@@ -2,7 +2,8 @@
 /**
  * The device harness: one lab per library mechanism (labs/), each a small
  * screen family with labelled buttons and testIDs for Argent loops.
- * Deep links: harness://lab/<id>, harness://stamp/off (frame stamp off for perf runs), harness://stamp/on
+ * Deep links: harness://lab/<id>, harness://stamp/off (frame stamp off for perf runs), harness://stamp/on,
+ * harness://bridge/<0|1|2> (bridge reporting level; 0 for perf runs), harness://perf/reset, harness://perf/hz/<n> (frame monitor)
  */
 import * as Linking from "expo-linking";
 import { StatusBar } from "expo-status-bar";
@@ -42,6 +43,11 @@ export default function App() {
 		if (lab) setOpen(lab[1]);
 		const stampMatch = url?.match(/stamp\/(on|off)/);
 		if (stampMatch) setStamp(stampMatch[1] === "on");
+		const levelMatch = url?.match(/bridge\/(\d)/);
+		if (levelMatch) globalThis.__harness.setLevel(Number(levelMatch[1]));
+		const hzMatch = url?.match(/perf\/hz\/(\d+)/);
+		if (hzMatch) globalThis.__harness.resetPerf(Number(hzMatch[1]));
+		else if (url?.includes("perf/reset")) globalThis.__harness.resetPerf();
 	}, [url]);
 	const lab = LABS.find((l) => l.id === open);
 	useEffect(() => bridge.setLab(lab?.id ?? null), [lab?.id]);
