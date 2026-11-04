@@ -426,3 +426,52 @@ for (const completionOrder of [["C", "B"], ["B", "C"]]) {
   expect(controller.getSnapshot().state.routeKeys).toEqual(["A"]);
  });
 }
+
+// From #159 (Vlad Petrenko): a params-only change must render the fresh descriptor.
+it("renders with the fresh descriptor when only route params change", () => {
+	const navigation = createNavigation();
+	const options = {
+		gestureEnabled: true,
+	} as BaseStackDescriptor["options"];
+	const createRenderableDescriptor = (route: BaseStackRoute) => ({
+		...createDescriptor(route, navigation, options),
+		render: () => route,
+	});
+
+	const routeA = createRoute("a");
+	const routeB: BaseStackRoute = {
+		...createRoute("b"),
+		params: { screen: "home" },
+	};
+	const controller = createBlankStackController(
+		createProps(
+			[routeA, routeB],
+			{
+				a: createRenderableDescriptor(routeA),
+				b: createRenderableDescriptor(routeB),
+			},
+			navigation,
+		),
+	);
+
+	// A deep link into a nested navigator only changes the parent route's
+	// params; its child state is untouched until the nested stack reads them.
+	const nextRouteB: BaseStackRoute = {
+		...createRoute("b"),
+		params: { screen: "settings" },
+	};
+	const nextDescriptorB = createRenderableDescriptor(nextRouteB);
+
+	controller.update(
+		createProps(
+			[routeA, nextRouteB],
+			{ a: createRenderableDescriptor(routeA), b: nextDescriptorB },
+			navigation,
+		),
+	);
+
+	const afterState = controller.getSnapshot().state;
+	expect(afterState.descriptors.b.route).toBe(nextRouteB);
+	expect(afterState.descriptors.b.render).toBe(nextDescriptorB.render);
+	expect(afterState.descriptors.b.render()).toBe(nextRouteB);
+});

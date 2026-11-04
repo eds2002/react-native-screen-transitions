@@ -159,13 +159,26 @@ const buildBaseScenes = ({
 			!previousState ||
 			Object.is(previousState.routeChildStates[route.key], routeChildState);
 
-		const sourceDescriptor = childStateUnchanged
-			? resolveStableDescriptorSource({
-					routeKey: route.key,
-					sourceDescriptor: rawSourceDescriptor,
-					previousState,
-				})
-			: rawSourceDescriptor;
+		// The source's render() closes over the route it was created with: reuse it only when the
+		// route itself is unchanged too, or a params-only change (a deep link into a nested stack,
+		// setParams) keeps rendering the old route.
+		const previousRoute = previousState?.descriptors[route.key]?.route;
+		const routeUnchanged =
+			!previousState ||
+			(!!previousRoute &&
+				areRecordsShallowEqual(
+					previousRoute as unknown as Record<string, unknown>,
+					route as unknown as Record<string, unknown>,
+				));
+
+		const sourceDescriptor =
+			childStateUnchanged && routeUnchanged
+				? resolveStableDescriptorSource({
+						routeKey: route.key,
+						sourceDescriptor: rawSourceDescriptor,
+						previousState,
+					})
+				: rawSourceDescriptor;
 
 		const activity = getSceneActivity({
 			...activityWindow,
