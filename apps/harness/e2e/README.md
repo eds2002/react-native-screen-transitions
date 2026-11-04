@@ -1,14 +1,25 @@
 # Harness e2e
 
-Argent-driven scenarios against the Release harness app on an iOS simulator. The
-pass bar is what is on screen: every run is recorded and checked frame by frame
-for blanks, flickers and jumps; the app's state is a second check.
+[Argent e2e](https://github.com/software-mansion/argent) tests against the Release harness app on
+an iOS simulator or Android emulator. The pass bar is what is on screen: every run is recorded and
+checked frame by frame for blanks, flickers and jumps; the app's state is a second check.
 
 ```sh
-# Release build on the simulator, then (app installed, any screen):
-apps/harness/e2e/run-all.sh <udid> apps/harness/e2e/results/<name> [name filter]
-open apps/harness/e2e/results/<name>/review.html
+# Release build installed on a booted simulator or emulator, then:
+apps/harness/e2e/argent/run.sh <simulator UDID or adb serial> [name filter]
+open apps/harness/e2e/results/argent/review.html
+
+# or one test, straight through Argent:
+cd apps/harness && argent e2e run stack-spam-alt-60 --device <id>
 ```
+
+The tests are YAML in `apps/harness/.argent/e2e/`, generated from the runs in
+`e2e/argent/build.py` (edit a run there, then `python3 e2e/argent/build.py`). Each test launches the
+harness, opens its lab, starts recording (`record-start.mjs`), plays the scenario with Argent
+directives and `gesture-custom` finger scripts, then its `check-<run>.mjs` stops the recording, runs
+the analyzer and checks the end state. A blank, a flicker or a wrong end state fails the test; a run
+marked flaky only warns. Script steps take no arguments, so the device comes from
+`apps/harness/.argent/device` (run.sh writes it) or the only booted device.
 
 `review.html` lists every run (did its end state check pass, events per kind) and
 every flagged event as a strip of the frames around it, flagged frames outlined in
@@ -16,8 +27,8 @@ red. `results/` is gitignored.
 
 ## Android
 
-The same scripts drive an Android emulator or device: pass its adb serial (`emulator-5554`) instead
-of a simulator UDID. Build and install the Release APK first:
+`argent/run.sh` drives an Android emulator or device too: pass its adb serial (`emulator-5554`)
+instead of a simulator UDID. Build and install the Release APK first:
 
 ```sh
 cd apps/harness && npx expo prebuild --platform android
@@ -25,8 +36,8 @@ cd android && ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a
 adb -s emulator-5554 install -r app/build/outputs/apk/release/app-release.apk
 ```
 
-`record.sh` records with `adb shell screenrecord` at half the screen's resolution (in its own shape)
-and passes the analyzer the window size in dp.
+On Android, `argent/lib.mjs` (and `visual/record.sh`) record with `adb shell screenrecord` at half
+the screen's resolution (in its own shape) and pass the analyzer the window size in dp.
 
 ## How a run is checked
 
@@ -67,17 +78,20 @@ scenario checks the stack depth against the presses the app counted
 
 ## Scenarios
 
+Defined in `e2e/argent/build.py` (one function each, one test per parameter):
+
 | scenario | covers |
 |---|---|
-| `regrab-spring-back.sh <ms>` | gestures lab: drag a card, let go (springs back), grab again `<ms>` later |
-| `stack-spam.sh <pairs> <ms> alt\|burst` | stack lab: push/pop through the fixed bar, `<ms>` apart (the cooldown sweep) |
-| `stack-grab-mid-push.sh <ms> letgo\|dismiss` | stack lab: grab the incoming screen `<ms>` into a push; let go, or fling it away (dismiss needs `<ms>` ≥ ~120, earlier the screen is still under the right edge) |
-| `ownership-spam.sh <ms>` | ownership lab, L1 (↓) → L2 (→): short drags alternating owners `<ms>` apart, then → dismisses L2 and ↓ dismisses L1 |
-| `heavy-push.sh <cost>` | heavy lab: push a screen that burns `<cost>` ms on its first render; it must enter from the edge (no `pop-in`, no blank) |
-| `sheet-regrab.sh <ms> spring-back\|during-snap` | sheet lab: grab during the spring-back, or during a `snapTo` animation |
-| `drag-after-dismiss.sh <ms>` | stack lab: fling C away, then drag B `<ms>` later; B must start dragging |
+| `regrab-spring-back-<ms>` | gestures lab: drag a card, let go (springs back), grab again `<ms>` later |
+| `stack-spam-alt-<ms>`, `stack-spam-burst-100` | stack lab: push/pop through the fixed bar, `<ms>` apart; the stack depth must match the presses that arrived |
+| `grab-mid-push-letgo\|dismiss-<ms>` | stack lab: grab the incoming screen `<ms>` into a push; let go, or fling it away (dismiss-120 is marked flaky) |
+| `drag-after-dismiss-<ms>` | stack lab: fling C away, then drag B `<ms>` later; B must start dragging |
+| `ownership-spam-<ms>` | ownership lab, L1 (↓) → L2 (→): short drags alternating owners `<ms>` apart, then → dismisses L2 and ↓ dismisses L1 |
+| `heavy-push-<cost>` | heavy lab: push a screen that burns `<cost>` ms on its first render; it must enter from the edge (no `pop-in`, no blank) |
+| `sheet-spring-back\|during-snap-<ms>` | sheet lab: grab during the spring-back, or during a `snapTo` animation |
 
-`run-all.sh` lists every run with its parameters and analyzer options.
+Taps inside timed gestures use screen fractions that hold on every device: the stack lab's bar sits
+at a fixed fraction of the screen (push ≈ 0.74, 0.87; pop ≈ 0.26, 0.87).
 
 ## Frame drops
 

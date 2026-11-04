@@ -29,14 +29,16 @@ passes on it:
 
 1. Build the harness app in **Release** for a booted simulator (`xcodebuild ... -configuration Release`)
    or emulator (`./gradlew assembleRelease`, then `adb install`). Debug builds aren't representative.
-2. Run `apps/harness/e2e/run-all.sh <simulator UDID or adb serial> <outDir>` (or a single scenario with
-   a name filter as the third argument). It records each scenario through Argent and analyzes every
-   frame; open `<outDir>/review.html`.
+2. Run `apps/harness/e2e/argent/run.sh <simulator UDID or adb serial> [name filter]`. It runs the
+   Argent e2e tests (`apps/harness/.argent/e2e`), each recorded and analyzed frame by frame, and fails
+   a test on a blank, a flicker or a wrong end state; open `apps/harness/e2e/results/argent/review.html`.
+   One test: `cd apps/harness && argent e2e run <name> --device <id>`.
 3. Look at every flagged event before calling it noise. Recorder gaps, misread frame stamps and a
    screen turning back at a reversal are known artifacts; anything else is a bug until shown otherwise.
 
-When you fix a visual or gesture bug, add a scenario for it in `apps/harness/e2e/scenarios/` and a
-run in `run-all.sh`, so it can't come back unnoticed. If the mechanism has no lab, add one in
+When you fix a visual or gesture bug, add a run for it in `apps/harness/e2e/argent/build.py` and
+regenerate the tests (`python3 apps/harness/e2e/argent/build.py`), so it can't come back unnoticed.
+Don't edit the generated YAML or check scripts by hand. If the mechanism has no lab, add one in
 `apps/harness/labs/`.
 
 ## Unit tests

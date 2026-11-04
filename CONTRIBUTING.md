@@ -57,7 +57,7 @@ bun run test:harness  # frame-by-frame harness tests, one process per file
 bun run test       # both
 
 # Visual e2e (Release harness app on a booted simulator or emulator, Argent CLI)
-apps/harness/e2e/run-all.sh <simulator UDID or adb serial> <outDir>
+apps/harness/e2e/argent/run.sh <simulator UDID or adb serial> [name filter]
 ```
 
 Tests share a process. For file-specific module overrides, use `createModuleMock`

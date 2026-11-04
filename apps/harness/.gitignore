@@ -42,3 +42,6 @@ app-example
 /ios
 /android
 /e2e/results/
+
+# Argent e2e: the device run.sh targets (local)
+.argent/device
