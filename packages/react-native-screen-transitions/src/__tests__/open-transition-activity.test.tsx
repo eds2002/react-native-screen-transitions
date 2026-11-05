@@ -10,7 +10,7 @@ await mockModule("../providers/builder", () => ({
 		selector({ derivations: { isFirstKey: false } }),
 }));
 const { useOpenTransitionIntent } = await import(
-	"../navigators/blank-stack/components/lifecycle/hooks/use-open-transition-intent"
+	"../providers/motion/lifecycle/use-open-transition-intent"
 );
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;

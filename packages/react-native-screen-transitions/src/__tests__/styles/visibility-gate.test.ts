@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { deriveDescriptorDerivations } from "../../providers/builder/helpers/derive-descriptor-derivations";
 import { LifecycleTransitionRequestKind } from "../../providers/motion/hooks/use-transition-values";
 import {
 	resolveInitialDestinationStyleGate,
@@ -110,28 +111,58 @@ describe("resolveInitialDestinationStyleGate", () => {
 
 // From #161 (Vlad Petrenko).
 describe("resolveInitialVisibilityBlocked", () => {
+	const screen = (key: string, options = {}) =>
+		({
+			route: { key, name: key },
+			navigation: {} as never,
+			options,
+		}) as const;
+	const startsSettled = (
+		key: string,
+		options: object = {},
+		override?: boolean,
+	) =>
+		deriveDescriptorDerivations({
+			current: screen(key, options),
+			firstRouteKey: "first",
+			startsSettled: override,
+		}).startsSettled;
+
 	it("starts the first screen of a stack visible", () => {
-		expect(resolveInitialVisibilityBlocked({ isFirstKey: true })).toBe(false);
+		expect(
+			resolveInitialVisibilityBlocked({ startsSettled: startsSettled("first") }),
+		).toBe(false);
 	});
 
 	it("starts the first screen blocked when it animates on initial mount", () => {
 		expect(
 			resolveInitialVisibilityBlocked({
-				isFirstKey: true,
-				animateOnInitialMount: true,
+				startsSettled: startsSettled("first", {
+					experimental_animateOnInitialMount: true,
+				}),
 			}),
 		).toBe(true);
 	});
 
 	it("starts pushed screens blocked until their open transition begins", () => {
-		expect(resolveInitialVisibilityBlocked({ isFirstKey: false })).toBe(true);
+		expect(
+			resolveInitialVisibilityBlocked({ startsSettled: startsSettled("pushed") }),
+		).toBe(true);
+	});
+
+	it("starts a standalone unit that mounts open visible", () => {
+		expect(
+			resolveInitialVisibilityBlocked({
+				startsSettled: startsSettled("standalone", {}, true),
+			}),
+		).toBe(false);
 	});
 
 	it("never blocks floating overlays", () => {
 		expect(
 			resolveInitialVisibilityBlocked({
 				isFloatingOverlay: true,
-				isFirstKey: false,
+				startsSettled: startsSettled("pushed"),
 			}),
 		).toBe(false);
 	});

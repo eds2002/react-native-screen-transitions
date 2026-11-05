@@ -1,25 +1,22 @@
 import { useLayoutEffect, useRef } from "react";
 import { useAnimatedReaction } from "react-native-reanimated";
 import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
-import { AnimationProgress } from "../../../../../constants";
-import useStableCallback from "../../../../../hooks/use-stable-callback";
-import {
-	type BaseDescriptor,
-	useBuilderStore,
-} from "../../../../../providers/builder";
+import { AnimationProgress } from "../../../constants";
+import useStableCallback from "../../../hooks/use-stable-callback";
+import type { SnapPoint } from "../../../types/screen.types";
+import { type BaseDescriptor, useBuilderStore } from "../../builder";
 import {
 	LifecycleTransitionRequestKind,
 	type MotionTransitionValues,
-} from "../../../../../providers/motion/hooks/use-transition-values";
-import type { MotionAnimationValues } from "../../../../../providers/motion/types";
-import type { SnapPoint } from "../../../../../types/screen.types";
+} from "../hooks/use-transition-values";
+import type { MotionAnimationValues } from "../types";
 
 /**
  * Calculates the initial progress value based on snap points configuration.
  * Returns `'auto'` if the initial snap point is the `'auto'` keyword
  * (meaning the animation must be deferred until content is measured).
  */
-function getInitialProgress({
+export function getInitialProgress({
 	snapPoints,
 	initialSnapIndex,
 }: {
@@ -39,15 +36,22 @@ function getInitialProgress({
 
 /**
  * Handles opening transition intent on mount.
+ *
+ * `"mount"` (a navigator's screens): a screen that starts settled sits at its initial snap point,
+ * any other screen opens. `"closed"` (a unit that opens on request): it stays closed and
+ * hidden, and its first `'auto'` measurement doesn't open it.
  */
 export function useOpenTransitionIntent(
 	current: BaseDescriptor,
 	animations: MotionAnimationValues,
 	system: MotionTransitionValues,
 	onComplete?: () => void,
+	mode: "mount" | "closed" = "mount",
 ) {
 	const initialized = useRef(false);
-	const isFirstKey = useBuilderStore((store) => store.derivations.isFirstKey);
+	const startsSettled = useBuilderStore(
+		(store) => store.derivations.startsSettled,
+	);
 	const { requestLifecycleTransition } = system.actions;
 	const completeOpen = useStableCallback(() => {
 		onComplete?.();
@@ -95,18 +99,19 @@ export function useOpenTransitionIntent(
 		}
 		initialized.current = true;
 
-		const {
-			snapPoints,
-			initialSnapIndex = 0,
-			experimental_animateOnInitialMount,
-		} = current.options;
+		if (mode === "closed") {
+			system.autoOpenArmed.set(0);
+			return;
+		}
+
+		const { snapPoints, initialSnapIndex = 0 } = current.options;
 
 		const initialProgress = getInitialProgress({
 			snapPoints,
 			initialSnapIndex,
 		});
 
-		if (isFirstKey && !experimental_animateOnInitialMount) {
+		if (startsSettled) {
 			if (typeof initialProgress === "string") {
 				system.targetProgress.set(0);
 				animations.transitionProgress.set(0);

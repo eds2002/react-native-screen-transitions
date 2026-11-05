@@ -18,9 +18,7 @@ export function useContentLayout(styleId: string | undefined) {
 	const animations = useOptionalMotionStore((store) =>
 		builder ? store?.state : undefined,
 	);
-	const isFirstKey = builder?.derivations.isFirstKey;
-	const experimental_animateOnInitialMount =
-		builder?.options.experimental_animateOnInitialMount;
+	const startsSettled = builder?.derivations.startsSettled;
 	const snapPoint = isContent ? "auto" : styleId;
 	const measureSnap =
 		snapPoint !== undefined && builder?.options.snapPoints?.includes(snapPoint);
@@ -28,8 +26,12 @@ export function useContentLayout(styleId: string | undefined) {
 	const handleLayout = useCallback(
 		(event: LayoutChangeEvent) => {
 			if (!animations) return;
-			const { targetProgress, resolvedAutoSnapPoint, measuredContentLayout } =
-				animations;
+			const {
+				targetProgress,
+				resolvedAutoSnapPoint,
+				measuredContentLayout,
+				autoOpenArmed,
+			} = animations;
 			const { requestLifecycleTransition } = animations.actions;
 			const { width, height } = event.nativeEvent.layout;
 			if (width <= 0 || height <= 0) return;
@@ -49,13 +51,14 @@ export function useContentLayout(styleId: string | undefined) {
 
 					if (
 						!isFirstMeasurement ||
+						!autoOpenArmed.get() ||
 						animations.transitionProgress.get() !== 0 ||
 						animations.progressAnimating.get() !== 0
 					) {
 						return;
 					}
 
-					if (isFirstKey && !experimental_animateOnInitialMount) {
+					if (startsSettled) {
 						targetProgress.set(nextFraction);
 						animations.transitionProgress.set(nextFraction);
 						return;
@@ -71,14 +74,7 @@ export function useContentLayout(styleId: string | undefined) {
 				fraction,
 			);
 		},
-		[
-			animations,
-			isContent,
-			measureSnap,
-			isFirstKey,
-			screenHeight,
-			experimental_animateOnInitialMount,
-		],
+		[animations, isContent, measureSnap, startsSettled, screenHeight],
 	);
 	return isContent || measureSnap ? handleLayout : undefined;
 }

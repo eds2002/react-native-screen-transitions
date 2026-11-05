@@ -41,20 +41,17 @@ export const useMaybeBlockVisibility = ({
 		pendingLifecycleRequestKind,
 	} = motion;
 
-	// The first screen of a stack (no open transition) starts visible: its only path to visible
-	// would otherwise be one UI-thread style update after mount, and losing it left it off-screen.
-	const isFirstKey = useBuilderStore((store) => store.derivations.isFirstKey);
-	const animateOnInitialMount = useBuilderStore(
-		(store) =>
-			(store.options as { experimental_animateOnInitialMount?: boolean })
-				.experimental_animateOnInitialMount,
+	// A screen that mounts already open (no open transition) starts visible: its only path to
+	// visible would otherwise be one UI-thread style update after mount, and losing it left it
+	// off-screen.
+	const startsSettled = useBuilderStore(
+		(store) => store.derivations.startsSettled,
 	);
 	const hasVisibilityGateOpened = useSharedValue(false);
 	const localVisibilityBlocked = useSharedValue(
 		resolveInitialVisibilityBlocked({
 			isFloatingOverlay,
-			isFirstKey,
-			animateOnInitialMount,
+			startsSettled,
 		}),
 	);
 	const lastVisibilityStyle = useSharedValue<{

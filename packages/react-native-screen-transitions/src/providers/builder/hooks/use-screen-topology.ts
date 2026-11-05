@@ -3,18 +3,30 @@ import { useOptionalScreenHostStore } from "../../host/screen-host.provider";
 import { useOptionalBuilderStore } from "../builder.provider";
 import { screenTopology } from "../topology/helpers/create-screen-topology";
 
-export function useScreenTopology(screenKey: string) {
+/**
+ * Registers a screen so relative (`{ depth }`) and named (`transitionKey`) lookups can find it.
+ * A host's screens always register. A screen outside any host (a standalone motion unit)
+ * registers only when it has a `transitionKey` to be found by.
+ */
+export function useScreenTopology(
+	screenKey: string,
+	ownTransitionKey: string | undefined,
+) {
 	const parentScreenKey = useOptionalBuilderStore(
 		(store) => store?.derivations.currentScreenKey,
 	);
 
-	const transitionKey = useOptionalScreenHostStore(
+	const hostTransitionKey = useOptionalScreenHostStore(
 		(store) => store?.scenesByKey[screenKey]?.descriptor.options.transitionKey,
 	);
 
-	const navigatorKey = useOptionalScreenHostStore((store) =>
+	const hostNavigatorKey = useOptionalScreenHostStore((store) =>
 		store?.scenesByKey[screenKey] ? store.navigatorKey : undefined,
 	);
+
+	const inHost = hostNavigatorKey !== undefined;
+	const transitionKey = inHost ? hostTransitionKey : ownTransitionKey;
+	const navigatorKey = inHost ? hostNavigatorKey : undefined;
 
 	const isActiveScreen = useOptionalScreenHostStore((store) => {
 		const focusedScene = store?.scenes[store.focusedIndex];
@@ -24,7 +36,7 @@ export function useScreenTopology(screenKey: string) {
 		);
 	});
 
-	const enabled = navigatorKey !== undefined;
+	const enabled = inHost || ownTransitionKey !== undefined;
 
 	useLayoutEffect(() => {
 		if (!enabled) return;

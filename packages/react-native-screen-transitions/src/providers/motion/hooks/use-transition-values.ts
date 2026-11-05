@@ -42,6 +42,13 @@ type MotionTransitionRawValues = {
 	 * starting immediately.
 	 */
 	pendingLifecycleStartBlockCount: SharedValue<number>;
+
+	/**
+	 * 1 while the first measurement of an `'auto'` (or named) snap point may open the screen.
+	 * Screens open when they mount, so this starts armed; a unit that mounts closed disarms it
+	 * until it is asked to open.
+	 */
+	autoOpenArmed: SharedValue<number>;
 };
 
 export interface MotionTransitionActions {
@@ -69,6 +76,7 @@ export function useTransitionValues(): MotionTransitionValues {
 	);
 	const pendingLifecycleRequestTarget = useSharedValue(0);
 	const pendingLifecycleStartBlockCount = useSharedValue(0);
+	const autoOpenArmed = useSharedValue(1);
 
 	return useMemo(() => {
 		const bag = {
@@ -79,6 +87,7 @@ export function useTransitionValues(): MotionTransitionValues {
 			pendingLifecycleRequestKind,
 			pendingLifecycleRequestTarget,
 			pendingLifecycleStartBlockCount,
+			autoOpenArmed,
 		};
 
 		return {
@@ -132,5 +141,6 @@ export function useTransitionValues(): MotionTransitionValues {
 		pendingLifecycleRequestKind,
 		pendingLifecycleRequestTarget,
 		pendingLifecycleStartBlockCount,
+		autoOpenArmed,
 	]);
 }

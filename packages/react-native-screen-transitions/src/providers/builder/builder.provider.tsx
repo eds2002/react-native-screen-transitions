@@ -29,6 +29,11 @@ export type BuilderProviderProps = {
 	children: ReactNode;
 	routeKey: string;
 	descriptors: DescriptorsContextValue;
+	/**
+	 * Whether this screen mounts already open. Defaults to the stack rule: the host's first
+	 * route, unless `experimental_animateOnInitialMount` is set.
+	 */
+	startsSettled?: boolean;
 };
 
 const createBuilderProvider = createProvider("Builder", {
@@ -42,7 +47,7 @@ const {
 	useBuilderStore,
 	useOptionalBuilderStore,
 }: ReturnType<typeof createBuilderProvider> = createBuilderProvider(
-	({ routeKey, children, descriptors: inputDescriptors }) => {
+	({ routeKey, children, descriptors: inputDescriptors, startsSettled }) => {
 		const currentDescriptor = inputDescriptors.current;
 		const previousDescriptor = inputDescriptors.previous;
 		const nextDescriptor = inputDescriptors.next;
@@ -73,10 +78,17 @@ const {
 				current: currentDescriptor,
 				next: nextDescriptor,
 				firstRouteKey,
+				startsSettled,
 			});
-		}, [previousDescriptor, currentDescriptor, nextDescriptor, firstRouteKey]);
+		}, [
+			previousDescriptor,
+			currentDescriptor,
+			nextDescriptor,
+			firstRouteKey,
+			startsSettled,
+		]);
 
-		useScreenTopology(routeKey);
+		useScreenTopology(routeKey, options.transitionKey);
 
 		const value = useMemo(
 			() => ({ descriptors, derivations, options }),
