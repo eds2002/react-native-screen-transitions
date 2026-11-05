@@ -49,8 +49,8 @@ let options = {
 	gestureDirection: "horizontal" as const,
 	gestureSensitivity: 1,
 };
-await mockModule("../navigators/blank-stack/state/blank-stack.provider", () => ({
-	useBlankStackStore: () => {
+await mockModule("../navigators/kit/state/navigator-store", () => ({
+	useNavigatorStore: () => {
 		throw new Error("Motion must not read Blank Stack");
 	},
 }));

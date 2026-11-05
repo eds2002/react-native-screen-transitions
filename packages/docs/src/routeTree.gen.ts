@@ -15,6 +15,7 @@ import { Route as BoundaryComponentsRouteImport } from './routes/boundary-compon
 import { Route as CaveatsRouteImport } from './routes/caveats'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as CustomAnimationsRouteImport } from './routes/custom-animations'
+import { Route as CustomNavigatorsRouteImport } from './routes/custom-navigators'
 import { Route as ExpoRouterRouteImport } from './routes/expo-router'
 import { Route as GestureOwnershipRouteImport } from './routes/gesture-ownership'
 import { Route as GesturesRouteImport } from './routes/gestures'
@@ -23,6 +24,7 @@ import { Route as InstallationRouteImport } from './routes/installation'
 import { Route as LayersRouteImport } from './routes/layers'
 import { Route as MigratingFromV3RouteImport } from './routes/migrating-from-v3'
 import { Route as MigratingTo34RouteImport } from './routes/migrating-to-3-4'
+import { Route as MotionRouteImport } from './routes/motion'
 import { Route as NativeStackAdapterRouteImport } from './routes/native-stack-adapter'
 import { Route as NavigationZoomRouteImport } from './routes/navigation-zoom'
 import { Route as OgDotpngRouteImport } from './routes/og[.]png'
@@ -38,7 +40,6 @@ import { Route as UpdatingTo36RouteImport } from './routes/updating-to-3-6'
 import { Route as UpdatingTo37RouteImport } from './routes/updating-to-3-7'
 import { Route as ApiCreateBoundaryComponentRouteImport } from './routes/api_.create-boundary-component'
 import { Route as ApiCreateTransitionAwareComponentRouteImport } from './routes/api_.create-transition-aware-component'
-import { Route as ApiProvidersRouteImport } from './routes/api_.providers'
 import { Route as ApiSnapToRouteImport } from './routes/api_.snap-to'
 import { Route as ApiTransitionBlockingRouteImport } from './routes/api_.transition-blocking'
 import { Route as ApiUseHistoryRouteImport } from './routes/api_.use-history'
@@ -76,6 +77,11 @@ const ChangelogRoute = ChangelogRouteImport.update({
 const CustomAnimationsRoute = CustomAnimationsRouteImport.update({
   id: '/custom-animations',
   path: '/custom-animations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomNavigatorsRoute = CustomNavigatorsRouteImport.update({
+  id: '/custom-navigators',
+  path: '/custom-navigators',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExpoRouterRoute = ExpoRouterRouteImport.update({
@@ -116,6 +122,11 @@ const MigratingFromV3Route = MigratingFromV3RouteImport.update({
 const MigratingTo34Route = MigratingTo34RouteImport.update({
   id: '/migrating-to-3-4',
   path: '/migrating-to-3-4',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MotionRoute = MotionRouteImport.update({
+  id: '/motion',
+  path: '/motion',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NativeStackAdapterRoute = NativeStackAdapterRouteImport.update({
@@ -195,11 +206,6 @@ const ApiCreateTransitionAwareComponentRoute =
     path: '/api/create-transition-aware-component',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiProvidersRoute = ApiProvidersRouteImport.update({
-  id: '/api_/providers',
-  path: '/api/providers',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiSnapToRoute = ApiSnapToRouteImport.update({
   id: '/api_/snap-to',
   path: '/api/snap-to',
@@ -248,6 +254,7 @@ export interface FileRoutesByFullPath {
   '/caveats': typeof CaveatsRoute
   '/changelog': typeof ChangelogRoute
   '/custom-animations': typeof CustomAnimationsRoute
+  '/custom-navigators': typeof CustomNavigatorsRoute
   '/expo-router': typeof ExpoRouterRoute
   '/gesture-ownership': typeof GestureOwnershipRoute
   '/gestures': typeof GesturesRoute
@@ -256,6 +263,7 @@ export interface FileRoutesByFullPath {
   '/layers': typeof LayersRoute
   '/migrating-from-v3': typeof MigratingFromV3Route
   '/migrating-to-3-4': typeof MigratingTo34Route
+  '/motion': typeof MotionRoute
   '/native-stack-adapter': typeof NativeStackAdapterRoute
   '/navigation-zoom': typeof NavigationZoomRoute
   '/og.png': typeof OgDotpngRoute
@@ -271,7 +279,6 @@ export interface FileRoutesByFullPath {
   '/updating-to-3-7': typeof UpdatingTo37Route
   '/api/create-boundary-component': typeof ApiCreateBoundaryComponentRoute
   '/api/create-transition-aware-component': typeof ApiCreateTransitionAwareComponentRoute
-  '/api/providers': typeof ApiProvidersRoute
   '/api/snap-to': typeof ApiSnapToRoute
   '/api/transition-blocking': typeof ApiTransitionBlockingRoute
   '/api/use-history': typeof ApiUseHistoryRoute
@@ -288,6 +295,7 @@ export interface FileRoutesByTo {
   '/caveats': typeof CaveatsRoute
   '/changelog': typeof ChangelogRoute
   '/custom-animations': typeof CustomAnimationsRoute
+  '/custom-navigators': typeof CustomNavigatorsRoute
   '/expo-router': typeof ExpoRouterRoute
   '/gesture-ownership': typeof GestureOwnershipRoute
   '/gestures': typeof GesturesRoute
@@ -296,6 +304,7 @@ export interface FileRoutesByTo {
   '/layers': typeof LayersRoute
   '/migrating-from-v3': typeof MigratingFromV3Route
   '/migrating-to-3-4': typeof MigratingTo34Route
+  '/motion': typeof MotionRoute
   '/native-stack-adapter': typeof NativeStackAdapterRoute
   '/navigation-zoom': typeof NavigationZoomRoute
   '/og.png': typeof OgDotpngRoute
@@ -311,7 +320,6 @@ export interface FileRoutesByTo {
   '/updating-to-3-7': typeof UpdatingTo37Route
   '/api/create-boundary-component': typeof ApiCreateBoundaryComponentRoute
   '/api/create-transition-aware-component': typeof ApiCreateTransitionAwareComponentRoute
-  '/api/providers': typeof ApiProvidersRoute
   '/api/snap-to': typeof ApiSnapToRoute
   '/api/transition-blocking': typeof ApiTransitionBlockingRoute
   '/api/use-history': typeof ApiUseHistoryRoute
@@ -329,6 +337,7 @@ export interface FileRoutesById {
   '/caveats': typeof CaveatsRoute
   '/changelog': typeof ChangelogRoute
   '/custom-animations': typeof CustomAnimationsRoute
+  '/custom-navigators': typeof CustomNavigatorsRoute
   '/expo-router': typeof ExpoRouterRoute
   '/gesture-ownership': typeof GestureOwnershipRoute
   '/gestures': typeof GesturesRoute
@@ -337,6 +346,7 @@ export interface FileRoutesById {
   '/layers': typeof LayersRoute
   '/migrating-from-v3': typeof MigratingFromV3Route
   '/migrating-to-3-4': typeof MigratingTo34Route
+  '/motion': typeof MotionRoute
   '/native-stack-adapter': typeof NativeStackAdapterRoute
   '/navigation-zoom': typeof NavigationZoomRoute
   '/og.png': typeof OgDotpngRoute
@@ -352,7 +362,6 @@ export interface FileRoutesById {
   '/updating-to-3-7': typeof UpdatingTo37Route
   '/api_/create-boundary-component': typeof ApiCreateBoundaryComponentRoute
   '/api_/create-transition-aware-component': typeof ApiCreateTransitionAwareComponentRoute
-  '/api_/providers': typeof ApiProvidersRoute
   '/api_/snap-to': typeof ApiSnapToRoute
   '/api_/transition-blocking': typeof ApiTransitionBlockingRoute
   '/api_/use-history': typeof ApiUseHistoryRoute
@@ -371,6 +380,7 @@ export interface FileRouteTypes {
     | '/caveats'
     | '/changelog'
     | '/custom-animations'
+    | '/custom-navigators'
     | '/expo-router'
     | '/gesture-ownership'
     | '/gestures'
@@ -379,6 +389,7 @@ export interface FileRouteTypes {
     | '/layers'
     | '/migrating-from-v3'
     | '/migrating-to-3-4'
+    | '/motion'
     | '/native-stack-adapter'
     | '/navigation-zoom'
     | '/og.png'
@@ -394,7 +405,6 @@ export interface FileRouteTypes {
     | '/updating-to-3-7'
     | '/api/create-boundary-component'
     | '/api/create-transition-aware-component'
-    | '/api/providers'
     | '/api/snap-to'
     | '/api/transition-blocking'
     | '/api/use-history'
@@ -411,6 +421,7 @@ export interface FileRouteTypes {
     | '/caveats'
     | '/changelog'
     | '/custom-animations'
+    | '/custom-navigators'
     | '/expo-router'
     | '/gesture-ownership'
     | '/gestures'
@@ -419,6 +430,7 @@ export interface FileRouteTypes {
     | '/layers'
     | '/migrating-from-v3'
     | '/migrating-to-3-4'
+    | '/motion'
     | '/native-stack-adapter'
     | '/navigation-zoom'
     | '/og.png'
@@ -434,7 +446,6 @@ export interface FileRouteTypes {
     | '/updating-to-3-7'
     | '/api/create-boundary-component'
     | '/api/create-transition-aware-component'
-    | '/api/providers'
     | '/api/snap-to'
     | '/api/transition-blocking'
     | '/api/use-history'
@@ -451,6 +462,7 @@ export interface FileRouteTypes {
     | '/caveats'
     | '/changelog'
     | '/custom-animations'
+    | '/custom-navigators'
     | '/expo-router'
     | '/gesture-ownership'
     | '/gestures'
@@ -459,6 +471,7 @@ export interface FileRouteTypes {
     | '/layers'
     | '/migrating-from-v3'
     | '/migrating-to-3-4'
+    | '/motion'
     | '/native-stack-adapter'
     | '/navigation-zoom'
     | '/og.png'
@@ -474,7 +487,6 @@ export interface FileRouteTypes {
     | '/updating-to-3-7'
     | '/api_/create-boundary-component'
     | '/api_/create-transition-aware-component'
-    | '/api_/providers'
     | '/api_/snap-to'
     | '/api_/transition-blocking'
     | '/api_/use-history'
@@ -492,6 +504,7 @@ export interface RootRouteChildren {
   CaveatsRoute: typeof CaveatsRoute
   ChangelogRoute: typeof ChangelogRoute
   CustomAnimationsRoute: typeof CustomAnimationsRoute
+  CustomNavigatorsRoute: typeof CustomNavigatorsRoute
   ExpoRouterRoute: typeof ExpoRouterRoute
   GestureOwnershipRoute: typeof GestureOwnershipRoute
   GesturesRoute: typeof GesturesRoute
@@ -500,6 +513,7 @@ export interface RootRouteChildren {
   LayersRoute: typeof LayersRoute
   MigratingFromV3Route: typeof MigratingFromV3Route
   MigratingTo34Route: typeof MigratingTo34Route
+  MotionRoute: typeof MotionRoute
   NativeStackAdapterRoute: typeof NativeStackAdapterRoute
   NavigationZoomRoute: typeof NavigationZoomRoute
   OgDotpngRoute: typeof OgDotpngRoute
@@ -515,7 +529,6 @@ export interface RootRouteChildren {
   UpdatingTo37Route: typeof UpdatingTo37Route
   ApiCreateBoundaryComponentRoute: typeof ApiCreateBoundaryComponentRoute
   ApiCreateTransitionAwareComponentRoute: typeof ApiCreateTransitionAwareComponentRoute
-  ApiProvidersRoute: typeof ApiProvidersRoute
   ApiSnapToRoute: typeof ApiSnapToRoute
   ApiTransitionBlockingRoute: typeof ApiTransitionBlockingRoute
   ApiUseHistoryRoute: typeof ApiUseHistoryRoute
@@ -568,6 +581,13 @@ declare module '@tanstack/react-router' {
       path: '/custom-animations'
       fullPath: '/custom-animations'
       preLoaderRoute: typeof CustomAnimationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/custom-navigators': {
+      id: '/custom-navigators'
+      path: '/custom-navigators'
+      fullPath: '/custom-navigators'
+      preLoaderRoute: typeof CustomNavigatorsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/expo-router': {
@@ -624,6 +644,13 @@ declare module '@tanstack/react-router' {
       path: '/migrating-to-3-4'
       fullPath: '/migrating-to-3-4'
       preLoaderRoute: typeof MigratingTo34RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/motion': {
+      id: '/motion'
+      path: '/motion'
+      fullPath: '/motion'
+      preLoaderRoute: typeof MotionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/native-stack-adapter': {
@@ -731,13 +758,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCreateTransitionAwareComponentRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api_/providers': {
-      id: '/api_/providers'
-      path: '/api/providers'
-      fullPath: '/api/providers'
-      preLoaderRoute: typeof ApiProvidersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api_/snap-to': {
       id: '/api_/snap-to'
       path: '/api/snap-to'
@@ -804,6 +824,7 @@ const rootRouteChildren: RootRouteChildren = {
   CaveatsRoute: CaveatsRoute,
   ChangelogRoute: ChangelogRoute,
   CustomAnimationsRoute: CustomAnimationsRoute,
+  CustomNavigatorsRoute: CustomNavigatorsRoute,
   ExpoRouterRoute: ExpoRouterRoute,
   GestureOwnershipRoute: GestureOwnershipRoute,
   GesturesRoute: GesturesRoute,
@@ -812,6 +833,7 @@ const rootRouteChildren: RootRouteChildren = {
   LayersRoute: LayersRoute,
   MigratingFromV3Route: MigratingFromV3Route,
   MigratingTo34Route: MigratingTo34Route,
+  MotionRoute: MotionRoute,
   NativeStackAdapterRoute: NativeStackAdapterRoute,
   NavigationZoomRoute: NavigationZoomRoute,
   OgDotpngRoute: OgDotpngRoute,
@@ -828,7 +850,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCreateBoundaryComponentRoute: ApiCreateBoundaryComponentRoute,
   ApiCreateTransitionAwareComponentRoute:
     ApiCreateTransitionAwareComponentRoute,
-  ApiProvidersRoute: ApiProvidersRoute,
   ApiSnapToRoute: ApiSnapToRoute,
   ApiTransitionBlockingRoute: ApiTransitionBlockingRoute,
   ApiUseHistoryRoute: ApiUseHistoryRoute,

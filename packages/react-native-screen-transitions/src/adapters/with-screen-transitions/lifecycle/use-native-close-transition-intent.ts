@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from "react";
 import useStableCallback from "../../../hooks/use-stable-callback";
-import { useNavigationHelpers } from "../../../navigators/blank-stack/hooks/use-navigation-helpers";
+import { useNavigationHelpers } from "../../../navigators/kit/hooks/use-navigation-helpers";
 import type { BaseDescriptor } from "../../../providers/builder";
 import { useScreenRelationships } from "../../../providers/builder/topology";
 import { useOptionalMotionStore } from "../../../providers/motion";

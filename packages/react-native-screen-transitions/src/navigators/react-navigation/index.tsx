@@ -46,3 +46,15 @@ export type {
 } from "../../types/blank-stack.types";
 
 export type { BlankStackStandardNavigatorProps } from "../blank-stack/create-blank-stack-navigator";
+
+export {
+	TransitionNavigator,
+	type TransitionNavigatorViewProps,
+} from "../kit/transition-navigator";
+export type {
+	TransitionNavigator as TransitionNavigatorValue,
+	TransitionNavigatorProps,
+	TransitionScene,
+	TransitionSceneActivity,
+} from "../kit/types";
+export { useTransitionNavigator } from "../kit/use-transition-navigator";

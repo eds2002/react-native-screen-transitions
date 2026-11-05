@@ -4,8 +4,8 @@ import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Overlay } from "../../components/overlay";
 import { ScreenLayers } from "../../components/screen-layers";
-import { useNavigationHelpers } from "../../navigators/blank-stack/hooks/use-navigation-helpers";
-import { BlankStackStoreProvider } from "../../navigators/blank-stack/state/blank-stack.provider";
+import { useNavigationHelpers } from "../../navigators/kit/hooks/use-navigation-helpers";
+import { NavigatorStoreProvider } from "../../navigators/kit/state/navigator-store";
 import { BuilderProvider } from "../../providers/builder";
 import {
 	ScreenHostStoreProvider,
@@ -190,12 +190,12 @@ function ScreenTransitionsStackContent({
 
 	return (
 		<ScreenTransitionsAdapterProvider value={adapterContextValue}>
-			<BlankStackStoreProvider value={blankStackValue}>
+			<NavigatorStoreProvider value={blankStackValue}>
 				<ScreenHostStoreProvider value={hostValue}>
 					<Overlay />
 					{children}
 				</ScreenHostStoreProvider>
-			</BlankStackStoreProvider>
+			</NavigatorStoreProvider>
 		</ScreenTransitionsAdapterProvider>
 	);
 }

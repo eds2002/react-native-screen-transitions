@@ -22,7 +22,7 @@ export type BlankStackDescriptorSources = Record<
 	BlankStackDescriptorSource
 >;
 
-export interface BlankStackStoreValue {
+export interface NavigatorStoreValue {
 	navigatorKey: string;
 	routeKeys: string[];
 	routes: BaseStackRoute[];

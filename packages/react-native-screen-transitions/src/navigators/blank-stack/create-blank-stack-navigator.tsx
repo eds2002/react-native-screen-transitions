@@ -5,7 +5,7 @@ import type {
 	BaseStackRoute,
 	BaseStackState,
 } from "../../types/stack.types";
-import { BlankStack } from "./components/stack-view";
+import { BlankStack } from "./blank-stack";
 
 export type BlankStackStandardEventMap = {};
 

@@ -7,7 +7,7 @@ import type {
 } from "../types/stack.types";
 
 const { createBlankStackController } = await import(
-	"../navigators/blank-stack/state/blank-stack-controller"
+	"../navigators/kit/state/blank-stack-controller"
 );
 
 const CHILD_STATE = Symbol("CHILD_STATE");

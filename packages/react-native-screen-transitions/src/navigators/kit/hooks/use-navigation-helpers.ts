@@ -4,14 +4,14 @@ import { useBuilderStore } from "../../../providers/builder";
 import { getMotionStore } from "../../../providers/motion";
 import { LifecycleTransitionRequestKind } from "../../../providers/motion/hooks/use-transition-values";
 import { dispatchCloseAction } from "../../../utils/navigation/close-action-replay";
-import { useBlankStackStore } from "../state/blank-stack.provider";
+import { useNavigatorStore } from "../state/navigator-store";
 
 export function useNavigationHelpers() {
 	const route = useBuilderStore((store) => store.descriptors.current.route);
 	const navigation = useBuilderStore(
 		(store) => store.descriptors.current.navigation,
 	);
-	const requestStackDismiss = useBlankStackStore(
+	const requestStackDismiss = useNavigatorStore(
 		(stack) => stack.requestDismiss,
 	);
 

@@ -417,6 +417,18 @@ export const focusedPath = (state: NavState | undefined) => {
 
 export type StackHarness = Awaited<ReturnType<typeof mountStack>>;
 
+type NavigatorFactory = () => { Navigator: unknown; Screen: unknown };
+let navigatorFactory: NavigatorFactory | null = null;
+
+/**
+ * Mounts every stack (nested ones too) with this navigator factory instead of
+ * createBlankStackNavigator: a custom navigator built on the navigator kit runs
+ * the same scenarios.
+ */
+export const setNavigatorFactory = (factory: NavigatorFactory | null) => {
+	navigatorFactory = factory;
+};
+
 /**
  * Mounts a BlankStack with the given screens. Each screen renders a marker the
  * recorder finds (`harness-screen:<routeKey>:<name>`).
@@ -494,7 +506,7 @@ export const mountStack = async (
 
 	/** One BlankStack with these screens; nested specs become nested stacks. */
 	const buildNavigator = (specs: ScreenSpec[], navigatorOptions?: Record<string, unknown>) => {
-		const Stack = createBlankStackNavigator();
+		const Stack = (navigatorFactory ?? createBlankStackNavigator)() as ReturnType<typeof createBlankStackNavigator>;
 		const children = specs.map((spec) => {
 			const component = spec.stack
 				? (() => {

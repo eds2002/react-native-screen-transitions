@@ -30,12 +30,11 @@ await mockModule("../components/boundary/portal", () => ({
 await mockModule("../components/overlay", () => ({
 	Overlay: () => null,
 }));
-await mockModule("../navigators/blank-stack/components/lifecycle/blank-stack", () => ({
-	BlankStackLifecycle: () => null,
+await mockModule("../navigators/kit/components/lifecycle/scene-lifecycle", () => ({
+	SceneLifecycle: () => null,
 }));
-await mockModule("../navigators/blank-stack/state/blank-stack.provider", () => ({
-	BlankStackProvider: passthrough,
-	useBlankStackStore: (select: (s: any) => unknown) =>
+await mockModule("../navigators/kit/state/navigator-store", () => ({
+	useNavigatorStore: (select: (s: any) => unknown) =>
 		useSyncExternalStore(
 			(callback) => {
 				sceneListeners.add(callback);
@@ -49,7 +48,7 @@ await mockModule("../navigators/blank-stack/state/blank-stack.provider", () => (
 await mockModule("../providers/builder", () => ({
 	BuilderProvider: passthrough,
 }));
-await mockModule("../navigators/blank-stack/hooks/use-navigation-helpers", () => ({
+await mockModule("../navigators/kit/hooks/use-navigation-helpers", () => ({
 	useNavigationHelpers: () => ({ requestDismiss: dismiss }),
 }));
 const dismiss = () => {};
@@ -62,14 +61,14 @@ await mockModule("../providers/motion", () => ({
 await mockModule("../providers/orchestrator", () => ({
 	OrchestratorProvider: passthrough,
 }));
-await mockModule("../navigators/blank-stack/components/activity", () => ({
+await mockModule("../navigators/kit/components/activity", () => ({
 	ActivityScreen: passthrough,
 	ActivityContainer: passthrough,
 }));
 await mockModule("../components/screen-layers", () => ({
 	ScreenLayers: passthrough,
 }));
-const { BlankStackView } = await import("../navigators/blank-stack/components/stack-view");
+const { TransitionScenes: BlankStackView } = await import("../navigators/kit/components/scenes");
 let renderer: ReactTestRenderer | undefined;
 afterEach(() => {
 	act(() => renderer?.unmount());

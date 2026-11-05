@@ -1,4 +1,4 @@
-import { useBlankStackStore } from "../../navigators/blank-stack/state/blank-stack.provider";
+import { useNavigatorStore } from "../../navigators/kit/state/navigator-store";
 
 import {
 	getFloatOverlayStack,
@@ -11,7 +11,7 @@ import { OverlayHost } from "./variations/overlay-host";
  * Gets routes and descriptors from stack context.
  */
 export function Overlay() {
-	const scenes = useBlankStackStore((store) => store.scenes);
+	const scenes = useNavigatorStore((store) => store.scenes);
 
 	const overlayStack = getFloatOverlayStack(scenes);
 

@@ -1,8 +1,11 @@
-import type {
-	NavigationState,
-	NavigatorTypeBagBase,
-	TypedNavigator,
+import {
+	type NavigationState,
+	type NavigatorTypeBagBase,
+	StackRouter,
+	type TypedNavigator,
+	useNavigationBuilder,
 } from "@react-navigation/native";
+import type { ComponentType, ReactNode } from "react";
 import type { DerivedValue, SharedValue } from "react-native-reanimated";
 import type Transition from "..";
 import type {
@@ -49,6 +52,12 @@ import {
 	type BlankStackOverlayProps,
 	type BlankStackScreenProps,
 	createBlankStackNavigator,
+	TransitionNavigator,
+	type TransitionNavigatorValue,
+	type TransitionNavigatorViewProps,
+	type TransitionScene,
+	type TransitionSceneActivity,
+	useTransitionNavigator,
 } from "../navigators/react-navigation";
 
 const slotStyle: TransitionSlotStyle = {
@@ -578,3 +587,27 @@ function useMotionApiTypes() {
 	};
 }
 void [invalidInitial, useMotionApiTypes];
+
+// A custom navigator, as the custom navigators guide writes it: React Navigation's
+// useNavigationBuilder output goes straight into useTransitionNavigator.
+function useCustomNavigatorApiTypes(children: ReactNode) {
+	const { state, navigation, descriptors } = useNavigationBuilder(StackRouter, {
+		children,
+	});
+	const navigator: TransitionNavigatorValue = useTransitionNavigator({
+		state,
+		navigation,
+		descriptors,
+	});
+	const scenes: readonly TransitionScene[] = navigator.scenes;
+	const activity: TransitionSceneActivity | undefined =
+		navigator.focused?.activity;
+	const key: string = navigator.key;
+	const focusedIndex: number = navigator.focusedIndex;
+	const hostProps: TransitionNavigatorViewProps = { value: navigator };
+	const Scenes: ComponentType = TransitionNavigator.Scenes;
+	// @ts-expect-error The host needs the navigator value.
+	const missingValue: TransitionNavigatorViewProps = {};
+	return [scenes, activity, key, focusedIndex, hostProps, Scenes, missingValue];
+}
+void useCustomNavigatorApiTypes;

@@ -1,11 +1,11 @@
 import { useBuilderStore } from "../../../../providers/builder";
-import { useBlankStackStore } from "../../state/blank-stack.provider";
+import { useNavigatorStore } from "../../state/navigator-store";
 import { useCloseTransitionIntent } from "./hooks/use-close-transition-intent";
 import { useScreenLifecycle } from "./use-screen-lifecycle";
 
-export function BlankStackLifecycle() {
+export function SceneLifecycle() {
 	const current = useBuilderStore((store) => store.descriptors.current);
-	const handleOpenRoute = useBlankStackStore((store) => store.handleOpenRoute);
+	const handleOpenRoute = useNavigatorStore((store) => store.handleOpenRoute);
 
 	const { completeClose } = useCloseTransitionIntent(current);
 

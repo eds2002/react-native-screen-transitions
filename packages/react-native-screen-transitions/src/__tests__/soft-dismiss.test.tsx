@@ -67,8 +67,8 @@ await mockModule("../providers/builder", () => ({
 		}),
 }));
 
-await mockModule("../navigators/blank-stack/state/blank-stack.provider", () => ({
-	useBlankStackStore: (selector: (stack: any) => unknown) =>
+await mockModule("../navigators/kit/state/navigator-store", () => ({
+	useNavigatorStore: (selector: (stack: any) => unknown) =>
 		selector({
 			requestDismiss: requestStackDismiss,
 			handleCloseRoute: handleBlankClose
@@ -88,10 +88,10 @@ await mockModule("../navigators/blank-stack/state/blank-stack.provider", () => (
 const { useNativeCloseTransitionIntent } = await import("../adapters/with-screen-transitions/lifecycle/use-native-close-transition-intent");
 
 const { useNavigationHelpers } = await import(
-	"../navigators/blank-stack/hooks/use-navigation-helpers"
+	"../navigators/kit/hooks/use-navigation-helpers"
 );
 const { useCloseTransitionIntent } = await import(
-	"../navigators/blank-stack/components/lifecycle/hooks/use-close-transition-intent"
+	"../navigators/kit/components/lifecycle/hooks/use-close-transition-intent"
 );
 
 beforeEach(() => {

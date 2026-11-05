@@ -25,7 +25,7 @@ interface BuilderStoreValue {
 	options: BaseDescriptor["options"];
 }
 
-export type BuilderProviderProps = {
+type BuilderProviderProps = {
 	children: ReactNode;
 	routeKey: string;
 	descriptors: DescriptorsContextValue;

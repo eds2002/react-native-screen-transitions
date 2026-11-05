@@ -1,0 +1,125 @@
+---
+title: "Custom Navigators"
+pageTitle: "Custom Navigators"
+summary: "Build your own React Navigation navigator on the transition engine."
+description: "useTransitionNavigator turns React Navigation state into animated scenes, and TransitionNavigator draws them, inside your own presentation."
+eyebrow: "Beyond Navigation"
+group: "Beyond Navigation"
+order: 2
+to: /custom-navigators
+---
+
+Blank Stack is one navigator built on a small kit. You can build your own with the same kit: React Navigation owns routes and history, the engine animates every route, and you decide what the navigator looks like.
+
+```tsx
+import {
+  createNavigatorFactory,
+  StackRouter,
+  useNavigationBuilder,
+} from "@react-navigation/native";
+import {
+  TransitionNavigator,
+  useTransitionNavigator,
+} from "react-native-screen-transitions/react-navigation";
+
+function MyNavigator({ id, initialRouteName, children, screenOptions }) {
+  const { state, navigation, descriptors, NavigationContent } = useNavigationBuilder(
+    StackRouter,
+    { id, initialRouteName, children, screenOptions },
+  );
+  const navigator = useTransitionNavigator({ state, navigation, descriptors });
+
+  return (
+    <NavigationContent>
+      <TransitionNavigator value={navigator} />
+    </NavigationContent>
+  );
+}
+
+export const createMyNavigator = createNavigatorFactory(MyNavigator);
+```
+
+That navigator already behaves like Blank Stack: screens take the same options (`screenStyleInterpolator`, `gestureEnabled`, `snapPoints`…), and push, pop, gesture dismissal and interruptions work.
+
+## useTransitionNavigator
+
+Pass it what React Navigation hands your navigator: `state`, `navigation` and `descriptors`. It handles what a navigator shouldn't have to:
+
+- keeping a route mounted after React Navigation removes it, until its close animation finishes;
+- wiring each scene's `previous` and `next`, so interpolators and `Boundary` see their neighbours;
+- turning a dismiss gesture into a pop.
+
+It returns a value describing the navigator:
+
+| Field | Meaning |
+| --- | --- |
+| `scenes` | Every scene, bottom to top, including closing ones. Each has `route`, `descriptor` and `activity`. |
+| `focused`, `focusedIndex` | The focused scene and its index in `scenes`. |
+| `key` | The navigator's state key. |
+
+A scene's `activity` is `"active"` when focused, `"inert"` directly below the focused scene, `"inactive"` further down, and `"closing"` while it animates out.
+
+## TransitionNavigator
+
+`<TransitionNavigator value={navigator}>` hosts the scenes. With no children, it draws `<TransitionNavigator.Scenes />`: every scene as its own layer, each with its own gestures and interpolator.
+
+To present scenes differently, put your own shell around `TransitionNavigator.Scenes`, or draw something else entirely:
+
+```tsx
+<TransitionNavigator value={navigator}>
+  <MyTabBar navigator={navigator} />
+  <View style={styles.panel}>
+    <TransitionNavigator.Scenes />
+  </View>
+</TransitionNavigator>
+```
+
+## One shared shell
+
+Some navigators draw one shared surface instead of a layer per screen: a dock that resizes between screens, a card deck, a split view. The shell follows the screens through `useScreenAnimation`. Give each screen a `transitionKey` (the route key works), then read the focused screen's frame: its `previous` and `next` neighbours, their routes and their live progress are all in it.
+
+A floating panel whose height follows the screens moving through it:
+
+```tsx
+const HEIGHTS = { Small: 240, Medium: 380, Tall: 560 };
+
+function PanelNavigator(props) {
+  const { state, navigation, descriptors, NavigationContent } = useNavigationBuilder(StackRouter, props);
+  const navigator = useTransitionNavigator({ state, navigation, descriptors });
+  const focused = useScreenAnimation(navigator.focused?.route.key ?? "");
+
+  const panel = useAnimatedStyle(() => {
+    const frame = focused.get();
+    if (!frame) return {};
+    const { previous, current, next } = frame;
+    // A screen over this one is opening or closing: grow toward it, shrink back from it.
+    if (next) return { height: interpolate(next.progress, [0, 1], [HEIGHTS[current.route.name], HEIGHTS[next.route.name]]) };
+    // This screen is opening over (or closing back to) the one below it.
+    if (previous) return { height: interpolate(current.progress, [0, 1], [HEIGHTS[previous.route.name], HEIGHTS[current.route.name]]) };
+    return { height: HEIGHTS[current.route.name] };
+  });
+
+  return (
+    <NavigationContent>
+      <TransitionNavigator value={navigator}>
+        <Animated.View style={[styles.panel, panel]}>
+          <TransitionNavigator.Scenes />
+        </Animated.View>
+      </TransitionNavigator>
+    </NavigationContent>
+  );
+}
+
+// screenOptions={({ route }) => ({ transitionKey: route.key, ... })}
+```
+
+## Migrating from the 4.1 providers
+
+Version 4.1 exported `BuilderProvider`, `MotionProvider`, `OrchestratorProvider`, `useMotionStore`, `BlankStackProvider`, `BlankStackView` and `useBlankStackStore` as experimental building blocks. They are now internal.
+
+| 4.1 | Now |
+| --- | --- |
+| `<BlankStackProvider state navigation descriptors>` | `const navigator = useTransitionNavigator({ state, navigation, descriptors })` and `<TransitionNavigator value={navigator}>` |
+| `<BlankStackView />` | `<TransitionNavigator.Scenes />` |
+| `useBlankStackStore((s) => s.scenes)` | `navigator.scenes`, `navigator.focused` |
+| `BuilderProvider` + `MotionProvider` + `OrchestratorProvider` for a component with no route | `useMotion` and `Transition.Motion` (see [Motion Without a Navigator](/motion)) |

@@ -65,7 +65,7 @@ The composition follows the same order used internally:
 
 Builder receives screen identity, descriptors, and options. Motion owns gesture and animation state, readiness, and visibility. Orchestrator coordinates interpolation and the named styles and props consumed by transition components.
 
-These are composition primitives. The host still supplies screen relationships and handles navigation and transition lifecycle requests. Existing Blank Stack and native-stack adapter users do not need to assemble these providers themselves. See [Providers](/api/providers) for the responsibilities, exported props, and current host limitations.
+These are composition primitives. The host still supplies screen relationships and handles navigation and transition lifecycle requests. Existing Blank Stack and native-stack adapter users do not need to assemble these providers themselves. These providers are internal since 4.2: see [Custom Navigators](/custom-navigators) for the navigator kit that replaces them.
 
 ## Observe a named transition
 

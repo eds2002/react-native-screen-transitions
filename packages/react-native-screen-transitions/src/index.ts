@@ -46,17 +46,6 @@ export type { MotionViewProps } from "./motion/motion";
 export type { PresenceProps } from "./motion/presence";
 export type { Motion, MotionOptions, MotionStatus } from "./motion/types";
 export { useMotion } from "./motion/use-motion";
-export { BlankStackView } from "./navigators/blank-stack/components/stack-view";
-export {
-	BlankStackProvider,
-	type BlankStackProviderProps,
-	type BlankStackStoreValue,
-	useBlankStackStore,
-} from "./navigators/blank-stack/state/blank-stack.provider";
-export {
-	BuilderProvider,
-	type BuilderProviderProps,
-} from "./providers/builder";
 export {
 	type ScreenAnimationTarget,
 	useScreenAnimation,
@@ -65,15 +54,6 @@ export {
 	type ScreenGestureTarget,
 	useScreenGesture,
 } from "./providers/motion/gestures/ownership/hooks/use-screen-gesture";
-export {
-	MotionProvider,
-	type MotionProviderProps,
-	useMotionStore,
-} from "./providers/motion/motion.provider";
-export {
-	OrchestratorProvider,
-	type OrchestratorProviderProps,
-} from "./providers/orchestrator/orchestrator.provider";
 export type {
 	AnimatedViewStyle,
 	AnimationConfig,

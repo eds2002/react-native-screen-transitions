@@ -1,4 +1,4 @@
-import { useScreenLifecycle } from "../../../navigators/blank-stack/components/lifecycle/use-screen-lifecycle";
+import { useScreenLifecycle } from "../../../navigators/kit/components/lifecycle/use-screen-lifecycle";
 import { useBuilderStore } from "../../../providers/builder";
 import { useNativeCloseTransitionIntent } from "./use-native-close-transition-intent";
 

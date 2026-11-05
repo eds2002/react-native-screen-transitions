@@ -3,14 +3,12 @@ import useStableCallback from "../../../../../hooks/use-stable-callback";
 import type { BaseDescriptor } from "../../../../../providers/builder";
 import { resetStoresForScreen } from "../../../../../providers/motion/lifecycle/reset-stores-for-screen";
 import { useNavigationHelpers } from "../../../hooks/use-navigation-helpers";
-import { useBlankStackStore } from "../../../state/blank-stack.provider";
+import { useNavigatorStore } from "../../../state/navigator-store";
 
 export function useCloseTransitionIntent(current: BaseDescriptor) {
-	const handleCloseRoute = useBlankStackStore(
-		(store) => store.handleCloseRoute,
-	);
+	const handleCloseRoute = useNavigatorStore((store) => store.handleCloseRoute);
 
-	const closing = useBlankStackStore(
+	const closing = useNavigatorStore(
 		(store) => store.scenesByKey[current.route.key]?.activity === "closing",
 	);
 

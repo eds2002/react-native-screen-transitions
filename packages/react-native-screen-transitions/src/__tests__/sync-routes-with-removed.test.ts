@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { syncRoutesWithRemoved } from "../navigators/blank-stack/state/helpers/navigation/sync-routes-with-removed";
+import { syncRoutesWithRemoved } from "../navigators/kit/state/helpers/navigation/sync-routes-with-removed";
 
 const createRoute = (key: string) => ({ key });
 

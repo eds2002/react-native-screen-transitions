@@ -62,8 +62,8 @@ await mockModule("../../providers/motion", () => ({
 	},
 }));
 
-await mockModule("../../navigators/blank-stack/state/blank-stack.provider", () => ({
-	useBlankStackStore: () => stackState,
+await mockModule("../../navigators/kit/state/navigator-store", () => ({
+	useNavigatorStore: () => stackState,
 }));
 
 await mockModule(

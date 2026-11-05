@@ -11,7 +11,7 @@ import { useSharedValueState } from "../../../../hooks/reanimated/use-shared-val
 import { useOptionalMotionStore } from "../../../../providers/motion";
 import type { InactiveBehavior } from "../../../../types/screen.types";
 import type { StackSceneActivity } from "../../../../types/stack.types";
-import { useBlankStackStore } from "../../state/blank-stack.provider";
+import { useNavigatorStore } from "../../state/navigator-store";
 
 const DEFAULT_INACTIVE_BEHAVIOR: InactiveBehavior = IS_WEB ? "unmount" : "hide";
 
@@ -32,8 +32,8 @@ export const ActivityScreen = memo(function ActivityScreen({
 	children,
 	routeKey,
 }: ActivityScreenProps) {
-	const scene = useBlankStackStore((store) => store.scenesByKey[routeKey]);
-	const paintDriverRouteKey = useBlankStackStore((store) =>
+	const scene = useNavigatorStore((store) => store.scenesByKey[routeKey]);
+	const paintDriverRouteKey = useNavigatorStore((store) =>
 		store.paintDriverRouteKeyByRouteKey.get(routeKey),
 	);
 

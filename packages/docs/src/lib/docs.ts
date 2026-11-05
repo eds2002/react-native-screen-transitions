@@ -53,6 +53,7 @@ const groupOrder = [
 	"Adapters",
 	"Core Concepts",
 	"Navigation Transitions",
+	"Beyond Navigation",
 	"Components",
 	"API",
 	"Advanced",

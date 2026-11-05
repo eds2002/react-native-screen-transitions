@@ -5,7 +5,7 @@ import Animated, {
 	useDerivedValue,
 } from "react-native-reanimated";
 import { snapDescriptorToIndex } from "../../../controls/snap-to";
-import { useBlankStackStore } from "../../../navigators/blank-stack/state/blank-stack.provider";
+import { useNavigatorStore } from "../../../navigators/kit/state/navigator-store";
 import { useOptionalMotionStore } from "../../../providers/motion";
 import { useOptionalOrchestratorStore } from "../../../providers/orchestrator";
 import {
@@ -96,7 +96,7 @@ function ReadyOverlayHost({
 	driverIsScreenReady,
 	OverlayComponent,
 }: ReadyOverlayHostProps) {
-	const { scenes, focusedIndex, routeKeys, routes } = useBlankStackStore();
+	const { scenes, focusedIndex, routeKeys, routes } = useNavigatorStore();
 	const focusedScene = scenes[focusedIndex] ?? scenes[scenes.length - 1];
 	const focusedDescriptor = focusedScene?.descriptor;
 	const ancestorIsScreenReady = useOptionalMotionStore(

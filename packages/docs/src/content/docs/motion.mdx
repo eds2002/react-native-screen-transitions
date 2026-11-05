@@ -1,0 +1,147 @@
+---
+title: "Motion Without a Navigator"
+pageTitle: "Motion Without a Navigator"
+summary: "Use the transition engine in any component: sheets, pagers, lightboxes, stories."
+description: "useMotion, Transition.Motion and Transition.Presence run the same springs, gestures, snap points and interpolators as a screen, with no routes and no navigation object."
+eyebrow: "Beyond Navigation"
+group: "Beyond Navigation"
+order: 1
+to: /motion
+---
+
+Everything a screen does in Blank Stack (springs, gestures, snap points, interpolators, slots, bounds) also works in a plain component. You own the state; the engine animates it.
+
+There are three pieces:
+
+| Piece | What it is |
+| --- | --- |
+| `useMotion(options)` | Creates a **motion unit**: progress, gestures and snap points, the same engine a screen uses. |
+| `<Transition.Motion value={motion}>` | Draws the unit with the standard layers (backdrop, surface, content). |
+| `<Transition.Presence open>` | A unit that mounts when `open` becomes true and unmounts only after its close animation finishes. |
+
+## useMotion
+
+```tsx
+import Transition, { useMotion } from "react-native-screen-transitions";
+
+function Screen() {
+  const sheet = useMotion({
+    snapPoints: [0.4, 0.9],
+    gestureEnabled: true,
+    gestureDirection: "vertical",
+    backdropBehavior: "dismiss",
+    screenStyleInterpolator: ({ progress, layouts: { screen } }) => {
+      "worklet";
+      return {
+        content: { style: { transform: [{ translateY: (1 - progress) * screen.height }] } },
+        backdrop: { style: { backgroundColor: "black", opacity: progress * 0.5 } },
+      };
+    },
+  });
+
+  return (
+    <>
+      <Button title="Open" onPress={sheet.open} />
+      <Transition.Motion value={sheet}>
+        <SheetContent />
+      </Transition.Motion>
+    </>
+  );
+}
+```
+
+It takes the same options as a screen (`screenStyleInterpolator`, `transitionSpec`, `gestureEnabled`, `gestureDirection`, `snapPoints`, `sheetSnapBehavior`, `backdropBehavior`, `transitionKey`…), plus:
+
+| Option | Meaning |
+| --- | --- |
+| `initial` | `"closed"` (default): starts hidden and lets touches through until opened. `"open"`: starts open at its first snap point, without animating. |
+| `onRequestClose` | A drag or a backdrop press dismissed it. |
+| `onOpen`, `onClose` | The open or close animation finished. |
+| `previous` | Another unit this one opens over. See [Opening over another unit](#opening-over-another-unit). |
+
+It returns:
+
+| Field | Meaning |
+| --- | --- |
+| `open()`, `close()`, `snapTo(index)` | Control the unit from anywhere. |
+| `progress` | Shared value: live progress, following the finger. A sheet open at its 0.4 detent has progress 0.4. |
+| `openness` | Shared value: 0 to 1, where 1 means open at any snap point. |
+| `status` | Shared value: `"closed"`, `"opening"`, `"open"` or `"closing"`. |
+
+Inside `Transition.Motion`, everything that works in a screen works the same way: `useScreenAnimation()`, `Transition.View` style slots, `Transition.Boundary`, and named lookups with `useScreenAnimation("key")` from anywhere else in the app.
+
+## Transition.Presence
+
+Most of the time you want "show this while a flag is true":
+
+```tsx
+const [open, setOpen] = useState(false);
+
+<Transition.Presence
+  open={open}
+  onRequestClose={() => setOpen(false)}
+  options={{ snapPoints: ["auto"], gestureEnabled: true, gestureDirection: "vertical" }}
+>
+  <ShareSheet onDone={() => setOpen(false)} />
+</Transition.Presence>
+```
+
+A unit animates in when it mounts, but React removes a component the moment you stop rendering it, so nothing can animate it out. Presence stays mounted itself and decides when its children leave: it plays the close animation first, then unmounts them. It's the same idea as Framer Motion's `AnimatePresence`.
+
+## Pagers and carousels
+
+Snap points don't have to be sheet detents. One snap point per page gives you a pager:
+
+```tsx
+const PAGES = 4;
+const pager = useMotion({
+  initial: "open",
+  snapPoints: Array.from({ length: PAGES }, (_, i) => (i + 1) / PAGES),
+  gestureDirection: "horizontal",
+  gestureEnabled: false,      // pages turn, but the pager never dismisses
+  sheetSnapBehavior: "step",  // one page per swipe
+  screenStyleInterpolator: ({ progress, layouts: { screen } }) => {
+    "worklet";
+    const page = progress * PAGES - 1;
+    return { content: { style: { transform: [{ translateX: -page * screen.width }] } } };
+  },
+});
+
+pager.snapTo(2); // jump to the third page
+```
+
+## Opening over another unit
+
+In a stack, the screen below a pushed screen animates as covered, and `Boundary` pairs elements between the two. Pass `previous` to get the same relationship without a stack. This is how a lightbox zooms a thumbnail into a full-screen photo:
+
+```tsx
+const grid = useMotion({ initial: "open", gestureEnabled: false });
+
+<Transition.Motion value={grid}>
+  <Transition.Boundary id={photo.id} group="photos" onPress={() => open(photo.id)}>
+    <Thumbnail />
+  </Transition.Boundary>
+</Transition.Motion>
+
+<Transition.Presence
+  open={openId !== null}
+  onRequestClose={close}
+  options={{
+    previous: grid,
+    gestureEnabled: true,
+    gestureDirection: ["bidirectional", "pinch-in"],
+    transitionSpec: Transition.Specs.Zoom,
+    screenStyleInterpolator: ({ bounds }) => {
+      "worklet";
+      // `selected` is a shared value holding the open photo's id.
+      return bounds({ id: selected.get(), group: "photos" }).navigation.zoom();
+    },
+  }}
+>
+  <Transition.Boundary id={openId} group="photos"><Photo /></Transition.Boundary>
+</Transition.Presence>
+```
+
+## When to use a navigator instead
+
+Use a unit when the thing you're animating isn't a route: it has no URL, no back history, and nothing else navigates to it. If it is a route, build a navigator: see [Custom Navigators](/custom-navigators).
