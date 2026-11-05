@@ -17,6 +17,7 @@ what it covers and a numbered Argent loop script.
 | `slots` | styleId slots and style reset, content/surface/backdrop components |
 | `overlay` | overlay persisting across pushes, focused route, overlayShown |
 | `bounds` | zoom (swipe/pinch), zoom to a bound, styles() morph, reveal(), group retarget |
+| `scrollbounds` | shared bounds + scroll: zoom / zoom-to-bound / keepFocusedVisible from a scrolled list into a scrolling detail; debug view (slow, no fade); the list moving or scrolling under the close |
 | `native-stack` | withScreenTransitions on native-stack: slide and zoom, mixed with plain native screens |
 | `motion` | standalone units, no navigator: useMotion pager (snap points as pages), useMotion sheet (open/close/snapTo, drag and backdrop dismiss), Transition.Presence with an `"auto"` snap point |
 

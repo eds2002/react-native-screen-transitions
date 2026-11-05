@@ -58,9 +58,13 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 		id: "zoom-stale-source-after-list-moved",
 		summary:
 			"Shared bounds + scroll: zoom() closes onto the source card's rect from when it opened. If the list " +
-			"under the zoomed screen moved meanwhile (scrolled, rows inserted, offset restored), the screen lands " +
-			"where the card used to be. (zoom({ target: 'bound' }) re-measures the source and lands correctly.)",
-		matches: (scenario, v) => scenario === "scroll-bounds-zoom / zoom-spec / list-moved-while-covered-then-close" && v.rule === "trajectory",
+			"under the zoomed screen moved meanwhile (scrolled, rows inserted, offset restored), or scrolls while " +
+			"it closes, the screen lands where the card used to be. zoom() already corrects for the source " +
+			"list's scroll, but only with keepFocusedVisible (the correction's weight is 0 otherwise); with it " +
+			"both cases land. Confirmed on a device (harness lab scrollbounds).",
+		matches: (scenario, v) =>
+			["scroll-bounds-zoom / zoom-spec / list-moved-while-covered-then-close", "scroll-bounds-zoom / zoom-spec / list-scrolls-during-close"].includes(scenario) &&
+			v.rule === "trajectory",
 	},
 	{
 		id: "zoom-to-bound-scrolled-destination-jump",
@@ -80,11 +84,26 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			scenario === "scroll-bounds-zoom-to-bound / zoom-spec / scroll-destination-then-swipe-back" && v.rule === "trajectory",
 	},
 	{
+		id: "zoom-to-bound-no-live-source-scroll",
+		summary:
+			"Shared bounds + scroll: zoom({ target: 'bound' }) measures the source once when the close starts, so a " +
+			"list that scrolls during the close leaves it landing where the card was at that moment.",
+		matches: (scenario, v) => scenario === "scroll-bounds-zoom-to-bound / zoom-spec / list-scrolls-during-close" && v.rule === "trajectory",
+	},
+	{
+		id: "zoom-visible-hard-cut-unverified",
+		summary:
+			"zoom({ keepFocusedVisible: true }) without a handoff: the landed screen is removed at full opacity in one " +
+			"frame. Invisible only if the source card shows in that same frame. Unverified: confirm on a device " +
+			"(scrollbounds lab, mode visible).",
+		matches: (scenario, v) => scenario.startsWith("scroll-bounds-zoom-visible") && v.rule === "vanish",
+	},
+	{
 		id: "zoom-to-bound-bound-scrolled-away",
 		summary:
 			"Shared bounds + scroll: with the destination boundary scrolled fully out of view, closing a " +
-			"zoom({ target: 'bound' }) collapses the screen into a zero-height sliver at the bottom. No rule for it yet; " +
-			"the scenario expects the plain-zoom fallback (the screen shrinks into the card).",
+			"zoom({ target: 'bound' }) collapses the screen into a zero-height sliver at the bottom. HARNESS SUSPECT: " +
+			"on a device it shrinks and fades toward the card (scrollbounds lab); find why the harness differs.",
 		matches: (scenario, v) =>
 			scenario === "scroll-bounds-zoom-to-bound / zoom-spec / destination-bound-scrolled-away-then-close" && v.rule === "trajectory",
 	},

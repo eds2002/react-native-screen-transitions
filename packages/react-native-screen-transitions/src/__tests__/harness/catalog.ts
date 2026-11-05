@@ -1141,6 +1141,12 @@ export const buildScrollBoundsCatalog = (window: { width: number; height: number
 	const destinations: Record<string, { screen: ScreenSpec; moving: { scene: string; element?: string }; opened: typeof full }> = {
 		// zoom: the whole screen grows from the card and shrinks back into it.
 		zoom: { screen: { name: "Z", options: zoom(), scroll: { contentSize: H * 3 } }, moving: { scene: "Z" }, opened: full },
+		// keepFocusedVisible: no landing fade, and zoom follows the source list's scroll while it lands.
+		"zoom-visible": {
+			screen: { name: "Z", options: zoom({ keepFocusedVisible: true }), scroll: { contentSize: H * 3 } },
+			moving: { scene: "Z" },
+			opened: full,
+		},
 		// target "bound": the destination's boundary, inside its scroll view, is what lands on the card.
 		"zoom-to-bound": {
 			screen: { name: "Z", options: zoom({ target: "bound" }), scroll: { contentSize: H * 3, bounds: [{ id: "card", rect: detailContent }] } },
@@ -1182,6 +1188,18 @@ export const buildScrollBoundsCatalog = (window: { width: number; height: number
 			{ op: "settle" },
 			{ op: "scrollTo", screen: "A", offset: listScroll + H * 0.3 },
 			{ op: "pop" },
+			closesOnto(cardAt(listScroll + H * 0.3)),
+		]);
+		// The list scrolls while the detail is closing back into it (a flick right after Back): the close
+		// follows the card to where it is now.
+		add("list-scrolls-during-close", [
+			scrollList(),
+			tapCard(),
+			{ op: "settle" },
+			{ op: "pop" },
+			{ op: "frames", count: 6 },
+			// A flick: 0.3 H over ten frames.
+			...Array.from({ length: 10 }, (_, i): Step => ({ op: "scrollTo", screen: "A", offset: listScroll + H * 0.03 * (i + 1) })),
 			closesOnto(cardAt(listScroll + H * 0.3)),
 		]);
 		// The card is partly scrolled off the top when tapped: open from its true rect, close back to it.
