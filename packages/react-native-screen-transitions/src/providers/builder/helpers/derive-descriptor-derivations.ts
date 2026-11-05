@@ -17,12 +17,15 @@ interface Params {
 	previous?: BaseStackDescriptor;
 	current: BaseStackDescriptor;
 	next?: BaseStackDescriptor;
+	/** The host's first route. Without a host, no screen is first. */
+	firstRouteKey?: string;
 }
 
 export function deriveDescriptorDerivations({
 	previous,
 	current,
 	next,
+	firstRouteKey,
 }: Params): DescriptorDerivations {
 	const previousScreenKey = previous?.route.key;
 	const currentScreenKey = current.route.key;
@@ -34,10 +37,8 @@ export function deriveDescriptorDerivations({
 		? createScreenPairKey(previousScreenKey, currentScreenKey)
 		: undefined;
 
-	const navigationState = current.navigation.getState();
-	const routes = navigationState?.routes ?? [];
 	const isFirstKey =
-		routes.findIndex((route) => route.key === current.route.key) === 0;
+		firstRouteKey !== undefined && current.route.key === firstRouteKey;
 	const isTopMostScreen = !next;
 	const hasConfiguredInterpolator =
 		!!current.options.screenStyleInterpolator ||

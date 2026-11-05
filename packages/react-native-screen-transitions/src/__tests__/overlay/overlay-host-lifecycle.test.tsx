@@ -63,8 +63,6 @@ await mockModule("../../providers/motion", () => ({
 }));
 
 await mockModule("../../navigators/blank-stack/state/blank-stack.provider", () => ({
-	useOptionalBlankStackStore: (selector: (store: null) => unknown) =>
-		selector(null),
 	useBlankStackStore: () => stackState,
 }));
 

@@ -20,7 +20,7 @@ await mockModule("../../providers/builder", () => ({
  useOptionalBuilderStore: (_keys: any, select: any) => keys.map((_,i) => select({derivations:{destinationPairKey:i ? `${keys[i-1]}<>${keys[i]}` : undefined}})),
 }));
 await mockModule("../../providers/builder/topology", () => ({useScreenRelationships: () => ({parentScreenKey:null})}));
-await mockModule("../../navigators/blank-stack/state/blank-stack.provider", () => ({useOptionalBlankStackStore: (select:any) => select({scenes})}));
+await mockModule("../../providers/host/screen-host.provider", () => ({useOptionalScreenHostStore: (select:any) => select({scenes})}));
 await mockModule("../../providers/motion", () => ({useMotionStore: (select:any) => select(motion[currentIndex]), useOptionalMotionStore: (_keys:any,select:any) => motion.map(select)}));
 await mockModule("../../providers/orchestrator", () => ({
  useOrchestratorStore: (select:any) => select(orchestrators[0]),

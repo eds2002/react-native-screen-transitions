@@ -7,6 +7,10 @@ import { ScreenLayers } from "../../components/screen-layers";
 import { useNavigationHelpers } from "../../navigators/blank-stack/hooks/use-navigation-helpers";
 import { BlankStackStoreProvider } from "../../navigators/blank-stack/state/blank-stack.provider";
 import { BuilderProvider } from "../../providers/builder";
+import {
+	ScreenHostStoreProvider,
+	type ScreenHostValue,
+} from "../../providers/host/screen-host.provider";
 import { MotionProvider } from "../../providers/motion";
 import { OrchestratorProvider } from "../../providers/orchestrator";
 import type { BaseStackDescriptor, BaseStackRoute } from "../../types";
@@ -170,13 +174,27 @@ function ScreenTransitionsStackContent({
 			shouldShowFloatOverlay: transitionState.shouldShowFloatOverlay,
 		};
 	}, [layoutArgs.state.key, layoutArgs.state.index, transitionState]);
+	const firstRouteKey = layoutArgs.state.routes[0]?.key;
+	const hostValue = useMemo<ScreenHostValue>(
+		() => ({
+			navigatorKey: blankStackValue.navigatorKey,
+			routeKeys: blankStackValue.routeKeys,
+			scenes: blankStackValue.scenes,
+			scenesByKey: blankStackValue.scenesByKey,
+			focusedIndex: blankStackValue.focusedIndex,
+			firstRouteKey,
+		}),
+		[blankStackValue, firstRouteKey],
+	);
 	const children = layout ? layout(layoutArgs) : layoutArgs.children;
 
 	return (
 		<ScreenTransitionsAdapterProvider value={adapterContextValue}>
 			<BlankStackStoreProvider value={blankStackValue}>
-				<Overlay />
-				{children}
+				<ScreenHostStoreProvider value={hostValue}>
+					<Overlay />
+					{children}
+				</ScreenHostStoreProvider>
 			</BlankStackStoreProvider>
 		</ScreenTransitionsAdapterProvider>
 	);

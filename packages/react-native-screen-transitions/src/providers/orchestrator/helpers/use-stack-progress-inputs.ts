@@ -2,7 +2,7 @@ import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Platform } from "react-native";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
-import { useOptionalBlankStackStore } from "../../../navigators/blank-stack/state/blank-stack.provider";
+import { useOptionalScreenHostStore } from "../../host/screen-host.provider";
 import { useMotionStore } from "../../motion";
 import type { StackProgressEntry } from "./stack-progress";
 
@@ -90,7 +90,7 @@ export function useStackProgressInputs(currentRouteKey: string) {
 		[currentRouteKey],
 	);
 
-	const routeKeys = useOptionalBlankStackStore(selectProgressRoutes);
+	const routeKeys = useOptionalScreenHostStore(selectProgressRoutes);
 	const stackProgressValues = useMotionStore(
 		routeKeys,
 		(store) => store.state.visualProgress,

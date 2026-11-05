@@ -34,8 +34,8 @@ await mockModule("../../providers/builder", () => ({
 		selector(descriptorState),
 }));
 
-await mockModule("../../navigators/blank-stack/state/blank-stack.provider", () => ({
-	useBlankStackStore: <T,>(selector: (state: typeof stackState) => T) =>
+await mockModule("../../providers/host/screen-host.provider", () => ({
+	useOptionalScreenHostStore: <T,>(selector: (state: typeof stackState) => T) =>
 		selector(stackState),
 }));
 

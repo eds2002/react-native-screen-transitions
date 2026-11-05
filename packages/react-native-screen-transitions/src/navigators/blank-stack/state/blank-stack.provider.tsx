@@ -1,4 +1,8 @@
 import { type ReactNode, useMemo } from "react";
+import {
+	ScreenHostStoreProvider,
+	type ScreenHostValue,
+} from "../../../providers/host/screen-host.provider";
 import type { BlankStackDescriptor } from "../../../types/blank-stack.types";
 import type {
 	BlankStackProviderProps,
@@ -27,7 +31,6 @@ const {
 	StoreProvider: BlankStackStoreProvider,
 	BlankStackProvider,
 	useBlankStackStore,
-	useOptionalBlankStackStore,
 } = createProvider("BlankStack")<
 	InternalBlankStackProviderProps,
 	BlankStackStoreValue
@@ -61,6 +64,15 @@ const {
 			return paintDrivers;
 		}, [state.routeKeys]);
 
+		const hostValue: ScreenHostValue = {
+			navigatorKey,
+			routeKeys: state.routeKeys,
+			scenes: state.scenes,
+			scenesByKey,
+			focusedIndex,
+			firstRouteKey: stackState.routes[0]?.key,
+		};
+
 		return {
 			value: {
 				navigatorKey,
@@ -75,16 +87,16 @@ const {
 				handleCloseRoute,
 				handleOpenRoute,
 			},
-			children,
+			// The engine reads its screens from the host, never from this store.
+			children: (
+				<ScreenHostStoreProvider value={hostValue}>
+					{children}
+				</ScreenHostStoreProvider>
+			),
 		};
 	},
 	{ getRouteActivity: (store, key) => store.scenesByKey[key]?.activity },
 );
 
 export type { BlankStackProviderProps, BlankStackStoreValue };
-export {
-	BlankStackProvider,
-	BlankStackStoreProvider,
-	useBlankStackStore,
-	useOptionalBlankStackStore,
-};
+export { BlankStackProvider, BlankStackStoreProvider, useBlankStackStore };

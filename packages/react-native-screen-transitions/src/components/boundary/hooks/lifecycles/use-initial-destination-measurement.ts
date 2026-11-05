@@ -7,8 +7,8 @@ import {
 	withTiming,
 } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
-import { useBlankStackStore } from "../../../../navigators/blank-stack/state/blank-stack.provider";
 import { useBuilderStore } from "../../../../providers/builder";
+import { useOptionalScreenHostStore } from "../../../../providers/host/screen-host.provider";
 import { useMotionStore } from "../../../../providers/motion";
 import {
 	createScreenPairKey,
@@ -60,8 +60,8 @@ export const useInitialDestinationMeasurement = ({
 	const preferredSourceScreenKey = destinationPairKey
 		? getSourceScreenKeyFromPairKey(destinationPairKey)
 		: undefined;
-	const stackScenes = useBlankStackStore((store) =>
-		canReceiveDestination ? store.scenes : EMPTY_SCENES,
+	const stackScenes = useOptionalScreenHostStore((store) =>
+		canReceiveDestination ? (store?.scenes ?? EMPTY_SCENES) : EMPTY_SCENES,
 	);
 	// A retained closing screen can still have registered boundaries, but it
 	// cannot own a new transition link.

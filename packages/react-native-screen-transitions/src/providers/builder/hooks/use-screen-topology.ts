@@ -1,5 +1,5 @@
 import { useLayoutEffect } from "react";
-import { useOptionalBlankStackStore } from "../../../navigators/blank-stack/state/blank-stack.provider";
+import { useOptionalScreenHostStore } from "../../host/screen-host.provider";
 import { useOptionalBuilderStore } from "../builder.provider";
 import { screenTopology } from "../topology/helpers/create-screen-topology";
 
@@ -8,15 +8,15 @@ export function useScreenTopology(screenKey: string) {
 		(store) => store?.derivations.currentScreenKey,
 	);
 
-	const transitionKey = useOptionalBlankStackStore(
+	const transitionKey = useOptionalScreenHostStore(
 		(store) => store?.scenesByKey[screenKey]?.descriptor.options.transitionKey,
 	);
 
-	const navigatorKey = useOptionalBlankStackStore((store) =>
+	const navigatorKey = useOptionalScreenHostStore((store) =>
 		store?.scenesByKey[screenKey] ? store.navigatorKey : undefined,
 	);
 
-	const isActiveScreen = useOptionalBlankStackStore((store) => {
+	const isActiveScreen = useOptionalScreenHostStore((store) => {
 		const focusedScene = store?.scenes[store.focusedIndex];
 		return (
 			focusedScene?.route.key === screenKey &&

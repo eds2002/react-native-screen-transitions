@@ -9,8 +9,8 @@ import {
 import type { View } from "react-native";
 import type { AnimatedRef } from "react-native-reanimated";
 import { useAnimatedRef, useSharedValue } from "react-native-reanimated";
-import { useBlankStackStore } from "../../../navigators/blank-stack/state/blank-stack.provider";
 import { useBuilderStore } from "../../../providers/builder";
+import { useOptionalScreenHostStore } from "../../../providers/host/screen-host.provider";
 import { createBoundTag } from "../../../stores/bounds/helpers/link-pairs.helpers";
 import type { BoundTag } from "../../../stores/bounds/types";
 import createProvider from "../../../utils/create-provider";
@@ -101,10 +101,10 @@ export const {
 		const currentScreenKey = useBuilderStore(
 			(s) => s.derivations.currentScreenKey,
 		);
-		const isCurrentScreenClosing = useBlankStackStore(
+		const isCurrentScreenClosing = useOptionalScreenHostStore(
 			(store) =>
 				portalRuntime.handoff &&
-				store.scenesByKey[currentScreenKey]?.activity === "closing",
+				store?.scenesByKey[currentScreenKey]?.activity === "closing",
 		);
 		const retainedBoundTagRef = useRef(requestedBoundTag);
 		const shouldRetainClosingBoundTag =

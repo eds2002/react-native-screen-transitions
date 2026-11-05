@@ -33,8 +33,8 @@ const scenes = Object.fromEntries(
 
 let hasStack = true;
 const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
-await mockModule("../../navigators/blank-stack/state/blank-stack.provider", () => ({
-	useOptionalBlankStackStore: (selector: (store: any) => unknown) =>
+await mockModule("../../providers/host/screen-host.provider", () => ({
+	useOptionalScreenHostStore: (selector: (store: any) => unknown) =>
 		selector(
 			hasStack
 				? {
@@ -42,6 +42,8 @@ await mockModule("../../navigators/blank-stack/state/blank-stack.provider", () =
 						scenesByKey: scenes,
 						scenes: Object.values(scenes),
 						focusedIndex: 1,
+						// The screen these tests measure on its own is its navigator's first route.
+						firstRouteKey: "builder-child",
 					}
 				: null,
 		),
@@ -173,7 +175,7 @@ describe("Builder and Motion composition", () => {
 		}
 	});
 
-	it("skips topology registration without Blank Stack while keeping Builder state available", () => {
+	it("skips topology registration without a screen host while keeping Builder state available", () => {
 		hasStack = false;
 		act(() => {
 			renderer = create(

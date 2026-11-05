@@ -2,9 +2,9 @@ import type { ReactNode } from "react";
 import { useMemo } from "react";
 import type { BaseStackDescriptor } from "../../types/stack.types";
 import createProvider from "../../utils/create-provider";
+import { useOptionalScreenHostStore } from "../host/screen-host.provider";
 import type { DescriptorDerivations } from "./helpers/derive-descriptor-derivations";
 import { deriveDescriptorDerivations } from "./helpers/derive-descriptor-derivations";
-
 import { useScreenTopology } from "./hooks/use-screen-topology";
 
 export type BaseDescriptor = BaseStackDescriptor;
@@ -63,13 +63,18 @@ const {
 			closingNextDescriptor,
 		]);
 
+		const firstRouteKey = useOptionalScreenHostStore(
+			(store) => store?.firstRouteKey,
+		);
+
 		const derivations = useMemo(() => {
 			return deriveDescriptorDerivations({
 				previous: previousDescriptor,
 				current: currentDescriptor,
 				next: nextDescriptor,
+				firstRouteKey,
 			});
-		}, [previousDescriptor, currentDescriptor, nextDescriptor]);
+		}, [previousDescriptor, currentDescriptor, nextDescriptor, firstRouteKey]);
 
 		useScreenTopology(routeKey);
 

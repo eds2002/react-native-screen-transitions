@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import { useDerivedValue, useSharedValue } from "react-native-reanimated";
 import { NO_PROPS, NO_STYLES } from "../../../constants";
-import { useOptionalBlankStackStore } from "../../../navigators/blank-stack/state/blank-stack.provider";
 import { useBuilderStore } from "../../../providers/builder";
 import { useScreenRelationships } from "../../../providers/builder/topology";
+import { useOptionalScreenHostStore } from "../../../providers/host/screen-host.provider";
 import {
 	useOptionalOrchestratorStore,
 	useOrchestratorStore,
@@ -27,7 +27,7 @@ import {
 // their live UI values decide ownership, including retained closing screens.
 export function useBoundaryPresentation(boundaryId: string, enabled = true) {
 	const screenKey = useBuilderStore((s) => s.derivations.currentScreenKey);
-	const scenes = useOptionalBlankStackStore((s) => s?.scenes);
+	const scenes = useOptionalScreenHostStore((s) => s?.scenes);
 	const keys = useMemo(
 		() => (enabled ? (scenes?.map((s) => s.route.key) ?? [screenKey]) : []),
 		[scenes, screenKey, enabled],
