@@ -106,3 +106,33 @@ export function LabContainer({ children, overlay }: { children: ReactNode; overl
 }
 
 export type Lab = { id: string; title: string; covers: string; Component: () => ReactNode };
+
+/**
+ * A fixed row of buttons over everything, for e2e spam: timed tap gestures need targets that never
+ * move. Each press is counted (bridge.count) so a scenario checks against the presses that arrived.
+ * Sits at y ≈ 0.135 of the screen; button i of n is centred at x = (i + 0.5) / n.
+ */
+export function SpamBar({ buttons }: { buttons: { id: string; label: string; onPress: () => void }[] }) {
+	return (
+		<View pointerEvents="box-none" style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, zIndex: 100 }}>
+			<View style={{ position: "absolute", left: 0, right: 0, top: "12%", height: "3%", flexDirection: "row" }}>
+				{buttons.map((b) => (
+					<Pressable
+						key={b.id}
+						testID={b.id}
+						accessibilityLabel={b.id}
+						onPress={() => {
+							bridge.count(b.id);
+							b.onPress();
+						}}
+						style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+					>
+						<Text style={{ color: "white", fontSize: 12, fontWeight: "700", backgroundColor: "#000a", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, overflow: "hidden" }}>{b.label}</Text>
+					</Pressable>
+				))}
+			</View>
+		</View>
+	);
+}
+
+export { bridge, ScreenReporter };

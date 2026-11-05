@@ -18,6 +18,7 @@ what it covers and a numbered Argent loop script.
 | `overlay` | overlay persisting across pushes, focused route, overlayShown |
 | `bounds` | zoom (swipe/pinch), zoom to a bound, styles() morph, reveal(), group retarget |
 | `native-stack` | withScreenTransitions on native-stack: slide and zoom, mixed with plain native screens |
+| `motion` | standalone units, no navigator: useMotion pager (snap points as pages), useMotion sheet (open/close/snapTo, drag and backdrop dismiss), Transition.Presence with an `"auto"` snap point |
 
 Conventions: page `<lab>-<screen>`, buttons `<lab>-<action>`, probes `<lab>-<name>`
 showing `name:value`. Deep link: `harness://lab/<id>`.

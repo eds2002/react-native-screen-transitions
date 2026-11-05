@@ -55,6 +55,25 @@ export function waitSettled(path = "", timeoutMs = 15000) {
 
 export function startRecording() {
 	const id = device();
+	// A test that failed before its check never stopped its recorder, and a device takes one recording
+	// at a time: stop the leftover one, or every later test records nothing.
+	// Match by device, not by a saved pid: a later test may have overwritten the pid file.
+	try {
+		if (isAndroid(id)) sh("adb", ["-s", id, "shell", "pkill", "-INT", "screenrecord"]);
+		else {
+			sh("pkill", ["-INT", "-f", `simctl io ${id} recordVideo`]);
+			for (let i = 0; i < 50; i++) {
+				try {
+					sh("pgrep", ["-f", `simctl io ${id} recordVideo`]);
+				} catch {
+					break; // none left
+				}
+				execFileSync("sleep", ["0.1"]);
+			}
+		}
+	} catch {
+		// No leftover recording.
+	}
 	fs.rmSync(CURRENT, { recursive: true, force: true });
 	fs.mkdirSync(CURRENT, { recursive: true });
 	const info = { device: id, android: isAndroid(id), before: state(id) };
@@ -78,7 +97,7 @@ export function startRecording() {
 
 /**
  * Stops the recording, runs the analyzer and the test's own check, and keeps everything under
- * results/argent/<name>. Throws (failing the step) on a blank or flicker, or when check() returns
+ * results/argent/<name>. Throws (failing the step) on a blank, flicker, jump or pop-in, or when check() returns
  * a message. check(before, after) gets the bridge state at the start of the recording and now.
  */
 export function finish(name, { analyze = [], check, flaky = false } = {}) {
@@ -108,6 +127,8 @@ export function finish(name, { analyze = [], check, flaky = false } = {}) {
 	const problems = [];
 	if (events.blank) problems.push(`${events.blank} blank`);
 	if (events.flicker) problems.push(`${events.flicker} flicker`);
+	if (events.jump) problems.push(`${events.jump} jump`);
+	if (events["pop-in"]) problems.push(`${events["pop-in"]} pop-in`);
 	const message = check?.(info.before, after);
 	if (message) problems.push(message);
 	const line = `${name}: ${Object.entries(events).map(([k, v]) => `${k} ${v}`).join(", ")} (${out})`;

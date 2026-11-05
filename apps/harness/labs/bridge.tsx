@@ -14,6 +14,7 @@
  *   d: the screen's pan/pinch gesture is dragging; counts["drag:<name>"] counts drags that started
  *   depth: routes in the innermost focused navigator
  *   counts: named events labs report with bridge.count() (button presses), reset when a lab opens
+ *   notes: named values labs report with bridge.note() (what the last press asked for), reset likewise
  *
  * Screens report through `ScreenReporter`, which `Page` renders.
  */
@@ -60,6 +61,7 @@ const state = {
 	errors: [] as Array<{ t: number; message: string }>,
 	frames: [] as Frame[],
 	counts: {} as Record<string, number>,
+	notes: {} as Record<string, string>,
 	version: 0,
 };
 const listeners = new Set<() => void>();
@@ -90,7 +92,8 @@ const focusedDepth = (nav) => {
 	return depth;
 };
 
-const isSettled = () => [...state.screens.values()].every((s) => !s.animating && !s.closing);
+// A closing screen has settled once its close finished (a standalone unit stays mounted, closed).
+const isSettled = () => [...state.screens.values()].every((s) => !s.animating && (!s.closing || s.progress === 0));
 
 const summary = () => ({
 	lab: state.lab,
@@ -101,6 +104,7 @@ const summary = () => ({
 	errors: state.errors.length,
 	frames: state.frames.length,
 	counts: state.counts,
+	notes: state.notes,
 	latency: { push: median(latency.push), pushMax: latency.push.length ? Math.max(...latency.push) : null, pop: median(latency.pop), popMax: latency.pop.length ? Math.max(...latency.pop) : null, n: latency.push.length + latency.pop.length },
 	perf: { load: perfLoad.value, frames: perf.value.frames, dropped: perf.value.dropped, late: perf.value.late, worst: Math.round(perf.value.worst * 10) / 10, vsync: Math.round(perf.value.vsync * 10) / 10 },
 });
@@ -108,6 +112,7 @@ const summary = () => ({
 export const bridge = {
 	setLab(lab: string | null) {
 		state.counts = {};
+		state.notes = {};
 		resetPerf();
 		// Screens unregister themselves on unmount; mounting effects run before the shell's, so don't clear here.
 		state.lab = lab;
@@ -136,6 +141,11 @@ export const bridge = {
 	},
 	unmount(key: string) {
 		state.screens.delete(key);
+		changed();
+	},
+	/** Records a named value (e.g. the state the last press asked for) for a scenario's end check. */
+	note(name: string, value: string) {
+		state.notes[name] = value;
 		changed();
 	},
 	/** Counts a named event (e.g. a button press) so a scenario can check its input arrived. */

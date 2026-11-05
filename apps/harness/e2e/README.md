@@ -51,7 +51,7 @@ them by the stamp, drops repeated captures, and flags:
 |---|---|---|
 | blank | BLANK pixels: part of the window has no screen over it | yes |
 | flicker | a frame unlike both neighbours while they match each other | yes |
-| jump | a tracked screen edge steps far off its path in one frame | yes |
+| jump | a tracked screen edge takes a step that stands out from the steps on both sides (a leap, or snapping somewhere and carrying on); sharp braking and turning around are not jumps | yes |
 | pop-in | a screen edge first appears well inside the window and keeps moving: a screen became visible part-way through its transition | yes |
 | burst | far more pixels change in one frame than around it | yes |
 | hitch | a jump-sized step across dropped frames (a stutter, not a wrong position) | no |
@@ -89,6 +89,7 @@ Defined in `e2e/argent/build.py` (one function each, one test per parameter):
 | `ownership-spam-<ms>` | ownership lab, L1 (↓) → L2 (→): short drags alternating owners `<ms>` apart, then → dismisses L2 and ↓ dismisses L1 |
 | `heavy-push-<cost>` | heavy lab: push a screen that burns `<cost>` ms on its first render; it must enter from the edge (no `pop-in`, no blank) |
 | `sheet-spring-back\|during-snap-<ms>` | sheet lab: grab during the spring-back, or during a `snapTo` animation |
+| `motion-*` | motion lab (no navigator): open/close spam through the lab's fixed bar (`SpamBar`, y ≈ 0.135), gesture spam, and gestures racing an open; units report to the bridge with `ScreenReporter` and the last press asked for is in `notes` |
 
 Taps inside timed gestures use screen fractions that hold on every device: the stack lab's bar sits
 at a fixed fraction of the screen (push ≈ 0.74, 0.87; pop ≈ 0.26, 0.87).

@@ -5,6 +5,7 @@
 U=$1; FILTER=${2:-}; H=${0:a:h:h:h}
 [[ -z $U ]] && { echo "usage: run.sh <device> [filter]" >&2; exit 2; }
 cd $H || exit 1
+mkdir -p e2e/results/argent
 echo $U > .argent/device
 FAILED=()
 for test in .argent/e2e/*.yaml; do

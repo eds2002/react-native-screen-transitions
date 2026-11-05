@@ -12,9 +12,9 @@ consecutive rendered frames:
            which only shows where no screen covers the window
   flicker  a frame that differs from both neighbours while the neighbours
            match each other: something appeared or vanished for one frame
-  jump     (with --track) a tracked screen edge moves by a step that departs
-           sharply from the steps around it: a screen leaps instead of moving
-           smoothly, or snaps somewhere and carries on from there
+  jump     (with --track) a tracked screen edge moves by a step that stands out
+           from the steps on both sides of it (a screen leaps, or snaps somewhere
+           and carries on from there); sharp braking and turning around are not jumps
   reversal (with --track) what looks like a flicker is a tracked screen changing
            direction (e.g. a pop landing mid-push); reported, not a failure
   hitch    (with --track) a jump-sized step across a gap of dropped frames: a stutter
@@ -169,22 +169,28 @@ def follow_edge(tr, timeline, flags, jump_pt):
         moving = len(after) == 4 and max(after) - min(after) >= 4
         if fresh and moving and margin < pos[n] < length - margin:
             flags.append((n, "pop-in", float(pos[n])))
+    # A jump is a step that stands out from the steps on BOTH sides of it: the screen leaps, then carries
+    # on. A step between its neighbours is the screen speeding up, braking or turning around, however
+    # sharply (a spring retargeted under spam), not a jump.
+    def neighbour(n, d):
+        k = n + d
+        return vel[k] if 0 <= k < len(vel) and vel[k] is not None and segment[k] == segment[n] else None
+
     for n, v in enumerate(vel):
         if v is None:
             continue
-        around = [vel[k] for k in range(max(1, n - 3), min(len(vel), n + 4)) if k != n and vel[k] is not None and segment[k] == segment[n]]
-        if not around:
+        prev, nxt = neighbour(n, -1), neighbour(n, 1)
+        if prev is None or nxt is None:
             continue
-        expected = float(np.median(around))
-        speed = float(np.median([abs(a) for a in around]))
-        tolerance = max(jump_pt, 2.0 * speed)
-        if abs(v - expected) > tolerance:
-            # A stalled frame followed by a catch-up (injected touches arrive unevenly) adds up to normal motion.
-            prev = vel[n - 1]
-            if prev is not None and abs(prev) < abs(expected) / 2 and abs(prev + v - 2 * expected) <= tolerance:
-                continue
+        # Next to a frame that held still, a big step is the catch-up: injected touches arrive unevenly.
+        if min(abs(prev), abs(nxt)) < 1:
+            continue
+        d1, d2 = v - prev, v - nxt
+        # Frames take uneven time, so a normal step can differ from its neighbours by up to their size.
+        tolerance = max(jump_pt, max(abs(prev), abs(nxt)))
+        if d1 * d2 > 0 and min(abs(d1), abs(d2)) > tolerance:
             # Across a frame gap the step is a dropped frame (stutter), not the screen going somewhere wrong.
-            flags.append((n, "hitch" if timeline[n].get("displayFrames", 1) > 1 else "jump", abs(v - expected)))
+            flags.append((n, "hitch" if timeline[n].get("displayFrames", 1) > 1 else "jump", max(abs(d1), abs(d2))))
 
 
 def main():
@@ -271,10 +277,14 @@ def main():
             skip = timeline[n + 1].get("changedSkip", 1)
             if min(a, b) > args.flicker_min and skip < 0.3 * min(a, b):
                 # A tracked edge that steps one way then back is a screen changing direction, not a flicker.
+                # Two frames each side too: a turn with a flat top (the edge rounds to the same point
+                # for a frame or two) is still a turn.
                 turned = any(
-                    None not in (e.get(t), timeline[n - 1].get(t), timeline[n + 1].get(t))
-                    and (e[t] - timeline[n - 1][t]) * (timeline[n + 1][t] - e[t]) < 0
+                    None not in (e.get(t), timeline[n - k].get(t), timeline[n + k].get(t))
+                    and (e[t] - timeline[n - k][t]) * (timeline[n + k][t] - e[t]) < 0
                     for t in args.track
+                    for k in (1, 2)
+                    if n - k >= 0 and n + k < len(timeline)
                 )
                 flags.append((n, "reversal" if turned else "flicker", min(a, b)))
         if "motion" in e:
