@@ -11,7 +11,12 @@ import type {
 	BoundsNavigationZoomOptions,
 	BoundsNavigationZoomStyle,
 	GestureHandoffValues,
+	Motion,
+	MotionOptions,
+	MotionStatus,
+	MotionViewProps,
 	NativeStackAdapterOptions,
+	PresenceProps,
 	RawGestureValues,
 	ScreenAnimationTarget,
 	ScreenGestureTarget,
@@ -34,6 +39,7 @@ import type {
 import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
+	useMotion,
 	useScreenAnimation,
 	useScreenGesture,
 	withScreenTransitions,
@@ -520,3 +526,55 @@ void [
 	incompleteClip,
 	invalidClipInterpolator,
 ];
+
+// A motion unit takes screen options, plus how it mounts and its lifecycle callbacks.
+const sheetOptions: MotionOptions = {
+	snapPoints: [0.5, 1],
+	gestureDirection: "vertical",
+	initial: "closed",
+	onRequestClose: () => {},
+	onOpen: () => {},
+	onClose: () => {},
+};
+const invalidInitial: MotionOptions = {
+	// @ts-expect-error A unit mounts open or closed.
+	initial: "opening",
+};
+function useMotionApiTypes() {
+	const motion: Motion = useMotion(sheetOptions);
+	const progress: SharedValue<number> = motion.progress;
+	const openness: DerivedValue<number> = motion.openness;
+	const status: DerivedValue<MotionStatus> = motion.status;
+	const key: string = motion.key;
+	motion.open();
+	motion.close();
+	motion.snapTo(1);
+	const view: MotionViewProps = { value: motion, children: null };
+	const presence: PresenceProps = {
+		open: true,
+		onRequestClose: () => {},
+		options: { snapPoints: [0.4] },
+		children: null,
+	};
+	const presenceOwnsMount: PresenceProps = {
+		open: true,
+		// @ts-expect-error Presence decides how its unit mounts.
+		options: { initial: "open" },
+		children: null,
+	};
+	type MotionComponent = (typeof Transition)["Motion"];
+	type PresenceComponent = (typeof Transition)["Presence"];
+	return [
+		progress,
+		openness,
+		status,
+		key,
+		view,
+		presence,
+		presenceOwnsMount,
+	] as [unknown, ...unknown[]] & {
+		motion?: MotionComponent;
+		presence?: PresenceComponent;
+	};
+}
+void [invalidInitial, useMotionApiTypes];

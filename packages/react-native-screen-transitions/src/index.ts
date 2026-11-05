@@ -3,12 +3,16 @@ import { withScreenTransitions } from "./adapters/with-screen-transitions";
 import { Boundary, createBoundaryComponent } from "./components/boundary";
 import { createTransitionAwareComponent } from "./components/create-transition-aware-component";
 import { Presets, Specs } from "./configs";
+import { MotionView } from "./motion/motion";
+import { Presence } from "./motion/presence";
 
 export default {
 	createTransitionAwareComponent,
 	createBoundaryComponent,
 	withScreenTransitions,
 	Boundary,
+	Motion: MotionView,
+	Presence,
 	View: createTransitionAwareComponent(View),
 	Pressable: createTransitionAwareComponent(Pressable),
 	ScrollView: createTransitionAwareComponent(ScrollView, {
@@ -38,6 +42,10 @@ export {
 	type ScreenState,
 	useScreenState,
 } from "./hooks/navigation/use-screen-state";
+export type { MotionViewProps } from "./motion/motion";
+export type { PresenceProps } from "./motion/presence";
+export type { Motion, MotionOptions, MotionStatus } from "./motion/types";
+export { useMotion } from "./motion/use-motion";
 export { BlankStackView } from "./navigators/blank-stack/components/stack-view";
 export {
 	BlankStackProvider,

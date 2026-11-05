@@ -8,10 +8,16 @@ import { useScreenGestures } from "./gestures/use-screen-gestures";
 import { useMaybeBlockVisibility } from "./hooks/use-maybe-block-visibility";
 import { useMotionValues } from "./hooks/use-motion-values";
 import { useScreenOptions } from "./options/use-screen-options";
+import type { MotionValues } from "./types";
 
 export type MotionProviderProps = {
 	children: ReactNode;
 	onDismissRequest?: () => void;
+	/**
+	 * @internal Values created outside the provider by `useMotion`, so its handle exposes the
+	 * live values themselves. Must stay the same for the provider's lifetime.
+	 */
+	values?: MotionValues;
 };
 
 export type MotionState = {
@@ -30,14 +36,15 @@ export const {
 } = createProvider("Motion", { global: true })<
 	MotionProviderProps,
 	MotionState
->(({ onDismissRequest, children }) => {
+>(({ onDismissRequest, children, values: externalValues }) => {
 	const screenKey = useBuilderStore(
 		(store) => store.derivations.currentScreenKey,
 	);
 	const ancestorIsScreenReady = useOptionalMotionStore(
 		(store) => store?.isScreenReady ?? null,
 	);
-	const values = useMotionValues();
+	const ownValues = useMotionValues();
+	const values = externalValues ?? ownValues;
 	const options = useScreenOptions();
 
 	const gestures = useScreenGestures(options, values, onDismissRequest);
