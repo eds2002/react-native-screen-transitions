@@ -55,11 +55,37 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 		matches: (scenario, v) => scenario.startsWith("bounds-reveal") && v.rule === "style-range",
 	},
 	{
-		id: "zoom-to-bound-close-unverified",
+		id: "zoom-stale-source-after-list-moved",
 		summary:
-			"zoom({ target: 'bound' }): on close the destination boundary stays at its own rect until the screen is " +
-			"removed instead of shrinking back to the source. Unverified: may be the harness's measure() or inset " +
-			"handling (zoom mixes window and safe-area coordinates); confirm on a device.",
-		matches: (scenario, v) => scenario === "bounds-zoom-to-bound / zoom-spec / open-close" && v.rule === "trajectory",
+			"Shared bounds + scroll: zoom() closes onto the source card's rect from when it opened. If the list " +
+			"under the zoomed screen moved meanwhile (scrolled, rows inserted, offset restored), the screen lands " +
+			"where the card used to be. (zoom({ target: 'bound' }) re-measures the source and lands correctly.)",
+		matches: (scenario, v) => scenario === "scroll-bounds-zoom / zoom-spec / list-moved-while-covered-then-close" && v.rule === "trajectory",
+	},
+	{
+		id: "zoom-to-bound-scrolled-destination-jump",
+		summary:
+			"Shared bounds + scroll: after the destination is scrolled, closing a zoom({ target: 'bound' }) makes the " +
+			"destination boundary jump by the scroll distance in one frame as the close starts (the boundary is " +
+			"placed from its open-time rect, then re-measured where it scrolled to).",
+		matches: (scenario, v) =>
+			scenario.startsWith("scroll-bounds-zoom-to-bound / zoom-spec / scroll-destination-then-") && v.rule === "element-spike",
+	},
+	{
+		id: "zoom-to-bound-scrolled-destination-swipe-landing",
+		summary:
+			"Shared bounds + scroll: swiping back from a scrolled zoom({ target: 'bound' }) destination lands the " +
+			"boundary off the source card (about 48 px off and 30% small). A button pop from the same state lands.",
+		matches: (scenario, v) =>
+			scenario === "scroll-bounds-zoom-to-bound / zoom-spec / scroll-destination-then-swipe-back" && v.rule === "trajectory",
+	},
+	{
+		id: "zoom-to-bound-bound-scrolled-away",
+		summary:
+			"Shared bounds + scroll: with the destination boundary scrolled fully out of view, closing a " +
+			"zoom({ target: 'bound' }) collapses the screen into a zero-height sliver at the bottom. No rule for it yet; " +
+			"the scenario expects the plain-zoom fallback (the screen shrinks into the card).",
+		matches: (scenario, v) =>
+			scenario === "scroll-bounds-zoom-to-bound / zoom-spec / destination-bound-scrolled-away-then-close" && v.rule === "trajectory",
 	},
 ];

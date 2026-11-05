@@ -46,9 +46,9 @@ export const BOUND_MARKER = "harness-bound:";
  * descendants' transforms about that rect's center, and through the layers
  * above it (which fill the window) about the window's center.
  */
-export const elementBox = (node: ReactTestInstance, sim: ReanimatedSim) => {
+export const elementBox = (node: ReactTestInstance, sim: ReanimatedSim, { layoutOnly = false } = {}) => {
 	const path = pathTo(node).filter((n) => typeof n.type === "string");
-	const styles = path.map((n) => flattenStyle(sim.resolveAnimated(n.props.style)));
+	const styles = path.map((n) => flattenStyle(layoutOnly ? staticStyle(n.props.style, sim) : sim.resolveAnimated(n.props.style)));
 	let layoutIndex = -1;
 	for (let i = path.length - 1; i >= 0; i--) {
 		const st = styles[i];
@@ -67,12 +67,13 @@ export const elementBox = (node: ReactTestInstance, sim: ReanimatedSim) => {
 				}
 			: { x: 0, y: 0, ...WINDOW };
 	let matrix = IDENTITY;
-	path.forEach((_, i) => {
+	path.forEach((step, i) => {
 		const { matrix: local } = transformMatrix(styles[i].transform);
 		const own = i >= layoutIndex && layoutIndex >= 0;
 		const cx = own ? rect.x + rect.width / 2 : WINDOW.width / 2;
 		const cy = own ? rect.y + rect.height / 2 : WINDOW.height / 2;
 		matrix = multiply(matrix, multiply(multiply({ ...IDENTITY, tx: cx, ty: cy }, local), { ...IDENTITY, tx: -cx, ty: -cy }));
+		if (i < path.length - 1) matrix = multiply(matrix, contentShift(step));
 	});
 	const corners = [
 		[rect.x, rect.y],
@@ -84,7 +85,32 @@ export const elementBox = (node: ReactTestInstance, sim: ReanimatedSim) => {
 	const ys = corners.map((p) => p[1]);
 	return { x: Math.min(...xs), y: Math.min(...ys), width: Math.max(...xs) - Math.min(...xs), height: Math.max(...ys) - Math.min(...ys) };
 };
+/**
+ * A style without its animated parts. Reanimated applies animated styles to the native view on the
+ * UI thread, outside the layout React Native measures, so measure() reports a view's layout (and its
+ * scroll position) without them.
+ */
+const staticStyle = (style: unknown, sim: ReanimatedSim): unknown => {
+	if (Array.isArray(style)) return style.filter((part) => !sim.isAnimatedHandle(part)).map((part) => staticStyle(part, sim));
+	return sim.isAnimatedHandle(style) ? undefined : style;
+};
+
 export const SCROLL_MARKER = "harness-scroll:";
+
+/**
+ * The current offset of a harness scroll view (by testID), set by the mounted stack. A scroll view
+ * moves its content by minus its offset, so everything inside it is placed accordingly, by the
+ * recorder and by measure() alike (as native measurement reports scrolled content).
+ */
+let scrollOffsetOf: ((testID: string) => number) | null = null;
+
+/** The translation a host node applies to its children: a scroll view moves its content. */
+const contentShift = (node: ReactTestInstance): Affine => {
+	const testID = String(node.props.testID ?? "");
+	if (!scrollOffsetOf || !testID.startsWith(SCROLL_MARKER)) return IDENTITY;
+	const offset = scrollOffsetOf(testID);
+	return node.props.horizontal ? { ...IDENTITY, tx: -offset } : { ...IDENTITY, ty: -offset };
+};
 export const OVERLAY_MARKER = "harness-overlay:";
 
 /** A host node's composed opacity (its own and its ancestors'). */
@@ -225,6 +251,7 @@ export const nodeBox = (node: ReactTestInstance, sim: ReanimatedSim) => {
 		const cx = WINDOW.width / 2;
 		const cy = WINDOW.height / 2;
 		matrix = multiply(matrix, multiply(multiply({ ...IDENTITY, tx: cx, ty: cy }, local), { ...IDENTITY, tx: -cx, ty: -cy }));
+		if (step !== node) matrix = multiply(matrix, contentShift(step));
 	}
 	const corners = [
 		[0, 0],
@@ -247,7 +274,10 @@ const pointerEventsOf = (node: ReactTestInstance, sim: ReanimatedSim) =>
  */
 export const hitTest = (root: ReactTestInstance, point: { x: number; y: number }, sim: ReanimatedSim) => {
 	const inside = (node: ReactTestInstance) => {
-		const box = nodeBox(node, sim);
+		// A view with its own layout rect (a boundary, a list item) is hit only inside that rect.
+		const style = flattenStyle(sim.resolveAnimated(node.props.style));
+		const laidOut = typeof style.width === "number" && typeof style.height === "number" && (typeof style.left === "number" || typeof style.top === "number");
+		const box = laidOut ? elementBox(node, sim) : nodeBox(node, sim);
 		return point.x >= box.x && point.x <= box.x + box.width && point.y >= box.y && point.y <= box.y + box.height;
 	};
 	const visit = (node: ReactTestInstance): ReactTestInstance | null => {
@@ -370,15 +400,20 @@ export const readScenes = (renderer: ReactTestRenderer, sim: ReanimatedSim): Sce
 	return scenes;
 };
 
+export type BoundSpec = { id: string; rect: Rect; pushTo?: string; group?: string };
+
 export type ScreenSpec = {
 	name: string;
 	options?: Record<string, unknown>;
 	/** styleIds rendered as Transition.View elements inside the screen. */
 	elements?: string[];
-	/** A full-screen Transition.ScrollView with this much content (along its axis). */
-	scroll?: { contentSize: number; horizontal?: boolean };
+	/**
+	 * A full-screen Transition.ScrollView with this much content (along its axis). `bounds` sit in its
+	 * content (rects in content coordinates), so they move as it scrolls.
+	 */
+	scroll?: { contentSize: number; horizontal?: boolean; bounds?: BoundSpec[] };
 	/** Transition.Boundary views at these window rects; pressing one pushes `pushTo` (with params { id }). */
-	bounds?: Array<{ id: string; rect: Rect; pushTo?: string; group?: string }>;
+	bounds?: BoundSpec[];
 	/** Makes this screen a nested BlankStack with these screens (the first is its initial route). */
 	stack?: { screens: ScreenSpec[]; screenOptions?: Record<string, unknown> };
 };
@@ -460,6 +495,17 @@ export const mountStack = async (
 	// Each screen is one pressable surface counting its taps, around the marker the recorder reads.
 	const Screen = ({ route, navigation }: { route: { key: string; name: string }; navigation: { setOptions: (o: object) => void } }) => {
 		navigations[route.name] = navigation;
+		const renderBound = (bound: BoundSpec) =>
+			React.createElement(Transition.Boundary as never, {
+				key: `bound-${bound.id}`,
+				id: bound.id,
+				group: bound.group,
+				testID: `${BOUND_MARKER}${route.key}:${bound.id}`,
+				style: { position: "absolute", left: bound.rect.x, top: bound.rect.y, width: bound.rect.width, height: bound.rect.height },
+				onPress: bound.pushTo
+					? () => (navigation as unknown as { push: (n: string, p: object) => void }).push(bound.pushTo as string, { id: bound.id })
+					: undefined,
+			} as never);
 		return React.createElement(
 			"Pressable",
 			{
@@ -473,26 +519,19 @@ export const mountStack = async (
 				{ testID: `${SCREEN_MARKER}${route.key}:${route.name}` },
 				...(specsByName.get(route.name)?.scroll
 					? [
-							React.createElement(Transition.ScrollView as never, {
-								key: "scroll",
-								testID: `${SCROLL_MARKER}${route.key}`,
-								horizontal: specsByName.get(route.name)?.scroll?.horizontal,
-								style: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0 },
-							} as never),
+							React.createElement(
+								Transition.ScrollView as never,
+								{
+									key: "scroll",
+									testID: `${SCROLL_MARKER}${route.key}`,
+									horizontal: specsByName.get(route.name)?.scroll?.horizontal,
+									style: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0 },
+								} as never,
+								...(specsByName.get(route.name)?.scroll?.bounds ?? []).map(renderBound),
+							),
 						]
 					: []),
-				...(specsByName.get(route.name)?.bounds ?? []).map((bound) =>
-					React.createElement(Transition.Boundary as never, {
-						key: `bound-${bound.id}`,
-						id: bound.id,
-						group: bound.group,
-						testID: `${BOUND_MARKER}${route.key}:${bound.id}`,
-						style: { position: "absolute", left: bound.rect.x, top: bound.rect.y, width: bound.rect.width, height: bound.rect.height },
-						onPress: bound.pushTo
-							? () => (navigation as unknown as { push: (n: string, p: object) => void }).push(bound.pushTo as string, { id: bound.id })
-							: undefined,
-					} as never),
-				),
+				...(specsByName.get(route.name)?.bounds ?? []).map(renderBound),
 				...(specsByName.get(route.name)?.elements ?? []).map((styleId) =>
 					React.createElement(Transition.View as never, {
 						key: styleId,
@@ -540,7 +579,7 @@ export const mountStack = async (
 			return null;
 		}
 		if (!node) return null;
-		const box = elementBox(node, sim);
+		const box = elementBox(node, sim, { layoutOnly: true });
 		return { x: box.x, y: box.y, width: box.width, height: box.height, pageX: box.x, pageY: box.y };
 	};
 	await act(async () => {
@@ -596,6 +635,7 @@ export const mountStack = async (
 			);
 		}
 	};
+	scrollOffsetOf = (testID) => scrollOffsets.get(testID) ?? 0;
 	/** Sends a scroll event to a scroll view (by testID) and records its offset. */
 	const scrollTo = (testID: string, offset: number) => {
 		const node = scrollViews().find((n) => n.props.testID === testID);
@@ -679,6 +719,12 @@ export const mountStack = async (
 		tap,
 		taps,
 		scrollOffsets,
+		/** Scrolls the named screen's scroll view (covered or not) to `offset`, before a frame. */
+		scrollScreenTo: async (name: string, offset: number) => {
+			const key = leafRoutes(ref.getRootState() as unknown as NavState).find((r) => r.name === name)?.key;
+			if (!key) throw new Error(`no mounted screen named ${name}`);
+			await frame(undefined, () => scrollTo(`${SCROLL_MARKER}${key}`, offset));
+		},
 		/** Scrolls the focused screen's scroll view to `offset` (on the UI thread, before a frame). */
 		scrollFocusedTo: async (offset: number) => {
 			const key = leafRoutes(ref.getRootState() as unknown as NavState).at(-1)?.key;

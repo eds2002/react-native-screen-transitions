@@ -1110,6 +1110,114 @@ export const buildBoundsCatalog = (interpolate: InterpolateFn, window: { width: 
 	return scenarios;
 };
 
+// ---------------------------------------------------------------------------
+// Shared bounds and scroll views: the source card lives in a scrolled list, the destination in a
+// scroll view of its own. Every close must land on where the source card is *now*.
+
+export const buildScrollBoundsCatalog = (window: { width: number; height: number }, specs: { Zoom?: unknown }): Scenario[] => {
+	const W = window.width;
+	const H = window.height;
+	const zoomSpec = specs.Zoom ?? DEFAULT_SPEC;
+	const full = { x: 0, y: 0, ...window };
+	// The card sits far down a long list; scrolled by `listScroll` it shows at 0.2 H.
+	const cardContent = { x: W * 0.1, y: H * 1.2, width: W * 0.36, height: H * 0.21 };
+	const listScroll = H;
+	const cardAt = (offset: number) => ({ ...cardContent, y: cardContent.y - offset });
+	const centerOf = (r: { x: number; y: number; width: number; height: number }) => ({ x: r.x + r.width / 2, y: r.y + r.height / 2 });
+	const tapCard = (offset = listScroll): Step => ({ op: "tap", at: centerOf(cardAt(offset)) });
+	const scrollList = (offset = listScroll): Step => ({ op: "scrollTo", offset });
+	const list = { name: "A", scroll: { contentSize: H * 3, bounds: [{ id: "card", rect: cardContent, pushTo: "Z" }] } };
+	const zoom = (zoomOptions?: Record<string, unknown>) => ({
+		gestureEnabled: true,
+		gestureDirection: ["bidirectional", "pinch-in"],
+		transitionSpec: { open: zoomSpec, close: zoomSpec },
+		screenStyleInterpolator: ({ bounds }: any) => {
+			"worklet";
+			return bounds("card").navigation.zoom(zoomOptions);
+		},
+	});
+	// The destination's own boundary, at the top of its scroll content.
+	const detailContent = { x: 0, y: 0, width: W, height: H * 0.4 };
+	const destinations: Record<string, { screen: ScreenSpec; moving: { scene: string; element?: string }; opened: typeof full }> = {
+		// zoom: the whole screen grows from the card and shrinks back into it.
+		zoom: { screen: { name: "Z", options: zoom(), scroll: { contentSize: H * 3 } }, moving: { scene: "Z" }, opened: full },
+		// target "bound": the destination's boundary, inside its scroll view, is what lands on the card.
+		"zoom-to-bound": {
+			screen: { name: "Z", options: zoom({ target: "bound" }), scroll: { contentSize: H * 3, bounds: [{ id: "card", rect: detailContent }] } },
+			moving: { scene: "Z", element: "bound:card" },
+			opened: detailContent,
+		},
+	};
+	const scenarios: Scenario[] = [];
+	for (const [kind, { screen, moving, opened }] of Object.entries(destinations)) {
+		const screens = [list, screen];
+		const add = (sequence: string, steps: Step[]) =>
+			scenarios.push({ name: `scroll-bounds-${kind} / zoom-spec / ${sequence}`, screens, steps, expect: { mayOvershoot: true } });
+		const closesOnto = (rect: typeof full): Step => ({ op: "expectTrajectory", ...moving, to: rect, tolerance: 40, throughFade: true });
+
+		// Opening measures the card where it is in the scrolled list, and closing returns there.
+		add("open-close-from-scrolled-list", [
+			scrollList(),
+			tapCard(),
+			{ op: "expectTrajectory", ...moving, from: cardAt(listScroll), to: opened, tolerance: 40 },
+			{ op: "pop" },
+			closesOnto(cardAt(listScroll)),
+		]);
+		// The user scrolls the destination, then goes back: it must still land on the card.
+		add("scroll-destination-then-close", [scrollList(), tapCard(), { op: "settle" }, { op: "scrollTo", offset: H * 0.25 }, { op: "pop" }, closesOnto(cardAt(listScroll))]);
+		// The destination's boundary is scrolled fully out of view. Rule: close as a plain zoom of the
+		// screen into the card; nothing flies in from off screen.
+		add("destination-bound-scrolled-away-then-close", [
+			scrollList(),
+			tapCard(),
+			{ op: "settle" },
+			{ op: "scrollTo", offset: H * 1.2 },
+			{ op: "pop" },
+			{ op: "expectTrajectory", scene: "Z", to: cardAt(listScroll), tolerance: 40, throughFade: true },
+		]);
+		// The list under the destination moved while it was covered (new rows, a restored offset).
+		add("list-moved-while-covered-then-close", [
+			scrollList(),
+			tapCard(),
+			{ op: "settle" },
+			{ op: "scrollTo", screen: "A", offset: listScroll + H * 0.3 },
+			{ op: "pop" },
+			closesOnto(cardAt(listScroll + H * 0.3)),
+		]);
+		// The card is partly scrolled off the top when tapped: open from its true rect, close back to it.
+		add("card-partly-off-screen", [
+			scrollList(listScroll + H * 0.3),
+			{ op: "tap", at: { x: centerOf(cardAt(listScroll + H * 0.3)).x, y: cardAt(listScroll + H * 0.3).y + cardContent.height * 0.8 } },
+			{ op: "expectTrajectory", ...moving, from: cardAt(listScroll + H * 0.3), to: opened, tolerance: 40 },
+			{ op: "pop" },
+			closesOnto(cardAt(listScroll + H * 0.3)),
+		]);
+		// A swipe back after scrolling the destination (horizontal: the vertical axis belongs to its scroll view).
+		add("scroll-destination-then-swipe-back", [
+			scrollList(),
+			tapCard(),
+			{ op: "settle" },
+			{ op: "scrollTo", offset: H * 0.25 },
+			{ op: "swipe", direction: "horizontal", distance: 0.6, durationMs: 250 },
+			{ op: "expectRoutes", names: ["A"] },
+			closesOnto(cardAt(listScroll)),
+		]);
+		// Spam: open, pop mid-open, open again, from the scrolled list.
+		add("open-pop-open-from-scrolled-list", [
+			scrollList(),
+			tapCard(),
+			{ op: "frames", count: 6 },
+			{ op: "pop" },
+			{ op: "frames", count: 4 },
+			tapCard(),
+			{ op: "expectRoutes", names: ["A", "Z"] },
+			{ op: "pop" },
+			closesOnto(cardAt(listScroll)),
+		]);
+	}
+	return scenarios;
+};
+
 export const buildFullCatalog = (
 	presets: Presets,
 	interpolate: InterpolateFn,
@@ -1127,4 +1235,5 @@ export const buildFullCatalog = (
 	...buildStackProgressCatalog(interpolate),
 	...buildScrollCatalog(interpolate, window),
 	...buildBoundsCatalog(interpolate, window, specs ?? {}),
+	...buildScrollBoundsCatalog(window, specs ?? {}),
 ];
