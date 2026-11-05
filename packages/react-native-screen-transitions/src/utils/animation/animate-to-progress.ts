@@ -152,7 +152,14 @@ export const animateToProgress = ({
 	if (emitWillAnimate) {
 		setTransitionLifecycleFlags(animations, isClosing, markEntering);
 
-		emitMotionStart(animations);
+		// Already moving (a retarget: snapTo, or a push/pop landing mid-transition): there is no
+		// clean frame to give willAnimate, so take over now. Deferring to the next frame callback
+		// could cancel the running spring before it stepped while the new one waits a frame for its
+		// first step: the screen stood still for one frame mid-motion.
+		if (!emitMotionStart(animations)) {
+			startAnimation(false);
+			return;
+		}
 		requestAnimationFrame(() => {
 			"worklet";
 			startAnimation(false);
