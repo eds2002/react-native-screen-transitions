@@ -31,6 +31,8 @@ export type SceneFrame = {
 	layers: Array<{ type: string; style: Record<string, unknown>; pointerEvents?: unknown }>;
 	/** The screen's styleId elements: composed pose and their own resolved style. */
 	elements: Record<string, { rect: Rect; opacity: number; style: Record<string, unknown> }>;
+	/** Only covers what is below it (a screen in an element trace); the rules don't check it. */
+	occluder?: boolean;
 };
 
 export type OverlayFrame = { owner: string; focused: string; rect: Rect; opacity: number };

@@ -31,8 +31,11 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			"height to 122) - hidden today by the same fade. A true shared element needs a layer of its own above " +
 			"both screens, placed by the pair's geometry.",
 		environments: ["teleport"],
+		// Only recipes that animate the screens: with the screens still (handoff as designed) it is fine.
 		matches: (scenario, v) =>
 			scenario.startsWith("handoff-") &&
+			!recipeOf(scenario).startsWith("still-") &&
+			topologyOf(scenario) !== "cross-stack" &&
 			(v.rule === "payload-hidden" ||
 				(v.scene === "List#payload-card" && ["element-teleport", "element-spike"].includes(v.rule))),
 	},
@@ -51,10 +54,15 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 		id: "handoff-cross-stack-returns-to-source",
 		summary:
 			"A handoff from a card in a nested stack to a screen on the root stack: once the open settles, the " +
-			"payload goes back to the card under the open screen (the card's stack can't see the pair).",
+			"payload jumps from the destination slot back to the card under the open screen (the slot is left " +
+			"empty), and the first frame of the close jumps it back (the card's stack can't see the pair). The " +
+			"screen-animating recipes also fade it as in handoff-payload-rides-destination-screen.",
 		environments: ["teleport"],
 		matches: (scenario, v) =>
-			scenario.startsWith("handoff-") && topologyOf(scenario) === "cross-stack" && v.rule === "payload-rest",
+			scenario.startsWith("handoff-") &&
+			topologyOf(scenario) === "cross-stack" &&
+			(v.rule.startsWith("payload-") ||
+				(v.scene === "List#payload-card" && ["element-teleport", "element-spike"].includes(v.rule))),
 	},
 	{
 		id: "handoff-scrolled-destination-dismiss",

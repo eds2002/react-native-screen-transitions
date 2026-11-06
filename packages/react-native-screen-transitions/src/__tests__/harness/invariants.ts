@@ -22,6 +22,11 @@ export type Expectations = {
 	/** No transitionSpec: screens switch in one frame, so motion rules do not apply. */
 	instant?: boolean;
 	/**
+	 * The screens don't animate (they switch in one frame) while their elements do (boundaries styled
+	 * with bounds().styles()): screen motion rules don't apply, element and payload rules do.
+	 */
+	stillScreens?: boolean;
+	/**
 	 * Screens that may turn back once without a finger: a push landing during a pop turns the screen
 	 * underneath from following the closing screen back to being covered by the new one.
 	 */
@@ -77,6 +82,7 @@ export const checkFinite = (trace: TraceFrame[]): Violation[] => {
 	const out: Violation[] = [];
 	for (const frame of trace) {
 		for (const scene of frame.scenes) {
+			if (scene.occluder) continue;
 			const values = [...pose(scene), ...scene.layers.flatMap((l) => numbersIn(l.style))];
 			if (values.some((v) => !Number.isFinite(v))) {
 				out.push({ rule: "finite", frame: frame.frame, scene: scene.name, detail: JSON.stringify(scene.layers.map((l) => l.style)) });
@@ -90,6 +96,7 @@ const byScene = (trace: TraceFrame[]) => {
 	const series = new Map<string, Array<{ frame: number; scene: SceneFrame } | undefined>>();
 	trace.forEach((frame, index) => {
 		for (const scene of frame.scenes) {
+			if (scene.occluder) continue;
 			if (!series.has(scene.key)) series.set(scene.key, new Array(trace.length).fill(undefined));
 			(series.get(scene.key) as Array<{ frame: number; scene: SceneFrame } | undefined>)[index] = {
 				frame: frame.frame,
@@ -293,9 +300,9 @@ export const checkSettled = (
 };
 
 /**
- * A handoff payload is the one live copy of its content: it is never hidden, not even for a frame
- * (not faded with a screen, not off the window, not lost between its boundaries), and it rests where
- * the scenario says. Each stretch where it is hidden is one violation.
+ * A handoff payload is the one live copy of its content: it is never transparent, not even for a
+ * frame (not faded with a screen), and it rests where the scenario says. Each stretch where it is
+ * hidden is one violation.
  */
 export const checkPayloads = (trace: TraceFrame[], expectations: Expectations = {}): Violation[] => {
 	const out: Violation[] = [];
@@ -324,11 +331,10 @@ export const checkPayloads = (trace: TraceFrame[], expectations: Expectations = 
 				close(frame.frame);
 				continue;
 			}
-			const { rect, opacity } = element;
-			const onWindow = rect.x < WINDOW.width && rect.x + rect.width > 0 && rect.y < WINDOW.height && rect.y + rect.height > 0;
-			if (opacity < 0.99 || !onWindow) {
+			// Transparency only: a payload scrolled out of view with its list is where it should be.
+			if (element.opacity < 0.99) {
 				if (hiddenFrom < 0) hiddenFrom = frame.frame;
-				worst = Math.min(worst, onWindow ? opacity : 0);
+				worst = Math.min(worst, element.opacity);
 			} else close(frame.frame);
 		}
 		close(trace.at(-1)?.frame ?? -1);
@@ -353,24 +359,37 @@ const roundRect = (r: Rect) => ({ x: +r.x.toFixed(1), y: +r.y.toFixed(1), width:
 
 /**
  * Elements (styleId views) and overlays as their own scenes, so the finite and
- * continuity rules apply to them too.
+ * continuity rules apply to them too. Each screen comes before its elements as an occluder, so an
+ * element under an opaque screen above it is covered (what changes there is not seen). A handoff
+ * payload can be above any screen while it moves: it goes last, never covered.
  */
 export const elementTrace = (trace: TraceFrame[]): TraceFrame[] =>
-	trace.map((frame) => ({
+	trace.map((frame) => {
+		const asScene = (scene: SceneFrame, id: string, element: SceneFrame["elements"][string]): SceneFrame => ({
+			key: `${scene.key}#${id}`,
+			name: `${scene.name}#${id}`,
+			rect: element.rect,
+			opacity: element.opacity,
+			touchable: true,
+			approx3d: false,
+			layers: [{ type: "element", style: element.style }],
+			elements: {},
+		});
+		const isPayload = (id: string) => id.startsWith("payload-");
+		return {
 		...frame,
 		overlays: [],
 		scenes: [
+			...frame.scenes.flatMap((scene) => [
+				{ ...scene, key: `occluder:${scene.key}`, elements: {}, occluder: true },
+				...Object.entries(scene.elements)
+					.filter(([id]) => !isPayload(id))
+					.map(([id, element]) => asScene(scene, id, element)),
+			]),
 			...frame.scenes.flatMap((scene) =>
-				Object.entries(scene.elements).map(([id, element]) => ({
-					key: `${scene.key}#${id}`,
-					name: `${scene.name}#${id}`,
-					rect: element.rect,
-					opacity: element.opacity,
-					touchable: true,
-					approx3d: false,
-					layers: [{ type: "element", style: element.style }],
-					elements: {},
-				})),
+				Object.entries(scene.elements)
+					.filter(([id]) => isPayload(id))
+					.map(([id, element]) => asScene(scene, id, element)),
 			),
 			...frame.overlays.map((overlay) => ({
 				key: `overlay:${overlay.owner}`,
@@ -383,4 +402,5 @@ export const elementTrace = (trace: TraceFrame[]): TraceFrame[] =>
 				elements: {},
 			})),
 		],
-	}));
+		};
+	});

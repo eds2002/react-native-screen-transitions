@@ -318,7 +318,7 @@ export const runScenario = async (sim: ReanimatedSim, scenario: Scenario): Promi
 			if (ACTIONS.has(step.op)) {
 				// The action ran between frames; the next frames must show it.
 				await stack.frames((expectations.maxStartLatency ?? 3) + 1);
-				violations.push(...checkStartLatency(stack.trace, before, expectations));
+				if (!expectations.stillScreens) violations.push(...checkStartLatency(stack.trace, before, expectations));
 			}
 			if (step.op === "swipe" || step.op === "pinch") {
 				for (let i = before; i < stack.trace.length; i++) fingerFrames.add(i);
@@ -343,11 +343,12 @@ export const runScenario = async (sim: ReanimatedSim, scenario: Scenario): Promi
 		} else current.push(frame);
 	});
 	if (current.length) runs.push(current);
+	const still = !!expectations.stillScreens;
 	violations.push(
 		...checkFinite(trace),
 		...checkStyleRange(trace),
-		...checkContinuity(trace, expectations),
-		...checkVanish(trace, expectations),
+		...(still ? [] : checkContinuity(trace, expectations)),
+		...(still ? [] : checkVanish(trace, expectations)),
 		...checkPayloads(trace, expectations),
 	);
 	const elements = elementTrace(trace);
@@ -356,7 +357,7 @@ export const runScenario = async (sim: ReanimatedSim, scenario: Scenario): Promi
 		...checkContinuity(elements, expectations).map((v) => ({ ...v, rule: `element-${v.rule}` })),
 	);
 	const latency = (expectations.maxStartLatency ?? 3) + 1;
-	for (const run of runs) violations.push(...checkMonotonic(run, expectations, latency));
+	if (!still) for (const run of runs) violations.push(...checkMonotonic(run, expectations, latency));
 	const routes = stack.leafRoutes();
 	violations.push(...checkSettled(trace, routes, expectations));
 	await stack.unmount();

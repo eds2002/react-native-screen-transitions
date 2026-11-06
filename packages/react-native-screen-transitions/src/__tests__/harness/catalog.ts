@@ -1646,6 +1646,15 @@ export const buildHandoffCatalog = (window: { width: number; height: number }, s
 	const centerOf = (r: typeof card) => ({ x: r.x + r.width / 2, y: r.y + r.height / 2 });
 	const shift = (r: typeof card, dy: number) => ({ ...r, y: r.y + dy });
 	const recipes: Record<string, (props: any) => any> = {
+		// As handoff was designed: the screens stay still, only the boundaries animate.
+		"still-transform": (props: any) => {
+			"worklet";
+			return { card: { style: props.bounds("card").styles() } };
+		},
+		"still-size": (props: any) => {
+			"worklet";
+			return { card: { style: props.bounds("card").styles({ method: "size" }) } };
+		},
 		// The morphs hide the (now empty) source frame while it is covered, as zoom does.
 		"morph-transform": (props: any) => {
 			"worklet";
@@ -1756,6 +1765,7 @@ export const buildHandoffCatalog = (window: { width: number; height: number }, s
 					steps: [...(t.before ?? []), ...steps],
 					expect: {
 						mayOvershoot: true,
+						stillScreens: recipe.startsWith("still-"),
 						payloadRest: { "payload-card": open === "scrolled" ? t.openRest : open === "fresh" ? hero : t.closedRest },
 					},
 				});
