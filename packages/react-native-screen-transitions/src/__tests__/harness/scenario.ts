@@ -8,6 +8,7 @@ import {
 	checkContinuity,
 	checkFinite,
 	checkMonotonic,
+	checkOneElement,
 	checkPayloads,
 	checkSettled,
 	checkStartLatency,
@@ -350,6 +351,9 @@ export const runScenario = async (sim: ReanimatedSim, scenario: Scenario): Promi
 		...(still ? [] : checkContinuity(trace, expectations)),
 		...(still ? [] : checkVanish(trace, expectations)),
 		...checkPayloads(trace, expectations),
+		// zoom() and reveal() morph the screen out of the card (the bound keeps its own aspect): one element
+		// is the bound only where the library draws both copies (styles(), handoff).
+		...(/zoom|reveal/.test(scenario.name) ? [] : checkOneElement(trace)),
 	);
 	const elements = elementTrace(trace);
 	violations.push(

@@ -1919,6 +1919,126 @@ export const buildHandoffCatalog = (window: { width: number; height: number }, s
 	return scenarios;
 };
 
+/**
+ * A shared bound on screens that move (the follow lab): A, B and C each hold a "card" in another
+ * place, styled with `bounds("card").styles()` and nothing else (no offset). The screens slide in with
+ * the screen below parallaxing (and, in `slide-scale`, scale as they go), so every copy of the card is
+ * drawn by a moving screen. The one-element rule checks every copy you can see agrees, frame by frame,
+ * through hops, swipes, chains and spam; `handoff` runs the same with a live payload.
+ */
+export const buildMovingBoundsCatalog = (interpolate: InterpolateFn, window: { width: number; height: number }): Scenario[] => {
+	const W = window.width;
+	const H = window.height;
+	const rects = {
+		A: { x: W * 0.05, y: H * 0.45, width: W * 0.4, height: W * 0.5 },
+		B: { x: W * 0.55, y: H * 0.12, width: W * 0.4, height: W * 0.5 },
+		C: { x: W * 0.3, y: H * 0.5, width: W * 0.4, height: W * 0.5 },
+	};
+	const motions: Record<string, (progress: number) => Record<string, unknown>> = {
+		slide: (progress) => ({ transform: [{ translateX: interpolate(progress, [0, 1, 2], [W, 0, -W * 0.3]) }] }),
+		"slide-scale": (progress) => ({
+			transform: [
+				{ translateX: interpolate(progress, [0, 1, 2], [W, 0, -W * 0.3]) },
+				{ scale: interpolate(progress, [0, 1, 2], [0.8, 1, 0.9]) },
+			],
+		}),
+		"slide-up": (progress) => ({ transform: [{ translateY: interpolate(progress, [0, 1, 2], [H, 0, -H * 0.1]) }] }),
+	};
+	const dismissOf: Record<string, SwipeDirection> = { slide: "horizontal", "slide-scale": "horizontal", "slide-up": "vertical" };
+	const scenarios: Scenario[] = [];
+	for (const [motion, content] of Object.entries(motions)) {
+		for (const handoff of [false, true]) {
+			const options = {
+				gestureEnabled: true,
+				gestureDirection: dismissOf[motion],
+				transitionSpec: { open: DEFAULT_SPEC, close: DEFAULT_SPEC },
+				screenStyleInterpolator: ({ bounds, progress }: any) => {
+					"worklet";
+					return { content: { style: content(progress) }, card: bounds("card").styles() };
+				},
+			};
+			const screens: ScreenSpec[] = (["A", "B", "C"] as const).map((name, i) => ({
+				name,
+				...(i > 0 ? { options } : {}),
+				bounds: [{ id: "card", rect: rects[name], ...(handoff ? { handoff: true, ...(i === 0 ? { payload: true } : {}) } : {}) }],
+			}));
+			const d = dismissOf[motion];
+			const swipe = (distance: number, extra: Record<string, unknown> = {}): Step => ({ op: "swipe", direction: d, distance, durationMs: 200, ...extra });
+			const add = (sequence: string, steps: Step[]) =>
+				scenarios.push({
+					name: `bounds-moving-${motion}${handoff ? "-handoff" : ""} / preset-spec / ${sequence}`,
+					screens,
+					steps,
+					expect: { mayOvershoot: true },
+				});
+			add("open-close", [{ op: "push", name: "B" }, { op: "settle" }, { op: "pop" }, { op: "settle" }]);
+			add("swipe-dismiss", [{ op: "push", name: "B" }, { op: "settle" }, swipe(0.75), { op: "settle" }]);
+			add("swipe-cancel", [{ op: "push", name: "B" }, { op: "settle" }, swipe(0.2, { durationMs: 300, holdMs: 200 }), { op: "settle" }]);
+			add("chain", [
+				{ op: "push", name: "B" },
+				{ op: "settle" },
+				{ op: "push", name: "C" },
+				{ op: "settle" },
+				{ op: "pop" },
+				{ op: "settle" },
+				{ op: "pop" },
+				{ op: "settle" },
+			]);
+			add("chain-fast", [
+				{ op: "push", name: "B" },
+				{ op: "frames", count: 6 },
+				{ op: "push", name: "C" },
+				{ op: "settle" },
+				{ op: "pop" },
+				{ op: "frames", count: 6 },
+				{ op: "pop" },
+				{ op: "settle" },
+			]);
+			add("push-pop-push", [
+				{ op: "push", name: "B" },
+				{ op: "frames", count: 6 },
+				{ op: "pop" },
+				{ op: "frames", count: 6 },
+				{ op: "push", name: "B" },
+				{ op: "settle" },
+				{ op: "pop" },
+				{ op: "settle" },
+			]);
+			add("spam", [
+				{ op: "push", name: "B" },
+				{ op: "frames", count: 5 },
+				{ op: "pop" },
+				{ op: "frames", count: 5 },
+				{ op: "push", name: "B" },
+				{ op: "frames", count: 5 },
+				{ op: "push", name: "C" },
+				{ op: "frames", count: 5 },
+				{ op: "pop" },
+				{ op: "frames", count: 5 },
+				{ op: "pop" },
+				{ op: "frames", count: 5 },
+				{ op: "push", name: "B" },
+				{ op: "settle" },
+				{ op: "pop" },
+				{ op: "settle" },
+			]);
+			add("swipe-chain-quickly", [
+				{ op: "push", name: "B" },
+				{ op: "settle" },
+				{ op: "push", name: "C" },
+				{ op: "settle" },
+				swipe(0.75),
+				// B is dragged right after C's swipe released (a swipe starts on the screen under the finger,
+				// so C must have cleared the start point).
+				{ op: "frames", count: 20 },
+				swipe(0.75),
+				{ op: "settle" },
+			]);
+		}
+	}
+	return scenarios;
+};
+
 export const buildFullCatalog = (
 	presets: Presets,
 	interpolate: InterpolateFn,
@@ -1938,6 +2058,7 @@ export const buildFullCatalog = (
 	...buildBoundsCatalog(interpolate, window, specs ?? {}),
 	...buildScrollBoundsCatalog(window, specs ?? {}),
 	...buildBoundsChainCatalog(window, specs ?? {}),
+	...buildMovingBoundsCatalog(interpolate, window),
 	...buildGlobalBoundsCatalog(window, specs ?? {}),
 	...buildHandoffCatalog(window, specs ?? {}),
 ];

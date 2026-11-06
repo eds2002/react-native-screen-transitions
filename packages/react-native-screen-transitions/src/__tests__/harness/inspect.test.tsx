@@ -2,7 +2,7 @@
  * Prints one catalog scenario's trace for a scene, frame by frame:
  *   SCENARIO="slide-horizontal / preset-spec / rapid" SCENE=B bun test inspect
  * Optional: FROM/TO (trace indexes), LAYERS=1 (each layer's transform),
- * ORDER=1 (paint order of scenes per frame), ELEMENT=<id> (one element's rect), TELEPORT=1 (react-native-teleport installed), ANDROID=1 (the Android catalog's window). Skipped without SCENARIO.
+ * ORDER=1 (paint order of scenes per frame), ELEMENT=<id> (one element's rect; ELEMENT_STYLE=1 adds its transform and opacity), TELEPORT=1 (react-native-teleport installed), ANDROID=1 (the Android catalog's window). Skipped without SCENARIO.
  */
 import { it } from "bun:test";
 import { installHarness } from "./install";
@@ -47,7 +47,8 @@ it.skipIf(!name)("inspect a catalog scenario", async () => {
 			: "";
 		const element = process.env.ELEMENT ? scene.elements[process.env.ELEMENT] : undefined;
 		const elementText = element
-			? ` | ${process.env.ELEMENT} x=${element.rect.x.toFixed(1)} y=${element.rect.y.toFixed(1)} w=${element.rect.width.toFixed(0)} o=${element.opacity.toFixed(2)}`
+			? ` | ${process.env.ELEMENT} x=${element.rect.x.toFixed(1)} y=${element.rect.y.toFixed(1)} w=${element.rect.width.toFixed(0)} o=${element.opacity.toFixed(2)}` +
+				(process.env.ELEMENT_STYLE ? ` ${JSON.stringify(element.style.transform ?? "")} o=${element.style.opacity ?? ""}` : "")
 			: "";
 		console.log(`${i} x=${x.toFixed(1)} y=${y.toFixed(1)} w=${width.toFixed(0)} o=${scene.opacity.toFixed(2)} touch=${scene.touchable} ${layers}${elementText}`);
 	}

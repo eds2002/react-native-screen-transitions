@@ -352,6 +352,78 @@ export const checkPayloads = (trace: TraceFrame[], expectations: Expectations = 
 	return out;
 };
 
+/** The fraction of a rect (sampled on a grid) inside the window and not under an opaque scene above `index`. */
+const uncoveredFraction = (frame: TraceFrame, index: number, rect: Rect) => {
+	const above = frame.scenes.slice(index + 1).filter((s) => s.opacity >= 0.999);
+	const inside = (r: Rect, x: number, y: number) => x >= r.x && x <= r.x + r.width && y >= r.y && y <= r.y + r.height;
+	let shown = 0;
+	const n = 8;
+	for (let i = 0; i < n; i++) {
+		for (let j = 0; j < n; j++) {
+			const x = rect.x + ((i + 0.5) / n) * rect.width;
+			const y = rect.y + ((j + 0.5) / n) * rect.height;
+			if (x < 0 || y < 0 || x > WINDOW.width || y > WINDOW.height) continue;
+			if (!above.some((s) => inside(s.rect, x, y))) shown++;
+		}
+	}
+	return shown / (n * n);
+};
+
+/**
+ * A shared bound is one element on screen: while it transitions (a copy carries a bounds transform),
+ * every copy you can see (not transparent, not under an opaque screen above) is drawn at the same rect
+ * (`bound-split`: two cards), and one that was visible does not blink out with no copy left to show it
+ * (`bound-vanish`). Each screen's copy of a bound is drawn by its own screen; they agree only if the
+ * library draws both where the two screens show its ends.
+ */
+export const checkOneElement = (trace: TraceFrame[], tolerance = 3): Violation[] => {
+	const out: Violation[] = [];
+	let wasShown = new Set<string>();
+	for (const frame of trace) {
+		const copies = new Map<string, Array<{ scene: string; rect: Rect; shown: boolean; uncovered: boolean; moving: boolean }>>();
+		frame.scenes.forEach((scene, index) => {
+			if (scene.occluder) return;
+			for (const id in scene.elements) {
+				if (!id.startsWith("bound:")) continue;
+				const element = scene.elements[id];
+				const uncovered = uncoveredFraction(frame, index, element.rect) > 0.15;
+				const list = copies.get(id) ?? [];
+				list.push({
+					scene: scene.name,
+					rect: element.rect,
+					uncovered,
+					shown: uncovered && element.opacity > 0.05,
+					moving: Array.isArray(element.style.transform) && element.style.transform.length > 0,
+				});
+				copies.set(id, list);
+			}
+		});
+		const shownNow = new Set<string>();
+		for (const [id, list] of copies) {
+			const shown = list.filter((copy) => copy.shown);
+			if (shown.length) shownNow.add(id);
+			if (!list.some((copy) => copy.moving)) continue;
+			for (let i = 1; i < shown.length; i++) {
+				const off = rectOff(shown[0].rect, shown[i].rect);
+				if (off > tolerance) {
+					out.push({
+						rule: "bound-split",
+						frame: frame.frame,
+						scene: `${shown[0].scene}+${shown[i].scene}#${id}`,
+						detail: `two copies ${off.toFixed(1)} px apart: ${JSON.stringify(roundRect(shown[0].rect))} vs ${JSON.stringify(roundRect(shown[i].rect))}`,
+					});
+					break;
+				}
+			}
+			if (wasShown.has(id) && !shown.length && list.some((copy) => copy.uncovered && copy.moving)) {
+				out.push({ rule: "bound-vanish", frame: frame.frame, scene: `#${id}`, detail: "every copy you could see went transparent" });
+			}
+		}
+		wasShown = shownNow;
+	}
+	return out;
+};
+
 export const rectOff = (a: Rect, b: Rect) =>
 	Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y), Math.abs(a.width - b.width), Math.abs(a.height - b.height));
 

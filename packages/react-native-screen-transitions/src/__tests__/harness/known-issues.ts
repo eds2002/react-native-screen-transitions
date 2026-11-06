@@ -20,6 +20,38 @@ const transitionOf = (scenario: string) => scenario.split(" / ")[0];
 
 export const KNOWN_ISSUES: KnownIssue[] = [
 	{
+		id: "moving-bounds-overlap",
+		summary:
+			"styles() on screens that move (slide, slide-scale, slide-up), when transitions overlap: spam, a chain " +
+			"pushed or popped quickly, push-pop-push, a second swipe right after one. The copies split (5-60 px) or " +
+			"step for a few frames: an overlapping transition starts from where the card is drawn (resolveMovingSource) " +
+			"through transforms read a frame late, and a newer screen's copy and the hidden one hand over a frame apart. " +
+			"Plain hops, swipes and cancels on moving screens pass.",
+		matches: (scenario, v) =>
+			/^bounds-moving-(slide|slide-scale|slide-up) \//.test(scenario) &&
+			["spam", "chain-fast", "push-pop-push", "swipe-chain-quickly", "chain"].includes(sequenceOf(scenario)) &&
+			["bound-split", "bound-vanish", "element-spike", "element-teleport", "element-flash", "spike", "error"].includes(v.rule),
+	},
+	{
+		id: "moving-bounds-handoff",
+		summary:
+			"Handoff on screens that move: the live payload is placed for the screen that styles it, but it lives in the " +
+			"receiving screen's host, and the hidden-copy rule can hide the boundary that holds it. It teleports, spikes " +
+			"and hides. Handoff on still screens passes (bounds-handoff family).",
+		matches: (scenario) => /^bounds-moving-[a-z-]+-handoff \//.test(scenario),
+	},
+	{
+		id: "moving-bounds-swipe",
+		summary:
+			"A swipe-dismiss (and slide-scale's cancel) on moving screens steps the card once: without teleport the source " +
+			"is measured again as the close starts with the card's own motion in it (boundary-measures-own-motion-without-" +
+			"teleport); with teleport, slide-scale's copy keeps its open scale for one frame as the transition ends.",
+		matches: (scenario, v) =>
+			/^bounds-moving-(slide|slide-scale|slide-up) \//.test(scenario) &&
+			["swipe-dismiss", "swipe-cancel", "open-close"].includes(sequenceOf(scenario)) &&
+			["bound-split", "element-spike"].includes(v.rule),
+	},
+	{
 		id: "boundary-measures-own-motion-without-teleport",
 		summary:
 			"Without react-native-teleport there is no escape placeholder: the boundary's own root is measured, and it " +
@@ -28,7 +60,7 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			"and both copies step ~100 px. With teleport the unstyled placeholder is measured. Fix: measure the root's " +
 			"layout without its own animated transform (or always measure a placeholder).",
 		matches: (scenario, v) =>
-			scenario === "bounds-styles / preset-spec / swipe-dismiss" && v.rule === "element-spike",
+			scenario === "bounds-styles / preset-spec / swipe-dismiss" && ["element-spike", "bound-split"].includes(v.rule),
 		environments: ["ios", "android", "compact", "120hz", "custom-navigator"],
 	},
 	{
