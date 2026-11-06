@@ -8,6 +8,7 @@
  *   fo-mode-scale   the detail also scales while it moves (a card-like screen)
  *   fo-mode-still   the screens don't move (the reference: only the bound animates)
  *   fo-method       toggles transform / size
+ *   fo-handoff      the card is one live view handed between the slots (handoff) instead of a copy per screen
  *   fo-card         opens the detail; fo-next pushes the theater (the card hands on to a third slot);
  *                   fo-back / fo-back-2 close them; swipe right from the left edge drags the top one
  *   bar (fixed, for spam): fo-bar-next pushes the next screen (List -> Detail -> Theater),
@@ -18,7 +19,7 @@
  * the same along the chain, and under any spam of next/back/drags.
  */
 import { StackActions } from "@react-navigation/native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, Text, useWindowDimensions, View } from "react-native";
 import { makeMutable } from "react-native-reanimated";
 import { Button, createBlankStackNavigator, interpolate, type Lab, LabContainer, Probe, SPEC, SpamBar, Transition } from "./ui";
@@ -27,6 +28,22 @@ const Stack = createBlankStackNavigator();
 const mode = makeMutable("slide");
 const method = makeMutable("transform");
 const MODES = ["slide", "scale", "still"];
+// Handoff: the list's card (a live counter) is the only content; the other slots receive it.
+let handoffOn = false;
+
+function LiveCard() {
+	const [count, setCount] = useState(0);
+	useEffect(() => {
+		const id = setInterval(() => setCount((c) => c + 1), 100);
+		return () => clearInterval(id);
+	}, []);
+	return (
+		<View style={{ flex: 1, backgroundColor: "#f59e0b", borderRadius: 20, alignItems: "center", justifyContent: "center" }}>
+			<Text style={{ color: "#111", fontSize: 28, fontWeight: "900" }}>{count}</Text>
+			<Text style={{ color: "#111", fontWeight: "700" }}>live</Text>
+		</View>
+	);
+}
 
 // The list's copy is orange, the detail's blue: both draw, so any disagreement shows as two cards.
 function Card({ color = "#f59e0b" }) {
@@ -41,6 +58,7 @@ function List({ navigation }) {
 	const { width } = useWindowDimensions();
 	const [current, setCurrent] = useState(mode.get());
 	const [m, setM] = useState(method.get());
+	const [handoff, setHandoff] = useState(handoffOn);
 	return (
 		<View style={{ flex: 1, backgroundColor: "#111827", paddingTop: 110, paddingHorizontal: 20, gap: 12 }}>
 			<Text style={{ color: "white", fontSize: 30, fontWeight: "800" }}>follow</Text>
@@ -66,15 +84,25 @@ function List({ navigation }) {
 					setM(next);
 				}}
 			/>
-			<Probe testID="fo-state" value={`mode:${current} method:${m}`} />
+			<Button
+				label={handoff ? "• handoff" : "handoff"}
+				testID="fo-handoff"
+				onPress={() => {
+					handoffOn = !handoff;
+					setHandoff(!handoff);
+				}}
+			/>
+			<Probe testID="fo-state" value={`mode:${current} method:${m}${handoff ? " handoff" : ""}`} />
 			<Transition.Boundary
+				key={handoff ? "handoff" : "copies"}
 				id="card"
+				handoff={handoff}
 				testID="fo-card"
 				accessibilityLabel="fo-card"
 				onPress={() => navigation.push("Detail")}
-				style={{ width: width * 0.4, height: width * 0.5, marginTop: 80 }}
+				style={{ width: width * 0.4, height: width * 0.5, marginTop: 40 }}
 			>
-				<Card />
+				{handoff ? <LiveCard /> : <Card />}
 			</Transition.Boundary>
 		</View>
 	);
@@ -84,8 +112,8 @@ function Detail({ navigation }) {
 	const { width } = useWindowDimensions();
 	return (
 		<View style={{ flex: 1, backgroundColor: "#1e293b", paddingTop: 100, paddingHorizontal: 20, gap: 16 }}>
-			<Transition.Boundary id="card" style={{ width: width * 0.4, height: width * 0.5, alignSelf: "flex-end" }}>
-				<Card color="#38bdf8" />
+			<Transition.Boundary id="card" handoff={handoffOn} style={{ width: width * 0.4, height: width * 0.5, alignSelf: "flex-end" }}>
+				{handoffOn ? null : <Card color="#38bdf8" />}
 			</Transition.Boundary>
 			<Text style={{ color: "white", fontSize: 26, fontWeight: "800" }}>Detail</Text>
 			<Pressable
@@ -114,8 +142,8 @@ function Theater({ navigation }) {
 	return (
 		<View style={{ flex: 1, backgroundColor: "#0b0b0f", paddingTop: 140, alignItems: "center", gap: 20 }}>
 			<Text style={{ color: "white", fontSize: 26, fontWeight: "800" }}>Theater</Text>
-			<Transition.Boundary id="card" style={{ width: width * 0.4, height: width * 0.5, marginTop: 120 }}>
-				<Card color="#22c55e" />
+			<Transition.Boundary id="card" handoff={handoffOn} style={{ width: width * 0.4, height: width * 0.5, marginTop: 120 }}>
+				{handoffOn ? null : <Card color="#22c55e" />}
 			</Transition.Boundary>
 			<Pressable
 				testID="fo-back-2"
