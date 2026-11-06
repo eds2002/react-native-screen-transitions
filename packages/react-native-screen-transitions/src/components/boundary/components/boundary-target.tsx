@@ -1,5 +1,5 @@
 import type React from "react";
-import { memo, useLayoutEffect } from "react";
+import { memo, useLayoutEffect, useMemo } from "react";
 import Animated from "react-native-reanimated";
 import { logger } from "../../../utils/logger";
 import { useComposedBoundaryStyle } from "../hooks/use-composed-boundary-style";
@@ -8,6 +8,7 @@ import {
 	TARGET_OUTSIDE_ROOT_WARNING,
 	useOptionalBoundaryRootStore,
 } from "../providers/boundary-root.provider";
+import { splitBoundaryLayoutStyle } from "../utils/split-layout-style";
 
 type BoundaryTargetProps = Omit<
 	React.ComponentProps<typeof Animated.View>,
@@ -37,10 +38,18 @@ const BoundaryTargetInner = (props: InternalBoundaryTargetProps) => {
 	const shouldEscapeTargetToScreenHost =
 		isActiveTarget && portalRuntime?.escapeClipping === true;
 
+	// An escaping target sits in a placeholder measured in its place: the placeholder takes its box.
+	const split = useMemo(
+		() =>
+			shouldEscapeTargetToScreenHost ? splitBoundaryLayoutStyle(style) : null,
+		[shouldEscapeTargetToScreenHost, style],
+	);
+	const ownStyle = split ? split.inner : style;
+
 	const associatedTargetStyles = useComposedBoundaryStyle(
 		rootContext?.slotsMap,
 		boundaryId,
-		style,
+		ownStyle,
 		"full",
 		// Only once the root follows its pairs (escapeMeasured) can the target leave.
 		shouldEscapeTargetToScreenHost && rootContext?.escapeMeasured && boundaryId
@@ -69,12 +78,13 @@ const BoundaryTargetInner = (props: InternalBoundaryTargetProps) => {
 			boundaryId={boundaryId ?? ""}
 			enabled={shouldEscapeTargetToScreenHost}
 			placeholderRef={measurementRef}
+			placeholderStyle={split?.outer}
 		>
 			<Animated.View
 				{...rest}
 				pointerEvents={pointerEvents}
 				ref={shouldEscapeTargetToScreenHost ? undefined : measurementRef}
-				style={[style, isActiveTarget ? associatedTargetStyles : undefined]}
+				style={[ownStyle, isActiveTarget ? associatedTargetStyles : undefined]}
 				collapsable={false}
 			>
 				<Portal mode="handoff" boundaryId={boundaryId} enabled={handoffEnabled}>

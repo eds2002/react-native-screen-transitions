@@ -32,6 +32,8 @@ import {
 
 const Stack = createBlankStackNavigator();
 const mode = makeMutable("zoom");
+// "fixed": the live content has a hardcoded size (the card's) instead of filling its boundary.
+let fixedSize: { width: number; height: number } | null = null;
 
 function LiveContent() {
 	const [count, setCount] = useState(0);
@@ -54,7 +56,7 @@ function LiveContent() {
 	return (
 		<View
 			style={{
-				flex: 1,
+				...(fixedSize ?? { flex: 1 }),
 				backgroundColor: "#f59e0b",
 				borderRadius: 20,
 				alignItems: "center",
@@ -85,6 +87,7 @@ function LiveContent() {
 function List({ navigation }) {
 	const { width } = useWindowDimensions();
 	const [current, setCurrent] = useState(mode.get());
+	const [fixed, setFixed] = useState(fixedSize !== null);
 	const size = width * 0.42;
 	return (
 		<View
@@ -112,8 +115,20 @@ function List({ navigation }) {
 					/>
 				))}
 			</View>
-			<Probe testID="ho-mode" value={`mode:${current}`} />
+			<Button
+				label={fixed ? "• fixed size" : "fixed size"}
+				testID="ho-fixed"
+				onPress={() => {
+					fixedSize = fixed ? null : { width: size, height: size * 1.2 };
+					setFixed(!fixed);
+				}}
+			/>
+			<Probe
+				testID="ho-mode"
+				value={`mode:${current}${fixed ? " fixed" : ""}`}
+			/>
 			<Transition.Boundary
+				key={fixed ? "fixed" : "flex"}
 				id="card"
 				handoff
 				testID="ho-card"

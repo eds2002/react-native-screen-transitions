@@ -4,7 +4,7 @@ import {
 	memo,
 	type ReactNode,
 } from "react";
-import { StyleSheet, View } from "react-native";
+import { type StyleProp, StyleSheet, View, type ViewStyle } from "react-native";
 import Animated, { type AnimatedRef } from "react-native-reanimated";
 import { logger } from "../../../../utils/logger";
 import { usePlaceholderStyles } from "../hooks/use-placeholder-styles";
@@ -38,6 +38,8 @@ type PortalProps = {
 	enabled: boolean;
 	mode: PortalMode;
 	placeholderRef?: AnimatedRef<View>;
+	/** The escaping view's box (margins, position, size): the placeholder holds and measures it. */
+	placeholderStyle?: StyleProp<ViewStyle>;
 };
 
 /**
@@ -67,6 +69,7 @@ function EnabledPortal({
 	children,
 	mode,
 	placeholderRef,
+	placeholderStyle,
 }: PortalProps & { boundaryId: string }) {
 	if (__DEV__ && mode === "escapeClipping" && !boundaryId) {
 		logger.warnOnce(
@@ -84,7 +87,7 @@ function EnabledPortal({
 				animatedProps={teleportProps}
 				name={boundaryId}
 				pointerEvents={PORTAL_POINTER_EVENTS}
-				style={mode === "handoff" ? StyleSheet.absoluteFill : undefined}
+				style={mode === "handoff" ? StyleSheet.absoluteFill : styles.fill}
 			>
 				{children}
 			</EnabledNativePortal>
@@ -97,7 +100,11 @@ function EnabledPortal({
 			<PortalHost name={localHostName} />
 		</>
 	) : (
-		<PortalPlaceholder placeholderRef={placeholderRef} pinned={pinned}>
+		<PortalPlaceholder
+			placeholderRef={placeholderRef}
+			placeholderStyle={placeholderStyle}
+			pinned={pinned}
+		>
 			{content}
 		</PortalPlaceholder>
 	);
@@ -109,13 +116,17 @@ function PortalPlaceholder({
 	children,
 	pinned,
 	placeholderRef,
-}: Pick<PortalProps, "children" | "placeholderRef"> & { pinned: boolean }) {
-	const { handleOnLayout, placeholderStyle } = usePlaceholderStyles(pinned);
+	placeholderStyle,
+}: Pick<PortalProps, "children" | "placeholderRef" | "placeholderStyle"> & {
+	pinned: boolean;
+}) {
+	const { handleOnLayout, placeholderStyle: pinnedStyle } =
+		usePlaceholderStyles(pinned);
 	return (
 		<View
 			ref={placeholderRef}
 			onLayout={handleOnLayout}
-			style={placeholderStyle}
+			style={[placeholderStyle, pinnedStyle]}
 			pointerEvents={PORTAL_POINTER_EVENTS}
 			collapsable={false}
 		>
@@ -123,3 +134,8 @@ function PortalPlaceholder({
 		</View>
 	);
 }
+
+const styles = StyleSheet.create({
+	// The escaping view fills its placeholder (the placeholder is its box).
+	fill: { flexGrow: 1 },
+});

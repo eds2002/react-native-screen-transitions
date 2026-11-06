@@ -11,9 +11,11 @@ import {
 	BoundaryTarget,
 } from "./components/boundary-target";
 import { Portal } from "./portal/components/portal";
+import { isTeleportAvailable } from "./portal/teleport";
 import { BoundaryRootProvider } from "./providers/boundary-root.provider";
 import type { BoundaryComponentProps } from "./types";
 import { resolveBoundaryTarget } from "./utils/resolve-boundary-target";
+import { splitBoundaryLayoutStyle } from "./utils/split-layout-style";
 
 interface CreateBoundaryComponentOptions {
 	alreadyAnimated?: boolean;
@@ -66,6 +68,15 @@ export function createBoundaryComponent<P extends object>(
 			targetResolution.target?.props as { style?: unknown } | undefined
 		)?.style;
 
+		// An escaping root sits in a placeholder that is measured in its place: the placeholder takes
+		// the root's box (margins, position, size), the root fills it.
+		const escapesRoot = isTeleportAvailable && targetResolution.target === null;
+		const split = useMemo(
+			() => (escapesRoot ? splitBoundaryLayoutStyle(style) : null),
+			[escapesRoot, style],
+		);
+		const rootStyle = split ? split.inner : style;
+
 		return (
 			<BoundaryRootProvider
 				config={config}
@@ -77,6 +88,7 @@ export function createBoundaryComponent<P extends object>(
 				hasTarget={targetResolution.target !== null}
 				id={id}
 				style={style}
+				rootStyle={rootStyle}
 				targetCount={targetResolution.targetCount}
 				targetStyle={targetStyle}
 			>
@@ -86,11 +98,15 @@ export function createBoundaryComponent<P extends object>(
 						boundaryId={root.boundTag.tag}
 						enabled={root.shouldRenderBoundaryRootThroughPortal}
 						placeholderRef={root.measurementRef}
+						placeholderStyle={split?.outer}
 					>
 						<AnimatedComponent
 							{...rest}
 							ref={root.ref}
-							style={[style, root.attachedStyle]}
+							style={[
+								root.shouldRenderBoundaryRootThroughPortal ? rootStyle : style,
+								root.attachedStyle,
+							]}
 							collapsable={false}
 						>
 							<Portal

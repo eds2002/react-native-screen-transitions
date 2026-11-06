@@ -75,6 +75,8 @@ type BoundaryRootProviderProps = Pick<
 	hasTarget: boolean;
 	id: BoundaryId;
 	style?: unknown;
+	/** The root's own style when its box goes to an escape placeholder (see splitBoundaryLayoutStyle). */
+	rootStyle?: unknown;
 	targetCount: number;
 	targetStyle?: unknown;
 };
@@ -98,6 +100,7 @@ export const {
 		hasTarget,
 		id,
 		style,
+		rootStyle = style,
 		targetCount,
 		targetStyle,
 	}) => {
@@ -191,7 +194,7 @@ export const {
 		const associatedStyles = useComposedBoundaryStyle(
 			slotsMap,
 			boundTag.tag,
-			style,
+			shouldEscapeBoundaryRootToScreenHost && !hasTarget ? rootStyle : style,
 			hasTarget ? "stacking" : "full",
 			escapeState,
 		);
