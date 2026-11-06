@@ -1528,6 +1528,42 @@ export const buildGlobalBoundsCatalog = (window: { width: number; height: number
 			openPath: ["B", "Detail"],
 			closedPath: ["A", "List"],
 		},
+		// Independent NavigationContainers (NavigationIndependentTree): no shared navigation state, the
+		// pairing goes through the bounds registry alone.
+		"independent-source-to-outer": {
+			screens: [{ name: "Home", stack: { independent: true, screens: [{ name: "List", bounds: source("Detail") }] } }, { name: "Detail", options: zoom() }],
+			destination: "Detail",
+			openPath: ["Detail"],
+			closedPath: ["Home", "List"],
+		},
+		"outer-source-to-independent-dest": {
+			screens: [{ name: "List", bounds: source("Deep") }, { name: "Deep", options: zoom(), stack: { independent: true, screens: [{ name: "Dest" }] } }],
+			destination: "Dest",
+			openPath: ["Deep", "Dest"],
+			closedPath: ["List"],
+		},
+		"inside-independent": {
+			screens: [
+				{ name: "Root" },
+				{
+					name: "Home",
+					stack: { independent: true, screens: [{ name: "List", bounds: source("Detail") }, { name: "Detail", options: zoom() }] },
+				},
+			],
+			destination: "Detail",
+			openPath: ["Home", "Detail"],
+			closedPath: ["Home", "List"],
+			before: [{ op: "push", name: "Home" }, { op: "settle" }],
+		},
+		"independent-to-independent": {
+			screens: [
+				{ name: "A", stack: { independent: true, screens: [{ name: "List", bounds: source("B") }] } },
+				{ name: "B", options: zoom(), stack: { independent: true, screens: [{ name: "Dest" }] } },
+			],
+			destination: "Dest",
+			openPath: ["B", "Dest"],
+			closedPath: ["A", "List"],
+		},
 		"deep-stack": {
 			screens: [{ name: "S1" }, { name: "S2" }, { name: "S3" }, { name: "List", bounds: source("Detail") }, { name: "Detail", options: zoom() }],
 			destination: "Detail",

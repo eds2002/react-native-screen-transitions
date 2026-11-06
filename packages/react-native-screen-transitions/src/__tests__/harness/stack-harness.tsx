@@ -456,8 +456,13 @@ export type ScreenSpec = {
 	};
 	/** Transition.Boundary views at these window rects; pressing one pushes `pushTo` (with params { id }). */
 	bounds?: BoundSpec[];
-	/** Makes this screen a nested BlankStack with these screens (the first is its initial route). */
-	stack?: { screens: ScreenSpec[]; screenOptions?: Record<string, unknown> };
+	/**
+	 * Makes this screen a nested BlankStack with these screens (the first is its initial route).
+	 * `independent` puts it in its own NavigationContainer (a NavigationIndependentTree): it shares no
+	 * navigation state with the outer tree, and its screens reach outer routes through the navigation
+	 * of the screen hosting it, as an app passes it down.
+	 */
+	stack?: { screens: ScreenSpec[]; screenOptions?: Record<string, unknown>; independent?: boolean };
 };
 
 type NavState = { index: number; routes: Array<{ key: string; name: string; state?: NavState }> };
@@ -494,6 +499,21 @@ export const focusedPath = (state: NavState | undefined) => {
 
 export type StackHarness = Awaited<ReturnType<typeof mountStack>>;
 
+type NavigationLike = {
+	push: (name: string, params?: object) => void;
+	navigate: (name: string, params?: object) => void;
+	getState: () => { routeNames?: string[] } | undefined;
+	getParent: () => NavigationLike | undefined;
+};
+
+/** Whether this navigation, or one of its parents in the same tree, has a route named `name`. */
+const knowsRoute = (navigation: NavigationLike, name: string) => {
+	for (let nav: NavigationLike | undefined = navigation; nav; nav = nav.getParent()) {
+		if (nav.getState()?.routeNames?.includes(name)) return true;
+	}
+	return false;
+};
+
 type NavigatorFactory = () => { Navigator: unknown; Screen: unknown };
 let navigatorFactory: NavigatorFactory | null = null;
 
@@ -516,11 +536,51 @@ export const mountStack = async (
 ) => {
 	const React = await import("react");
 	const { act, create } = await import("react-test-renderer");
-	const { BaseNavigationContainer, createNavigationContainerRef } = await import("@react-navigation/core");
+	const { BaseNavigationContainer, NavigationIndependentTree, createNavigationContainerRef } = await import("@react-navigation/core");
 	const { LinkingContext } = await import("@react-navigation/native");
 	const { createBlankStackNavigator } = await import("../../navigators/react-navigation");
 	const ref = createNavigationContainerRef<Record<string, object | undefined>>();
+	type ContainerRef = typeof ref;
 	const trace: TraceFrame[] = [];
+	/** Each independent container's ref, by the key of the outer route hosting it. */
+	const independentRefs = new Map<string, ContainerRef>();
+	/**
+	 * The whole route tree: an independent container's state is set as its hosting route's nested
+	 * state, so paths and leaf routes read across containers. `owner` names the container that holds
+	 * each stack state (by its key), for actions sent to it.
+	 */
+	const owners = new Map<string, ContainerRef>();
+	const fullState = (container: ContainerRef = ref): NavState | undefined => {
+		const state = container.isReady() ? (container.getRootState() as unknown as NavState & { key: string }) : undefined;
+		if (!state) return undefined;
+		const merge = (s: NavState & { key: string }): NavState => {
+			owners.set(s.key, container);
+			return {
+				...s,
+				routes: s.routes.map((route) => {
+					if (route.state) return { ...route, state: merge(route.state as NavState & { key: string }) };
+					const inner = independentRefs.get(route.key);
+					const innerState = inner ? fullState(inner) : undefined;
+					return innerState ? { ...route, state: innerState } : route;
+				}),
+			};
+		};
+		return merge(state);
+	};
+	/** The containers on the focused path, innermost first. */
+	const focusedContainers = () => {
+		const list: ContainerRef[] = [ref];
+		let state = fullState();
+		while (state) {
+			const route = state.routes[state.index];
+			const inner = independentRefs.get(route.key);
+			if (inner) list.unshift(inner);
+			state = route.state;
+		}
+		return list;
+	};
+	/** Outer screens' navigation objects, for screens in an independent tree (innermost tree first). */
+	const OuterNavigation = React.createContext<NavigationLike[]>([]);
 
 	const { default: Transition } = await import("../../index");
 	const specsByName = new Map<string, ScreenSpec>();
@@ -537,6 +597,11 @@ export const mountStack = async (
 	// Each screen is one pressable surface counting its taps, around the marker the recorder reads.
 	const Screen = ({ route, navigation }: { route: { key: string; name: string }; navigation: { setOptions: (o: object) => void } }) => {
 		navigations[route.name] = navigation;
+		const outer = React.useContext(OuterNavigation);
+		// The navigation that knows `name`: this screen's own (its stack or a parent), else the outer
+		// tree's, as an app hands the outer navigation into an independent container.
+		const navigationFor = (name: string) =>
+			[navigation as unknown as NavigationLike, ...outer].find((nav) => knowsRoute(nav, name)) ?? (navigation as unknown as NavigationLike);
 		// Positioned by a wrapper, sized itself, as an app lays a card out: a boundary that escapes into its
 		// overlay host takes its size there, not a position inside its old parent.
 		const renderBound = (bound: BoundSpec) =>
@@ -553,11 +618,11 @@ export const mountStack = async (
 					testID: `${BOUND_MARKER}${route.key}:${bound.id}`,
 					style: { width: bound.rect.width, height: bound.rect.height },
 					onPress: bound.pushTo
-						? () => (navigation as unknown as { push: (n: string, p: object) => void }).push(bound.pushTo as string, { id: bound.id })
+						? () => navigationFor(bound.pushTo as string).push(bound.pushTo as string, { id: bound.id })
 						: bound.navigateTo
 							? () => {
 									const { name, screen } = bound.navigateTo as { name: string; screen?: string };
-									(navigation as unknown as { navigate: (n: string, p: object) => void }).navigate(
+									navigationFor(name).navigate(
 										name,
 										screen ? { screen, params: { id: bound.id } } : { id: bound.id },
 									);
@@ -625,7 +690,27 @@ export const mountStack = async (
 			const component = spec.stack
 				? (() => {
 						const Nested = buildNavigator(spec.stack.screens, spec.stack.screenOptions);
-						return () => Nested;
+						if (!spec.stack.independent) return () => Nested;
+						return ({ route, navigation }: { route: { key: string }; navigation: NavigationLike }) => {
+							const outer = React.useContext(OuterNavigation);
+							const innerRef = React.useMemo(() => createNavigationContainerRef<Record<string, object | undefined>>(), []);
+							React.useLayoutEffect(() => {
+								independentRefs.set(route.key, innerRef);
+								return () => {
+									if (independentRefs.get(route.key) === innerRef) independentRefs.delete(route.key);
+								};
+							}, [route.key, innerRef]);
+							const chain = React.useMemo(() => [navigation, ...outer], [navigation, outer]);
+							return React.createElement(
+								OuterNavigation.Provider,
+								{ value: chain },
+								React.createElement(
+									NavigationIndependentTree as never,
+									null,
+									React.createElement(BaseNavigationContainer, { ref: innerRef } as never, Nested),
+								),
+							);
+						};
 					})()
 				: Screen;
 			return React.createElement(Stack.Screen as never, {
@@ -719,7 +804,7 @@ export const mountStack = async (
 	const scrollSpecOf = (testID: string) => {
 		const inner = testID.endsWith(INNER_SCROLL);
 		const routeKey = testID.slice(SCROLL_MARKER.length, inner ? -INNER_SCROLL.length : undefined);
-		const name = leafRoutes(ref.getRootState() as unknown as NavState).find((r) => r.key === routeKey)?.name;
+		const name = leafRoutes(fullState()).find((r) => r.key === routeKey)?.name;
 		const spec = name ? specsByName.get(name)?.scroll : undefined;
 		return inner ? spec?.inner : spec;
 	};
@@ -818,13 +903,13 @@ export const mountStack = async (
 		scrollOffsets,
 		/** Scrolls the named screen's scroll view (covered or not) to `offset`, before a frame. */
 		scrollScreenTo: async (name: string, offset: number, inner = false) => {
-			const key = leafRoutes(ref.getRootState() as unknown as NavState).find((r) => r.name === name)?.key;
+			const key = leafRoutes(fullState()).find((r) => r.name === name)?.key;
 			if (!key) throw new Error(`no mounted screen named ${name}`);
 			await frame(undefined, () => scrollTo(`${SCROLL_MARKER}${key}${inner ? INNER_SCROLL : ""}`, offset));
 		},
 		/** Scrolls the focused screen's scroll view (or the one nested in it) to `offset` (on the UI thread, before a frame). */
 		scrollFocusedTo: async (offset: number, inner = false) => {
-			const key = leafRoutes(ref.getRootState() as unknown as NavState).at(-1)?.key;
+			const key = leafRoutes(fullState()).at(-1)?.key;
 			await frame(undefined, () => scrollTo(`${SCROLL_MARKER}${key}${inner ? INNER_SCROLL : ""}`, offset));
 		},
 		/** The named screen's navigation.setOptions, on the JS thread. */
@@ -843,24 +928,29 @@ export const mountStack = async (
 		navigate: (name: string, params?: object) => js(() => ref.navigate(name as never, params as never)),
 		push: (name: string, params?: object) =>
 			js(() => ref.dispatch({ type: "PUSH", payload: { name, params } } as never)),
-		goBack: () => js(() => ref.goBack()),
+		/** Back in the innermost focused container that can go back (an independent tree first). */
+		goBack: () =>
+			js(() => {
+				const container = focusedContainers().find((c) => c.canGoBack()) ?? ref;
+				container.goBack();
+			}),
 		/** Pushes `name` onto the nested stack at `path` (route names from the root's routes down). */
 		pushIn: (path: string[], name: string, params?: object) =>
 			js(() => {
-				let state = ref.getRootState() as unknown as (NavState & { key: string }) | undefined;
+				let state = fullState() as (NavState & { key: string }) | undefined;
 				for (const segment of path) {
 					const route = state?.routes.find((r) => r.name === segment);
 					state = route?.state as (NavState & { key: string }) | undefined;
 				}
 				if (!state) throw new Error(`no nested stack at ${path.join("/")}`);
-				ref.dispatch({ type: "PUSH", payload: { name, params }, target: state.key } as never);
+				(owners.get(state.key) ?? ref).dispatch({ type: "PUSH", payload: { name, params }, target: state.key } as never);
 			}),
 		replace: (name: string, params?: object) =>
 			js(() => ref.dispatch({ type: "REPLACE", payload: { name, params } } as never)),
 		routes: () => ref.getRootState()?.routes.map((r) => ({ key: r.key, name: r.name })) ?? [],
 		/** Leaf routes across nested stacks, focused leaf last. */
-		leafRoutes: () => leafRoutes(ref.getRootState() as unknown as NavState),
-		focusedPath: () => focusedPath(ref.getRootState() as unknown as NavState),
+		leafRoutes: () => leafRoutes(fullState()),
+		focusedPath: () => focusedPath(fullState()),
 		unmount: () => act(async () => root.unmount()),
 		window: WINDOW,
 		insets: INSETS,
