@@ -1234,6 +1234,63 @@ export const buildScrollBoundsCatalog = (window: { width: number; height: number
 			closesOnto(cardAt(listScroll)),
 		]);
 	}
+
+	// Nested: the card sits in a horizontal carousel inside the vertical list. The close follows both
+	// scroll views, whichever moves.
+	const carousel = { x: 0, y: cardContent.y - 10, width: W, height: cardContent.height + 20 };
+	const cardInCarousel = { x: W * 1.1, y: 10, width: cardContent.width, height: cardContent.height };
+	const carouselScroll = W * 0.9;
+	const nestedCardAt = (list: number, inner: number) => ({
+		...cardInCarousel,
+		x: carousel.x + cardInCarousel.x - inner,
+		y: carousel.y + cardInCarousel.y - list,
+	});
+	const nestedList = {
+		name: "A",
+		scroll: {
+			contentSize: H * 3,
+			inner: { rect: carousel, contentSize: W * 3, horizontal: true, bounds: [{ id: "card", rect: cardInCarousel, pushTo: "Z" }] },
+		},
+	};
+	const openNested = (): Step[] => [
+		scrollList(),
+		{ op: "scrollTo", offset: carouselScroll, inner: true },
+		{ op: "tap", at: centerOf(nestedCardAt(listScroll, carouselScroll)) },
+	];
+	for (const [kind, { screen, moving, opened }] of Object.entries(destinations)) {
+		const screens = [nestedList, screen];
+		const add = (sequence: string, steps: Step[]) =>
+			scenarios.push({ name: `scroll-bounds-${kind} / zoom-spec / nested-${sequence}`, screens, steps, expect: { mayOvershoot: true } });
+		const closesOnto = (rect: typeof full): Step => ({ op: "expectTrajectory", ...moving, to: rect, tolerance: 40, throughFade: true });
+
+		add("open-close", [
+			...openNested(),
+			{ op: "expectTrajectory", ...moving, from: nestedCardAt(listScroll, carouselScroll), to: opened, tolerance: 40 },
+			{ op: "pop" },
+			closesOnto(nestedCardAt(listScroll, carouselScroll)),
+		]);
+		// The carousel moved while covered: land on the card's new place in it.
+		add("carousel-moved-while-covered-then-close", [
+			...openNested(),
+			{ op: "settle" },
+			{ op: "scrollTo", screen: "A", inner: true, offset: carouselScroll + W * 0.25 },
+			{ op: "pop" },
+			closesOnto(nestedCardAt(listScroll, carouselScroll + W * 0.25)),
+		]);
+		// Both scroll during the close (a diagonal flick right after Back).
+		add("list-and-carousel-scroll-during-close", [
+			...openNested(),
+			{ op: "settle" },
+			{ op: "pop" },
+			{ op: "frames", count: 6 },
+			// Each scrollTo is a frame: ten frames in all, alternating the two scroll views.
+			...Array.from({ length: 5 }, (_, i): Step[] => [
+				{ op: "scrollTo", screen: "A", offset: listScroll + H * 0.04 * (i + 1) },
+				{ op: "scrollTo", screen: "A", inner: true, offset: carouselScroll + W * 0.04 * (i + 1) },
+			]).flat(),
+			closesOnto(nestedCardAt(listScroll + H * 0.2, carouselScroll + W * 0.2)),
+		]);
+	}
 	return scenarios;
 };
 

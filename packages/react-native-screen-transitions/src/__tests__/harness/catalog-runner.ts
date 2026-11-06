@@ -22,7 +22,11 @@ export const runCatalog = async (
 	const { KNOWN_ISSUES } = await import("./known-issues");
 	const presets = await import("../../configs/presets");
 	const { interpolate } = await import("react-native-reanimated");
-	const catalog = buildFullCatalog(presets as never, interpolate as never, WINDOW, HarnessOverlay, (await import("../../configs/specs")) as never);
+	// HARNESS_ONLY=<substring> runs the matching scenarios only (known issues outside them can't reproduce, so strictness is off).
+	const only = process.env.HARNESS_ONLY;
+	const catalog = buildFullCatalog(presets as never, interpolate as never, WINDOW, HarnessOverlay, (await import("../../configs/specs")) as never).filter(
+		(scenario) => !only || scenario.name.includes(only),
+	);
 
 	const unexplained: string[] = [];
 	const seen = new Map<string, number>();
@@ -48,6 +52,6 @@ export const runCatalog = async (
 	if (unexplained.length) console.log(`[${label}] unexplained violations:\n${unexplained.join("\n")}`);
 	if (fixed.length) console.log(`[${label}] known issues that no longer reproduce (delete them): ${fixed.join(", ")}`);
 	expect(unexplained).toEqual([]);
-	if (strictKnownIssues) expect(fixed).toEqual([]);
+	if (strictKnownIssues && !only) expect(fixed).toEqual([]);
 	return catalog.length;
 };

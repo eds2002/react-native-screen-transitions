@@ -8,8 +8,11 @@
  * (no landing fade), no backdrop and no background shrink, so both screens stay visible and the
  * landing can be compared with the card.
  *
+ * A horizontal carousel (c1–c8) sits inside the list: its cards are nested two scroll views deep.
+ *
  * The detail's bar: Back; "move list" scrolls the list underneath (as if rows changed while covered);
- * "Back + scroll" pops and scrolls the list during the close (a flick right after Back).
+ * "Back + scroll" pops and scrolls the list during the close (a flick right after Back); "Back + both"
+ * pops and scrolls the list and the carousel during the close.
  *
  * Argent loop (open harness://lab/scrollbounds):
  *  1. swipe up on the list (0.5,0.8 → 0.5,0.55), tap sb-card-5 → the detail grows out of card 5
@@ -25,8 +28,11 @@ import { Button, colorFor, createBlankStackNavigator, LabContainer, Transition, 
 const GROUP = "list";
 const CARDS = Array.from({ length: 12 }, (_, i) => `${i + 1}`);
 const Stack = createBlankStackNavigator();
+const CAROUSEL = Array.from({ length: 8 }, (_, i) => `c${i + 1}`);
 const listRef = { current: null };
 const listOffset = { current: 0 };
+const carouselRef = { current: null };
+const carouselOffset = { current: 0 };
 
 const SLOW = { stiffness: 60, damping: 20, mass: 1.6, overshootClamping: true };
 
@@ -80,6 +86,31 @@ function List({ navigation }) {
 					))}
 					<Button label={debug ? "• debug" : "debug"} testID="sb-debug" onPress={() => setDebug(!debug)} />
 				</View>
+				{/* Nested: a horizontal carousel inside the list. */}
+				<Transition.ScrollView
+					horizontal
+					ref={carouselRef}
+					scrollEventThrottle={16}
+					onScroll={(e) => {
+						carouselOffset.current = e.nativeEvent.contentOffset.x;
+					}}
+					style={{ marginHorizontal: -20 }}
+					contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}
+				>
+					{CAROUSEL.map((id) => (
+						<Transition.Boundary
+							key={id}
+							id={id}
+							group={GROUP}
+							testID={`sb-card-${id}`}
+							accessibilityLabel={`sb-card-${id}`}
+							onPress={() => navigation.push("detail", { id, mode, debug })}
+							style={{ width: size, height: size * CARD_RATIO, borderRadius: 20, backgroundColor: colorFor(`card${id}`), justifyContent: "flex-end", padding: 14 }}
+						>
+							<Text style={{ color: "white", fontSize: 28, fontWeight: "800" }}>{id}</Text>
+						</Transition.Boundary>
+					))}
+				</Transition.ScrollView>
 				<View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
 					{CARDS.map((id) => (
 						<Transition.Boundary
@@ -126,9 +157,22 @@ function Detail({ navigation, route }) {
 					<View key={i} style={{ height: 56, borderRadius: 14, backgroundColor: "#ffffff14" }} />
 				))}
 			</Transition.ScrollView>
-			<View style={{ position: "absolute", top: 60, left: 16, right: 16, flexDirection: "row", gap: 8 }}>
+			<View style={{ position: "absolute", top: 60, left: 16, right: 16, flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
 				<BarButton label="Back" testID="sb-back" onPress={() => navigation.goBack()} />
 				<BarButton label="move list" testID="sb-move-list" onPress={() => listRef.current?.scrollTo?.({ y: listOffset.current + 300, animated: false })} />
+				<BarButton
+					label="Back + both"
+					testID="sb-back-both"
+					onPress={() => {
+						const list = listOffset.current;
+						const carousel = carouselOffset.current;
+						navigation.goBack();
+						setTimeout(() => {
+							listRef.current?.scrollTo?.({ y: list + 200, animated: true });
+							carouselRef.current?.scrollTo?.({ x: carousel + 200, animated: true });
+						}, 120);
+					}}
+				/>
 				<BarButton
 					label="Back + scroll"
 					testID="sb-back-scroll"

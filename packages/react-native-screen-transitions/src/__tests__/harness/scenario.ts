@@ -63,8 +63,11 @@ export type Step =
 			/** Count frames where it is transparent too (screens that fade as they land). */
 			throughFade?: boolean;
 	  }
-	/** Scrolls the focused screen's scroll view to an offset (as if the user had scrolled there). */
-	| { op: "scrollTo"; offset: number; screen?: string }
+	/**
+	 * Scrolls the focused screen's scroll view (or `screen`'s) to an offset (as if the user had
+	 * scrolled there). `inner` scrolls the scroll view nested inside it instead.
+	 */
+	| { op: "scrollTo"; offset: number; screen?: string; inner?: boolean }
 	/** Checks the focused screen's scroll offset. */
 	| { op: "expectScroll"; min?: number; max?: number }
 	/** Settles, then checks the focused screen's styleId element sits exactly on its screen (no leftover slot style). */
@@ -274,7 +277,7 @@ const runStep = async (stack: StackHarness, step: Step, expectations: Expectatio
 			return;
 		}
 		case "scrollTo":
-			return step.screen ? stack.scrollScreenTo(step.screen, step.offset) : stack.scrollFocusedTo(step.offset);
+			return step.screen ? stack.scrollScreenTo(step.screen, step.offset, step.inner) : stack.scrollFocusedTo(step.offset, step.inner);
 		case "expectScroll": {
 			await stack.settle();
 			const key = stack.leafRoutes().at(-1)?.key;

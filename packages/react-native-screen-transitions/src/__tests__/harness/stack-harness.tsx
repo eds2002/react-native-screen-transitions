@@ -46,13 +46,16 @@ export const BOUND_MARKER = "harness-bound:";
  * descendants' transforms about that rect's center, and through the layers
  * above it (which fill the window) about the window's center.
  */
+/** A view placed at its own rect (left/top + width/height), like a boundary or a nested scroll view. */
+const hasOwnLayout = (st: Record<string, unknown>) =>
+	typeof st.width === "number" && typeof st.height === "number" && (typeof st.left === "number" || typeof st.top === "number");
+
 export const elementBox = (node: ReactTestInstance, sim: ReanimatedSim, { layoutOnly = false } = {}) => {
 	const path = pathTo(node).filter((n) => typeof n.type === "string");
 	const styles = path.map((n) => flattenStyle(layoutOnly ? staticStyle(n.props.style, sim) : sim.resolveAnimated(n.props.style)));
 	let layoutIndex = -1;
 	for (let i = path.length - 1; i >= 0; i--) {
-		const st = styles[i];
-		if (typeof st.width === "number" && typeof st.height === "number" && (typeof st.left === "number" || typeof st.top === "number")) {
+		if (hasOwnLayout(styles[i])) {
 			layoutIndex = i;
 			break;
 		}
@@ -67,12 +70,22 @@ export const elementBox = (node: ReactTestInstance, sim: ReanimatedSim, { layout
 				}
 			: { x: 0, y: 0, ...WINDOW };
 	let matrix = IDENTITY;
+	// The box the current node is laid out in, at the local origin: the window, or a positioned
+	// ancestor (a scroll view nested in another one's content).
+	let container = { width: WINDOW.width, height: WINDOW.height };
 	path.forEach((step, i) => {
 		const { matrix: local } = transformMatrix(styles[i].transform);
 		const own = i >= layoutIndex && layoutIndex >= 0;
-		const cx = own ? rect.x + rect.width / 2 : WINDOW.width / 2;
-		const cy = own ? rect.y + rect.height / 2 : WINDOW.height / 2;
+		const placed = !own && hasOwnLayout(styles[i]);
+		const left = placed ? Number(styles[i].left ?? 0) : 0;
+		const top = placed ? Number(styles[i].top ?? 0) : 0;
+		const cx = own ? rect.x + rect.width / 2 : placed ? left + Number(styles[i].width) / 2 : container.width / 2;
+		const cy = own ? rect.y + rect.height / 2 : placed ? top + Number(styles[i].height) / 2 : container.height / 2;
 		matrix = multiply(matrix, multiply(multiply({ ...IDENTITY, tx: cx, ty: cy }, local), { ...IDENTITY, tx: -cx, ty: -cy }));
+		if (placed) {
+			matrix = multiply(matrix, { ...IDENTITY, tx: left, ty: top });
+			container = { width: Number(styles[i].width), height: Number(styles[i].height) };
+		}
 		if (i < path.length - 1) matrix = multiply(matrix, contentShift(step));
 	});
 	const corners = [
@@ -96,6 +109,8 @@ const staticStyle = (style: unknown, sim: ReanimatedSim): unknown => {
 };
 
 export const SCROLL_MARKER = "harness-scroll:";
+/** Suffix of a scroll view nested inside a screen's scroll view. */
+const INNER_SCROLL = ":inner";
 
 /**
  * The current offset of a harness scroll view (by testID), set by the mounted stack. A scroll view
@@ -411,7 +426,13 @@ export type ScreenSpec = {
 	 * A full-screen Transition.ScrollView with this much content (along its axis). `bounds` sit in its
 	 * content (rects in content coordinates), so they move as it scrolls.
 	 */
-	scroll?: { contentSize: number; horizontal?: boolean; bounds?: BoundSpec[] };
+	scroll?: {
+		contentSize: number;
+		horizontal?: boolean;
+		bounds?: BoundSpec[];
+		/** A Transition.ScrollView nested in this one's content at `rect` (a carousel in a list), with its own `bounds`. */
+		inner?: { rect: Rect; contentSize: number; horizontal?: boolean; bounds?: BoundSpec[] };
+	};
 	/** Transition.Boundary views at these window rects; pressing one pushes `pushTo` (with params { id }). */
 	bounds?: BoundSpec[];
 	/** Makes this screen a nested BlankStack with these screens (the first is its initial route). */
@@ -528,6 +549,22 @@ export const mountStack = async (
 									style: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0 },
 								} as never,
 								...(specsByName.get(route.name)?.scroll?.bounds ?? []).map(renderBound),
+								...(() => {
+									const inner = specsByName.get(route.name)?.scroll?.inner;
+									if (!inner) return [];
+									return [
+										React.createElement(
+											Transition.ScrollView as never,
+											{
+												key: "inner-scroll",
+												testID: `${SCROLL_MARKER}${route.key}${INNER_SCROLL}`,
+												horizontal: inner.horizontal,
+												style: { position: "absolute", left: inner.rect.x, top: inner.rect.y, width: inner.rect.width, height: inner.rect.height },
+											} as never,
+											...(inner.bounds ?? []).map(renderBound),
+										),
+									];
+								})(),
 							),
 						]
 					: []),
@@ -624,16 +661,23 @@ export const mountStack = async (
 			const id = String(node.props.testID);
 			if (scrollOffsets.has(id)) continue;
 			scrollOffsets.set(id, 0);
-			const routeKey = id.slice(SCROLL_MARKER.length);
-			const name = leafRoutes(ref.getRootState() as unknown as NavState).find((r) => r.key === routeKey)?.name;
-			const spec = name ? specsByName.get(name)?.scroll : undefined;
-			(node.props.onLayout as ((e: unknown) => void) | undefined)?.({ nativeEvent: { layout: { x: 0, y: 0, ...WINDOW } } });
-			const size = spec?.contentSize ?? WINDOW.height;
+			const spec = scrollSpecOf(id);
+			const box = spec && "rect" in spec ? { width: spec.rect.width, height: spec.rect.height } : WINDOW;
+			(node.props.onLayout as ((e: unknown) => void) | undefined)?.({ nativeEvent: { layout: { x: 0, y: 0, ...box } } });
+			const size = spec?.contentSize ?? box.height;
 			(node.props.onContentSizeChange as ((w: number, h: number) => void) | undefined)?.(
-				spec?.horizontal ? size : WINDOW.width,
-				spec?.horizontal ? WINDOW.height : size,
+				spec?.horizontal ? size : box.width,
+				spec?.horizontal ? box.height : size,
 			);
 		}
+	};
+	/** The spec of a scroll view by testID: a screen's scroll, or the one nested in it. */
+	const scrollSpecOf = (testID: string) => {
+		const inner = testID.endsWith(INNER_SCROLL);
+		const routeKey = testID.slice(SCROLL_MARKER.length, inner ? -INNER_SCROLL.length : undefined);
+		const name = leafRoutes(ref.getRootState() as unknown as NavState).find((r) => r.key === routeKey)?.name;
+		const spec = name ? specsByName.get(name)?.scroll : undefined;
+		return inner ? spec?.inner : spec;
 	};
 	scrollOffsetOf = (testID) => scrollOffsets.get(testID) ?? 0;
 	/** Sends a scroll event to a scroll view (by testID) and records its offset. */
@@ -690,11 +734,10 @@ export const mountStack = async (
 		scrollOffset: (testID) => scrollOffsets.get(testID) ?? 0,
 		scrollTo,
 		scrollLimit: (testID) => {
-			const routeKey = testID.slice(SCROLL_MARKER.length);
-			const name = leafRoutes(ref.getRootState() as unknown as NavState).find((r) => r.key === routeKey)?.name;
-			const spec = name ? specsByName.get(name)?.scroll : undefined;
+			const spec = scrollSpecOf(testID);
 			if (!spec) return 0;
-			return Math.max(0, spec.contentSize - (spec.horizontal ? WINDOW.width : WINDOW.height));
+			const box = "rect" in spec ? spec.rect : WINDOW;
+			return Math.max(0, spec.contentSize - (spec.horizontal ? box.width : box.height));
 		},
 		scenes: () => readScenes(root, sim),
 		frameWith: (beforeFrame) => frame(undefined, beforeFrame),
@@ -720,15 +763,15 @@ export const mountStack = async (
 		taps,
 		scrollOffsets,
 		/** Scrolls the named screen's scroll view (covered or not) to `offset`, before a frame. */
-		scrollScreenTo: async (name: string, offset: number) => {
+		scrollScreenTo: async (name: string, offset: number, inner = false) => {
 			const key = leafRoutes(ref.getRootState() as unknown as NavState).find((r) => r.name === name)?.key;
 			if (!key) throw new Error(`no mounted screen named ${name}`);
-			await frame(undefined, () => scrollTo(`${SCROLL_MARKER}${key}`, offset));
+			await frame(undefined, () => scrollTo(`${SCROLL_MARKER}${key}${inner ? INNER_SCROLL : ""}`, offset));
 		},
-		/** Scrolls the focused screen's scroll view to `offset` (on the UI thread, before a frame). */
-		scrollFocusedTo: async (offset: number) => {
+		/** Scrolls the focused screen's scroll view (or the one nested in it) to `offset` (on the UI thread, before a frame). */
+		scrollFocusedTo: async (offset: number, inner = false) => {
 			const key = leafRoutes(ref.getRootState() as unknown as NavState).at(-1)?.key;
-			await frame(undefined, () => scrollTo(`${SCROLL_MARKER}${key}`, offset));
+			await frame(undefined, () => scrollTo(`${SCROLL_MARKER}${key}${inner ? INNER_SCROLL : ""}`, offset));
 		},
 		/** The named screen's navigation.setOptions, on the JS thread. */
 		setOptions: (name: string, options: object) =>
