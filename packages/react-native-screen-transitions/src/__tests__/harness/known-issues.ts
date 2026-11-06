@@ -22,12 +22,24 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 		id: "escape-reopen-during-close-snap",
 		environments: ["teleport"],
 		summary:
-			"With teleport: open a card from a scrolled list, pop mid-open, and open it again while the close is still " +
+			"With teleport: open a card (seen from a scrolled list, a nested destination, a deep stack), pop mid-open, and open it again while the close is still " +
 			"shrinking it back: on the second open the card snaps from its mid-close pose to its slot (27 px, 179 -> 141 " +
 			"wide, fully opaque) and then grows again, instead of continuing from where it was. Escaped into its overlay " +
 			"host it follows the closing pair; the new pair takes over a frame later, and in between it is drawn inline at rest.",
 		matches: (scenario, v) =>
-			sequenceOf(scenario) === "open-pop-open-from-scrolled-list" && v.rule === "element-spike" && v.scene === "A#bound:card",
+			sequenceOf(scenario).startsWith("open-pop-open") && v.rule === "element-spike" && !!v.scene?.endsWith("#bound:card"),
+	},
+	{
+		id: "global-source-outside-destination-stack",
+		summary:
+			"A card inside a nested stack (or a sibling stack) opening a screen in another stack does not zoom at all: the " +
+			"destination appears at full size and vanishes on close. The handshake pairs the real source (List<>Detail), but " +
+			"the interpolator resolves its pair from the destination's previous route in its own stack, the container " +
+			"(Home<>Detail), finds no link, and returns no styles.",
+		matches: (scenario) =>
+			["bounds-global-nested-source-to-root", "bounds-global-deep-source-to-root", "bounds-global-sibling-stacks"].includes(
+				transitionOf(scenario),
+			),
 	},
 	{
 		id: "interrupted-navigation",

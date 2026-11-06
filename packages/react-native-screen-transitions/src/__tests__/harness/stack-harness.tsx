@@ -428,7 +428,15 @@ export const readScenes = (renderer: ReactTestRenderer, sim: ReanimatedSim): Sce
 	return scenes;
 };
 
-export type BoundSpec = { id: string; rect: Rect; pushTo?: string; group?: string };
+export type BoundSpec = {
+	id: string;
+	rect: Rect;
+	/** Pressing it pushes this route (params { id }); a nested stack without it hands the push to its parent. */
+	pushTo?: string;
+	/** Pressing it navigates to `name` (opening its nested `screen` with params { id }): a screen in a sibling stack. */
+	navigateTo?: { name: string; screen?: string };
+	group?: string;
+};
 
 export type ScreenSpec = {
 	name: string;
@@ -546,7 +554,15 @@ export const mountStack = async (
 					style: { width: bound.rect.width, height: bound.rect.height },
 					onPress: bound.pushTo
 						? () => (navigation as unknown as { push: (n: string, p: object) => void }).push(bound.pushTo as string, { id: bound.id })
-						: undefined,
+						: bound.navigateTo
+							? () => {
+									const { name, screen } = bound.navigateTo as { name: string; screen?: string };
+									(navigation as unknown as { navigate: (n: string, p: object) => void }).navigate(
+										name,
+										screen ? { screen, params: { id: bound.id } } : { id: bound.id },
+									);
+								}
+							: undefined,
 				} as never),
 			);
 		return React.createElement(

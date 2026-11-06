@@ -1444,6 +1444,156 @@ export const buildBoundsChainCatalog = (window: { width: number; height: number 
 	return scenarios;
 };
 
+// Shared bounds across the route tree: a source and its destination can sit at any depth of nested
+// stacks, in sibling stacks, high in a long stack, or under screens pushed over the destination. A
+// pair is source screen -> destination screen wherever they are; every open must grow from the card
+// and every close land back on it.
+export const buildGlobalBoundsCatalog = (window: { width: number; height: number }, specs: { Zoom?: unknown }): Scenario[] => {
+	const W = window.width;
+	const H = window.height;
+	const zoomSpec = specs.Zoom ?? DEFAULT_SPEC;
+	const full = { x: 0, y: 0, ...window };
+	const card = { x: W * 0.1, y: H * 0.6, width: W * 0.36, height: H * 0.2 };
+	const centerOf = (r: typeof card) => ({ x: r.x + r.width / 2, y: r.y + r.height / 2 });
+	// The card's id from the route's params, or from its nested screen's (a container screen opened
+	// onto the destination inside it).
+	const zoom = () => ({
+		gestureEnabled: true,
+		gestureDirection: ["bidirectional", "pinch-in"],
+		transitionSpec: { open: zoomSpec, close: zoomSpec },
+		screenStyleInterpolator: (props: any) => {
+			"worklet";
+			const params = props.active?.route?.params ?? props.current?.route?.params;
+			const id = params?.id ?? params?.params?.id;
+			if (!id) return {};
+			return props.bounds(id).navigation.zoom();
+		},
+	});
+	const slideUp = {
+		gestureEnabled: true,
+		gestureDirection: "vertical",
+		transitionSpec: { open: DEFAULT_SPEC, close: DEFAULT_SPEC },
+		screenStyleInterpolator: ({ progress }: any) => {
+			"worklet";
+			return { content: { style: { transform: [{ translateY: (1 - Math.min(progress, 1)) * H }] } } };
+		},
+	};
+	const source = (pushTo?: string, navigateTo?: { name: string; screen?: string }) => [{ id: "card", rect: card, pushTo, navigateTo }];
+	type Topology = {
+		screens: ScreenSpec[];
+		/** The leaf screen that grows out of the card. */
+		destination: string;
+		openPath: string[];
+		closedPath: string[];
+		/** Steps that bring the source on screen first. */
+		before?: Step[];
+	};
+	const topologies: Record<string, Topology> = {
+		"nested-source-to-root": {
+			screens: [{ name: "Home", stack: { screens: [{ name: "List", bounds: source("Detail") }] } }, { name: "Detail", options: zoom() }],
+			destination: "Detail",
+			openPath: ["Detail"],
+			closedPath: ["Home", "List"],
+		},
+		"deep-source-to-root": {
+			screens: [
+				{ name: "Home", stack: { screens: [{ name: "Inner", stack: { screens: [{ name: "List", bounds: source("Detail") }] } }] } },
+				{ name: "Detail", options: zoom() },
+			],
+			destination: "Detail",
+			openPath: ["Detail"],
+			closedPath: ["Home", "Inner", "List"],
+		},
+		"root-source-to-nested-dest": {
+			screens: [{ name: "List", bounds: source("Deep") }, { name: "Deep", options: zoom(), stack: { screens: [{ name: "Dest" }] } }],
+			destination: "Dest",
+			openPath: ["Deep", "Dest"],
+			closedPath: ["List"],
+		},
+		"root-source-to-deep-dest": {
+			screens: [
+				{ name: "List", bounds: source("Deep") },
+				{ name: "Deep", options: zoom(), stack: { screens: [{ name: "Mid", stack: { screens: [{ name: "Dest" }] } }] } },
+			],
+			destination: "Dest",
+			openPath: ["Deep", "Mid", "Dest"],
+			closedPath: ["List"],
+		},
+		"sibling-stacks": {
+			screens: [
+				{ name: "A", stack: { screens: [{ name: "List", bounds: source(undefined, { name: "B", screen: "Detail" }) }] } },
+				{ name: "B", options: zoom(), stack: { screens: [{ name: "Hub" }, { name: "Detail" }] } },
+			],
+			destination: "Detail",
+			openPath: ["B", "Detail"],
+			closedPath: ["A", "List"],
+		},
+		"deep-stack": {
+			screens: [{ name: "S1" }, { name: "S2" }, { name: "S3" }, { name: "List", bounds: source("Detail") }, { name: "Detail", options: zoom() }],
+			destination: "Detail",
+			openPath: ["Detail"],
+			closedPath: ["List"],
+			before: [{ op: "push", name: "S2" }, { op: "push", name: "S3" }, { op: "push", name: "List" }, { op: "settle" }],
+		},
+	};
+	const scenarios: Scenario[] = [];
+	for (const [topology, { screens, destination, openPath, closedPath, before = [] }] of Object.entries(topologies)) {
+		const add = (sequence: string, steps: Step[]) =>
+			scenarios.push({
+				name: `bounds-global-${topology} / zoom-spec / ${sequence}`,
+				screens,
+				steps: [...before, ...steps],
+				expect: { mayOvershoot: true },
+			});
+		const tapCard: Step = { op: "tap", at: centerOf(card) };
+		const opens: Step = { op: "expectTrajectory", scene: destination, from: card, to: full, tolerance: 40 };
+		const closesOnto: Step = { op: "expectTrajectory", scene: destination, to: card, tolerance: 40, throughFade: true };
+		add("open-close", [tapCard, opens, { op: "expectPath", names: openPath }, { op: "pop" }, closesOnto, { op: "expectPath", names: closedPath }]);
+		add("pop-mid-open", [tapCard, { op: "frames", count: 6 }, { op: "pop" }, closesOnto, { op: "expectPath", names: closedPath }]);
+		add("open-pop-open", [
+			tapCard,
+			{ op: "frames", count: 6 },
+			{ op: "pop" },
+			{ op: "frames", count: 4 },
+			tapCard,
+			{ op: "expectPath", names: openPath },
+			{ op: "pop" },
+			closesOnto,
+			{ op: "expectPath", names: closedPath },
+		]);
+		add("swipe-dismiss", [
+			tapCard,
+			{ op: "settle" },
+			{ op: "swipe", direction: "vertical", distance: 0.5, durationMs: 250 },
+			closesOnto,
+			{ op: "expectPath", names: closedPath },
+		]);
+	}
+	// Screens over the destination, popped in quick succession: the destination closes onto the card
+	// while the screens above it are still leaving.
+	scenarios.push({
+		name: "bounds-global-covered-destination / zoom-spec / pop-three-quickly",
+		screens: [{ name: "List", bounds: source("Detail") }, { name: "Detail", options: zoom() }, { name: "X", options: slideUp }, { name: "Y", options: slideUp }],
+		expect: { mayOvershoot: true },
+		steps: [
+			{ op: "tap", at: centerOf(card) },
+			{ op: "settle" },
+			{ op: "push", name: "X" },
+			{ op: "settle" },
+			{ op: "push", name: "Y" },
+			{ op: "settle" },
+			{ op: "pop" },
+			{ op: "frames", count: 3 },
+			{ op: "pop" },
+			{ op: "frames", count: 3 },
+			{ op: "pop" },
+			{ op: "expectTrajectory", scene: "Detail", to: card, tolerance: 40, throughFade: true },
+			{ op: "expectRoutes", names: ["List"] },
+		],
+	});
+	return scenarios;
+};
+
 export const buildFullCatalog = (
 	presets: Presets,
 	interpolate: InterpolateFn,
@@ -1463,4 +1613,5 @@ export const buildFullCatalog = (
 	...buildBoundsCatalog(interpolate, window, specs ?? {}),
 	...buildScrollBoundsCatalog(window, specs ?? {}),
 	...buildBoundsChainCatalog(window, specs ?? {}),
+	...buildGlobalBoundsCatalog(window, specs ?? {}),
 ];
