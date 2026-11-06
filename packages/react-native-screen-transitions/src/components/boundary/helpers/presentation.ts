@@ -18,6 +18,13 @@ export type BoundaryPresentationState = {
 	)[];
 	pairs: ReturnType<typeof pairs.get>;
 	entries: ReturnType<typeof boundaryRegistry.get>;
+	/**
+	 * The screen this boundary's own screen is transitioning with (its frame's next screen), if any.
+	 * A source follows that pair, as its inline style does: when a new pair opens while an earlier one
+	 * from the same card is still closing, the card keeps following the closing one until its screen
+	 * moves on, instead of jumping to the new pair's start.
+	 */
+	following?: string;
 };
 
 export function resolveBoundaryPresentation(
@@ -28,6 +35,7 @@ export function resolveBoundaryPresentation(
 	"worklet";
 	const linkKey = getLinkKeyFromTag(boundaryId);
 	let result: BoundaryPairPresentation | undefined;
+	let other: BoundaryPairPresentation | undefined;
 	for (const value of state.presentations) {
 		const presentation = value?.get();
 		if (!presentation) continue;
@@ -39,11 +47,21 @@ export function resolveBoundaryPresentation(
 		const destinationKey =
 			link.destination?.screenKey ?? presentation.destinationKey;
 		if (sourceKey !== screenKey && destinationKey !== screenKey) continue;
+		const candidate = { ...presentation, sourceKey, destinationKey };
+		const followed =
+			destinationKey === screenKey ||
+			!state.following ||
+			destinationKey === state.following;
 		// A preparing or completed pair cannot displace a live presentation.
-		if (result && !presentation.ready) continue;
-		result = { ...presentation, sourceKey, destinationKey };
+		if (followed) {
+			if (result && !presentation.ready) continue;
+			result = candidate;
+		} else {
+			if (other && !presentation.ready) continue;
+			other = candidate;
+		}
 	}
-	return result;
+	return result ?? other;
 }
 
 export function resolveBoundaryReceiver(

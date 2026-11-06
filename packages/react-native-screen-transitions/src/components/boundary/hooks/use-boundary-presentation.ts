@@ -37,6 +37,7 @@ export function useBoundaryPresentation(boundaryId: string, enabled = true) {
 		(s) => s.pairPresentation,
 	);
 	const localSlots = useOrchestratorStore((s) => s.slotsMap);
+	const frame = useOrchestratorStore((s) => s.screenInterpolatorProps);
 	const { parentScreenKey } = useScreenRelationships();
 	const ancestorSlots = useOptionalOrchestratorStore(
 		parentScreenKey,
@@ -49,6 +50,7 @@ export function useBoundaryPresentation(boundaryId: string, enabled = true) {
 			presentations: pairPresentations,
 			pairs: pairs.get(),
 			entries: boundaryRegistry.get(),
+			following: frame.get().next?.route.key,
 		};
 		const owner = resolveBoundaryPresentation(screenKey, boundaryId, state);
 		const receiver = resolveBoundaryHandoff(screenKey, boundaryId, state);

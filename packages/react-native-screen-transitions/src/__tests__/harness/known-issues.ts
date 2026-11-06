@@ -19,17 +19,6 @@ const transitionOf = (scenario: string) => scenario.split(" / ")[0];
 
 export const KNOWN_ISSUES: KnownIssue[] = [
 	{
-		id: "escape-reopen-during-close-snap",
-		environments: ["teleport"],
-		summary:
-			"With teleport: open a card (seen from a scrolled list, a nested destination, a deep stack), pop mid-open, and open it again while the close is still " +
-			"shrinking it back: on the second open the card snaps from its mid-close pose to its slot (27 px, 179 -> 141 " +
-			"wide, fully opaque) and then grows again, instead of continuing from where it was. Escaped into its overlay " +
-			"host it follows the closing pair; the new pair takes over a frame later, and in between it is drawn inline at rest.",
-		matches: (scenario, v) =>
-			sequenceOf(scenario).startsWith("open-pop-open") && v.rule === "element-spike" && !!v.scene?.endsWith("#bound:card"),
-	},
-	{
 		id: "interrupted-navigation",
 		summary:
 			"A push landing during another push still steps the screens: the first screen's progress is " +
