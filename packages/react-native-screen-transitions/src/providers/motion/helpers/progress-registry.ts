@@ -52,13 +52,18 @@ export const getScreenMountOrder = (key: string): number => {
 	return screenProgress.get()[key]?.order ?? 0;
 };
 
-/** Whether `key` was mounted after `other` (both mounted). */
+/**
+ * Whether `key` was mounted after `other` (a mounted screen). A screen not registered yet is newer
+ * than every registered one: it registers a frame after it mounts, and its first frame already
+ * transitions (a screen just pushed over one still closing).
+ */
 export const isScreenNewer = (key: string, other: string): boolean => {
 	"worklet";
 	const state = screenProgress.get();
 	const a = state[key];
 	const b = state[other];
-	return !!a && !!b && a.order > b.order;
+	if (!b) return false;
+	return !a || a.order > b.order;
 };
 
 export const isScreenClosing = (key: string): boolean => {

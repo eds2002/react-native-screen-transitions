@@ -423,11 +423,13 @@ export const computeBoundStyles = (
 	// Raw values are composed by their caller (the navigation helpers move the screen themselves).
 	if (computeOptions.raw || isAbsolute) return withLocalTransform;
 	const tag = String(id);
+	// A pair a newer screen has taken the element from (its destination closing): neither copy draws
+	// it any more, the newer one does, from where this pair had it. The source's copy too: its screen
+	// may still follow the closing pair for a few frames, and it would draw a second card.
 	const taken =
-		entering &&
 		!!sourceScreenKey &&
 		!!destinationScreenKey &&
-		currentScreenKey === destinationScreenKey &&
+		(entering ? currentScreenKey === destinationScreenKey : true) &&
 		isTakenByNewerScreen(tag, destinationScreenKey);
 	return attachBoundsScreenFrame(
 		taken ? { ...withLocalTransform, opacity: 0 } : withLocalTransform,
