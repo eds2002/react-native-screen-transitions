@@ -4,8 +4,10 @@ import {
 	type SharedValue,
 	type StyleProps,
 	useAnimatedStyle,
+	useSharedValue,
 } from "react-native-reanimated";
 import { NO_STYLES } from "../../../constants";
+import { STYLE_RESET_VALUES } from "../../../providers/orchestrator/styles/constants";
 import {
 	composeSlotStyleWithLocalTransform,
 	getLocalTransformForSlotComposition,
@@ -34,41 +36,68 @@ export function useComposedBoundaryStyle(
 		[style],
 	);
 
+	// Keys this style set last frame. Reanimated leaves a key that drops out of an animated style at
+	// its last value, so a boundary that escapes while hidden (opacity 0 from its slot) would keep
+	// that opacity on its escaped root. Mutated in place, never notifying: not an input.
+	const appliedKeys = useSharedValue<Record<string, true>>({});
+
 	return useAnimatedStyle(() => {
-		const slot = id ? slots?.get()[id] : undefined;
-		const value: StyleProps = slot?.style ?? NO_STYLES;
-		const effectiveKind =
-			kind === "full" && escapeState && isBoundaryEscaped(escapeState)
-				? "layout"
-				: kind;
-		if (effectiveKind === "stacking")
-			return { zIndex: value.zIndex ?? 0, elevation: value.elevation ?? 0 };
-
-		if (effectiveKind === "layout") {
-			const {
-				width,
-				height,
-				minWidth,
-				minHeight,
-				maxWidth,
-				maxHeight,
-				aspectRatio,
-			} = value;
-
-			return {
-				width: width ?? baseLayout.width,
-				height: height ?? baseLayout.height,
-				minWidth: minWidth ?? baseLayout.minWidth,
-				minHeight: minHeight ?? baseLayout.minHeight,
-				maxWidth: maxWidth ?? baseLayout.maxWidth,
-				maxHeight: maxHeight ?? baseLayout.maxHeight,
-				aspectRatio: aspectRatio ?? baseLayout.aspectRatio,
-			};
+		const style = resolveStyle();
+		const applied = appliedKeys.get();
+		const reset: StyleProps = {};
+		let hasReset = false;
+		for (const key in applied) {
+			if (key in style) continue;
+			const value =
+				(baseLayout as Record<string, unknown>)[key] ?? STYLE_RESET_VALUES[key];
+			if (value === undefined) continue;
+			reset[key] = value;
+			hasReset = true;
 		}
-		return composeSlotStyleWithLocalTransform(
-			value,
-			local,
-			slot?.boundsLocalTransform,
-		);
+		appliedKeys.modify((keys) => {
+			"worklet";
+			for (const key in keys) delete keys[key];
+			for (const key in style) keys[key] = true;
+			return keys;
+		}, false);
+		return hasReset ? { ...reset, ...style } : style;
+
+		function resolveStyle(): StyleProps {
+			const slot = id ? slots?.get()[id] : undefined;
+			const value: StyleProps = slot?.style ?? NO_STYLES;
+			const effectiveKind =
+				kind === "full" && escapeState && isBoundaryEscaped(escapeState)
+					? "layout"
+					: kind;
+			if (effectiveKind === "stacking")
+				return { zIndex: value.zIndex ?? 0, elevation: value.elevation ?? 0 };
+
+			if (effectiveKind === "layout") {
+				const {
+					width,
+					height,
+					minWidth,
+					minHeight,
+					maxWidth,
+					maxHeight,
+					aspectRatio,
+				} = value;
+
+				return {
+					width: width ?? baseLayout.width,
+					height: height ?? baseLayout.height,
+					minWidth: minWidth ?? baseLayout.minWidth,
+					minHeight: minHeight ?? baseLayout.minHeight,
+					maxWidth: maxWidth ?? baseLayout.maxWidth,
+					maxHeight: maxHeight ?? baseLayout.maxHeight,
+					aspectRatio: aspectRatio ?? baseLayout.aspectRatio,
+				};
+			}
+			return composeSlotStyleWithLocalTransform(
+				value,
+				local,
+				slot?.boundsLocalTransform,
+			);
+		}
 	});
 }

@@ -30,3 +30,32 @@ it('keeps escaped roots measurable, applies live dimensions, and restores base s
  expect(output.height).toBe(100);
  await act(() => root!.unmount());
 });
+
+it('resets what the full style set when the root escapes (a boundary hidden by its slot does not stay hidden)', async () => {
+ const slots = makeMutable<NormalizedTransitionInterpolatedStyle>({box:{style:{opacity:0,transform:[{scale:2}]}}});
+ const presentation = makeMutable<any>({owner:undefined, slots:{}});
+ const localMeasurement = makeMutable<any>(null);
+ const portalHostReady = makeMutable(false);
+ const escapeState = {boundaryId:'box', presentation, localMeasurement, portalHostReady};
+ let output: any;
+ function Probe() {
+  output = useComposedBoundaryStyle(slots, 'box', {width:100, height:80}, 'full', escapeState);
+  return null;
+ }
+ let root: ReturnType<typeof create>;
+ await act(() => {root = create(<Probe/>);});
+ // Inline and hidden by its slot (the active source of an open zoom).
+ expect(output.opacity).toBe(0);
+ // Now it escapes: the host applies the slot, the root keeps only layout and must not stay at opacity 0.
+ localMeasurement.set({pairKey:'A<>B', bounds:{}});
+ portalHostReady.set(true);
+ presentation.set({owner:{ready:true, pairKey:'A<>B'}, slots:{box:{style:{opacity:0}}}});
+ await act(() => root!.update(<Probe/>));
+ expect(output.width).toBe(100);
+ expect(output.opacity).toBe(1);
+ expect(output.transform).toBeDefined();
+ // The reset is sent once; later frames carry layout only.
+ await act(() => root!.update(<Probe/>));
+ expect(output.opacity).toBeUndefined();
+ await act(() => root!.unmount());
+});
