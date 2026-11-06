@@ -219,15 +219,25 @@ export const useInterpolatedStylesMap = ({
 			closing: activeClosing.get(),
 			animationProgress: activeAnimationProgress.get(),
 		});
+		// Dragging this screen while the screen above it still closes (a fast swipe back through a
+		// chain): this screen follows its own drag (its interpolator on the current-only frame) and the
+		// closing screen keeps uncovering it (its interpolator composed on top). Either one alone jumps:
+		// dropping the cover snaps this screen out from under it, keeping only the cover ignores the drag.
+		const composesClosingNext =
+			isInGestureMode &&
+			isNextClosing &&
+			!!nextInterpolator &&
+			hasNextSystem &&
+			!hasCloseFinished;
 		const currentOwnsInterpolator =
-			isInGestureMode ||
+			(isInGestureMode && !composesClosingNext) ||
 			!nextInterpolator ||
 			!hasNextSystem ||
 			(isOpeningBlocked && !hasClosingNext) ||
 			hasCloseFinished;
-		const interpolatorOptionsOwner = currentOwnsInterpolator
-			? "current"
-			: "next";
+		// The dragged screen keeps its own gesture options while a closing screen above is composed in.
+		const interpolatorOptionsOwner =
+			currentOwnsInterpolator || composesClosingNext ? "current" : "next";
 
 		// Once the next interpolator owns the relationship, the current
 		// interpolator remains responsible only for its own live presentation.
@@ -253,7 +263,7 @@ export const useInterpolatedStylesMap = ({
 			return NO_STYLE_LAYERS;
 		}
 
-		if (interpolatorOptionsOwner === "current") {
+		if (currentOwnsInterpolator) {
 			syncSelectedInterpolatorOptions(
 				selectedInterpolatorOptions,
 				"current",
@@ -282,12 +292,21 @@ export const useInterpolatedStylesMap = ({
 			selectedFrame: nextSelectedFrame,
 		});
 
-		syncSelectedInterpolatorOptions(
-			selectedInterpolatorOptions,
-			"next",
-			nextResult?.rawStyleMap?.options,
-		);
-		syncScreenOptionsOverrides(undefined, screenOptions);
+		if (interpolatorOptionsOwner === "current") {
+			syncSelectedInterpolatorOptions(
+				selectedInterpolatorOptions,
+				"current",
+				currentResult?.rawStyleMap?.options,
+			);
+			syncScreenOptionsOverrides(currentResult?.rawStyleMap, screenOptions);
+		} else {
+			syncSelectedInterpolatorOptions(
+				selectedInterpolatorOptions,
+				"next",
+				nextResult?.rawStyleMap?.options,
+			);
+			syncScreenOptionsOverrides(undefined, screenOptions);
+		}
 
 		const handoff = resolveInterpolatorStyleHandoff({
 			currentOwnsInterpolator: false,

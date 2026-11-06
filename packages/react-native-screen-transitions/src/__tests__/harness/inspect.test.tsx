@@ -2,12 +2,16 @@
  * Prints one catalog scenario's trace for a scene, frame by frame:
  *   SCENARIO="slide-horizontal / preset-spec / rapid" SCENE=B bun test inspect
  * Optional: FROM/TO (trace indexes), LAYERS=1 (each layer's transform),
- * ORDER=1 (paint order of scenes per frame), ELEMENT=<id> (one element's rect), TELEPORT=1 (react-native-teleport installed). Skipped without SCENARIO.
+ * ORDER=1 (paint order of scenes per frame), ELEMENT=<id> (one element's rect), TELEPORT=1 (react-native-teleport installed), ANDROID=1 (the Android catalog's window). Skipped without SCENARIO.
  */
 import { it } from "bun:test";
 import { installHarness } from "./install";
 
-const sim = installHarness({ teleport: !!process.env.TELEPORT });
+const sim = installHarness(
+	process.env.ANDROID
+		? { os: "android", window: { width: 412, height: 915 }, insets: { top: 24, right: 0, bottom: 0, left: 0 }, teleport: !!process.env.TELEPORT }
+		: { teleport: !!process.env.TELEPORT },
+);
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 const name = process.env.SCENARIO;

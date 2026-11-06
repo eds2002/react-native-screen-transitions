@@ -40,6 +40,21 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			scenario.startsWith("bounds-zoom") && scenario.endsWith("/ pinch-dismiss") && v.rule === "spike" && v.scene === "A",
 	},
 	{
+		id: "zoom-settled-background-reset",
+		summary:
+			"Same root as zoom-pinch-background-snap: zoom() resets the covered screen to full size once the screen " +
+			"over it settles (so its cards are measured unscaled), and puts the 0.94 background scale back when that " +
+			"screen moves again. A full-screen cover hides both steps; dragging back through a chain does not: B is " +
+			"still being uncovered by C (not full screen) when it starts its own drag, so A, under it, steps 52 px in " +
+			"view (and its boundaries with it). Fix: measure boundaries in rest coordinates (undo the screen's content transform) and drop the reset.",
+		matches: (scenario, v) =>
+			scenario.startsWith("bounds-chain-zoom") &&
+			["drag-chain-quickly", "drag-middle-right-after", "drag-middle-mid-close"].includes(sequenceOf(scenario)) &&
+			// The screen's step, and its boundaries stepping with it.
+			["spike", "element-spike"].includes(v.rule) &&
+			["A", "B"].includes(v.scene?.split("#")[0] ?? ""),
+	},
+	{
 		id: "reveal-dismiss-source-jump",
 		summary:
 			"(reveal() is deprecated in favour of zoom(); not planned to fix.) "+

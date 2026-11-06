@@ -1391,6 +1391,51 @@ export const buildBoundsChainCatalog = (window: { width: number; height: number 
 			closesOnto(1),
 			{ op: "expectRoutes", names: ["A"] },
 		]);
+		// Drag every level away in quick succession: each drag starts while the level above is still
+		// closing, so each screen must follow its own drag, not the closing screen above it.
+		const drag: Step = { op: "swipe", direction: "vertical", distance: 0.6, durationMs: 200 };
+		add("drag-chain-quickly", [
+			tapCard,
+			{ op: "settle" },
+			tapCard,
+			{ op: "settle" },
+			tapCard,
+			{ op: "settle" },
+			drag,
+			{ op: "frames", count: 3 },
+			drag,
+			{ op: "frames", count: 3 },
+			drag,
+			{ op: "settle" },
+			{ op: "expectRoutes", names: ["A"] },
+			{ op: "expectScene", name: "A", state: "shown" },
+		]);
+		// Drag the middle screen the moment the top one is released (a thumb flicking twice).
+		add("drag-middle-right-after", [
+			tapCard,
+			{ op: "settle" },
+			tapCard,
+			{ op: "settle" },
+			{ op: "swipe", direction: "vertical", distance: 0.5, durationMs: 200 },
+			{ op: "frames", count: 1 },
+			{ op: "swipe", direction: "vertical", distance: 0.5, durationMs: 450 },
+			{ op: "settle" },
+			{ op: "expectRoutes", names: ["A"] },
+			{ op: "expectScene", name: "A", state: "shown" },
+		]);
+		// Drag the middle screen while the top one is half way through closing.
+		add("drag-middle-mid-close", [
+			tapCard,
+			{ op: "settle" },
+			tapCard,
+			{ op: "settle" },
+			drag,
+			{ op: "frames", count: 6 },
+			drag,
+			{ op: "settle" },
+			{ op: "expectRoutes", names: ["A"] },
+			{ op: "expectScene", name: "A", state: "shown" },
+		]);
 		// Back and forth in the middle of a chain: B is a destination (from A) and a source (to C).
 		add("middle-reopen", [
 			tapCard,
@@ -1828,6 +1873,27 @@ export const buildHandoffCatalog = (window: { width: number; height: number }, s
 		for (let i = 0; i < 4; i++)
 			spam.push({ op: "push", name: "Theater" }, { op: "frames", count: 2 }, { op: "pop" }, { op: "frames", count: 2 });
 		add("spam-second", [...spam, { op: "settle" }, { op: "expectPath", names: ["Detail"] }], "Detail");
+		// Gestures down the chain: dismissing Theater, then Detail while Theater still closes, the
+		// payload following each drag and landing on the card.
+		const swipe = (distance = 0.5, extra: Partial<Extract<Step, { op: "swipe" }>> = {}): Step => ({
+			op: "swipe",
+			direction: "vertical",
+			distance,
+			durationMs: 250,
+			...extra,
+		});
+		add("swipe-back-both", [...both, swipe(), { op: "settle" }, swipe(), { op: "settle" }, { op: "expectPath", names: ["List"] }], "List");
+		add("swipe-swipe-quickly", [...both, swipe(), { op: "frames", count: 3 }, swipe(), { op: "settle" }, { op: "expectPath", names: ["List"] }], "List");
+		add(
+			"swipe-spam",
+			[...both, swipe(0.4, { durationMs: 120 }), { op: "frames", count: 1 }, swipe(0.4, { durationMs: 120 }), { op: "frames", count: 1 }, swipe(0.4, { durationMs: 120 }), { op: "settle" }, { op: "expectPath", names: ["List"] }],
+			"List",
+		);
+		add(
+			"swipe-cancel-then-dismiss",
+			[...both, swipe(0.1, { durationMs: 300, holdMs: 200 }), { op: "frames", count: 3 }, swipe(), { op: "settle" }, { op: "expectPath", names: ["Detail"] }],
+			"Detail",
+		);
 	}
 	return scenarios;
 };
