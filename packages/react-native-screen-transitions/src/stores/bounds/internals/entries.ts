@@ -109,22 +109,54 @@ function setEntry(tag: TagID, screenKey: ScreenKey, patch: EntryPatch) {
 	});
 }
 
+const deleteScreenEntry = (
+	state: BoundaryEntriesState,
+	tag: TagID,
+	screenKey: ScreenKey,
+) => {
+	"worklet";
+	const tagState = state[tag];
+	if (!tagState?.screens[screenKey]) return;
+	delete tagState.screens[screenKey];
+	if (!hasAnyKeys(tagState.screens)) {
+		delete state[tag];
+	}
+};
+
 function removeEntry(tag: TagID, screenKey: ScreenKey) {
 	"worklet";
 	boundaryRegistry.modify(<T extends BoundaryEntriesState>(state: T): T => {
 		"worklet";
-		const tagState = state[tag];
-		if (!tagState?.screens[screenKey]) {
-			return state;
-		}
-
-		delete tagState.screens[screenKey];
-		if (!hasAnyKeys(tagState.screens)) {
-			delete state[tag];
-		}
-
+		deleteScreenEntry(state, tag, screenKey);
 		return state;
 	});
 }
 
-export { getEntry, getMatchingSourceScreenKey, removeEntry, setEntry };
+export type EntryOp =
+	| { tag: TagID; screenKey: ScreenKey; patch: EntryPatch }
+	| { tag: TagID; screenKey: ScreenKey; remove: true };
+
+/** Applies several entry changes in order, in one update (a list mounting notifies readers once). */
+function applyEntryOps(ops: readonly EntryOp[]) {
+	"worklet";
+	boundaryRegistry.modify(<T extends BoundaryEntriesState>(state: T): T => {
+		"worklet";
+		for (const op of ops) {
+			if ("remove" in op) deleteScreenEntry(state, op.tag, op.screenKey);
+			else
+				applyEntryPatch(
+					ensureScreenEntry(state, op.tag, op.screenKey),
+					op.patch,
+				);
+		}
+		return state;
+	});
+}
+
+export {
+	applyEntryOps,
+	getEntry,
+	getMatchingSourceScreenKey,
+	removeEntry,
+	setEntry,
+};

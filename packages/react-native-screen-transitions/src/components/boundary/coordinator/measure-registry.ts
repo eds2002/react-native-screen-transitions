@@ -1,6 +1,10 @@
 import { useLayoutEffect } from "react";
 import { makeMutable } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
+import {
+	applyEntryOps,
+	type EntryOp,
+} from "../../../stores/bounds/internals/entries";
 import type { BoundTag, ScreenKey, TagID } from "../../../stores/bounds/types";
 import type { MeasureBoundary } from "../types";
 
@@ -58,19 +62,37 @@ const applyRegistryOps = (ops: RegistryOp[]) => {
 	);
 };
 
-// Mounting a list registers every boundary in one UI call, not one call per boundary.
+const applyBoundaryOps = (registryOps: RegistryOp[], entryOps: EntryOp[]) => {
+	"worklet";
+	if (entryOps.length) applyEntryOps(entryOps);
+	if (registryOps.length) applyRegistryOps(registryOps);
+};
+
+// Mounting a list registers every boundary (its presence in the bounds registry and its place in
+// its screen's measure registry) in one UI call, not calls per boundary.
 let pendingOps: RegistryOp[] = [];
+let pendingEntryOps: EntryOp[] = [];
 let flushScheduled = false;
-const queueRegistryOp = (op: RegistryOp) => {
-	pendingOps.push(op);
+const scheduleFlush = () => {
 	if (flushScheduled) return;
 	flushScheduled = true;
 	queueMicrotask(() => {
 		flushScheduled = false;
 		const ops = pendingOps;
+		const entryOps = pendingEntryOps;
 		pendingOps = [];
-		scheduleOnUI(applyRegistryOps, ops);
+		pendingEntryOps = [];
+		scheduleOnUI(applyBoundaryOps, ops, entryOps);
 	});
+};
+const queueRegistryOp = (op: RegistryOp) => {
+	pendingOps.push(op);
+	scheduleFlush();
+};
+/** A boundary's presence in the bounds registry, sent with the next registry flush. */
+export const queueEntryOp = (op: EntryOp) => {
+	pendingEntryOps.push(op);
+	scheduleFlush();
 };
 
 let nextRegistrationId = 0;

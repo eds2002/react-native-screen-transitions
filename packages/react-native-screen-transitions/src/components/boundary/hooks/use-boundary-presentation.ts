@@ -1,5 +1,6 @@
 import { memo, useLayoutEffect, useMemo } from "react";
 import {
+	makeMutable,
 	type SharedValue,
 	useDerivedValue,
 	useSharedValue,
@@ -38,7 +39,12 @@ export type BoundaryPresentationValue = {
 export type BoundaryPresentationHandles = {
 	presentation: SharedValue<BoundaryPresentationValue>;
 	slotsMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
+	/** Set by the overlay once this boundary's host is placed (it only gets one once engaged). */
+	portalHostReady: SharedValue<boolean>;
 };
+
+// A boundary at rest has no overlay host: every one of them shares this (never set).
+const NO_PORTAL_HOST = makeMutable(false);
 
 /**
  * A boundary outside any transition follows no pair: it reads its screen's slots, through values
@@ -48,7 +54,10 @@ export type BoundaryPresentationHandles = {
 export function useIdleBoundaryPresentation(): BoundaryPresentationHandles {
 	const presentation = useOrchestratorStore((s) => s.idleBoundaryPresentation);
 	const slotsMap = useOrchestratorStore((s) => s.slotsMap);
-	return useMemo(() => ({ presentation, slotsMap }), [presentation, slotsMap]);
+	return useMemo(
+		() => ({ presentation, slotsMap, portalHostReady: NO_PORTAL_HOST }),
+		[presentation, slotsMap],
+	);
 }
 
 // Screens are discovered through existing providers. React only wires subscriptions;
@@ -110,7 +119,11 @@ export function useBoundaryPresentation(
 		return { owner, receiver, slots: resolvedStylesMap };
 	});
 	const slotsMap = useDerivedValue(() => presentation.get().slots);
-	return useMemo(() => ({ presentation, slotsMap }), [presentation, slotsMap]);
+	const portalHostReady = useSharedValue(false);
+	return useMemo(
+		() => ({ presentation, slotsMap, portalHostReady }),
+		[presentation, slotsMap, portalHostReady],
+	);
 }
 
 /**

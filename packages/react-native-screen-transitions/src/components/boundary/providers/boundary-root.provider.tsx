@@ -1,6 +1,7 @@
 import {
 	type ForwardedRef,
 	type ReactNode,
+	type RefObject,
 	useCallback,
 	useImperativeHandle,
 	useLayoutEffect,
@@ -59,7 +60,7 @@ export type BoundaryRootRenderState = {
 	localMeasurement: BoundaryLocalMeasurementValue;
 	measurementRef: AnimatedRef<View>;
 	portalRuntime: ReturnType<typeof resolveBoundaryPortal>;
-	ref: AnimatedRef<View>;
+	ref: RefObject<View | null>;
 	/** Set by the overlay once this boundary's host is placed. */
 	portalHostReady: SharedValue<boolean>;
 	shouldRenderBoundaryRootThroughPortal: boolean;
@@ -139,7 +140,6 @@ export const {
 		const localMeasurement = useSharedValue<BoundaryLocalMeasurement | null>(
 			null,
 		);
-		const portalHostReady = useSharedValue(false);
 		const [escapeMeasured, setEscapeMeasured] = useState(false);
 		const onFirstEscapeMeasure = useCallback(() => setEscapeMeasured(true), []);
 		const firstEscapeMeasureKey =
@@ -156,27 +156,44 @@ export const {
 		const [engagedPresentation, setEngagedPresentation] =
 			useState<BoundaryPresentationHandles | null>(null);
 		const presentationReady = engaged && engagedPresentation !== null;
-		const { presentation: boundaryPresentation, slotsMap } = presentationReady
-			? engagedPresentation
-			: idlePresentation;
+		const {
+			presentation: boundaryPresentation,
+			slotsMap,
+			portalHostReady,
+		} = presentationReady ? engagedPresentation : idlePresentation;
 
+		const escapesRoot = shouldEscapeBoundaryRootToScreenHost && !hasTarget;
+		// Stable between renders: a new object would restart the style's UI mapper every render.
+		const escapeState = useMemo(
+			() =>
+				escapesRoot
+					? {
+							boundaryId: boundTag.tag,
+							presentation: boundaryPresentation,
+							localMeasurement,
+							portalHostReady,
+						}
+					: undefined,
+			[
+				escapesRoot,
+				boundTag.tag,
+				boundaryPresentation,
+				localMeasurement,
+				portalHostReady,
+			],
+		);
 		const associatedStyles = useComposedBoundaryStyle(
 			slotsMap,
 			boundTag.tag,
 			style,
 			hasTarget ? "stacking" : "full",
-			shouldEscapeBoundaryRootToScreenHost && !hasTarget
-				? {
-						boundaryId: boundTag.tag,
-						presentation: boundaryPresentation,
-						localMeasurement,
-						portalHostReady,
-					}
-				: undefined,
+			escapeState,
 		);
 
-		const rootRef = useAnimatedRef<View>();
+		// One view is measured on the UI thread: the escape placeholder, the target, or else the root.
+		// Only that one needs an animated ref; the root otherwise takes a plain one.
 		const measurementRef = useAnimatedRef<View>();
+		const plainRootRef = useRef<View>(null);
 
 		useLayoutEffect(() => {
 			if (__DEV__ && targetCount > 1) {
@@ -184,10 +201,11 @@ export const {
 			}
 		}, [targetCount]);
 
-		const measuredRef =
+		const rootRef =
 			hasTarget || shouldEscapeBoundaryRootToScreenHost
-				? measurementRef
-				: rootRef;
+				? plainRootRef
+				: measurementRef;
+		const measuredRef = measurementRef;
 
 		useImperativeHandle(forwardedRef, () => rootRef.current as any, [rootRef]);
 

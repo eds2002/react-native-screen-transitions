@@ -1,10 +1,6 @@
 import { useLayoutEffect } from "react";
-import { scheduleOnUI } from "react-native-worklets";
-import {
-	removeEntry,
-	setEntry,
-} from "../../../../stores/bounds/internals/entries";
 import type { BoundTag } from "../../../../stores/bounds/types";
+import { queueEntryOp } from "../../coordinator/measure-registry";
 import type { BoundaryConfigProps } from "../../types";
 
 export const useBoundaryPresence = (params: {
@@ -28,14 +24,18 @@ export const useBoundaryPresence = (params: {
 	useLayoutEffect(() => {
 		if (!enabled) return;
 
-		scheduleOnUI(setEntry, tag, currentScreenKey, {
-			boundaryConfig,
-			handoff: handoff ? true : null,
-			escapeClipping: escapeClipping ? true : null,
+		queueEntryOp({
+			tag,
+			screenKey: currentScreenKey,
+			patch: {
+				boundaryConfig,
+				handoff: handoff ? true : null,
+				escapeClipping: escapeClipping ? true : null,
+			},
 		});
 
 		return () => {
-			scheduleOnUI(removeEntry, tag, currentScreenKey);
+			queueEntryOp({ tag, screenKey: currentScreenKey, remove: true });
 		};
 	}, [enabled, tag, currentScreenKey, boundaryConfig, handoff, escapeClipping]);
 };
