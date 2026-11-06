@@ -5,9 +5,11 @@ import {
 	FULLSCREEN_DIMENSIONS,
 	NO_STYLES,
 } from "../../../../constants";
-import { createScreenPairKey } from "../../../../stores/bounds/helpers/link-pairs.helpers";
 import { requestSourceMeasure } from "../../../../stores/bounds/internals/links";
-import { resolveTransitionPair } from "../../../../stores/bounds/internals/resolver";
+import {
+	resolveScreenPairKey,
+	resolveTransitionPair,
+} from "../../../../stores/bounds/internals/resolver";
 import type { ResolvedTransitionPair } from "../../../../stores/bounds/types";
 import type { ScreenTransitionState } from "../../../../types/animation.types";
 import type { Layout } from "../../../../types/screen.types";
@@ -52,12 +54,12 @@ const resolveStartEnd = (params: {
 	const currentScreenKey = params.current?.route.key;
 	const previousScreenKey = params.previous?.route.key;
 	const nextScreenKey = params.next?.route.key;
-	const sourceMeasurePairKey =
-		entering && previousScreenKey && currentScreenKey
-			? createScreenPairKey(previousScreenKey, currentScreenKey)
-			: !entering && currentScreenKey && nextScreenKey
-				? createScreenPairKey(currentScreenKey, nextScreenKey)
-				: null;
+	// The screen that has the card, wherever it is in the route tree (not just this stack's neighbour).
+	const sourceMeasurePairKey = resolveScreenPairKey(String(params.id), {
+		currentScreenKey,
+		previousScreenKey,
+		nextScreenKey,
+	});
 
 	const resolvedPair =
 		params.resolvedPair ??

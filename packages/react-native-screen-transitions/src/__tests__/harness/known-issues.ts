@@ -30,18 +30,6 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			sequenceOf(scenario).startsWith("open-pop-open") && v.rule === "element-spike" && !!v.scene?.endsWith("#bound:card"),
 	},
 	{
-		id: "global-source-outside-destination-stack",
-		summary:
-			"A card inside a nested stack (or a sibling stack) opening a screen in another stack does not zoom at all: the " +
-			"destination appears at full size and vanishes on close. The handshake pairs the real source (List<>Detail), but " +
-			"the interpolator resolves its pair from the destination's previous route in its own stack, the container " +
-			"(Home<>Detail), finds no link, and returns no styles.",
-		matches: (scenario) =>
-			["bounds-global-nested-source-to-root", "bounds-global-deep-source-to-root", "bounds-global-sibling-stacks"].includes(
-				transitionOf(scenario),
-			),
-	},
-	{
 		id: "interrupted-navigation",
 		summary:
 			"A push landing during another push still steps the screens: the first screen's progress is " +

@@ -66,7 +66,8 @@ export const syncActiveGroupId = (params: {
 	const { props, id, group } = params;
 	if (id == null || id === "" || !group) return;
 
-	const pairKey = resolveBoundsPairKey(props);
+	const tag = createBoundTag({ id, group });
+	const pairKey = tag ? resolveBoundsPairKey(props, tag) : null;
 	if (!pairKey) return;
 
 	const activeId = String(id);

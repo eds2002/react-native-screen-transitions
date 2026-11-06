@@ -1,22 +1,16 @@
-import { createScreenPairKey } from "../../../stores/bounds/helpers/link-pairs.helpers";
-import type { ScreenPairKey } from "../../../stores/bounds/types";
+import { resolveScreenPairKey } from "../../../stores/bounds/internals/resolver";
+import type { ScreenPairKey, TagID } from "../../../stores/bounds/types";
 import type { BoundsInterpolationProps } from "../../../types/bounds.types";
 
+/** The pair `tag` belongs to in this frame, wherever its source sits in the route tree. */
 export const resolveBoundsPairKey = (
 	props: BoundsInterpolationProps,
+	tag: TagID,
 ): ScreenPairKey | null => {
 	"worklet";
-	const currentScreenKey = props.current?.route.key;
-	const previousScreenKey = props.previous?.route.key;
-	const nextScreenKey = props.next?.route.key;
-
-	if (nextScreenKey && currentScreenKey) {
-		return createScreenPairKey(currentScreenKey, nextScreenKey);
-	}
-
-	if (previousScreenKey && currentScreenKey) {
-		return createScreenPairKey(previousScreenKey, currentScreenKey);
-	}
-
-	return null;
+	return resolveScreenPairKey(tag, {
+		currentScreenKey: props.current?.route.key,
+		previousScreenKey: props.previous?.route.key,
+		nextScreenKey: props.next?.route.key,
+	});
 };
