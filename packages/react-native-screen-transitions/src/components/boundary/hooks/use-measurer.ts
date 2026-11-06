@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import type { View } from "react-native";
 import { useWindowDimensions } from "react-native";
 import type { AnimatedRef, StyleProps } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { useMotionStore } from "../../../providers/motion";
 import { useScrollChain } from "../../../providers/motion/gestures/scroll-coordination";
 import { setEntry } from "../../../stores/bounds/internals/entries";
@@ -29,6 +30,7 @@ interface UseMeasurerParams {
 	handoff: boolean;
 	escapeClipping: boolean;
 	localMeasurement: BoundaryLocalMeasurementValue;
+	onFirstEscapeMeasure: () => void;
 }
 
 export const useMeasurer = ({
@@ -40,6 +42,7 @@ export const useMeasurer = ({
 	handoff,
 	escapeClipping,
 	localMeasurement,
+	onFirstEscapeMeasure,
 }: UseMeasurerParams): MeasureBoundary => {
 	const { width: viewportWidth, height: viewportHeight } =
 		useWindowDimensions();
@@ -93,20 +96,23 @@ export const useMeasurer = ({
 
 			if (!viewportAllowsDestinationWrite) return;
 
-			// Handoff can render into the destination boundary's escape host too.
-			// Capture only accepted geometry, correcting the destination visibility gate.
-			if (escapeClipping) {
-				localMeasurement.set({
-					bounds: correctedMeasured,
-					pairKey: target.pairKey,
-				});
-			}
-
 			const measuredWithScroll = attachScrollSnapshotToMeasuredBounds(
 				correctedMeasured,
 				scrollMetadata.get(),
 				scrollChain,
 			);
+
+			// Handoff can render into the destination boundary's escape host too.
+			// Capture only accepted geometry, correcting the destination visibility gate. The scroll
+			// snapshot lets the escaped frame follow its scroll views while it is in the overlay.
+			if (escapeClipping) {
+				// The first measurement is what gives this boundary a host in the overlay.
+				if (localMeasurement.get() === null) scheduleOnRN(onFirstEscapeMeasure);
+				localMeasurement.set({
+					bounds: measuredWithScroll,
+					pairKey: target.pairKey,
+				});
+			}
 
 			// Refresh the public bounds entry on every accepted measurement.
 			setEntry(boundTag.tag, currentScreenKey, { bounds: measuredWithScroll });
@@ -144,6 +150,7 @@ export const useMeasurer = ({
 			handoff,
 			escapeClipping,
 			localMeasurement,
+			onFirstEscapeMeasure,
 			viewportWidth,
 			viewportHeight,
 			scrollState,

@@ -1,6 +1,7 @@
-import { useAnimatedProps, useSharedValue } from "react-native-reanimated";
+import { useAnimatedProps } from "react-native-reanimated";
 import { useBoundaryRootStore } from "../../providers/boundary-root.provider";
 import { useActiveHostKey } from "../stores/host-registry.store";
+import { isBoundaryEscaped } from "../utils/is-escaped";
 import {
 	createHandoffHostName,
 	PORTAL_HOST_NAME_RESET_VALUE,
@@ -10,11 +11,19 @@ import { useActivePortalBoundaryHost } from "./use-active-portal-boundary-host";
 export type PortalMode = "handoff" | "escapeClipping";
 
 export function usePortalDestination(boundaryId: string, mode: PortalMode) {
-	const { currentScreenKey, localMeasurement, slotsMap, boundaryPresentation } =
-		useBoundaryRootStore((s) => s);
-	const portalHostReady = useSharedValue(false);
+	const {
+		currentScreenKey,
+		escapeMeasured,
+		localMeasurement,
+		portalHostReady,
+		slotsMap,
+		boundaryPresentation,
+	} = useBoundaryRootStore((s) => s);
+	// Every boundary can escape, but only one taking part in a transition needs a host in the
+	// overlay: it registers the first time the boundary is measured for a pair (a source on press, a
+	// destination on mount), not on mount. A long list of boundaries costs the overlay nothing.
 	const escapeHostKey = useActiveHostKey(
-		mode === "escapeClipping" ? currentScreenKey : null,
+		mode === "escapeClipping" && escapeMeasured ? currentScreenKey : null,
 	);
 	const portalHostName = useActivePortalBoundaryHost({
 		boundaryId,
@@ -25,7 +34,7 @@ export function usePortalDestination(boundaryId: string, mode: PortalMode) {
 	});
 	const teleportProps = useAnimatedProps(() => {
 		"worklet";
-		const { owner, receiver, slots } = boundaryPresentation.get();
+		const { receiver, slots } = boundaryPresentation.get();
 		const slot = slots[boundaryId];
 		const {
 			pointerEvents: _pointerEvents,
@@ -36,10 +45,12 @@ export function usePortalDestination(boundaryId: string, mode: PortalMode) {
 		if (mode === "handoff") {
 			hostName = createHandoffHostName(receiver, boundaryId);
 		} else if (
-			owner?.ready &&
-			localMeasurement.get()?.pairKey === owner.pairKey &&
-			slot !== undefined &&
-			portalHostReady.get()
+			isBoundaryEscaped({
+				boundaryId,
+				presentation: boundaryPresentation,
+				localMeasurement,
+				portalHostReady,
+			})
 		) {
 			hostName = portalHostName;
 		}
@@ -47,6 +58,7 @@ export function usePortalDestination(boundaryId: string, mode: PortalMode) {
 		return { ...props, hostName };
 	});
 	return {
+		pinned: escapeMeasured,
 		teleportProps,
 		localHostName: createHandoffHostName(currentScreenKey, boundaryId),
 	};

@@ -8,7 +8,7 @@
  *   morph  { [group:id]: bounds().styles() }         tile rect -> larger rect, body fades in
  *   reveal navigation.reveal()                       clip reveal from the tile
  *   pager  zoom target "bound" in a paging list      setParams({ id }) retargets the dismiss
- * react-native-teleport is not installed, so no handoff / escapeClipping here.
+ * Boundaries escape clipping through react-native-teleport (installed in the harness app).
  *
  * Argent loop (open-bounds first; probes read "key:value"):
  *  1. read bounds-mode → "mode:zoom"; bounds-grid shows bounds-tile-a..d

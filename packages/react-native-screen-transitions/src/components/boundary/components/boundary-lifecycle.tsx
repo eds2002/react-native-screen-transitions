@@ -23,6 +23,8 @@ interface BoundaryLifecycleProps {
 	handoff: boolean;
 	localMeasurement: BoundaryLocalMeasurementValue;
 	measuredRef: AnimatedRef<View>;
+	/** Called once, the first time this boundary is measured for a transition (escape only). */
+	onFirstEscapeMeasure: () => void;
 	style?: unknown;
 }
 
@@ -33,6 +35,7 @@ export const BoundaryLifecycle = memo(function BoundaryLifecycle({
 	enabled,
 	escapeClipping,
 	handoff,
+	onFirstEscapeMeasure,
 	localMeasurement,
 	measuredRef,
 	style,
@@ -53,6 +56,7 @@ export const BoundaryLifecycle = memo(function BoundaryLifecycle({
 		handoff,
 		escapeClipping,
 		localMeasurement,
+		onFirstEscapeMeasure,
 	});
 
 	// Presence and source capture must not depend on this screen owning an

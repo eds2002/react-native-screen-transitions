@@ -5,10 +5,10 @@ await mockModule("../../components/boundary/portal/teleport", () => ({isTeleport
 const {resolveBoundaryPortal} = await import("../../components/boundary/portal/utils/resolve-portal");
 
 describe("resolveBoundaryPortal", () => {
- it("defaults omitted flags to false and preserves either or both features", () => {
-  expect(resolveBoundaryPortal({})).toEqual({handoff:false,escapeClipping:false});
-  expect(resolveBoundaryPortal({handoff:true})).toEqual({handoff:true,escapeClipping:false});
-  expect(resolveBoundaryPortal({escapeClipping:true})).toEqual({handoff:false,escapeClipping:true});
+ it("always escapes clipping with Teleport; handoff stays opt-in; the deprecated prop is ignored", () => {
+  expect(resolveBoundaryPortal({})).toEqual({handoff:false,escapeClipping:true});
+  expect(resolveBoundaryPortal({handoff:true})).toEqual({handoff:true,escapeClipping:true});
+  expect(resolveBoundaryPortal({escapeClipping:false})).toEqual({handoff:false,escapeClipping:true});
   expect(resolveBoundaryPortal({handoff:true,escapeClipping:true})).toEqual({handoff:true,escapeClipping:true});
  });
 });

@@ -6,7 +6,6 @@ import {
 } from "react";
 import { StyleSheet, type View } from "react-native";
 import Animated, { type AnimatedRef } from "react-native-reanimated";
-import { scheduleOnUI } from "react-native-worklets";
 import { logger } from "../../../../utils/logger";
 import { usePlaceholderStyles } from "../hooks/use-placeholder-styles";
 import {
@@ -75,7 +74,7 @@ function EnabledPortal({
 			"A boundary portal was rendered without an id; rendering inline.",
 		);
 	}
-	const { teleportProps, localHostName } = usePortalDestination(
+	const { teleportProps, localHostName, pinned } = usePortalDestination(
 		boundaryId,
 		mode,
 	);
@@ -97,7 +96,7 @@ function EnabledPortal({
 			<PortalHost name={localHostName} />
 		</>
 	) : (
-		<PortalPlaceholder placeholderRef={placeholderRef}>
+		<PortalPlaceholder placeholderRef={placeholderRef} pinned={pinned}>
 			{content}
 		</PortalPlaceholder>
 	);
@@ -105,15 +104,14 @@ function EnabledPortal({
 
 function PortalPlaceholder({
 	children,
+	pinned,
 	placeholderRef,
-}: Pick<PortalProps, "children" | "placeholderRef">) {
-	const { handleOnLayout, placeholderStyle } = usePlaceholderStyles();
+}: Pick<PortalProps, "children" | "placeholderRef"> & { pinned: boolean }) {
+	const { handleOnLayout, placeholderStyle } = usePlaceholderStyles(pinned);
 	return (
 		<Animated.View
 			ref={placeholderRef}
-			onLayout={({ nativeEvent: { layout } }) =>
-				scheduleOnUI(handleOnLayout, layout)
-			}
+			onLayout={handleOnLayout}
 			style={placeholderStyle}
 			pointerEvents={PORTAL_POINTER_EVENTS}
 			collapsable={false}

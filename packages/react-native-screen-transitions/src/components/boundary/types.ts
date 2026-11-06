@@ -1,5 +1,6 @@
 import type { MeasuredDimensions, SharedValue } from "react-native-reanimated";
 import type { ScreenPairKey } from "../../stores/bounds/types";
+import type { ScrollChainSnapshot } from "../../stores/scroll.store";
 import type { BoundsOptions } from "../../utils/bounds/types/options";
 
 export type BoundaryId = string | number;
@@ -34,10 +35,8 @@ export interface BoundaryOwnProps extends BoundaryConfigProps {
 	 */
 	handoff?: boolean;
 	/**
-	 * Renders this boundary through the current screen's portal host while a
-	 * transition is active so the payload can escape clipping/layout constraints.
-	 *
-	 * @default false
+	 * @deprecated Boundaries escape clipping automatically when react-native-teleport is
+	 * installed; this prop has no effect.
 	 */
 	escapeClipping?: boolean;
 	id: BoundaryId;
@@ -63,7 +62,7 @@ export type MeasureTarget =
 export type MeasureBoundary = (target: MeasureTarget) => void;
 
 export type BoundaryLocalMeasurement = {
-	bounds: MeasuredDimensions;
+	bounds: MeasuredDimensions & { scrollChain?: ScrollChainSnapshot[] };
 	pairKey: ScreenPairKey;
 };
 

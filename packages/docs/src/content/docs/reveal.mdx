@@ -299,11 +299,11 @@ Use [Zoom](/navigation-zoom) when the matched element should float above the tra
 Use reveal when the destination content itself should grow out of the source and remain clipped by the visible rectangle during the handoff.
 
 <Note>
-  <span className="font-semibold">Layout clipping caveat.</span> If the source
-  boundary lives inside a clipping layout such as a `ScrollView`, `FlatList`, or
-  another constrained container, add `escapeClipping` to the boundary. That lets
-  the animated payload render through the screen host during the transition
-  while the boundary keeps its measured layout slot in place.
+  <span className="font-semibold">Layout clipping.</span> If the source boundary
+  lives inside a clipping layout such as a `ScrollView`, `FlatList`, or another
+  constrained container, install `react-native-teleport`: the animated payload
+  then renders through the screen host during the transition while the boundary
+  keeps its measured layout slot in place. Without it, the container can clip it.
 </Note>
 
 ## Related Reading

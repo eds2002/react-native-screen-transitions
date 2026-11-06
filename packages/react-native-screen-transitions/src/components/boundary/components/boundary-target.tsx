@@ -41,7 +41,15 @@ const BoundaryTargetInner = (props: InternalBoundaryTargetProps) => {
 		rootContext?.slotsMap,
 		boundaryId,
 		style,
-		shouldEscapeTargetToScreenHost ? "layout" : "full",
+		"full",
+		shouldEscapeTargetToScreenHost && rootContext && boundaryId
+			? {
+					boundaryId,
+					presentation: rootContext.boundaryPresentation,
+					localMeasurement: rootContext.localMeasurement,
+					portalHostReady: rootContext.portalHostReady,
+				}
+			: undefined,
 	);
 
 	const measurementRef = isActiveTarget

@@ -8,16 +8,24 @@ import {
 	type ViewStyle,
 } from "react-native";
 import Animated, {
-	type MeasuredDimensions,
 	type SharedValue,
 	useAnimatedReaction,
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { NO_STYLES } from "../../../../constants";
 import { useBuilderStore } from "../../../../providers/builder";
+import { useScrollChain } from "../../../../providers/motion/gestures/scroll-coordination";
 import { composeSlotStyleWithLocalTransform } from "../../../../providers/orchestrator/styles/helpers/compose-slot-style";
+import {
+	getScrollChainAxisDelta,
+	ScrollStore,
+} from "../../../../stores/scroll.store";
+import type { ScrollMetadataState } from "../../../../types/gesture.types";
 import { resolvePortalOffsetStyle } from "../helpers/offset-style";
-import { useHostMeasurement } from "../hooks/use-host-measurement";
+import {
+	type HostBounds,
+	useHostMeasurement,
+} from "../hooks/use-host-measurement";
 import { registerHost, unregisterHost } from "../stores/host-registry.store";
 import {
 	type ActivePortalBoundaryHost,
@@ -55,11 +63,15 @@ export const PortalOverlay = memo(function PortalOverlay({
 	const { height: viewportHeight, width: viewportWidth } =
 		useWindowDimensions();
 
+	const scrollMetadata = ScrollStore.getValue(screenKey, "metadata");
+	const scrollChain = useScrollChain();
 	const measurement = useHostMeasurement({
 		enabled: activeBoundaryHosts.length > 0,
 		boundaryMeasurements: activeBoundaryHosts.map(
 			(host) => host.localMeasurement,
 		),
+		scrollMetadata,
+		scrollChain,
 	});
 
 	const boundaryHosts = activeBoundaryHosts.map((host) => (
@@ -74,6 +86,7 @@ export const PortalOverlay = memo(function PortalOverlay({
 			<BoundaryPortalPlacement
 				host={host}
 				hostBounds={measurement.hostBounds}
+				scrollMetadata={scrollMetadata}
 			/>
 		</View>
 	));
@@ -113,13 +126,15 @@ const getCurrentBoundaryBounds = (host: ActivePortalBoundaryHost) => {
 
 type BoundaryPortalPlacementProps = {
 	host: ActivePortalBoundaryHost;
-	hostBounds: SharedValue<MeasuredDimensions | null>;
+	hostBounds: SharedValue<HostBounds | null>;
+	scrollMetadata: SharedValue<ScrollMetadataState | null>;
 };
 
 /** Positions one receiver using captured boundary and overlay measurements. */
 const BoundaryPortalPlacement = memo(function BoundaryPortalPlacement({
 	host,
 	hostBounds,
+	scrollMetadata,
 }: BoundaryPortalPlacementProps) {
 	useAnimatedReaction(
 		() => {
@@ -141,9 +156,21 @@ const BoundaryPortalPlacement = memo(function BoundaryPortalPlacement({
 			return NO_STYLES;
 		}
 
+		// The escaped frame left its scroll views: follow them by how far they (and any scroll
+		// view around the host) moved since measured, read from the scroll event's own write.
+		const host$ = hostBounds.get();
+		const live = scrollMetadata.get();
+		const boundaryChain = boundaryBounds.scrollChain ?? [];
+		const hostChain = host$?.scrollChain ?? [];
 		return resolvePortalOffsetStyle({
 			bounds: boundaryBounds,
-			hostBounds: hostBounds.get(),
+			hostBounds: host$,
+			scrollDeltaX:
+				getScrollChainAxisDelta(live, boundaryChain, "horizontal") -
+				getScrollChainAxisDelta(live, hostChain, "horizontal"),
+			scrollDeltaY:
+				getScrollChainAxisDelta(live, boundaryChain, "vertical") -
+				getScrollChainAxisDelta(live, hostChain, "vertical"),
 		});
 	});
 

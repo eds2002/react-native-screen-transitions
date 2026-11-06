@@ -64,13 +64,13 @@ Use this to make handoff or clipping-escape placement explicit inside a scrollab
 <Transition.ScrollView>
   <Transition.Boundary.Host />
 
-  <Transition.Boundary id="card" escapeClipping onPress={openCard}>
+  <Transition.Boundary id="card" onPress={openCard}>
     <Image source={image} style={styles.card} />
   </Transition.Boundary>
 </Transition.ScrollView>
 ```
 
-Most flows do not need an explicit host. Add one when `escapeClipping` or `handoff` content should be placed inside a specific local coordinate space.
+Most flows do not need an explicit host. Add one when escaped or `handoff` content should be placed inside a specific local coordinate space.
 
 ## Boundary Config Props
 
@@ -84,7 +84,7 @@ Boundary components share the same configuration props:
 - `method`
 - `enabled`
 - `handoff`
-- `escapeClipping`
+- `escapeClipping` (deprecated, no effect: see [Escaping clipping](/shared-elements#escaping-clipping))
 
 They keep the wrapped component props as well. The root `Transition.Boundary` accepts `onPress` for pressable usage.
 

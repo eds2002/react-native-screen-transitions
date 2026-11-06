@@ -6,7 +6,7 @@ import { makeMutable } from "react-native-reanimated";
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 const localMeasurement = makeMutable<any>({pairKey:"a<>b"});
 const boundaryPresentation = makeMutable<any>({owner:{pairKey:"a<>b",ready:true},receiver:"b",slots:{photo:{props:{opacity:0.5,pointerEvents:"none",handoffTarget:"destination"}}}});
-const root = {currentScreenKey:"a",localMeasurement,slotsMap:makeMutable({}),boundaryPresentation};
+const root = {currentScreenKey:"a",escapeMeasured:true,localMeasurement,portalHostReady:makeMutable(false),slotsMap:makeMutable({}),boundaryPresentation};
 let hostReady = false;
 let registeredScope: string | undefined;
 const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
@@ -14,7 +14,19 @@ await mockModule("../../components/boundary/providers/boundary-root.provider", (
 await mockModule("../../components/boundary/portal/stores/host-registry.store", () => ({useActiveHostKey:(screen:string|null)=>screen ? "overlay" : undefined}));
 await mockModule("../../components/boundary/portal/hooks/use-active-portal-boundary-host", () => ({useActivePortalBoundaryHost:({escapeHostKey,portalHostReady}:any)=>{registeredScope=escapeHostKey;portalHostReady.set(hostReady);return escapeHostKey ? "overlay-photo" : null;}}));
 const {usePortalDestination} = await import("../../components/boundary/portal/hooks/use-portal-destination");
-beforeEach(()=>{hostReady=false;registeredScope=undefined;localMeasurement.set({pairKey:"a<>b"});});
+beforeEach(()=>{hostReady=false;registeredScope=undefined;root.escapeMeasured=true;localMeasurement.set({pairKey:"a<>b"});});
+
+it("registers no overlay host for a boundary never measured for a transition", () => {
+ root.escapeMeasured=false;
+ let destination: ReturnType<typeof usePortalDestination>;
+ function Probe(){destination=usePortalDestination("photo","escapeClipping");return null;}
+ let renderer: ReturnType<typeof create>;
+ act(()=>{renderer=create(<Probe/>);});
+ expect(registeredScope).toBeUndefined();
+ expect(destination!.pinned).toBe(false);
+ expect(destination!.teleportProps.hostName).toBeNull();
+ act(()=>renderer!.unmount());
+});
 
 it("routes handoff content without registering or waiting for an overlay host", () => {
  let destination: ReturnType<typeof usePortalDestination>;

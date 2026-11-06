@@ -1,44 +1,30 @@
-import { useCallback } from "react";
-import type { LayoutRectangle } from "react-native";
-import { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
+import { useRef, useState } from "react";
+import type { LayoutChangeEvent } from "react-native";
 
-export const usePlaceholderStyles = () => {
-	const placeholderWidth = useSharedValue(0);
-	const placeholderHeight = useSharedValue(0);
-	// Pin the placeholder to its measured size while content lives in the host,
-	// in the same UI frame the host name flips - no commit in between. Until the
-	// first layout lands (dims 0) sizing stays natural so an instant attach
-	// cannot collapse the slot.
-	const placeholderStyle = useAnimatedStyle(() => {
-		"worklet";
-		const width = placeholderWidth.get();
-		const height = placeholderHeight.get();
+/**
+ * The placeholder keeps the boundary's slot while its frame is in the overlay. Its size is the
+ * boundary's own layout (not a measurement, which a scaled screen would shrink), kept on the JS side
+ * without a UI-thread hop, and pinned only once the boundary is measured for a transition: that
+ * render lands before its overlay host exists, so before the frame can leave. Boundaries that never
+ * transition pay one cheap layout callback.
+ */
+export const usePlaceholderStyles = (pinned: boolean) => {
+	const layout = useRef<{ width: number; height: number } | null>(null);
+	const [pinnedSize, setPinnedSize] = useState<{
+		width: number;
+		height: number;
+	} | null>(null);
 
-		if (width === 0) {
-			return { width: "auto", height: "auto" } as const;
-		}
+	if (pinned && !pinnedSize && layout.current) {
+		setPinnedSize(layout.current);
+	}
 
-		return { width, height };
-	});
+	const handleOnLayout = ({ nativeEvent }: LayoutChangeEvent) => {
+		const { width, height } = nativeEvent.layout;
+		if (width === 0 || height === 0) return;
+		layout.current = { width, height };
+		if (pinned && !pinnedSize) setPinnedSize(layout.current);
+	};
 
-	const handleOnLayout = useCallback(
-		(layout: LayoutRectangle) => {
-			"worklet";
-			const { width, height } = layout;
-			if (width === 0 || height === 0) {
-				return;
-			}
-
-			const hasValidDimensions =
-				placeholderHeight.get() !== 0 && placeholderWidth.get() !== 0;
-
-			if (!hasValidDimensions) {
-				placeholderWidth.set(width);
-				placeholderHeight.set(height);
-			}
-		},
-		[placeholderHeight, placeholderWidth],
-	);
-
-	return { placeholderStyle, handleOnLayout };
+	return { placeholderStyle: pinnedSize ?? undefined, handleOnLayout };
 };

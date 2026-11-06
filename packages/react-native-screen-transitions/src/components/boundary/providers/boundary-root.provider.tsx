@@ -1,14 +1,20 @@
 import {
 	type ForwardedRef,
 	type ReactNode,
+	useCallback,
 	useImperativeHandle,
 	useLayoutEffect,
 	useMemo,
 	useRef,
+	useState,
 } from "react";
 import type { View } from "react-native";
 import type { AnimatedRef } from "react-native-reanimated";
-import { useAnimatedRef, useSharedValue } from "react-native-reanimated";
+import {
+	type SharedValue,
+	useAnimatedRef,
+	useSharedValue,
+} from "react-native-reanimated";
 import { useBuilderStore } from "../../../providers/builder";
 import { useOptionalScreenHostStore } from "../../../providers/host/screen-host.provider";
 import { createBoundTag } from "../../../stores/bounds/helpers/link-pairs.helpers";
@@ -44,11 +50,15 @@ export type BoundaryRootRenderState = {
 	attachedStyle: unknown;
 	boundTag: BoundTag;
 	currentScreenKey: string;
+	/** This boundary has been measured for a transition, so it has (or is getting) an overlay host. */
+	escapeMeasured: boolean;
 	handoffEnabled: boolean;
 	localMeasurement: BoundaryLocalMeasurementValue;
 	measurementRef: AnimatedRef<View>;
 	portalRuntime: ReturnType<typeof resolveBoundaryPortal>;
 	ref: AnimatedRef<View>;
+	/** Set by the overlay once this boundary's host is placed. */
+	portalHostReady: SharedValue<boolean>;
 	shouldRenderBoundaryRootThroughPortal: boolean;
 	shouldRenderHandoffHost: boolean;
 };
@@ -123,28 +133,41 @@ export const {
 		const shouldAttachAssociatedStyles = enabled;
 		const shouldEscapeBoundaryRootToScreenHost = portalRuntime.escapeClipping;
 
+		const localMeasurement = useSharedValue<BoundaryLocalMeasurement | null>(
+			null,
+		);
+		const portalHostReady = useSharedValue(false);
+		const [escapeMeasured, setEscapeMeasured] = useState(false);
+		const onFirstEscapeMeasure = useCallback(() => setEscapeMeasured(true), []);
+
+		// Following pair presentations costs UI work on every bounds change and every transition
+		// frame: only boundaries taking part in a transition (handoff, or escaping and measured for a
+		// pair) do it. The rest only read their own screen's slots.
 		const { presentation: boundaryPresentation, slotsMap } =
 			useBoundaryPresentation(
 				boundTag.tag,
-				enabled && (portalRuntime.handoff || portalRuntime.escapeClipping),
+				enabled &&
+					(portalRuntime.handoff ||
+						(portalRuntime.escapeClipping && escapeMeasured)),
 			);
 
 		const associatedStyles = useComposedBoundaryStyle(
 			slotsMap,
 			boundTag.tag,
 			style,
-			hasTarget
-				? "stacking"
-				: shouldEscapeBoundaryRootToScreenHost
-					? "layout"
-					: "full",
+			hasTarget ? "stacking" : "full",
+			shouldEscapeBoundaryRootToScreenHost && !hasTarget
+				? {
+						boundaryId: boundTag.tag,
+						presentation: boundaryPresentation,
+						localMeasurement,
+						portalHostReady,
+					}
+				: undefined,
 		);
 
 		const rootRef = useAnimatedRef<View>();
 		const measurementRef = useAnimatedRef<View>();
-		const localMeasurement = useSharedValue<BoundaryLocalMeasurement | null>(
-			null,
-		);
 
 		useLayoutEffect(() => {
 			if (__DEV__ && targetCount > 1) {
@@ -180,10 +203,12 @@ export const {
 				attachedStyle,
 				boundTag,
 				currentScreenKey,
+				escapeMeasured,
 				handoffEnabled,
 				localMeasurement,
 				measurementRef,
 				portalRuntime,
+				portalHostReady,
 				ref: rootRef,
 				shouldRenderBoundaryRootThroughPortal,
 				shouldRenderHandoffHost: handoffEnabled && !hasTarget,
@@ -194,11 +219,13 @@ export const {
 				attachedStyle,
 				boundTag,
 				currentScreenKey,
+				escapeMeasured,
 				handoffEnabled,
 				hasTarget,
 				localMeasurement,
 				measurementRef,
 				portalRuntime,
+				portalHostReady,
 				rootRef,
 				shouldRenderBoundaryRootThroughPortal,
 			],
@@ -218,6 +245,7 @@ export const {
 						handoff={portalRuntime.handoff}
 						localMeasurement={localMeasurement}
 						measuredRef={measuredRef}
+						onFirstEscapeMeasure={onFirstEscapeMeasure}
 						style={hasTarget ? targetStyle : style}
 					/>
 				</>
