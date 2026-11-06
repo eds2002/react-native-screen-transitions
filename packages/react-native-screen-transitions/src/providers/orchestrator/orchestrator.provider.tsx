@@ -1,5 +1,6 @@
 import { type ReactNode, useMemo } from "react";
 import type { SharedValue } from "react-native-reanimated";
+import { useBoundaryMeasureCoordinator } from "../../components/boundary/coordinator/use-boundary-measure-coordinator";
 import type { NormalizedTransitionInterpolatedStyle } from "../../types/animation.types";
 import type { BoundsAccessor } from "../../types/bounds.types";
 import { createBoundsAccessor } from "../../utils/bounds";
@@ -32,7 +33,7 @@ export const {
 	useOrchestratorStore,
 } = createProvider("Orchestrator", {
 	global: true,
-})<OrchestratorProviderProps, OrchestratorState>(() => {
+})<OrchestratorProviderProps, OrchestratorState>(({ screenKey }) => {
 	const currentScreenKey = useBuilderStore(
 		(store) => store.derivations.currentScreenKey,
 	);
@@ -54,6 +55,10 @@ export const {
 			}),
 		[screenInterpolatorProps],
 	);
+
+	// One coordinator per screen measures its boundaries. An instance reusing another screen's
+	// orchestration (the overlay) must not run a second one.
+	useBoundaryMeasureCoordinator(!screenKey);
 
 	useRegisterGestureOwnership({
 		claimedDirections: gestures.claimedDirections,

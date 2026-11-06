@@ -4,10 +4,9 @@ import type { AnimatedRef } from "react-native-reanimated";
 import { useBuilderStore } from "../../../providers/builder";
 import type { BoundTag } from "../../../stores/bounds/types";
 import { prepareStyleForBounds } from "../../../utils/bounds/helpers/styles/styles";
+import { useBoundaryMeasureRegistration } from "../coordinator/measure-registry";
 import { useBoundaryPresence } from "../hooks/lifecycles/use-boundary-presence";
 import { useInitialDestinationMeasurement } from "../hooks/lifecycles/use-initial-destination-measurement";
-import { useInitialSourceMeasurement } from "../hooks/lifecycles/use-initial-source-measurement";
-import { useRefreshBoundary } from "../hooks/lifecycles/use-refresh-boundary";
 import { useMeasurer } from "../hooks/use-measurer";
 import type {
 	BoundaryConfigProps,
@@ -77,15 +76,11 @@ export const BoundaryLifecycle = memo(function BoundaryLifecycle({
 		escapeClipping,
 	});
 
-	useInitialSourceMeasurement({
+	// Source capture and refresh run from the screen's coordinator (one reaction per screen).
+	useBoundaryMeasureRegistration({
 		enabled,
-		measureBoundary,
 		boundTag,
-	});
-
-	useRefreshBoundary({
-		enabled: runtimeEnabled,
-		boundTag,
+		currentScreenKey,
 		measureBoundary,
 	});
 
