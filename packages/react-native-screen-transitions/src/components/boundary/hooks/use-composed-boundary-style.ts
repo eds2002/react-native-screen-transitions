@@ -1,10 +1,9 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { StyleSheet, type ViewStyle } from "react-native";
 import {
 	type SharedValue,
 	type StyleProps,
 	useAnimatedStyle,
-	useSharedValue,
 } from "react-native-reanimated";
 import { NO_STYLES } from "../../../constants";
 import { STYLE_RESET_VALUES } from "../../../providers/orchestrator/styles/constants";
@@ -13,10 +12,15 @@ import {
 	getLocalTransformForSlotComposition,
 } from "../../../providers/orchestrator/styles/helpers/compose-slot-style";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
+import { queueForgetAppliedStyleKeys } from "../coordinator/measure-registry";
 import {
 	type BoundaryEscapeState,
 	isBoundaryEscaped,
 } from "../portal/utils/is-escaped";
+import {
+	appliedStyleKeys,
+	nextAppliedStyleKey,
+} from "../utils/applied-style-keys";
 
 export function useComposedBoundaryStyle(
 	slots: SharedValue<NormalizedTransitionInterpolatedStyle> | undefined,
@@ -36,14 +40,15 @@ export function useComposedBoundaryStyle(
 		[style],
 	);
 
-	// Keys this style set last frame. Reanimated leaves a key that drops out of an animated style at
-	// its last value, so a boundary that escapes while hidden (opacity 0 from its slot) would keep
-	// that opacity on its escaped root. Mutated in place, never notifying: not an input.
-	const appliedKeys = useSharedValue<Record<string, true>>({});
+	// Keys this style set last frame (see applied-style-keys). Reanimated leaves a key that drops out
+	// of an animated style at its last value, so a boundary that escapes while hidden (opacity 0 from
+	// its slot) would keep that opacity on its escaped root.
+	const [styleKey] = useState(nextAppliedStyleKey);
+	useEffect(() => () => queueForgetAppliedStyleKeys(styleKey), [styleKey]);
 
 	return useAnimatedStyle(() => {
 		const style = resolveStyle();
-		const applied = appliedKeys.get();
+		const applied = appliedStyleKeys.get()[styleKey];
 		const reset: StyleProps = {};
 		let hasReset = false;
 		for (const key in applied) {
@@ -54,11 +59,16 @@ export function useComposedBoundaryStyle(
 			reset[key] = value;
 			hasReset = true;
 		}
-		appliedKeys.modify((keys) => {
+		appliedStyleKeys.modify((byStyle) => {
 			"worklet";
-			for (const key in keys) delete keys[key];
+			let keys = byStyle[styleKey];
+			if (keys) for (const key in keys) delete keys[key];
+			else {
+				keys = {};
+				byStyle[styleKey] = keys;
+			}
 			for (const key in style) keys[key] = true;
-			return keys;
+			return byStyle;
 		}, false);
 		return hasReset ? { ...reset, ...style } : style;
 

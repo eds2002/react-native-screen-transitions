@@ -66,5 +66,11 @@ export type BoundaryLocalMeasurement = {
 	pairKey: ScreenPairKey;
 };
 
-export type BoundaryLocalMeasurementValue =
-	SharedValue<BoundaryLocalMeasurement | null>;
+/**
+ * A boundary's entry in the shared measurement map (see utils/local-measurements): its number and
+ * the map itself, so a worklet reading it depends on the map.
+ */
+export type BoundaryLocalMeasurementValue = {
+	key: number;
+	map: SharedValue<Record<number, BoundaryLocalMeasurement>>;
+};

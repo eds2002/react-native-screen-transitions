@@ -3,6 +3,7 @@ import {
 	type ReactNode,
 	type RefObject,
 	useCallback,
+	useEffect,
 	useImperativeHandle,
 	useLayoutEffect,
 	useMemo,
@@ -11,11 +12,7 @@ import {
 } from "react";
 import type { View } from "react-native";
 import type { AnimatedRef } from "react-native-reanimated";
-import {
-	type SharedValue,
-	useAnimatedRef,
-	useSharedValue,
-} from "react-native-reanimated";
+import { type SharedValue, useAnimatedRef } from "react-native-reanimated";
 import { useBuilderStore } from "../../../providers/builder";
 import { useOptionalScreenHostStore } from "../../../providers/host/screen-host.provider";
 import { createBoundTag } from "../../../stores/bounds/helpers/link-pairs.helpers";
@@ -23,6 +20,7 @@ import type { BoundTag } from "../../../stores/bounds/types";
 import createProvider from "../../../utils/create-provider";
 import { logger } from "../../../utils/logger";
 import { BoundaryLifecycle } from "../components/boundary-lifecycle";
+import { queueForgetLocalMeasurement } from "../coordinator/measure-registry";
 import {
 	BoundaryPresentationDriver,
 	type BoundaryPresentationHandles,
@@ -33,11 +31,11 @@ import { resolveBoundaryPortal } from "../portal/utils/resolve-portal";
 import type {
 	BoundaryConfigProps,
 	BoundaryId,
-	BoundaryLocalMeasurement,
 	BoundaryLocalMeasurementValue,
 	BoundaryOwnProps,
 } from "../types";
 import { useFirstEscapeMeasureKey } from "../utils/first-escape-measure";
+import { createLocalMeasurementRef } from "../utils/local-measurements";
 
 type BoundaryRootContextValue = BoundaryRootRenderState;
 
@@ -137,13 +135,19 @@ export const {
 		const shouldAttachAssociatedStyles = enabled;
 		const shouldEscapeBoundaryRootToScreenHost = portalRuntime.escapeClipping;
 
-		const localMeasurement = useSharedValue<BoundaryLocalMeasurement | null>(
-			null,
-		);
 		const [escapeMeasured, setEscapeMeasured] = useState(false);
 		const onFirstEscapeMeasure = useCallback(() => setEscapeMeasured(true), []);
+		// The boundary's number: its first-measure notification and its measurement map entry.
 		const firstEscapeMeasureKey =
 			useFirstEscapeMeasureKey(onFirstEscapeMeasure);
+		const localMeasurement = useMemo(
+			() => createLocalMeasurementRef(firstEscapeMeasureKey),
+			[firstEscapeMeasureKey],
+		);
+		useEffect(
+			() => () => queueForgetLocalMeasurement(firstEscapeMeasureKey),
+			[firstEscapeMeasureKey],
+		);
 
 		// Following pair presentations costs UI work on every bounds change and every transition
 		// frame: only boundaries taking part in a transition (handoff, or escaping and measured for a
@@ -162,7 +166,9 @@ export const {
 			portalHostReady,
 		} = presentationReady ? engagedPresentation : idlePresentation;
 
-		const escapesRoot = shouldEscapeBoundaryRootToScreenHost && !hasTarget;
+		// Only a boundary following its pairs can escape: at rest its style needs no escape inputs.
+		const escapesRoot =
+			shouldEscapeBoundaryRootToScreenHost && !hasTarget && presentationReady;
 		// Stable between renders: a new object would restart the style's UI mapper every render.
 		const escapeState = useMemo(
 			() =>

@@ -18,6 +18,7 @@ import {
 import type { ScrollMetadataState } from "../../../../types/gesture.types";
 import { getVisibilityBlockOffset } from "../../../../utils/visibility-block-offset";
 import type { BoundaryLocalMeasurementValue } from "../../types";
+import { readLocalMeasurement } from "../../utils/local-measurements";
 import { correctMeasuredBoundsForVisibilityGate } from "../../utils/measured-bounds";
 
 const HOST_MEASUREMENT_RETRY_DELAY_MS = 16;
@@ -88,7 +89,7 @@ export const useHostMeasurement = ({
 			const captures = [];
 			let hasSource = false;
 			for (const value of boundaryMeasurements) {
-				const capture = value.get();
+				const capture = readLocalMeasurement(value);
 				captures.push(capture);
 				if (capture) hasSource = true;
 			}

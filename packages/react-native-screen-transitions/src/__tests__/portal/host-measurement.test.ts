@@ -32,7 +32,10 @@ await mockModule("react-native-reanimated", () => ({
  withTiming: (value: any) => value,
 }));
 const {useHostMeasurement} = await import("../../components/boundary/portal/hooks/use-host-measurement");
-const source = mutable(null);
+const sourceMap = mutable({});
+// A boundary's entry in the shared measurement map: set its capture (or clear it) by replacing the map.
+const source = { key: 1, map: sourceMap };
+const setSource = (capture: any) => sourceMap.set(capture ? { 1: capture } : {});
 const render = (enabled = true) => {
  cursor = 0;
  reactions = [];
@@ -52,7 +55,7 @@ const settle = () => { for (let i = 0; i < 100; i++) tick(); };
 const bounds = (pageY = 0): Bounds => ({x:0, y:0, pageX:0, pageY, width:402, height:874});
 beforeEach(() => {
  measurements = 0; retries = 0; values = []; reactions = []; cursor = 0; collecting = null;
- source.set({bounds: {}, pairKey: "a<>b"});
+ setSource({bounds: {}, pairKey: "a<>b"});
  result = bounds();
 });
 
@@ -70,21 +73,21 @@ it("measures fresh after scrolling and recapturing the same pair", () => {
  const host = render();
  settle();
  result = bounds(-180);
- source.set({bounds: {}, pairKey: "a<>b"});
+ setSource({bounds: {}, pairKey: "a<>b"});
  settle();
  expect(host.hostBounds.get()?.pageY).toBe(-180);
  expect(measurements).toBe(2);
 });
 
 it("waits for source capture instead of measuring an initially offscreen host", () => {
- source.set(null);
+ setSource(null);
  result = bounds(1800);
  const host = render();
  settle();
  expect(measurements).toBe(0);
  expect(host.hostBounds.get()).toBeNull();
  result = bounds(63);
- source.set({bounds: {}, pairKey:"a<>b"});
+ setSource({bounds: {}, pairKey:"a<>b"});
  settle();
  expect(host.hostBounds.get()?.pageY).toBe(63);
  expect(measurements).toBe(1);
@@ -107,12 +110,12 @@ it("discards old bounds on a failed fresh capture and gives the next capture fre
  const host = render();
  settle();
  result = null;
- source.set({bounds:{}, pairKey:"a<>c"});
+ setSource({bounds:{}, pairKey:"a<>c"});
  settle();
  expect(host.hostBounds.get()).toBeNull();
  expect(measurements).toBe(21);
  result = bounds(-120);
- source.set({bounds:{}, pairKey:"a<>c"});
+ setSource({bounds:{}, pairKey:"a<>c"});
  settle();
  expect(host.hostBounds.get()?.pageY).toBe(-120);
  expect(measurements).toBe(22);

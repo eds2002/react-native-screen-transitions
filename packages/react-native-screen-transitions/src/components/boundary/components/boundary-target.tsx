@@ -42,7 +42,8 @@ const BoundaryTargetInner = (props: InternalBoundaryTargetProps) => {
 		boundaryId,
 		style,
 		"full",
-		shouldEscapeTargetToScreenHost && rootContext && boundaryId
+		// Only once the root follows its pairs (escapeMeasured) can the target leave.
+		shouldEscapeTargetToScreenHost && rootContext?.escapeMeasured && boundaryId
 			? {
 					boundaryId,
 					presentation: rootContext.boundaryPresentation,

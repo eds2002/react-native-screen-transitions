@@ -4,7 +4,9 @@ import { act, create } from "react-test-renderer";
 import { makeMutable } from "react-native-reanimated";
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
-const localMeasurement = makeMutable<any>({pairKey:"a<>b"});
+const {createLocalMeasurementRef, writeLocalMeasurement} = await import("../../components/boundary/utils/local-measurements");
+const localMeasurement = createLocalMeasurementRef(201);
+writeLocalMeasurement(localMeasurement, {pairKey:"a<>b"} as any);
 const boundaryPresentation = makeMutable<any>({owner:{pairKey:"a<>b",ready:true},receiver:"b",slots:{photo:{props:{opacity:0.5,pointerEvents:"none",handoffTarget:"destination"}}}});
 const root = {currentScreenKey:"a",escapeMeasured:true,localMeasurement,portalHostReady:makeMutable(false),slotsMap:makeMutable({}),boundaryPresentation};
 let hostReady = false;
@@ -14,7 +16,7 @@ await mockModule("../../components/boundary/providers/boundary-root.provider", (
 await mockModule("../../components/boundary/portal/stores/host-registry.store", () => ({useActiveHostKey:(screen:string|null)=>screen ? "overlay" : undefined}));
 await mockModule("../../components/boundary/portal/hooks/use-active-portal-boundary-host", () => ({useActivePortalBoundaryHost:({escapeHostKey,portalHostReady}:any)=>{registeredScope=escapeHostKey;portalHostReady.set(hostReady);return escapeHostKey ? "overlay-photo" : null;}}));
 const {usePortalDestination} = await import("../../components/boundary/portal/hooks/use-portal-destination");
-beforeEach(()=>{hostReady=false;registeredScope=undefined;root.escapeMeasured=true;localMeasurement.set({pairKey:"a<>b"});});
+beforeEach(()=>{hostReady=false;registeredScope=undefined;root.escapeMeasured=true;writeLocalMeasurement(localMeasurement, {pairKey:"a<>b"} as any);});
 
 it("registers no overlay host for a boundary never measured for a transition", () => {
  root.escapeMeasured=false;
@@ -53,7 +55,7 @@ it("keeps an escaped frame inline until its host and matching pair are ready", (
  hostReady=true;
  act(()=>renderer!.update(<Probe key="ready"/>));
  expect(destination!.teleportProps).toEqual({opacity:0.5,hostName:"overlay-photo"});
- localMeasurement.set({pairKey:"a<>c"});
+ writeLocalMeasurement(localMeasurement, {pairKey:"a<>c"} as any);
  act(()=>renderer!.update(<Probe key="other-pair"/>));
  expect(destination!.teleportProps?.hostName).toBeNull();
  act(()=>renderer!.unmount());

@@ -1,6 +1,7 @@
 import { expect, it } from 'bun:test';
 import { act, create } from 'react-test-renderer';
 import { makeMutable } from 'react-native-reanimated';
+import { createLocalMeasurementRef, writeLocalMeasurement } from '../../components/boundary/utils/local-measurements';
 import { useComposedBoundaryStyle } from '../../components/boundary/hooks/use-composed-boundary-style';
 import type { NormalizedTransitionInterpolatedStyle } from '../../types/animation.types';
 
@@ -34,7 +35,7 @@ it('keeps escaped roots measurable, applies live dimensions, and restores base s
 it('resets what the full style set when the root escapes (a boundary hidden by its slot does not stay hidden)', async () => {
  const slots = makeMutable<NormalizedTransitionInterpolatedStyle>({box:{style:{opacity:0,transform:[{scale:2}]}}});
  const presentation = makeMutable<any>({owner:undefined, slots:{}});
- const localMeasurement = makeMutable<any>(null);
+ const localMeasurement = createLocalMeasurementRef(101);
  const portalHostReady = makeMutable(false);
  const escapeState = {boundaryId:'box', presentation, localMeasurement, portalHostReady};
  let output: any;
@@ -47,7 +48,7 @@ it('resets what the full style set when the root escapes (a boundary hidden by i
  // Inline and hidden by its slot (the active source of an open zoom).
  expect(output.opacity).toBe(0);
  // Now it escapes: the host applies the slot, the root keeps only layout and must not stay at opacity 0.
- localMeasurement.set({pairKey:'A<>B', bounds:{}});
+ writeLocalMeasurement(localMeasurement, {pairKey:'A<>B', bounds:{}} as any);
  portalHostReady.set(true);
  presentation.set({owner:{ready:true, pairKey:'A<>B'}, slots:{box:{style:{opacity:0}}}});
  await act(() => root!.update(<Probe/>));

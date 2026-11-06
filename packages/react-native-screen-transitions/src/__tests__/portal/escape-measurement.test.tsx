@@ -9,12 +9,14 @@ const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier
 await mockModule('../../providers/motion', () => ({useMotionStore:(select:any)=>select(motion)}));
 const {useMeasurer} = await import('../../components/boundary/hooks/use-measurer');
 const {useFirstEscapeMeasureKey} = await import('../../components/boundary/utils/first-escape-measure');
+const {createLocalMeasurementRef, readLocalMeasurement} = await import('../../components/boundary/utils/local-measurements');
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
 let firstMeasures = 0;
 const onFirstMeasure = () => {firstMeasures++;};
 it('captures destination escape placement in corrected coordinates and rejects invalid captures', async () => {
- const localMeasurement = makeMutable<BoundaryLocalMeasurement | null>(null);
+ const localMeasurement = createLocalMeasurementRef(301);
+ const read = () => readLocalMeasurement(localMeasurement);
  const ref = {current:{measurement:{x:0,y:0,pageX:0,pageY:1915,width:310,height:100}}};
  let measureBoundary: MeasureBoundary;
  function Probe() {
@@ -25,14 +27,14 @@ it('captures destination escape placement in corrected coordinates and rejects i
  let root: ReturnType<typeof create>;
  await act(() => {root=create(<Probe/>);});
  measureBoundary!({type:'destination',pairKey:'A<>B'});
- expect(localMeasurement.get()?.bounds.pageY).toBe(226);
- expect(localMeasurement.get()?.pairKey).toBe('A<>B');
+ expect(read()?.bounds.pageY).toBe(226);
+ expect(read()?.pairKey).toBe('A<>B');
  // The first accepted capture activates the overlay host, once.
  measureBoundary!({type:'destination',pairKey:'A<>B'});
  expect(firstMeasures).toBe(1);
- const accepted = localMeasurement.get();
+ const accepted = read();
  ref.current.measurement.pageY = 9000;
  measureBoundary!({type:'destination',pairKey:'B<>C'});
- expect(localMeasurement.get()).toBe(accepted);
+ expect(read()).toBe(accepted);
  await act(() => root!.unmount());
 });

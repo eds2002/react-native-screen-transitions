@@ -7,6 +7,8 @@ import {
 } from "../../../stores/bounds/internals/entries";
 import type { BoundTag, ScreenKey, TagID } from "../../../stores/bounds/types";
 import type { MeasureBoundary } from "../types";
+import { forgetAppliedStyleKeys } from "../utils/applied-style-keys";
+import { forgetLocalMeasurements } from "../utils/local-measurements";
 
 /**
  * The boundaries each screen's coordinator can measure. Lives on the UI thread; JS only sends
@@ -62,16 +64,26 @@ const applyRegistryOps = (ops: RegistryOp[]) => {
 	);
 };
 
-const applyBoundaryOps = (registryOps: RegistryOp[], entryOps: EntryOp[]) => {
+const applyBoundaryOps = (
+	registryOps: RegistryOp[],
+	entryOps: EntryOp[],
+	forgottenStyleKeys: number[],
+	forgottenMeasurementKeys: number[],
+) => {
 	"worklet";
 	if (entryOps.length) applyEntryOps(entryOps);
 	if (registryOps.length) applyRegistryOps(registryOps);
+	if (forgottenStyleKeys.length) forgetAppliedStyleKeys(forgottenStyleKeys);
+	if (forgottenMeasurementKeys.length)
+		forgetLocalMeasurements(forgottenMeasurementKeys);
 };
 
 // Mounting a list registers every boundary (its presence in the bounds registry and its place in
 // its screen's measure registry) in one UI call, not calls per boundary.
 let pendingOps: RegistryOp[] = [];
 let pendingEntryOps: EntryOp[] = [];
+let pendingForgottenStyleKeys: number[] = [];
+let pendingForgottenMeasurementKeys: number[] = [];
 let flushScheduled = false;
 const scheduleFlush = () => {
 	if (flushScheduled) return;
@@ -80,13 +92,33 @@ const scheduleFlush = () => {
 		flushScheduled = false;
 		const ops = pendingOps;
 		const entryOps = pendingEntryOps;
+		const forgottenStyleKeys = pendingForgottenStyleKeys;
+		const forgottenMeasurementKeys = pendingForgottenMeasurementKeys;
 		pendingOps = [];
 		pendingEntryOps = [];
-		scheduleOnUI(applyBoundaryOps, ops, entryOps);
+		pendingForgottenStyleKeys = [];
+		pendingForgottenMeasurementKeys = [];
+		scheduleOnUI(
+			applyBoundaryOps,
+			ops,
+			entryOps,
+			forgottenStyleKeys,
+			forgottenMeasurementKeys,
+		);
 	});
 };
 const queueRegistryOp = (op: RegistryOp) => {
 	pendingOps.push(op);
+	scheduleFlush();
+};
+/** An unmounted boundary style's applied keys, dropped with the next registry flush. */
+export const queueForgetAppliedStyleKeys = (key: number) => {
+	pendingForgottenStyleKeys.push(key);
+	scheduleFlush();
+};
+/** An unmounted boundary's last transition measurement, dropped with the next registry flush. */
+export const queueForgetLocalMeasurement = (key: number) => {
+	pendingForgottenMeasurementKeys.push(key);
 	scheduleFlush();
 };
 /** A boundary's presence in the bounds registry, sent with the next registry flush. */

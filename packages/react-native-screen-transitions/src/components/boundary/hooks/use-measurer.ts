@@ -16,6 +16,10 @@ import { getVisibilityBlockOffset } from "../../../utils/visibility-block-offset
 import type { BoundaryLocalMeasurementValue, MeasureBoundary } from "../types";
 import { notifyFirstEscapeMeasure } from "../utils/first-escape-measure";
 import {
+	readLocalMeasurement,
+	writeLocalMeasurement,
+} from "../utils/local-measurements";
+import {
 	attachScrollSnapshotToMeasuredBounds,
 	correctMeasuredBoundsForVisibilityGate,
 	isMeasurementInViewport,
@@ -109,9 +113,9 @@ export const useMeasurer = ({
 			// snapshot lets the escaped frame follow its scroll views while it is in the overlay.
 			if (escapeClipping) {
 				// The first measurement is what gives this boundary a host in the overlay.
-				if (localMeasurement.get() === null)
+				if (readLocalMeasurement(localMeasurement) === null)
 					scheduleOnRN(notifyFirstEscapeMeasure, firstEscapeMeasureKey);
-				localMeasurement.set({
+				writeLocalMeasurement(localMeasurement, {
 					bounds: measuredWithScroll,
 					pairKey: target.pairKey,
 				});

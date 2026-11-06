@@ -21,6 +21,7 @@ import {
 	ScrollStore,
 } from "../../../../stores/scroll.store";
 import type { ScrollMetadataState } from "../../../../types/gesture.types";
+import { readLocalMeasurement } from "../../utils/local-measurements";
 import { resolvePortalOffsetStyle } from "../helpers/offset-style";
 import {
 	type HostBounds,
@@ -121,7 +122,7 @@ export const PortalOverlay = memo(function PortalOverlay({
 
 const getCurrentBoundaryBounds = (host: ActivePortalBoundaryHost) => {
 	"worklet";
-	return host.localMeasurement.get()?.bounds ?? null;
+	return readLocalMeasurement(host.localMeasurement)?.bounds ?? null;
 };
 
 type BoundaryPortalPlacementProps = {
