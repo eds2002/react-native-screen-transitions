@@ -12,10 +12,11 @@ import { lab as perf } from "./perf";
 import { lab as ownership } from "./ownership";
 import { lab as scroll } from "./scroll";
 import { lab as scrollbounds } from "./scrollbounds";
+import { lab as screencycles } from "./screencycles";
 import { lab as sheet } from "./sheet";
 import { lab as slots } from "./slots";
 import { lab as stack } from "./stack";
 import type { Lab } from "./ui";
 
 /** One lab per library mechanism, in this order on the home screen. */
-export const LABS: Lab[] = [stack, heavy, sheet, backdrop, gestures, ownership, scroll, inactive, slots, overlay, bounds, chain, scrollbounds, nativeStack, motion, perf, manybounds];
+export const LABS: Lab[] = [stack, heavy, sheet, backdrop, gestures, ownership, scroll, inactive, slots, overlay, bounds, chain, scrollbounds, nativeStack, motion, perf, manybounds, screencycles];
