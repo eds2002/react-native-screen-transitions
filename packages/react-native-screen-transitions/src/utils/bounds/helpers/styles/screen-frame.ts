@@ -2,37 +2,16 @@ import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
 
 /**
  * What a bounds element style needs to stay one element while the screens it travels between move
- * (a slide, a parallax, a screen dragged by the finger). `bounds().styles()` computes the element's
- * path between the two measured rects as if neither screen moved; the screen's resolved styles then
- * read every screen's own transform for the same frame and correct the element (see
- * `applyBoundsScreenFrames`). Carried on the style under a private key and removed there.
+ * (a slide, a parallax, a screen dragged by the finger) and while transitions overlap (spam, a
+ * chain pushed or popped quickly). `bounds().styles()` composes the element's path where the screens
+ * lay it out, from its source slot; the screen's resolved styles then place it for this frame (see
+ * `applyBoundsScreenFrames`): where the two screens show its ends right now, starting from wherever
+ * the element is drawn if it is in flight elsewhere. Carried on the style under a private key and
+ * removed there.
  */
 export const BOUNDS_SCREEN_FRAME_STYLE_KEY = "__screenTransitionsBoundsFrame";
 
-export type BoundsScreenFrame = {
-	/** How far along the source -> destination path the element is (0 at the source, 1 at the destination). */
-	t: number;
-	sourceScreenKey: string;
-	destinationScreenKey: string;
-	/** The screen whose interpolator styled this element (the element is drawn inside it). */
-	screenKey: string;
-	/** The transforms the source and destination screens had when their ends were measured. */
-	sourceMeasuredWith?: MeasuredScreenTransform;
-	destinationMeasuredWith?: MeasuredScreenTransform;
-	/**
-	 * How far the path's start is from the element's own box (the leaving copy, when the element
-	 * leaves from where a sibling had it in flight rather than from its slot), in measured space.
-	 */
-	shiftX: number;
-	shiftY: number;
-	/** The element's own measured box (window space, measured with its end's screen transform). */
-	x: number;
-	y: number;
-	width: number;
-	height: number;
-};
-
-/** A screen's translate/scale when a boundary on it was measured (see bounds-screen-frames). */
+/** A screen's translate/scale, about its center, when a boundary on it was measured. */
 export type MeasuredScreenTransform = {
 	sx: number;
 	sy: number;
@@ -42,8 +21,44 @@ export type MeasuredScreenTransform = {
 	height: number;
 };
 
-type MeasuredWithTransform = MeasuredDimensions & {
-	screenTransform?: MeasuredScreenTransform;
+export type FrameRect = {
+	pageX: number;
+	pageY: number;
+	width: number;
+	height: number;
+};
+
+/**
+ * A pair whose element another pair starts from (see resolveStartChain): an older screen still
+ * closing that draws it, or the source screen's own pair still moving (a chain).
+ */
+export type StartPair = {
+	pairKey: string;
+	source: string;
+	destination: string;
+	/** Its destination's progress this frame. */
+	t: number;
+};
+
+export type BoundsScreenFrame = {
+	/** The bound's tag (to read the start pairs' links). */
+	tag: string;
+	/** How far along the source -> destination path the element is (0 at the source, 1 at the destination). */
+	t: number;
+	sourceScreenKey: string;
+	destinationScreenKey: string;
+	/** The screen whose interpolator styled this element (the element is drawn inside it). */
+	screenKey: string;
+	/** The path the element's style was composed for, where the screens lay it out. */
+	start: FrameRect;
+	end: FrameRect;
+	/** The pairs the element starts from instead of `start` (nearest first), when it is in flight. */
+	startChain: StartPair[];
+	/** The element's own box where its screen lays it out. */
+	x: number;
+	y: number;
+	width: number;
+	height: number;
 };
 
 type StyleWithScreenFrame = StyleProps & {
@@ -53,15 +68,15 @@ type StyleWithScreenFrame = StyleProps & {
 export const attachBoundsScreenFrame = (
 	style: StyleProps,
 	params: {
-		shiftX: number;
-		shiftY: number;
+		tag: string;
 		t: number;
 		sourceScreenKey: string | null | undefined;
 		destinationScreenKey: string | null | undefined;
 		screenKey: string | null | undefined;
 		layout: MeasuredDimensions | null | undefined;
-		sourceMeasured: MeasuredDimensions | null | undefined;
-		destinationMeasured: MeasuredDimensions | null | undefined;
+		start: MeasuredDimensions;
+		end: MeasuredDimensions;
+		startChain: StartPair[];
 	},
 ): StyleProps => {
 	"worklet";
@@ -73,17 +88,24 @@ export const attachBoundsScreenFrame = (
 	const source = style as Record<string, unknown>;
 	for (const key in source) next[key] = source[key];
 	next[BOUNDS_SCREEN_FRAME_STYLE_KEY] = {
+		tag: params.tag,
 		t: params.t,
-		shiftX: params.shiftX,
-		shiftY: params.shiftY,
 		sourceScreenKey,
 		destinationScreenKey,
 		screenKey,
-		sourceMeasuredWith: (params.sourceMeasured as MeasuredWithTransform | null)
-			?.screenTransform,
-		destinationMeasuredWith: (
-			params.destinationMeasured as MeasuredWithTransform | null
-		)?.screenTransform,
+		start: {
+			pageX: params.start.pageX,
+			pageY: params.start.pageY,
+			width: params.start.width,
+			height: params.start.height,
+		},
+		end: {
+			pageX: params.end.pageX,
+			pageY: params.end.pageY,
+			width: params.end.width,
+			height: params.end.height,
+		},
+		startChain: params.startChain,
 		x: layout.pageX,
 		y: layout.pageY,
 		width: layout.width,

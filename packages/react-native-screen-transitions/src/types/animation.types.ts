@@ -346,6 +346,8 @@ export type NormalizedTransitionSlotStyle = {
 	style?: StyleProps;
 	props?: TransitionSlotProps;
 	boundsLocalTransform?: TransformArrayItem[];
+	/** A bounds element styles() placed this frame (its style moves it along a shared-bound path). */
+	boundsPlaced?: true;
 };
 
 /**

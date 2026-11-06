@@ -3,6 +3,7 @@ import type { View } from "react-native";
 import {
 	type AnimatedRef,
 	type SharedValue,
+	type StyleProps,
 	useAnimatedRef,
 	useDerivedValue,
 	useSharedValue,
@@ -14,6 +15,7 @@ import type { BoundsAccessor } from "../../types/bounds.types";
 import { createBoundsAccessor } from "../../utils/bounds";
 import createProvider from "../../utils/create-provider";
 import { useBuilderStore } from "../builder";
+import { useOptionalScreenHostStore } from "../host/screen-host.provider";
 import { useMotionStore } from "../motion";
 import { useScreenAnimationPipeline } from "./helpers/pipeline";
 import { usePairPresentation } from "./helpers/use-pair-presentation";
@@ -70,50 +72,46 @@ export const {
 	const { screenInterpolatorProps } = pipeline;
 
 	// Where this screen draws its content this frame, for the bounds elements of the screens it
-	// shares them with (see applyBoundsScreenFrames).
+	// shares them with (see applyBoundsScreenFrames). From its own interpolator's content style only
+	// (the local layers, the last that sets a transform): its resolved styles inherit its parent
+	// screen's, which may read this screen's transform (a pair across a nested stack).
 	const lastScreenTransform = useSharedValue<ScreenTransform>(
 		IDENTITY_SCREEN_TRANSFORM,
 	);
 	const screenTransform = useDerivedValue<ScreenTransform>(() => {
 		const screen = screenInterpolatorProps.get().layouts.screen;
-		const next = readScreenTransform(
-			resolvedSlotsMap.get().content?.style,
-			screen.width,
-			screen.height,
-		);
+		const layers = localStylesMaps.get();
+		let contentStyle: StyleProps | undefined;
+		for (let index = 0; index < layers.length; index++) {
+			const style = layers[index]?.content?.style;
+			if (style?.transform !== undefined) contentStyle = style;
+		}
+		const next = readScreenTransform(contentStyle, screen.width, screen.height);
 		const previous = lastScreenTransform.get();
 		if (areScreenTransformsEqual(previous, next)) return previous;
 		lastScreenTransform.set(next);
 		return next;
 	});
 	useRegisterScreenTransform(currentScreenKey, screenTransform, !screenKey);
-	const previousScreenKey = useBuilderStore(
-		(store) => store.derivations.previousScreenKey,
+	// The screens this one may share bound elements with: its stack's (closing ones included), read
+	// the same frame (a declared dependency: computed before this screen's styles).
+	const scenes = useOptionalScreenHostStore((store) => store?.scenes);
+	const stackKeys = useMemo(
+		() => scenes?.map((scene) => scene.route.key) ?? [currentScreenKey],
+		[scenes, currentScreenKey],
 	);
-	const nextScreenKey = useBuilderStore(
-		(store) => store.derivations.nextScreenKey,
-	);
-	const previousScreenTransform = useOptionalOrchestratorStore(
-		previousScreenKey ?? null,
+	const stackScreenTransforms = useOptionalOrchestratorStore(
+		stackKeys,
 		(store) => store.screenTransform,
 	);
-	const nextScreenTransform = useOptionalOrchestratorStore(
-		nextScreenKey ?? null,
-		(store) => store.screenTransform,
-	);
-	// The screens this one shares bounds with in its stack, by key (others are read by key).
 	const screenTransforms = useDerivedValue<
 		Record<string, ScreenTransform | undefined>
 	>(() => {
-		const transforms: Record<string, ScreenTransform | undefined> = {
-			[currentScreenKey]: screenTransform.get(),
-		};
-		if (previousScreenKey) {
-			transforms[previousScreenKey] = previousScreenTransform?.get();
+		const transforms: Record<string, ScreenTransform | undefined> = {};
+		for (let index = 0; index < stackKeys.length; index++) {
+			transforms[stackKeys[index]] = stackScreenTransforms[index]?.get();
 		}
-		if (nextScreenKey) {
-			transforms[nextScreenKey] = nextScreenTransform?.get();
-		}
+		transforms[currentScreenKey] = screenTransform.get();
 		return transforms;
 	});
 	const slotsMap = useDerivedValue<NormalizedTransitionInterpolatedStyle>(() =>
@@ -136,7 +134,7 @@ export const {
 
 	// One coordinator per screen measures its boundaries. An instance reusing another screen's
 	// orchestration (the overlay) must not run a second one.
-	useBoundaryMeasureCoordinator(!screenKey, contentMeasureRef);
+	useBoundaryMeasureCoordinator(!screenKey, contentMeasureRef, slotsMap);
 
 	useRegisterGestureOwnership({
 		claimedDirections: gestures.claimedDirections,

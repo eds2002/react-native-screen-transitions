@@ -11,11 +11,7 @@ import {
 	isScreenClosing,
 	isScreenNewer,
 } from "../../../../providers/motion/helpers/progress-registry";
-import {
-	resolveDrawnRect,
-	toLayoutSpace,
-	toMeasuredSpace,
-} from "../../../../providers/orchestrator/styles/helpers/bounds-screen-frames";
+import { toLayoutSpace } from "../../../../providers/orchestrator/styles/helpers/bounds-screen-frames";
 import {
 	createScreenPairKey,
 	getDestinationScreenKeyFromPairKey,
@@ -54,44 +50,8 @@ import { attachBoundsLocalTransform } from "./local-transform";
 import {
 	attachBoundsScreenFrame,
 	type MeasuredScreenTransform,
+	type StartPair,
 } from "./screen-frame";
-
-const lerp = (a: number, b: number, t: number) => {
-	"worklet";
-	return a + (b - a) * t;
-};
-
-/**
- * Handed-off content passed along a chain (List -> Detail -> Theater) lives in one place. While the
- * middle screen is itself moving (Theater closing while Detail closes too, or Theater pushed while
- * Detail still opens), the slot the content goes back to is not at rest: it is wherever Detail's
- * own pair has it now. Aiming there keeps both hops one motion; aiming at the resting slot lands
- * the content there and then jumps onto Detail's pair, already part way along.
- */
-const centerX = (rect: MeasuredDimensions) => {
-	"worklet";
-	return rect.pageX + rect.width / 2;
-};
-const centerY = (rect: MeasuredDimensions) => {
-	"worklet";
-	return rect.pageY + rect.height / 2;
-};
-
-const lerpRect = (
-	from: MeasuredDimensions,
-	to: MeasuredDimensions,
-	t: number,
-): MeasuredDimensions => {
-	"worklet";
-	return {
-		x: lerp(from.x, to.x, t),
-		y: lerp(from.y, to.y, t),
-		width: lerp(from.width, to.width, t),
-		height: lerp(from.height, to.height, t),
-		pageX: lerp(from.pageX, to.pageX, t),
-		pageY: lerp(from.pageY, to.pageY, t),
-	};
-};
 
 type MeasuredWith = MeasuredDimensions & {
 	screenTransform?: MeasuredScreenTransform;
@@ -163,13 +123,6 @@ const isTakenByNewerScreen = (
 	return false;
 };
 
-type MovingPair = {
-	pairKey: string;
-	source: string;
-	destination: string;
-	t: number;
-};
-
 /**
  * The pair whose element a pair from `sourceScreenKey` to `destinationScreenKey` starts from, when
  * the element is not at its source slot right now:
@@ -181,7 +134,7 @@ const resolveStartPair = (
 	tag: string,
 	sourceScreenKey: string,
 	destinationScreenKey: string,
-): MovingPair | null => {
+): StartPair | null => {
 	"worklet";
 	const presenter = resolveClosingPresenter(tag, destinationScreenKey);
 	if (presenter && presenter.destination !== sourceScreenKey) return presenter;
@@ -206,19 +159,20 @@ const resolveStartPair = (
 };
 
 /**
- * Where an element's path starts, in the source screen's measured space: its source slot, unless
- * it is elsewhere right now (see resolveStartPair), then where that pair draws it. That pair's own
- * start may be moving too (a chain spammed): the chain is walked down, then drawn back up.
+ * The pairs an element starts from when it is not at its source slot right now (see
+ * resolveStartPair), nearest first: that pair's own start may be moving too (a chain spammed). Only
+ * which pairs and how far along: where they draw it is resolved with the screens' transforms of
+ * this frame, once every screen's styles are (applyBoundsScreenFrames); reading them here, from an
+ * interpolator, would make the screens' styles depend on each other's.
  */
-const resolveMovingSource = (
+const resolveStartChain = (
 	tag: string,
-	sourceBounds: MeasuredDimensions,
 	sourceScreenKey: string | null,
 	destinationScreenKey: string | null,
-): MeasuredDimensions => {
+): StartPair[] => {
 	"worklet";
-	if (!sourceScreenKey || !destinationScreenKey) return sourceBounds;
-	const chain: MovingPair[] = [];
+	const chain: StartPair[] = [];
+	if (!sourceScreenKey || !destinationScreenKey) return chain;
 	let source = sourceScreenKey;
 	let destination = destinationScreenKey;
 	for (let depth = 0; depth < MAX_CHAIN_DEPTH; depth++) {
@@ -231,37 +185,7 @@ const resolveMovingSource = (
 		source = next.source;
 		destination = next.destination;
 	}
-	if (!chain.length) return sourceBounds;
-	// Draw back up: the deepest pair starts at its own source slot.
-	let start: MeasuredDimensions | null = null;
-	for (let index = chain.length - 1; index >= 0; index--) {
-		const pair = chain[index];
-		const link = getResolvedLink(pair.pairKey, tag).link;
-		const from = link?.source?.bounds as MeasuredWith | undefined;
-		const to = link?.destination?.bounds as MeasuredWith | undefined;
-		if (!from || !to) {
-			start = null;
-			continue;
-		}
-		const drawn = resolveDrawnRect(
-			lerpRect(start ?? from, to, pair.t),
-			pair.t,
-			{ key: pair.source, measuredWith: from.screenTransform },
-			{ key: pair.destination, measuredWith: to.screenTransform },
-		);
-		// In the measured space of whichever screen starts from it: the next pair up's source.
-		const above = index > 0 ? chain[index - 1].source : sourceScreenKey;
-		const aboveBounds =
-			index > 0
-				? (getResolvedLink(chain[index - 1].pairKey, tag).link?.source
-						?.bounds as MeasuredWith | undefined)
-				: (sourceBounds as MeasuredWith);
-		start = toMeasuredSpace(drawn, {
-			key: above,
-			measuredWith: aboveBounds?.screenTransform,
-		});
-	}
-	return start ?? sourceBounds;
+	return chain;
 };
 
 const resolveStartEnd = (params: {
@@ -340,14 +264,7 @@ const resolveStartEnd = (params: {
 		};
 	}
 
-	// Both copies travel from where the element is now: a moving source (see
-	// resolveMovingSource) is the start of the leaving copy's path too.
-	const start = resolveMovingSource(
-		String(params.id),
-		sourceBounds,
-		resolvedPair.sourceScreenKey,
-		resolvedPair.destinationScreenKey,
-	);
+	const start = sourceBounds;
 	let end = destinationBounds ?? fullscreen;
 
 	if (isFullscreenTarget) {
@@ -505,28 +422,25 @@ export const computeBoundStyles = (
 	);
 	// Raw values are composed by their caller (the navigation helpers move the screen themselves).
 	if (computeOptions.raw || isAbsolute) return withLocalTransform;
+	const tag = String(id);
 	const taken =
 		entering &&
 		!!sourceScreenKey &&
 		!!destinationScreenKey &&
 		currentScreenKey === destinationScreenKey &&
-		isTakenByNewerScreen(String(id), destinationScreenKey);
+		isTakenByNewerScreen(tag, destinationScreenKey);
 	return attachBoundsScreenFrame(
 		taken ? { ...withLocalTransform, opacity: 0 } : withLocalTransform,
 		{
-			// The leaving copy is laid out at the source's slot, but its path starts at `start`.
-			shiftX:
-				entering || !ownLayout ? 0 : centerX(pathStart) - centerX(ownLayout),
-			shiftY:
-				entering || !ownLayout ? 0 : centerY(pathStart) - centerY(ownLayout),
+			tag,
 			t: Math.min(1, Math.max(0, progress - ranges[0])),
 			sourceScreenKey,
 			destinationScreenKey,
 			screenKey: currentScreenKey,
-			// Already in layout space: no measured transforms left to undo.
 			layout: ownLayout,
-			sourceMeasured: null,
-			destinationMeasured: null,
+			start: pathStart,
+			end: pathEnd,
+			startChain: resolveStartChain(tag, sourceScreenKey, destinationScreenKey),
 		},
 	);
 };

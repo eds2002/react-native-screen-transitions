@@ -1,4 +1,5 @@
 import type { StyleProps, TransformArrayItem } from "react-native-reanimated";
+import { getResolvedLink } from "../../../../stores/bounds/internals/links";
 import type {
 	NormalizedTransitionInterpolatedStyle,
 	NormalizedTransitionSlotStyle,
@@ -6,6 +7,7 @@ import type {
 import {
 	BOUNDS_SCREEN_FRAME_STYLE_KEY,
 	type BoundsScreenFrame,
+	type FrameRect,
 	getBoundsScreenFrame,
 	type MeasuredScreenTransform,
 } from "../../../../utils/bounds/helpers/styles/screen-frame";
@@ -125,203 +127,185 @@ const stripFrame = (style: StyleProps): StyleProps => {
 
 const EPSILON = 1e-4;
 
-/**
- * How far a screen moved since a boundary on it was measured: `now ∘ measured⁻¹`. Measurements are
- * in window space, so they already include the transform the screen had then.
- */
-export const movedSince = (
-	now: ScreenTransform,
-	measured: MeasuredScreenTransform | undefined,
-): ScreenTransform => {
+/** `p -> s * p + t` per axis, in window coordinates. */
+type Affine = { sx: number; sy: number; tx: number; ty: number };
+
+const UNIT: Affine = { sx: 1, sy: 1, tx: 0, ty: 0 };
+
+/** A screen transform (about the screen's center) as a window-space affine. */
+const toAffine = (transform: ScreenTransform): Affine => {
 	"worklet";
-	if (!measured) return now;
-	const sx = now.sx / measured.sx;
-	const sy = now.sy / measured.sy;
+	const cx = transform.width / 2;
+	const cy = transform.height / 2;
+	return {
+		sx: transform.sx,
+		sy: transform.sy,
+		tx: cx - transform.sx * cx + transform.tx,
+		ty: cy - transform.sy * cy + transform.ty,
+	};
+};
+
+/** `a` after `b`. */
+const compose = (a: Affine, b: Affine): Affine => {
+	"worklet";
+	return {
+		sx: a.sx * b.sx,
+		sy: a.sy * b.sy,
+		tx: a.sx * b.tx + a.tx,
+		ty: a.sy * b.ty + a.ty,
+	};
+};
+
+const invert = (a: Affine): Affine => {
+	"worklet";
+	return { sx: 1 / a.sx, sy: 1 / a.sy, tx: -a.tx / a.sx, ty: -a.ty / a.sy };
+};
+
+/** Where the element of a pair is drawn: the source screen's transform at its source, the destination's at its destination. */
+const blend = (source: Affine, destination: Affine, t: number): Affine => {
+	"worklet";
+	return {
+		sx: source.sx + (destination.sx - source.sx) * t,
+		sy: source.sy + (destination.sy - source.sy) * t,
+		tx: source.tx + (destination.tx - source.tx) * t,
+		ty: source.ty + (destination.ty - source.ty) * t,
+	};
+};
+
+const mapRect = (rect: FrameRect, a: Affine): FrameRect => {
+	"worklet";
+	return {
+		pageX: a.sx * rect.pageX + a.tx,
+		pageY: a.sy * rect.pageY + a.ty,
+		width: a.sx * rect.width,
+		height: a.sy * rect.height,
+	};
+};
+
+const lerpRect = (from: FrameRect, to: FrameRect, t: number): FrameRect => {
+	"worklet";
+	return {
+		pageX: from.pageX + (to.pageX - from.pageX) * t,
+		pageY: from.pageY + (to.pageY - from.pageY) * t,
+		width: from.width + (to.width - from.width) * t,
+		height: from.height + (to.height - from.height) * t,
+	};
+};
+
+/** The affine that takes rect `a` onto rect `b` (scaling about their centers). */
+const rectToRect = (a: FrameRect, b: FrameRect): Affine => {
+	"worklet";
+	const sx = a.width > 0 ? b.width / a.width : 1;
+	const sy = a.height > 0 ? b.height / a.height : 1;
 	return {
 		sx,
 		sy,
-		tx: now.tx - sx * measured.tx,
-		ty: now.ty - sy * measured.ty,
-		width: now.width || measured.width,
-		height: now.height || measured.height,
+		tx: b.pageX + b.width / 2 - sx * (a.pageX + a.width / 2),
+		ty: b.pageY + b.height / 2 - sy * (a.pageY + a.height / 2),
 	};
-};
-
-type Rect = {
-	x: number;
-	y: number;
-	pageX: number;
-	pageY: number;
-	width: number;
-	height: number;
-};
-
-const mapRect = (
-	rect: Rect,
-	sx: number,
-	sy: number,
-	tx: number,
-	ty: number,
-	width: number,
-	height: number,
-): Rect => {
-	"worklet";
-	const cx = width / 2;
-	const cy = height / 2;
-	const centerX = rect.pageX + rect.width / 2;
-	const centerY = rect.pageY + rect.height / 2;
-	const nextWidth = rect.width * sx;
-	const nextHeight = rect.height * sy;
-	const pageX = cx + sx * (centerX - cx) + tx - nextWidth / 2;
-	const pageY = cy + sy * (centerY - cy) + ty - nextHeight / 2;
-	return {
-		x: rect.x + (pageX - rect.pageX),
-		y: rect.y + (pageY - rect.pageY),
-		pageX,
-		pageY,
-		width: nextWidth,
-		height: nextHeight,
-	};
-};
-
-const readNow = (key: string) => {
-	"worklet";
-	return getScreenTransform(key) ?? IDENTITY_SCREEN_TRANSFORM;
-};
-
-/**
- * Where an element travelling a pair is drawn right now: its path rect (in measured space) through
- * the blend of how far the pair's two screens moved since they were measured. The same thing
- * applyBoundsScreenFrames draws, for reading another pair's element (a sibling still in flight).
- */
-export const resolveDrawnRect = (
-	rect: Rect,
-	t: number,
-	source: { key: string; measuredWith?: MeasuredScreenTransform },
-	destination: { key: string; measuredWith?: MeasuredScreenTransform },
-): Rect => {
-	"worklet";
-	const s = movedSince(readNow(source.key), source.measuredWith);
-	const d = movedSince(readNow(destination.key), destination.measuredWith);
-	const width = s.width || d.width;
-	const height = s.height || d.height;
-	if (!width || !height) return rect;
-	return mapRect(
-		rect,
-		s.sx + (d.sx - s.sx) * t,
-		s.sy + (d.sy - s.sy) * t,
-		s.tx + (d.tx - s.tx) * t,
-		s.ty + (d.ty - s.ty) * t,
-		width,
-		height,
-	);
 };
 
 /**
  * A measured rect where its screen lays it out: the inverse of the transform the screen had when it
  * was measured (measurements are in window space and include it).
  */
-export const toLayoutSpace = <T extends Rect>(
+export const toLayoutSpace = <T extends FrameRect>(
 	rect: T,
 	measuredWith: MeasuredScreenTransform | undefined,
 ): T => {
 	"worklet";
 	if (!measuredWith?.width || !measuredWith.height) return rect;
-	return {
-		...rect,
-		...mapRect(
-			rect,
-			1 / measuredWith.sx,
-			1 / measuredWith.sy,
-			-measuredWith.tx / measuredWith.sx,
-			-measuredWith.ty / measuredWith.sy,
-			measuredWith.width,
-			measuredWith.height,
-		),
-	};
+	const laid = mapRect(rect, invert(toAffine(measuredWith)));
+	return { ...rect, ...laid };
 };
 
-/** A drawn rect in a screen's measured space (the inverse of how far it moved since measured). */
-export const toMeasuredSpace = (
-	rect: Rect,
-	screen: { key: string; measuredWith?: MeasuredScreenTransform },
-): Rect => {
+type MeasuredRect = FrameRect & { screenTransform?: MeasuredScreenTransform };
+
+/**
+ * Where the element of the frame's pair starts this frame, where its source screen lays it out: its
+ * source slot, or, in flight, wherever the pairs it starts from draw it now (the deepest from its own
+ * slot, each through its two screens' transforms of this frame).
+ */
+const resolveStart = (
+	frame: BoundsScreenFrame,
+	read: (key: string) => ScreenTransform,
+): FrameRect => {
 	"worklet";
-	const m = movedSince(readNow(screen.key), screen.measuredWith);
-	if (!m.width || !m.height) return rect;
-	return mapRect(
-		rect,
-		1 / m.sx,
-		1 / m.sy,
-		-m.tx / m.sx,
-		-m.ty / m.sy,
-		m.width,
-		m.height,
-	);
+	const chain = frame.startChain;
+	if (!chain.length) return frame.start;
+	let drawn: FrameRect | null = null;
+	for (let index = chain.length - 1; index >= 0; index--) {
+		const pair = chain[index];
+		const link = getResolvedLink(pair.pairKey, frame.tag).link;
+		const from = link?.source?.bounds as MeasuredRect | undefined;
+		const to = link?.destination?.bounds as MeasuredRect | undefined;
+		if (!from || !to) {
+			drawn = null;
+			continue;
+		}
+		const source = toAffine(read(pair.source));
+		const start = drawn
+			? mapRect(drawn, invert(source))
+			: toLayoutSpace(from, from.screenTransform);
+		drawn = mapRect(
+			lerpRect(start, toLayoutSpace(to, to.screenTransform), pair.t),
+			blend(source, toAffine(read(pair.destination)), pair.t),
+		);
+	}
+	if (!drawn) return frame.start;
+	return mapRect(drawn, invert(toAffine(read(frame.sourceScreenKey))));
 };
 
 /**
- * The transform to put in front of an element's own bounds transform so that it is drawn where the
- * two screens show its ends right now. The element's path is computed from the measured ends as if
- * neither screen moved since; its source end belongs to the source screen and its destination end
- * to the destination screen, so the element is drawn through the blend of how far each screen
- * moved (the source's at the source, the destination's at the destination). It is drawn inside its
- * own screen, which already moves it with that screen: the correction is the blend, minus that.
- * Worked in coordinates around the screen's center (where screen transforms scale from).
+ * The transform to put in front of an element's own bounds transform so that it is drawn where it
+ * belongs this frame. Its style was composed along `start -> end` where the screens lay it out; it
+ * belongs on the path from where it starts now (resolveStart) to `end`, drawn through the blend of
+ * the two screens' transforms (the source's at the source, the destination's at the destination). It
+ * is drawn inside its own screen, which already applies that screen's transform: the correction is
+ * own⁻¹ ∘ blend ∘ (composed path -> actual path), put in front of the element's transform about its
+ * own center.
  */
 const resolveCorrection = (
 	frame: BoundsScreenFrame,
 	style: StyleProps,
-	source: ScreenTransform,
-	destination: ScreenTransform,
-	own: ScreenTransform,
-	ownMeasured: MeasuredScreenTransform | undefined,
+	read: (key: string) => ScreenTransform,
 ): TransformArrayItem[] | null => {
 	"worklet";
 	const t = frame.t;
-	const bsx = source.sx + (destination.sx - source.sx) * t;
-	const bsy = source.sy + (destination.sy - source.sy) * t;
-	const btx = source.tx + (destination.tx - source.tx) * t;
-	const bty = source.ty + (destination.ty - source.ty) * t;
-	// The measured-space offset of the element's box from where its path assumes it is: the screen's
-	// own transform when it was measured, plus the path's shift (see BoundsScreenFrame).
-	const omx = (ownMeasured?.tx ?? 0) + frame.shiftX;
-	const omy = (ownMeasured?.ty ?? 0) + frame.shiftY;
-	// Local point q is drawn at own(q); the path puts it at measured-space point q + measured offset,
-	// which should be drawn at blend(that): correction(q) = own⁻¹(blend(q + measured offset)).
-	const kx = bsx / own.sx;
-	const ky = bsy / own.sy;
-	const ux = (bsx * omx + btx - own.tx) / own.sx;
-	const uy = (bsy * omy + bty - own.ty) / own.sy;
-
-	// The correction scales around the screen's center; the element scales around its own center.
-	const width =
-		source.width ||
-		destination.width ||
-		own.width ||
-		ownMeasured?.width ||
-		frame.width * 2;
-	const height =
-		source.height ||
-		destination.height ||
-		own.height ||
-		ownMeasured?.height ||
-		frame.height * 2;
-	const cx = width / 2;
-	const cy = height / 2;
-	const elementWidth =
-		typeof style.width === "number" ? style.width : frame.width;
-	const elementHeight =
-		typeof style.height === "number" ? style.height : frame.height;
-	const lx = frame.x - (ownMeasured?.tx ?? 0) + elementWidth / 2;
-	const ly = frame.y - (ownMeasured?.ty ?? 0) + elementHeight / 2;
-	const vx = (1 - kx) * (cx - lx) + ux;
-	const vy = (1 - ky) * (cy - ly) + uy;
-
-	const scaled = Math.abs(kx - 1) > EPSILON || Math.abs(ky - 1) > EPSILON;
+	const start = resolveStart(frame, read);
+	const composed = lerpRect(frame.start, frame.end, t);
+	const actual =
+		start === frame.start ? composed : lerpRect(start, frame.end, t);
+	const path = start === frame.start ? UNIT : rectToRect(composed, actual);
+	const placement = compose(
+		invert(toAffine(read(frame.screenKey))),
+		compose(
+			blend(
+				toAffine(read(frame.sourceScreenKey)),
+				toAffine(read(frame.destinationScreenKey)),
+				t,
+			),
+			path,
+		),
+	);
+	// The element scales about its own center (its box: the size method resizes it).
+	const width = typeof style.width === "number" ? style.width : frame.width;
+	const height = typeof style.height === "number" ? style.height : frame.height;
+	const lx = frame.x + width / 2;
+	const ly = frame.y + height / 2;
+	const vx = placement.tx - (1 - placement.sx) * lx;
+	const vy = placement.ty - (1 - placement.sy) * ly;
+	const scaled =
+		Math.abs(placement.sx - 1) > EPSILON ||
+		Math.abs(placement.sy - 1) > EPSILON;
 	if (!scaled && Math.abs(vx) < EPSILON && Math.abs(vy) < EPSILON) return null;
 	return (scaled
-		? [{ translateX: vx }, { translateY: vy }, { scaleX: kx }, { scaleY: ky }]
+		? [
+				{ translateX: vx },
+				{ translateY: vy },
+				{ scaleX: placement.sx },
+				{ scaleY: placement.sy },
+			]
 		: [
 				{ translateX: vx },
 				{ translateY: vy },
@@ -329,9 +313,11 @@ const resolveCorrection = (
 };
 
 /**
- * Corrects every bounds element this screen styles for where the screens it travels between are
- * drawn this frame, and removes the frame data from their styles. Returns the same map when there
- * is nothing to correct.
+ * Places every bounds element this screen styles for where the screens it travels between are
+ * drawn this frame (and where it is in flight, when transitions overlap), and removes the frame
+ * data from their styles. `transforms` holds the screens whose transforms this one depends on (its
+ * stack's, read the same frame); others are read by key. Returns the same map when there is
+ * nothing to place.
  */
 export const applyBoundsScreenFrames = (
 	stylesMap: NormalizedTransitionInterpolatedStyle,
@@ -340,6 +326,8 @@ export const applyBoundsScreenFrames = (
 	"worklet";
 	let next: Record<string, NormalizedTransitionSlotStyle | undefined> | null =
 		null;
+	const read = (key: string) =>
+		transforms[key] ?? getScreenTransform(key) ?? IDENTITY_SCREEN_TRANSFORM;
 	for (const slotId in stylesMap) {
 		const slot = stylesMap[slotId];
 		const style = slot?.style;
@@ -350,33 +338,14 @@ export const applyBoundsScreenFrames = (
 			for (const key in stylesMap) next[key] = stylesMap[key];
 		}
 		const stripped = stripFrame(style);
-		const read = (key: string) =>
-			transforms[key] ?? getScreenTransform(key) ?? IDENTITY_SCREEN_TRANSFORM;
-		const sourceNow = read(frame.sourceScreenKey);
-		const destinationNow = read(frame.destinationScreenKey);
-		const ownNow = read(frame.screenKey);
-		const ownMeasured =
-			frame.screenKey === frame.destinationScreenKey
-				? frame.destinationMeasuredWith
-				: frame.sourceMeasuredWith;
 		const unmoved =
-			!frame.shiftX &&
-			!frame.shiftY &&
-			isIdentity(sourceNow) &&
-			isIdentity(destinationNow) &&
-			isIdentity(ownNow) &&
-			!frame.sourceMeasuredWith &&
-			!frame.destinationMeasuredWith;
+			!frame.startChain.length &&
+			isIdentity(read(frame.sourceScreenKey)) &&
+			isIdentity(read(frame.destinationScreenKey)) &&
+			isIdentity(read(frame.screenKey));
 		const correction = unmoved
 			? null
-			: resolveCorrection(
-					frame,
-					stripped,
-					movedSince(sourceNow, frame.sourceMeasuredWith),
-					movedSince(destinationNow, frame.destinationMeasuredWith),
-					ownNow,
-					ownMeasured,
-				);
+			: resolveCorrection(frame, stripped, read);
 		if (correction) {
 			const transform = stripped.transform;
 			stripped.transform = (
@@ -385,7 +354,7 @@ export const applyBoundsScreenFrames = (
 					: correction
 			) as StyleProps["transform"];
 		}
-		next[slotId] = { ...slot, style: stripped };
+		next[slotId] = { ...slot, style: stripped, boundsPlaced: true };
 	}
 	return (next as NormalizedTransitionInterpolatedStyle | null) ?? stylesMap;
 };

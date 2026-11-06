@@ -1,18 +1,13 @@
 import { useLayoutEffect } from "react";
-import {
-	makeMutable,
-	type SharedValue,
-	useAnimatedReaction,
-	useSharedValue,
-} from "react-native-reanimated";
+import { makeMutable, type SharedValue } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
 import type { ScreenTransform } from "./bounds-screen-frames";
 
 /**
- * Each mounted screen's content transform, by route key, readable from any worklet: where a pair's
- * element is drawn (a sibling in flight, a chain) and a screen outside a stack's neighbours. A
- * snapshot, published once the screen's styles resolve: reading the live value from an interpolator
- * would make every screen's styles depend on each other's (a cycle).
+ * Each mounted screen's content transform, by route key, readable from any worklet: a screen
+ * outside the stack whose bounds share an element (a pair across stacks), and a measurement's
+ * screen size. Never read from an interpolator: a screen's transform comes from its interpolator's
+ * output, so that would make every screen's styles depend on each other's.
  */
 const screenTransforms = makeMutable<
 	Record<string, SharedValue<ScreenTransform>>
@@ -44,30 +39,14 @@ export const getScreenTransform = (
 	return screenTransforms.get()[key]?.get();
 };
 
-const UNMOVED: ScreenTransform = {
-	sx: 1,
-	sy: 1,
-	tx: 0,
-	ty: 0,
-	width: 0,
-	height: 0,
-};
-
 export function useRegisterScreenTransform(
 	key: string,
 	transform: SharedValue<ScreenTransform>,
 	enabled: boolean,
 ) {
-	const snapshot = useSharedValue<ScreenTransform>(UNMOVED);
-	useAnimatedReaction(
-		() => transform.get(),
-		(next) => {
-			if (snapshot.get() !== next) snapshot.set(next);
-		},
-	);
 	useLayoutEffect(() => {
 		if (!enabled) return;
-		scheduleOnUI(register, key, snapshot);
-		return () => scheduleOnUI(unregister, key, snapshot);
-	}, [key, snapshot, enabled]);
+		scheduleOnUI(register, key, transform);
+		return () => scheduleOnUI(unregister, key, transform);
+	}, [key, transform, enabled]);
 }

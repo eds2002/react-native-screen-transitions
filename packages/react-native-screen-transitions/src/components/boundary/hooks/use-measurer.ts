@@ -14,7 +14,7 @@ import { useScrollChain } from "../../../providers/motion/gestures/scroll-coordi
 import { useOptionalOrchestratorStore } from "../../../providers/orchestrator/orchestrator.provider";
 import { toLayoutSpace } from "../../../providers/orchestrator/styles/helpers/bounds-screen-frames";
 import { getScreenTransform } from "../../../providers/orchestrator/styles/helpers/screen-transform-registry";
-import { setEntry } from "../../../stores/bounds/internals/entries";
+import { getEntry, setEntry } from "../../../stores/bounds/internals/entries";
 import {
 	setDestination,
 	setSource,
@@ -109,8 +109,8 @@ const SCREEN_TRANSFORM_EPSILON = 0.01;
 type ScreenAtMeasure = {
 	/** Where the screen was drawn (absent when it was not moved). */
 	transform?: MeasuredScreenTransform;
-	/** The boundary's place inside its screen's content, from the same native frame. */
-	contentOffset: { x: number; y: number };
+	/** The boundary's box inside its screen's content (unscaled), from the same native frame. */
+	contentOffset: { x: number; y: number; width: number; height: number };
 };
 
 /**
@@ -143,6 +143,8 @@ const measureScreenAt = (
 	const contentOffset = {
 		x: (boundary.pageX - content.pageX) / sx,
 		y: (boundary.pageY - content.pageY) / sy,
+		width: boundary.width / sx,
+		height: boundary.height / sy,
 	};
 	const tx = content.pageX + content.width / 2 - width / 2;
 	const ty = content.pageY + gateDeltaY + content.height / 2 - height / 2;
@@ -162,6 +164,8 @@ export const measureBoundaryWith = (
 	screen: ScreenMeasureContext,
 	data: BoundaryMeasureData,
 	target: MeasureTarget,
+	/** Record its last measurement instead (it is drawn somewhere else right now; see the coordinator). */
+	reuseLast = false,
 ) => {
 	"worklet";
 	const {
@@ -185,6 +189,34 @@ export const measureBoundaryWith = (
 		isScreenReady,
 	} = screen;
 	if (!enabled) return;
+
+	const last = reuseLast
+		? getEntry(boundTag.tag, currentScreenKey)?.bounds
+		: undefined;
+	if (last) {
+		if (target.type === "source") {
+			setSource(
+				target.pairKey,
+				boundTag.linkKey,
+				currentScreenKey,
+				last,
+				preparedStyles,
+				boundTag.group,
+				{ handoff, escapeClipping },
+			);
+		} else {
+			setDestination(
+				target.pairKey,
+				boundTag.linkKey,
+				currentScreenKey,
+				last,
+				preparedStyles,
+				boundTag.group,
+				{ handoff },
+			);
+		}
+		return;
+	}
 
 	const measured = measureWithOverscrollAwareness(
 		measuredAnimatedRef,

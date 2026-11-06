@@ -50,6 +50,6 @@ it.skipIf(!name)("inspect a catalog scenario", async () => {
 			? ` | ${process.env.ELEMENT} x=${element.rect.x.toFixed(1)} y=${element.rect.y.toFixed(1)} w=${element.rect.width.toFixed(0)} o=${element.opacity.toFixed(2)}` +
 				(process.env.ELEMENT_STYLE ? ` ${JSON.stringify(element.style.transform ?? "")} o=${element.style.opacity ?? ""}` : "")
 			: "";
-		console.log(`${i} x=${x.toFixed(1)} y=${y.toFixed(1)} w=${width.toFixed(0)} o=${scene.opacity.toFixed(2)} touch=${scene.touchable} ${layers}${elementText}`);
+		console.log(`${i} f${result.trace[i].frame} x=${x.toFixed(1)} y=${y.toFixed(1)} w=${width.toFixed(0)} o=${scene.opacity.toFixed(2)} touch=${scene.touchable} ${layers}${elementText}`);
 	}
 });

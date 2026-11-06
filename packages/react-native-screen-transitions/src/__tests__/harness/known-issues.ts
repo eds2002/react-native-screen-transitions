@@ -22,11 +22,13 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 	{
 		id: "moving-bounds-overlap",
 		summary:
-			"styles() on screens that move (slide, slide-scale, slide-up), when transitions overlap: spam, a chain " +
-			"pushed or popped quickly, push-pop-push, a second swipe right after one. The copies split (5-60 px) or " +
-			"step for a few frames: an overlapping transition starts from where the card is drawn (resolveMovingSource) " +
-			"through transforms read a frame late, and a newer screen's copy and the hidden one hand over a frame apart. " +
-			"Plain hops, swipes and cancels on moving screens pass.",
+			"styles() on screens that move, when transitions overlap (spam, a chain pushed or popped quickly). " +
+			"Left after placing in-flight starts with this frame's transforms and measuring moving roots from their " +
+			"last rest: (1) the frame a new screen takes the card while an older one still closes, its copy and the " +
+			"source's disagree for 1-2 frames (up to ~60 px); (2) popping two levels quickly, the top screen's copy " +
+			"closes toward where the middle one's card is in flight while the source's copy shows that card directly: " +
+			"~15 px apart, meeting within ~8 frames; (3) one frame as the second pop starts, where the middle screen " +
+			"itself steps (interrupted-navigation).",
 		matches: (scenario, v) =>
 			/^bounds-moving-(slide|slide-scale|slide-up) \//.test(scenario) &&
 			["spam", "chain-fast", "push-pop-push", "swipe-chain-quickly", "chain"].includes(sequenceOf(scenario)) &&
@@ -40,29 +42,8 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			"and hides. Handoff on still screens passes (bounds-handoff family).",
 		matches: (scenario) => /^bounds-moving-[a-z-]+-handoff \//.test(scenario),
 	},
-	{
-		id: "moving-bounds-swipe",
-		summary:
-			"A swipe-dismiss (and slide-scale's cancel) on moving screens steps the card once: without teleport the source " +
-			"is measured again as the close starts with the card's own motion in it (boundary-measures-own-motion-without-" +
-			"teleport); with teleport, slide-scale's copy keeps its open scale for one frame as the transition ends.",
-		matches: (scenario, v) =>
-			/^bounds-moving-(slide|slide-scale|slide-up) \//.test(scenario) &&
-			["swipe-dismiss", "swipe-cancel", "open-close"].includes(sequenceOf(scenario)) &&
-			["bound-split", "element-spike"].includes(v.rule),
-	},
-	{
-		id: "boundary-measures-own-motion-without-teleport",
-		summary:
-			"Without react-native-teleport there is no escape placeholder: the boundary's own root is measured, and it " +
-			"carries the boundary's animated style. A source measured again as a close starts (a swipe released while " +
-			"styles() still moves the card) includes the card's own motion, so its path starts where the card was drawn, " +
-			"and both copies step ~100 px. With teleport the unstyled placeholder is measured. Fix: measure the root's " +
-			"layout without its own animated transform (or always measure a placeholder).",
-		matches: (scenario, v) =>
-			scenario === "bounds-styles / preset-spec / swipe-dismiss" && ["element-spike", "bound-split"].includes(v.rule),
-		environments: ["ios", "android", "compact", "120hz", "custom-navigator"],
-	},
+
+
 	{
 		id: "zoom-measured-mid-zoom",
 		summary:

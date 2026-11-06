@@ -2,6 +2,7 @@ import type {
 	NormalizedTransitionInterpolatedStyle,
 	NormalizedTransitionSlotStyle,
 } from "../../../../types/animation.types";
+import { getBoundsScreenFrame } from "../../../../utils/bounds/helpers/styles/screen-frame";
 import type { LocalStyleLayers } from "./resolve-slot-styles";
 
 const mergeBuckets = (
@@ -52,7 +53,10 @@ const mergeSlots = (
 ): NormalizedTransitionSlotStyle => {
 	"worklet";
 
-	if (!frozen) {
+	// A bounds element the next screen places (bounds().styles()) is placed whole: its path already
+	// starts wherever the element is drawn (in flight in this screen's own pair, a chain). Composing
+	// this screen's own bounds transform onto it would move it twice.
+	if (!frozen || getBoundsScreenFrame(live.style)) {
 		return live;
 	}
 

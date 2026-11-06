@@ -13,6 +13,7 @@ import {
 } from "../../stores/bounds/internals/links";
 import { createBoundsAccessor } from "../../utils/bounds";
 import { computeBoundStyles } from "../../utils/bounds/helpers/styles/compute";
+import { BOUNDS_SCREEN_FRAME_STYLE_KEY } from "../../utils/bounds/helpers/styles/screen-frame";
 import type { EntryPatch } from "../../stores/bounds/types";
 
 const createBounds = (
@@ -890,8 +891,13 @@ describe("boundary runtime source links", () => {
 				{ id: tag },
 			);
 
-		const classic = computeFor("classic");
-		const escaped = computeFor("escaped");
+		// The geometry, without the frame data the screen's styles read (it names its bound).
+		const withoutFrame = (style: Record<string, unknown>) => {
+			const { [BOUNDS_SCREEN_FRAME_STYLE_KEY]: _frame, ...rest } = style;
+			return rest;
+		};
+		const classic = withoutFrame(computeFor("classic") as Record<string, unknown>);
+		const escaped = withoutFrame(computeFor("escaped") as Record<string, unknown>);
 
 		expect(escaped).toEqual(classic);
 	});

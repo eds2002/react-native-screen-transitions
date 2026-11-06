@@ -194,9 +194,14 @@ const BoundaryPortalPlacement = memo(function BoundaryPortalPlacement({
 			return NO_STYLES;
 		}
 
+		// In the screen's own overlay the frame is laid out as in the screen (unscaled: the screen's
+		// transform scales the overlay with it); measured bounds include the transform it was measured with.
+		const inContent = atContentOrigin
+			? boundaryBounds.contentOffset
+			: undefined;
 		return {
-			height: boundaryBounds.height,
-			width: boundaryBounds.width,
+			height: inContent?.height ?? boundaryBounds.height,
+			width: inContent?.width ?? boundaryBounds.width,
 		};
 	});
 

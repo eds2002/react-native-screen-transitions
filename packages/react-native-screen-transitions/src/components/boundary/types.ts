@@ -65,7 +65,7 @@ export type BoundaryLocalMeasurement = {
 	bounds: MeasuredDimensions & {
 		scrollChain?: ScrollChainSnapshot[];
 		/** Where the boundary sits inside its screen's content (see measureScreenAt). */
-		contentOffset?: { x: number; y: number };
+		contentOffset?: { x: number; y: number; width: number; height: number };
 	};
 	pairKey: ScreenPairKey;
 	/**

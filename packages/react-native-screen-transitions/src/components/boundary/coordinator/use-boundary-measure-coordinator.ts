@@ -1,6 +1,8 @@
 import type { View } from "react-native";
 import {
 	type AnimatedRef,
+	type SharedValue,
+	type StyleProps,
 	useAnimatedReaction,
 	useSharedValue,
 } from "react-native-reanimated";
@@ -12,6 +14,7 @@ import {
 	getPairKeyForSource,
 } from "../../../stores/bounds/internals/links";
 import { pairs } from "../../../stores/bounds/internals/state";
+import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
 import {
 	type BoundaryMeasureData,
 	measureBoundaryWith,
@@ -22,9 +25,24 @@ import { getRefreshBoundarySignal } from "../utils/refresh-signals";
 import { getInitialSourceCaptureSignal } from "../utils/source-signals";
 import { boundaryMeasureRegistry } from "./measure-registry";
 
+/** A slot style that moves its view (a bounds transform), not just places it. */
+const isMovedByStyle = (style: StyleProps | undefined) => {
+	"worklet";
+	const transform = style?.transform;
+	if (!Array.isArray(transform)) return false;
+	for (const item of transform as Record<string, unknown>[]) {
+		for (const key in item) {
+			const value = item[key];
+			if (key.startsWith("scale") ? value !== 1 : value !== 0) return true;
+		}
+	}
+	return false;
+};
+
 type MeasureSignal = {
 	/** Registration id plus kind: a remounted boundary starts with no history. */
 	key: string;
+	tag: string;
 	signal: string;
 	data: BoundaryMeasureData;
 	target: MeasureTarget;
@@ -41,6 +59,8 @@ type MeasureSignal = {
 export function useBoundaryMeasureCoordinator(
 	enabled: boolean,
 	contentRef: AnimatedRef<View> | null,
+	/** This screen's resolved styles: whether a boundary is being moved by its bounds style now. */
+	slotsMap: SharedValue<NormalizedTransitionInterpolatedStyle>,
 ) {
 	const currentScreenKey = useBuilderStore(
 		(s) => s.derivations.currentScreenKey,
@@ -85,13 +105,13 @@ export function useBoundaryMeasureCoordinator(
 				hasConfiguredInterpolator && !!willAnimate && !!progressSettled;
 			const isClosing = !!closing?.get();
 			const closeStarted = canRefresh && isClosing && !lastClosing.get();
-			const shouldRefresh =
-				(canRefresh && !!willAnimate?.get()) || closeStarted;
+			const willAnimatePulse = canRefresh && !!willAnimate?.get();
 			const settled = canRefresh && !!progressSettled?.get();
 
 			const signals: MeasureSignal[] = [];
 			for (const tag in boundaries) {
 				const { id, linkKey, group, data } = boundaries[tag];
+				const shouldRefresh = willAnimatePulse || closeStarted;
 				const sourcePairKey =
 					getPairKeyForSource(tag, currentScreenKey) ?? undefined;
 
@@ -105,6 +125,7 @@ export function useBoundaryMeasureCoordinator(
 				if (source) {
 					signals.push({
 						key: `${id}|source`,
+						tag,
 						signal: source.signal,
 						data,
 						target: { type: "source", pairKey: source.pairKey },
@@ -137,6 +158,7 @@ export function useBoundaryMeasureCoordinator(
 				if (refresh) {
 					signals.push({
 						key: `${id}|refresh`,
+						tag,
 						signal: refresh.signal,
 						data,
 						target: { type: refresh.type, pairKey: refresh.pairKey },
@@ -149,9 +171,21 @@ export function useBoundaryMeasureCoordinator(
 			"worklet";
 			const previous = lastSignals.get();
 			const next: Record<string, string> = {};
-			for (const { key, signal, data, target } of signals ?? []) {
+			const slots = slotsMap.get();
+			for (const { key, tag, signal, data, target } of signals ?? []) {
 				next[key] = signal;
-				if (previous[key] !== signal) measureBoundaryWith(screen, data, target);
+				if (previous[key] === signal) continue;
+				// Without a placeholder (it does not escape) a boundary's own root is measured: while
+				// styles() moves it (a transition still running when another starts or closes), it would
+				// be measured where it is drawn. Its last measurement stands in (styles() undo the screen
+				// transform it was taken with). zoom()/reveal() compose window-space measurements: theirs
+				// are always taken fresh.
+				const slot = slots[tag];
+				const moving =
+					!data.escapeClipping &&
+					!!slot?.boundsPlaced &&
+					isMovedByStyle(slot.style);
+				measureBoundaryWith(screen, data, target, moving);
 			}
 			lastSignals.set(next);
 			lastClosing.set(!!closing?.get());
