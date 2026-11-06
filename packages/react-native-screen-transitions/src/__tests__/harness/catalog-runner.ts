@@ -19,7 +19,9 @@ export const runCatalog = async (
 	const { buildFullCatalog } = await import("./catalog");
 	const { WINDOW } = await import("./install");
 	const { HarnessOverlay } = await import("./stack-harness");
-	const { KNOWN_ISSUES } = await import("./known-issues");
+	const KNOWN_ISSUES = (await import("./known-issues")).KNOWN_ISSUES.filter(
+		(issue) => !issue.environments || issue.environments.includes(label),
+	);
 	const presets = await import("../../configs/presets");
 	const { interpolate } = await import("react-native-reanimated");
 	// HARNESS_ONLY=<substring> runs the matching scenarios only (known issues outside them can't reproduce, so strictness is off).

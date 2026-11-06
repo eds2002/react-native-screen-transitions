@@ -16,22 +16,45 @@ const passthrough = ({ children }: { children?: React.ReactNode }) =>
 /** The environment a harness file runs in: platform, window, insets and display rate. */
 export const PLATFORM = { os: "ios" as "ios" | "android" };
 
+/** Host element types the teleport stand-in renders; the recorder re-parents a portal's content into its host. */
+export const TELEPORT_PORTAL = "TeleportPortal";
+export const TELEPORT_HOST = "TeleportHost";
+
+let hostViewIds = 0;
+/**
+ * A host view stamped with a stable id: measure() resolves a ref through it (test-renderer refs are
+ * fresh node mocks, so identity can't find the view; views without a testID, like the escape
+ * placeholder or an overlay host, still measure).
+ */
+const stampedHost = (type: string) =>
+	React.forwardRef((props: Record<string, unknown>, ref) => {
+		const id = React.useRef(0);
+		if (!id.current) id.current = ++hostViewIds;
+		return React.createElement(type, { ...props, ref, __harnessHostId: id.current });
+	});
+
 export const installHarness = ({
 	frameMs,
 	os = "ios",
 	window,
 	insets,
+	teleport = false,
 }: {
 	frameMs?: number;
 	os?: "ios" | "android";
 	window?: { width: number; height: number };
 	insets?: typeof INSETS;
+	/** Install a react-native-teleport stand-in: boundaries escape clipping and hand off, as in apps that have it. */
+	teleport?: boolean;
 } = {}) => {
 	// Mutated in place: every module that imported WINDOW/INSETS sees this file's values.
 	if (window) Object.assign(WINDOW, window);
 	if (insets) Object.assign(INSETS, insets);
 	PLATFORM.os = os;
 	const sim = createReanimatedSim({ frameMs });
+	const StampedView = stampedHost("View");
+	const StampedAnimatedView = stampedHost("AnimatedView");
+	(sim.reanimated.default as Record<string, unknown>).View = StampedAnimatedView;
 	// React Native's development flag (Metro defines it).
 	(globalThis as { __DEV__?: boolean }).__DEV__ = true;
 	globalThis.requestAnimationFrame = sim.requestAnimationFrame as typeof requestAnimationFrame;
@@ -50,7 +73,7 @@ export const installHarness = ({
 					? (style as Record<string, unknown>)
 					: {};
 		return {
-			View: "View",
+			View: StampedView,
 			Text: "Text",
 			Pressable: "Pressable",
 			ScrollView: "ScrollView",
@@ -115,8 +138,20 @@ export const installHarness = ({
 			State: { UNDETERMINED: 0, FAILED: 1, BEGAN: 2, CANCELLED: 3, ACTIVE: 4, END: 5 },
 		};
 	});
-	// Optional peer: absent, so handoff and escapeClipping render inline.
-	mock.module("react-native-teleport", () => ({}));
+	// Optional peer. Absent, handoff and escapeClipping render inline (Expo Go). The stand-in renders a
+	// portal and a host as host elements; the recorder places a portal's content inside the host its
+	// hostName (an animated prop, resolved per frame) names, as the native view is re-parented.
+	mock.module("react-native-teleport", () =>
+		teleport
+			? {
+					PortalProvider: passthrough,
+					Portal: ({ children, ...props }: { children?: React.ReactNode }) =>
+						React.createElement(TELEPORT_PORTAL, props, children),
+					PortalHost: ({ children, ...props }: { children?: React.ReactNode }) =>
+						React.createElement(TELEPORT_HOST, props, children),
+				}
+			: {},
+	);
 	mock.module("react-native-safe-area-context", () => {
 		const SafeAreaInsetsContext = React.createContext(INSETS);
 		const SafeAreaFrameContext = React.createContext({ x: 0, y: 0, ...WINDOW });

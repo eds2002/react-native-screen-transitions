@@ -9,14 +9,14 @@ hundreds of hand-written cases.
 | File | What it does |
 |---|---|
 | `reanimated-sim.ts` | Frame-accurate Reanimated/Worklets stand-in: shared values step animation objects (the library spring, `withTiming`, `withDelay`) on a fake 60 Hz clock; reactions re-run each frame; `scheduleOnRN`, `scheduleOnUI` and `requestAnimationFrame` hop threads in order. |
-| `install.ts` | Installs the sim and stand-ins for `react-native`, gesture-handler (keeps every handler so they can be fired), safe-area-context and teleport. Call it first in a harness test. |
+| `install.ts` | Installs the sim and stand-ins for `react-native`, gesture-handler (keeps every handler so they can be fired), safe-area-context and teleport. Call it first in a harness test. `teleport: true` installs a react-native-teleport stand-in (absent by default, as in Expo Go): a portal's content is placed inside the host its `hostName` names that frame, as the native view is re-parented, for its rect, opacity, hit-testing and `measure()`. |
 | `stack-harness.tsx` | Mounts the real `createBlankStackNavigator()` (screens can be nested stacks) and records per frame each screen's window rect (all ancestor transforms composed), opacity and touchability, its `styleId` elements and any overlays. Helpers: `push`, `pushIn` (nested), `navigate`, `goBack`, `replace`, `setOptions`, `tap` (React Native hit-testing, nearest `onPress`), `frame(s)`, `settle`. |
 | `gesture-driver.ts` | Timed touches through the library's real pan/pinch handlers (manual activation, `onStart`/`onUpdate`/`onEnd`, simultaneous groups). Fingers ease in by default; `linear` is a constant-speed swipe (Maestro/Argent style). |
 | `invariants.ts` | Rules every trace must satisfy: finite values, no teleport/spike/flash, no screen vanishing while visible, no turning back without a finger, motion starts within 3 frames, settled state matches the routes. |
 | `scenario.ts` | Scenarios as data (screens, options, steps) and `runScenario`, which plays them and checks every rule. Assertion steps: `expectRoutes`, `expectPath`, `expectSnap`, `expectTaps`, `expectScene`, `expectElementAtRest`, `expectOverlay`. |
 | `catalog.ts` | One scenario family per library mechanism (including shared bounds inside scroll views: scrolled source lists, scrolled destinations, a list that moved while covered), one plain interpolator each (interpolator math is not under test): stack push/pop/swipe/interruptions with a slide in each axis (spring and instant); sheets (bottom, side, three snaps, step, snap lock); backdrop behaviors; nested gesture ownership (the e2e app's `GestureInfo` tables); gesture options; `inactiveBehavior`; `styleId` slots and style reset; custom layer components; overlays; `stackProgress`; initial mount; scroll handoff; bounds (zoom, `styles()`, `reveal()`). About 230 scenarios. |
-| `catalog-runner.ts` | Runs the catalog under the environment a test file installed; `catalog*.test.tsx` cover iOS 390×844 at 60 Hz (strict about known issues), Android 412×915, 120 Hz, and a compact 320×568 screen. |
-| `known-issues.ts` | Library behavior found and not fixed yet. The catalog test fails on any violation none of them explains, and on one that stops reproducing. |
+| `catalog-runner.ts` | Runs the catalog under the environment a test file installed; `catalog*.test.tsx` cover iOS 390×844 at 60 Hz (strict about known issues), Android 412×915, 120 Hz, a compact 320×568 screen, and teleport installed (`catalog-teleport`: boundaries escape clipping into their overlay hosts). |
+| `known-issues.ts` | Library behavior found and not fixed yet (optionally only in some runs, by label). The catalog test fails on any violation none of them explains, and on one that stops reproducing. |
 
 ## Running
 
@@ -41,4 +41,5 @@ HARNESS_REPORT=/tmp/report.json bun test catalog
 - Environments vary platform, window, insets and display rate, not RTL yet.
 - Scroll views move their content by their offset, for the recorder and for `measure()` alike; boundaries can sit inside scroll content (`scroll.bounds`), and a covered screen can be scrolled (`scrollTo` with `screen`).
 - `measure()` reports a view's layout and scroll position without animated styles, as Reanimated's measure does on a device (animated styles are applied on the UI thread, outside layout).
-- Not covered yet: teleport (shared elements with `handoff` / `escapeClipping`; react-native-teleport is stubbed as missing), virtualized lists, the native-stack adapter.
+- Teleport is modelled at the recorder: a teleported view's box composes its host's ancestors. Paint order is not (an escaped view hit-tests in its portal's place in the tree, not on top).
+- Not covered yet: virtualized lists, the native-stack adapter.

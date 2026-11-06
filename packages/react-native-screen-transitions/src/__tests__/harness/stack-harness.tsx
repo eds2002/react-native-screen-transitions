@@ -11,7 +11,7 @@
  */
 import type { ReactTestInstance, ReactTestRenderer } from "react-test-renderer";
 import { createGestureDriver } from "./gesture-driver";
-import { INSETS, WINDOW } from "./install";
+import { INSETS, TELEPORT_HOST, TELEPORT_PORTAL, WINDOW } from "./install";
 import type { ReanimatedSim } from "./reanimated-sim";
 
 export type Rect = { x: number; y: number; width: number; height: number };
@@ -244,12 +244,27 @@ const flattenStyle = (style: unknown): Record<string, unknown> => {
 	return {};
 };
 
+/**
+ * The host a teleport portal's content is in this frame (its hostName, an animated prop, names a
+ * mounted host), or null when it renders inline. Set by the mounted stack.
+ */
+let teleportHostOf: ((portal: ReactTestInstance) => ReactTestInstance | null) | null = null;
+
+/**
+ * A node's ancestors, root first. Content of a teleported portal sits inside its host, as the native
+ * view is re-parented: its rect, opacity and measurement compose the host's ancestors, not the portal's.
+ */
 const pathTo = (node: ReactTestInstance): ReactTestInstance[] => {
 	const path: ReactTestInstance[] = [];
 	let current: ReactTestInstance | null = node;
+	let fromBelow = false;
 	while (current) {
+		if (fromBelow && current.type === TELEPORT_PORTAL && teleportHostOf) {
+			current = teleportHostOf(current) ?? current;
+		}
 		path.unshift(current);
 		current = current.parent;
+		fromBelow = true;
 	}
 	return path;
 };
@@ -289,10 +304,8 @@ const pointerEventsOf = (node: ReactTestInstance, sim: ReanimatedSim) =>
  */
 export const hitTest = (root: ReactTestInstance, point: { x: number; y: number }, sim: ReanimatedSim) => {
 	const inside = (node: ReactTestInstance) => {
-		// A view with its own layout rect (a boundary, a list item) is hit only inside that rect.
-		const style = flattenStyle(sim.resolveAnimated(node.props.style));
-		const laidOut = typeof style.width === "number" && typeof style.height === "number" && (typeof style.left === "number" || typeof style.top === "number");
-		const box = laidOut ? elementBox(node, sim) : nodeBox(node, sim);
+		// A view inside a laid-out rect (a boundary, a list item, a teleport host) is hit only inside that rect.
+		const box = elementBox(node, sim);
 		return point.x >= box.x && point.x <= box.x + box.width && point.y >= box.y && point.y <= box.y + box.height;
 	};
 	const visit = (node: ReactTestInstance): ReactTestInstance | null => {
@@ -516,17 +529,26 @@ export const mountStack = async (
 	// Each screen is one pressable surface counting its taps, around the marker the recorder reads.
 	const Screen = ({ route, navigation }: { route: { key: string; name: string }; navigation: { setOptions: (o: object) => void } }) => {
 		navigations[route.name] = navigation;
+		// Positioned by a wrapper, sized itself, as an app lays a card out: a boundary that escapes into its
+		// overlay host takes its size there, not a position inside its old parent.
 		const renderBound = (bound: BoundSpec) =>
-			React.createElement(Transition.Boundary as never, {
-				key: `bound-${bound.id}`,
-				id: bound.id,
-				group: bound.group,
-				testID: `${BOUND_MARKER}${route.key}:${bound.id}`,
-				style: { position: "absolute", left: bound.rect.x, top: bound.rect.y, width: bound.rect.width, height: bound.rect.height },
-				onPress: bound.pushTo
-					? () => (navigation as unknown as { push: (n: string, p: object) => void }).push(bound.pushTo as string, { id: bound.id })
-					: undefined,
-			} as never);
+			React.createElement(
+				"View",
+				{
+					key: `bound-${bound.id}`,
+					pointerEvents: "box-none",
+					style: { position: "absolute", left: bound.rect.x, top: bound.rect.y, width: bound.rect.width, height: bound.rect.height },
+				},
+				React.createElement(Transition.Boundary as never, {
+					id: bound.id,
+					group: bound.group,
+					testID: `${BOUND_MARKER}${route.key}:${bound.id}`,
+					style: { width: bound.rect.width, height: bound.rect.height },
+					onPress: bound.pushTo
+						? () => (navigation as unknown as { push: (n: string, p: object) => void }).push(bound.pushTo as string, { id: bound.id })
+						: undefined,
+				} as never),
+			);
 		return React.createElement(
 			"Pressable",
 			{
@@ -604,14 +626,20 @@ export const mountStack = async (
 	// Host refs are mock instances naming their view; measure() resolves them against the live tree.
 	const createNodeMock = (element: { type: unknown; props: Record<string, unknown> }) => ({
 		testID: element.props.testID,
+		hostId: element.props.__harnessHostId,
 		measureInWindow: () => {},
 	});
 	(globalThis as { __harnessMeasure?: (instance: unknown) => unknown }).__harnessMeasure = (instance) => {
-		const testID = (instance as { testID?: string } | null)?.testID;
-		if (!testID || !renderer) return null;
+		const { testID, hostId } = (instance as { testID?: string; hostId?: number } | null) ?? {};
+		if ((!testID && !hostId) || !renderer) return null;
 		let node: ReactTestInstance | undefined;
 		try {
-			node = renderer.root.findAll((n) => typeof n.type === "string" && n.props.testID === testID, { deep: true })[0];
+			node = renderer.root.findAll(
+				(n) =>
+					typeof n.type === "string" &&
+					(hostId ? n.props.__harnessHostId === hostId : n.props.testID === testID),
+				{ deep: true },
+			)[0];
 		} catch {
 			return null;
 		}
@@ -680,6 +708,16 @@ export const mountStack = async (
 		return inner ? spec?.inner : spec;
 	};
 	scrollOffsetOf = (testID) => scrollOffsets.get(testID) ?? 0;
+	teleportHostOf = (portal) => {
+		const props = sim.resolveAnimated(portal.props.animatedProps) as { hostName?: unknown } | undefined;
+		const hostName = props?.hostName ?? portal.props.hostName;
+		if (typeof hostName !== "string" || !hostName || !renderer) return null;
+		try {
+			return renderer.root.findAll((n) => n.type === TELEPORT_HOST && n.props.name === hostName, { deep: true })[0] ?? null;
+		} catch {
+			return null;
+		}
+	};
 	/** Sends a scroll event to a scroll view (by testID) and records its offset. */
 	const scrollTo = (testID: string, offset: number) => {
 		const node = scrollViews().find((n) => n.props.testID === testID);

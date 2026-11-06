@@ -10,12 +10,25 @@ export type KnownIssue = {
 	id: string;
 	summary: string;
 	matches: (scenario: string, violation: Violation) => boolean;
+	/** Catalog runs (their labels) the issue shows in; all when omitted. */
+	environments?: string[];
 };
 
 const sequenceOf = (scenario: string) => scenario.split(" / ")[2];
 const transitionOf = (scenario: string) => scenario.split(" / ")[0];
 
 export const KNOWN_ISSUES: KnownIssue[] = [
+	{
+		id: "escape-reopen-during-close-snap",
+		environments: ["teleport"],
+		summary:
+			"With teleport: open a card from a scrolled list, pop mid-open, and open it again while the close is still " +
+			"shrinking it back: on the second open the card snaps from its mid-close pose to its slot (27 px, 179 -> 141 " +
+			"wide, fully opaque) and then grows again, instead of continuing from where it was. Escaped into its overlay " +
+			"host it follows the closing pair; the new pair takes over a frame later, and in between it is drawn inline at rest.",
+		matches: (scenario, v) =>
+			sequenceOf(scenario) === "open-pop-open-from-scrolled-list" && v.rule === "element-spike" && v.scene === "A#bound:card",
+	},
 	{
 		id: "interrupted-navigation",
 		summary:
