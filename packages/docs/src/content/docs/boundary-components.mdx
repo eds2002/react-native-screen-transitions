@@ -2,7 +2,7 @@
 title: "Boundary Components"
 pageTitle: "Boundary Components"
 summary: "Register, measure, and place elements used by bounds-driven transitions."
-description: "Use Transition.Boundary, Transition.Boundary.Target, and Transition.Boundary.Host."
+description: "Use Transition.Boundary and Transition.Boundary.Target."
 eyebrow: "Components"
 group: "Components"
 order: 2
@@ -13,7 +13,6 @@ to: /boundary-components
 
 - `Transition.Boundary`
 - `Transition.Boundary.Target`
-- `Transition.Boundary.Host`
 
 ## Transition.Boundary
 
@@ -56,21 +55,7 @@ Use this when the measured element is nested inside the owner.
 
 It does not take its own `id`. It inherits the surrounding boundary owner and changes which descendant gets measured.
 
-## Transition.Boundary.Host
-
-Use this to make handoff or clipping-escape placement explicit inside a scrollable or otherwise constrained coordinate space.
-
-```tsx
-<Transition.ScrollView>
-  <Transition.Boundary.Host />
-
-  <Transition.Boundary id="card" onPress={openCard}>
-    <Image source={image} style={styles.card} />
-  </Transition.Boundary>
-</Transition.ScrollView>
-```
-
-Most flows do not need an explicit host. Add one when escaped or `handoff` content should be placed inside a specific local coordinate space.
+`Transition.Boundary.Host` is deprecated. Escaped boundaries go to their screen's overlay on their own and follow their scroll views while they are out, so there is no host to place. It still renders for now and warns in development; remove it.
 
 ## Boundary Config Props
 

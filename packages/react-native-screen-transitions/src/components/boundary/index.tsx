@@ -1,10 +1,12 @@
 import {
 	type ComponentProps,
 	forwardRef,
+	memo,
 	type NamedExoticComponent,
 } from "react";
 import { View, type ViewProps } from "react-native";
 import { Pressable, type PressableProps } from "react-native-gesture-handler";
+import { logger } from "../../utils/logger";
 import { BoundaryTarget } from "./components/boundary-target";
 import { createBoundaryComponent } from "./create-boundary-component";
 import { PortalOverlay } from "./portal/components/portal-overlay";
@@ -48,7 +50,6 @@ type BoundaryRootComponent = typeof BoundaryRoot;
  * Use:
  * - `Boundary` for passive and pressable shared elements.
  * - `Boundary.Target` as a direct child to measure it instead of the root.
- * - `Boundary.Host` to make clipping-escape host placement explicit.
  */
 export interface BoundaryComponent extends BoundaryRootComponent {
 	/**
@@ -56,7 +57,8 @@ export interface BoundaryComponent extends BoundaryRootComponent {
 	 */
 	Target: typeof BoundaryTarget;
 	/**
-	 * Explicit host for clipping-escape placement.
+	 * @deprecated Escaped boundaries go to their screen's overlay on their own and follow their
+	 * scroll views while they are out: there is no host to place. Still renders; remove it.
 	 */
 	Host: NamedExoticComponent<
 		Omit<ComponentProps<typeof PortalOverlay>, "fallback">
@@ -65,7 +67,19 @@ export interface BoundaryComponent extends BoundaryRootComponent {
 
 export type BoundaryProps = BoundaryComponentProps<BoundaryPrimitiveProps>;
 
+const DeprecatedBoundaryHost = memo(function BoundaryHost(
+	props: Omit<ComponentProps<typeof PortalOverlay>, "fallback">,
+) {
+	if (__DEV__) {
+		logger.warnOnce(
+			"boundary:host-deprecated",
+			"Transition.Boundary.Host is deprecated: escaped boundaries go to their screen's overlay on their own and follow their scroll views. Remove it.",
+		);
+	}
+	return <PortalOverlay {...props} />;
+});
+
 export const Boundary = Object.assign(BoundaryRoot, {
 	Target: BoundaryTarget,
-	Host: PortalOverlay,
+	Host: DeprecatedBoundaryHost,
 }) as BoundaryComponent;
