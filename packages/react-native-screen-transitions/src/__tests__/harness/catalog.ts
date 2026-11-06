@@ -1137,7 +1137,8 @@ export const buildScrollBoundsCatalog = (window: { width: number; height: number
 		},
 	});
 	// The destination's own boundary, at the top of its scroll content.
-	const detailContent = { x: 0, y: 0, width: W, height: H * 0.4 };
+	// Same aspect ratio as the card, so a zoom only scales and moves.
+	const detailContent = { x: 0, y: 0, width: W, height: W * (cardContent.height / cardContent.width) };
 	const destinations: Record<string, { screen: ScreenSpec; moving: { scene: string; element?: string }; opened: typeof full }> = {
 		// zoom: the whole screen grows from the card and shrinks back into it.
 		zoom: { screen: { name: "Z", options: zoom(), scroll: { contentSize: H * 3 } }, moving: { scene: "Z" }, opened: full },

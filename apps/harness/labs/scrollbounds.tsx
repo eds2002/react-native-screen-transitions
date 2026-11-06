@@ -2,7 +2,8 @@
 /**
  * scrollbounds: shared bounds whose source sits in a scrolled list and whose destination scrolls.
  * A Transition.ScrollView of cards (Boundary ids 1–12, group "list") zooms into a scrolling detail.
- * Mode buttons pick the zoom: zoom, bound (zoom({ target: "bound" })), visible (zoom({
+ * The destination boundary has the cards' 5:4 aspect ratio, so a zoom only scales and moves (any
+ * bend in the path is the bug, not a shape change). Mode buttons pick the zoom: zoom, bound (zoom({ target: "bound" })), visible (zoom({
  * keepFocusedVisible })). Debug (on by default): a slow spring, the destination held at 60% opacity
  * (no landing fade), no backdrop and no background shrink, so both screens stay visible and the
  * landing can be compared with the card.
@@ -55,7 +56,11 @@ const zoomOptions = (mode, debug) => ({
 	},
 });
 
-function List({ navigation, mode, setMode, debug, setDebug }) {
+function List({ navigation }) {
+	// Mode lives here and travels in the route params: Blank Stack reuses a screen's render while its
+	// options are unchanged, so state held above the navigator never reaches the screens.
+	const [mode, setMode] = useState("zoom");
+	const [debug, setDebug] = useState(true);
 	const { width } = useWindowDimensions();
 	const size = (width - 40 - 10) / 2;
 	return (
@@ -83,8 +88,8 @@ function List({ navigation, mode, setMode, debug, setDebug }) {
 							group={GROUP}
 							testID={`sb-card-${id}`}
 							accessibilityLabel={`sb-card-${id}`}
-							onPress={() => navigation.push("detail", { id })}
-							style={{ width: size, height: size * 0.8, borderRadius: 20, backgroundColor: colorFor(`card${id}`), justifyContent: "flex-end", padding: 14 }}
+							onPress={() => navigation.push("detail", { id, mode, debug })}
+							style={{ width: size, height: size * CARD_RATIO, borderRadius: 20, backgroundColor: colorFor(`card${id}`), justifyContent: "flex-end", padding: 14 }}
 						>
 							<Text style={{ color: "white", fontSize: 28, fontWeight: "800" }}>{id}</Text>
 						</Transition.Boundary>
@@ -103,13 +108,18 @@ function BarButton({ label, testID, onPress }) {
 	);
 }
 
-function Detail({ navigation, route, bound }) {
-	const { id } = route.params;
+/** Cards are 5:4; the destination boundary keeps that aspect ratio, so a zoom only scales and moves. */
+const CARD_RATIO = 0.8;
+
+function Detail({ navigation, route }) {
+	const { id, mode } = route.params;
+	const bound = mode === "bound";
+	const { width } = useWindowDimensions();
 	const Card = bound ? Transition.Boundary : View;
 	return (
 		<View style={{ flex: 1, backgroundColor: "#0b0b0f" }}>
 			<Transition.ScrollView contentContainerStyle={{ paddingTop: 120, paddingHorizontal: 20, paddingBottom: 1200, gap: 14 }}>
-				<Card {...(bound ? { id, group: GROUP } : {})} testID="sb-dest" style={{ height: 260, borderRadius: 28, backgroundColor: colorFor(`card${id}`), justifyContent: "flex-end", padding: 18 }}>
+				<Card {...(bound ? { id, group: GROUP } : {})} testID="sb-dest" style={{ height: (width - 40) * CARD_RATIO, borderRadius: 28, backgroundColor: colorFor(`card${id}`), justifyContent: "flex-end", padding: 18 }}>
 					<Text style={{ color: "white", fontSize: 44, fontWeight: "800" }}>{id}</Text>
 				</Card>
 				{Array.from({ length: 14 }, (_, i) => (
@@ -134,15 +144,11 @@ function Detail({ navigation, route, bound }) {
 }
 
 function Component() {
-	const [mode, setMode] = useState("zoom");
-	const [debug, setDebug] = useState(true);
 	return (
 		<LabContainer>
 			<Stack.Navigator>
-				<Stack.Screen name="list">{(props) => <List {...props} mode={mode} setMode={setMode} debug={debug} setDebug={setDebug} />}</Stack.Screen>
-				<Stack.Screen name="detail" options={zoomOptions(mode, debug)}>
-					{(props) => <Detail {...props} bound={mode === "bound"} />}
-				</Stack.Screen>
+				<Stack.Screen name="list" component={List} />
+				<Stack.Screen name="detail" component={Detail} options={({ route }) => zoomOptions(route.params.mode, route.params.debug)} />
 			</Stack.Navigator>
 		</LabContainer>
 	);
