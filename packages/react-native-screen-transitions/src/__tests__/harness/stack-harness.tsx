@@ -387,7 +387,9 @@ export const readScenes = (renderer: ReactTestRenderer, sim: ReanimatedSim): Sce
 			const bound = String(element.props.testID).startsWith(BOUND_MARKER);
 			const id = `${bound ? "bound:" : ""}${String(element.props.testID).split(":").at(-1)}`;
 			elements[id] = {
-				rect: bound ? elementBox(element, sim) : nodeBox(element, sim),
+				// A boundary and a handoff payload fill their nearest positioned ancestor (the payload's is
+				// whichever boundary holds it now).
+				rect: bound || id.startsWith("payload-") ? elementBox(element, sim) : nodeBox(element, sim),
 				opacity: composedOpacity(element, sim),
 				style: flattenStyle(sim.resolveAnimated(element.props.style)),
 			};
@@ -436,6 +438,13 @@ export type BoundSpec = {
 	/** Pressing it navigates to `name` (opening its nested `screen` with params { id }): a screen in a sibling stack. */
 	navigateTo?: { name: string; screen?: string };
 	group?: string;
+	/** A handoff boundary: its live content moves between the matching boundaries instead of remounting. */
+	handoff?: boolean;
+	/**
+	 * Renders a live child filling the boundary, recorded as the element `payload-<id>` of this screen
+	 * wherever it is teleported (a handoff source; the destination renders none).
+	 */
+	payload?: boolean;
 };
 
 export type ScreenSpec = {
@@ -615,6 +624,7 @@ export const mountStack = async (
 				React.createElement(Transition.Boundary as never, {
 					id: bound.id,
 					group: bound.group,
+					handoff: bound.handoff,
 					testID: `${BOUND_MARKER}${route.key}:${bound.id}`,
 					style: { width: bound.rect.width, height: bound.rect.height },
 					onPress: bound.pushTo
@@ -628,7 +638,16 @@ export const mountStack = async (
 									);
 								}
 							: undefined,
-				} as never),
+				} as never,
+				...(bound.payload
+					? [
+							// No layout of its own: it fills whichever boundary holds it, as live content would.
+							React.createElement("View", {
+								key: "payload",
+								testID: `${ELEMENT_MARKER}${route.key}:payload-${bound.id}`,
+							}),
+						]
+					: [])),
 			);
 		return React.createElement(
 			"Pressable",

@@ -26,6 +26,8 @@ export type Expectations = {
 	 * underneath from following the closing screen back to being covered by the new one.
 	 */
 	mayTurnBack?: string[];
+	/** Where each handoff payload (`payload-<id>`) must rest at the end, in window coordinates. */
+	payloadRest?: Record<string, Rect>;
 };
 
 const visible = (scene: SceneFrame) =>
@@ -286,6 +288,60 @@ export const checkSettled = (
 	const allowed = top && expectations.rest && top.name in expectations.rest ? expectations.rest[top.name] : fallback;
 	if (allowed && !allowed.some((rest) => rectOff(topScene.rect, rest) <= 0.5)) {
 		out.push({ rule: "top-rest", frame: last.frame, scene: top?.name, detail: `rests at ${JSON.stringify(roundRect(topScene.rect))}, expected one of ${JSON.stringify(allowed.map(roundRect))}` });
+	}
+	return out;
+};
+
+/**
+ * A handoff payload is the one live copy of its content: it is never hidden, not even for a frame
+ * (not faded with a screen, not off the window, not lost between its boundaries), and it rests where
+ * the scenario says. Each stretch where it is hidden is one violation.
+ */
+export const checkPayloads = (trace: TraceFrame[], expectations: Expectations = {}): Violation[] => {
+	const out: Violation[] = [];
+	const ids = new Set<string>();
+	for (const frame of trace)
+		for (const scene of frame.scenes)
+			for (const id in scene.elements) if (id.startsWith("payload-")) ids.add(`${scene.name}#${id}`);
+	for (const key of ids) {
+		const [sceneName, id] = key.split("#");
+		let hiddenFrom = -1;
+		let worst = 1;
+		const close = (frame: number) => {
+			if (hiddenFrom < 0) return;
+			out.push({
+				rule: "payload-hidden",
+				frame: hiddenFrom,
+				scene: key,
+				detail: `hidden from frame ${hiddenFrom} to ${frame} (lowest opacity ${worst.toFixed(2)})`,
+			});
+			hiddenFrom = -1;
+			worst = 1;
+		};
+		for (const frame of trace) {
+			const element = frame.scenes.find((s) => s.name === sceneName)?.elements[id];
+			if (!element) {
+				close(frame.frame);
+				continue;
+			}
+			const { rect, opacity } = element;
+			const onWindow = rect.x < WINDOW.width && rect.x + rect.width > 0 && rect.y < WINDOW.height && rect.y + rect.height > 0;
+			if (opacity < 0.99 || !onWindow) {
+				if (hiddenFrom < 0) hiddenFrom = frame.frame;
+				worst = Math.min(worst, onWindow ? opacity : 0);
+			} else close(frame.frame);
+		}
+		close(trace.at(-1)?.frame ?? -1);
+		const rest = expectations.payloadRest?.[id];
+		const last = trace.at(-1)?.scenes.find((s) => s.name === sceneName)?.elements[id];
+		if (rest && last && rectOff(last.rect, rest) > 1) {
+			out.push({
+				rule: "payload-rest",
+				frame: trace.at(-1)?.frame ?? -1,
+				scene: key,
+				detail: `rests at ${JSON.stringify(roundRect(last.rect))}, expected ${JSON.stringify(roundRect(rest))}`,
+			});
+		}
 	}
 	return out;
 };

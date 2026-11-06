@@ -1630,6 +1630,157 @@ export const buildGlobalBoundsCatalog = (window: { width: number; height: number
 	return scenarios;
 };
 
+/**
+ * Handoff (true shared elements): one live payload moves between matching `handoff` boundaries
+ * instead of a copy on each screen. Each recipe (a transform morph, a size morph, zoom) runs the
+ * usual sequences plus spam, from a scrolled list, into a scrolled destination and across stacks.
+ * Besides the usual rules, the payload must never be hidden and must rest on its card (closed) or
+ * on the destination slot (open).
+ */
+export const buildHandoffCatalog = (window: { width: number; height: number }, specs: { Zoom?: unknown }): Scenario[] => {
+	const W = window.width;
+	const H = window.height;
+	const spec = specs.Zoom ?? DEFAULT_SPEC;
+	const card = { x: W * 0.1, y: H * 0.6, width: W * 0.36, height: H * 0.2 };
+	const hero = { x: 0, y: H * 0.1, width: W, height: H * 0.4 };
+	const centerOf = (r: typeof card) => ({ x: r.x + r.width / 2, y: r.y + r.height / 2 });
+	const shift = (r: typeof card, dy: number) => ({ ...r, y: r.y + dy });
+	const recipes: Record<string, (props: any) => any> = {
+		// The morphs hide the (now empty) source frame while it is covered, as zoom does.
+		"morph-transform": (props: any) => {
+			"worklet";
+			if (props.next) return { card: { style: { opacity: 0 } } };
+			return {
+				content: { style: { opacity: Math.min(props.progress, 1) } },
+				card: { style: props.bounds("card").styles() },
+			};
+		},
+		"morph-size": (props: any) => {
+			"worklet";
+			if (props.next) return { card: { style: { opacity: 0 } } };
+			return {
+				content: { style: { opacity: Math.min(props.progress, 1) } },
+				card: { style: props.bounds("card").styles({ method: "size" }) },
+			};
+		},
+		zoom: (props: any) => {
+			"worklet";
+			// The destination slot maps onto the card, so the payload's frame is continuous at the handover.
+			return props.bounds("card").navigation.zoom({ target: "bound" });
+		},
+	};
+	const source = (pushTo?: string) => ({ id: "card", rect: card, pushTo, handoff: true, payload: true });
+	// A scroll the way a finger does it: 20 px a frame, not one jump.
+	const scrollBy = (to: number): Step[] =>
+		Array.from({ length: Math.ceil(to / 20) }, (_, i) => [
+			{ op: "scrollTo", offset: Math.min(to, (i + 1) * 20) } as Step,
+			{ op: "frames", count: 1 } as Step,
+		]).flat();
+	const destination = { id: "card", rect: hero, handoff: true };
+	type Topology = {
+		screens: (options: Record<string, unknown>) => ScreenSpec[];
+		openPath: string[];
+		closedPath: string[];
+		/** The card on screen when closed, and the slot when open (after `before` / `whileOpen`). */
+		closedRest: typeof card;
+		openRest: typeof card;
+		before?: Step[];
+		/** Steps run while the destination is open and settled (scrolling it). */
+		whileOpen?: Step[];
+		tapAt: { x: number; y: number };
+	};
+	const SCROLL = H * 0.5;
+	const topologies: Record<string, Topology> = {
+		"same-stack": {
+			screens: (options) => [{ name: "List", bounds: [source("Detail")] }, { name: "Detail", options, bounds: [destination] }],
+			openPath: ["Detail"],
+			closedPath: ["List"],
+			closedRest: card,
+			openRest: hero,
+			tapAt: centerOf(card),
+		},
+		// The card sits further down a list scrolled up by SCROLL: it is on screen at the same place.
+		"scrolled-source": {
+			screens: (options) => [
+				{ name: "List", scroll: { contentSize: H * 2, bounds: [{ ...source("Detail"), rect: shift(card, SCROLL) }] } },
+				{ name: "Detail", options, bounds: [destination] },
+			],
+			openPath: ["Detail"],
+			closedPath: ["List"],
+			closedRest: card,
+			openRest: hero,
+			before: [...scrollBy(SCROLL), { op: "settle" }],
+			tapAt: centerOf(card),
+		},
+		// The slot is in the destination's scroll content, scrolled by 200 before closing.
+		"scrolled-destination": {
+			screens: (options) => [
+				{ name: "List", bounds: [source("Detail")] },
+				{ name: "Detail", options, scroll: { contentSize: H * 2, bounds: [destination] } },
+			],
+			openPath: ["Detail"],
+			closedPath: ["List"],
+			closedRest: card,
+			openRest: shift(hero, -200),
+			whileOpen: [...scrollBy(200), { op: "settle" }],
+			tapAt: centerOf(card),
+		},
+		"cross-stack": {
+			screens: (options) => [
+				{ name: "Home", stack: { screens: [{ name: "List", bounds: [source("Detail")] }] } },
+				{ name: "Detail", options, bounds: [destination] },
+			],
+			openPath: ["Detail"],
+			closedPath: ["Home", "List"],
+			closedRest: card,
+			openRest: hero,
+			tapAt: centerOf(card),
+		},
+	};
+	const scenarios: Scenario[] = [];
+	for (const [recipe, interpolator] of Object.entries(recipes)) {
+		const options = {
+			gestureEnabled: true,
+			gestureDirection: ["vertical", "pinch-in"],
+			transitionSpec: { open: spec, close: spec },
+			screenStyleInterpolator: interpolator,
+		};
+		for (const [topology, t] of Object.entries(topologies)) {
+			// `open`: the destination it was opened to (scrolled while open), or a fresh one (re-pushed).
+			const add = (sequence: string, steps: Step[], open: false | "scrolled" | "fresh") =>
+				scenarios.push({
+					name: `handoff-${recipe} / ${topology} / ${sequence}`,
+					// Without react-native-teleport, handoff renders inline by design: nothing to hand off.
+					environments: ["teleport"],
+					screens: t.screens(options),
+					steps: [...(t.before ?? []), ...steps],
+					expect: {
+						mayOvershoot: true,
+						payloadRest: { "payload-card": open === "scrolled" ? t.openRest : open === "fresh" ? hero : t.closedRest },
+					},
+				});
+			const tap: Step = { op: "tap", at: t.tapAt };
+			// Re-opening while a close runs: the closing screen may cover the card, so push directly.
+			const reopen: Step = { op: "push", name: "Detail" };
+			const opened: Step[] = [tap, { op: "settle" }, { op: "expectPath", names: t.openPath }, ...(t.whileOpen ?? [])];
+			add("open", opened, "scrolled");
+			add("open-close", [...opened, { op: "pop" }, { op: "settle" }, { op: "expectPath", names: t.closedPath }], false);
+			add("pop-mid-open", [tap, { op: "frames", count: 6 }, { op: "pop" }, { op: "settle" }, { op: "expectPath", names: t.closedPath }], false);
+			add(
+				"open-pop-open",
+				[...opened, { op: "pop" }, { op: "frames", count: 4 }, reopen, { op: "settle" }, { op: "expectPath", names: t.openPath }],
+				"fresh",
+			);
+			add("swipe-dismiss", [...opened, { op: "swipe", direction: "vertical", distance: 0.5, durationMs: 250 }, { op: "settle" }], false);
+			// Spam: open and close every two frames, five times, then let it land closed.
+			const spam: Step[] = [];
+			for (let i = 0; i < 5; i++) spam.push(i ? reopen : tap, { op: "frames", count: 2 }, { op: "pop" }, { op: "frames", count: 2 });
+			add("spam", [...spam, { op: "settle" }, { op: "expectPath", names: t.closedPath }], false);
+		}
+	}
+	return scenarios;
+};
+
 export const buildFullCatalog = (
 	presets: Presets,
 	interpolate: InterpolateFn,
@@ -1650,4 +1801,5 @@ export const buildFullCatalog = (
 	...buildScrollBoundsCatalog(window, specs ?? {}),
 	...buildBoundsChainCatalog(window, specs ?? {}),
 	...buildGlobalBoundsCatalog(window, specs ?? {}),
+	...buildHandoffCatalog(window, specs ?? {}),
 ];

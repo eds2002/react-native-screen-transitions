@@ -27,7 +27,9 @@ export const runCatalog = async (
 	// HARNESS_ONLY=<substring> runs the matching scenarios only (known issues outside them can't reproduce, so strictness is off).
 	const only = process.env.HARNESS_ONLY;
 	const catalog = buildFullCatalog(presets as never, interpolate as never, WINDOW, HarnessOverlay, (await import("../../configs/specs")) as never).filter(
-		(scenario) => !only || scenario.name.includes(only),
+		(scenario) =>
+			(!only || scenario.name.includes(only)) &&
+			(!scenario.environments || scenario.environments.includes(label)),
 	);
 
 	const unexplained: string[] = [];

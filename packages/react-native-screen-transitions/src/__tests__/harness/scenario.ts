@@ -8,6 +8,7 @@ import {
 	checkContinuity,
 	checkFinite,
 	checkMonotonic,
+	checkPayloads,
 	checkSettled,
 	checkStartLatency,
 	checkStyleRange,
@@ -90,6 +91,8 @@ export type Step =
 
 export type Scenario = {
 	name: string;
+	/** Catalog runs (their labels) the scenario applies to; all when omitted. */
+	environments?: string[];
 	screens: ScreenSpec[];
 	screenOptions?: Record<string, unknown>;
 	steps: Step[];
@@ -345,6 +348,7 @@ export const runScenario = async (sim: ReanimatedSim, scenario: Scenario): Promi
 		...checkStyleRange(trace),
 		...checkContinuity(trace, expectations),
 		...checkVanish(trace, expectations),
+		...checkPayloads(trace, expectations),
 	);
 	const elements = elementTrace(trace);
 	violations.push(
