@@ -60,7 +60,9 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			"Shared bounds over a chain (A → B → C → D): pushing each level while the last is still opening, " +
 			"then popping back the same way, makes background screens snap (a 52.8 px step: the zoom background " +
 			"scale dropping to full size in one frame), part of A vanish in one frame, and the source cards of B " +
-			"and C jump between their tracked and rest rects. Harness only so far; confirm on a device.",
+			"and C jump between their tracked and rest rects. HARNESS SUSPECT: not reproduced on a device (chain lab, " +
+			"fast push / fast pop, frame analyzer clean and nothing visible); likely changes on screens that are " +
+			"covered or faded at that moment, which the harness does not occlude.",
 		matches: (scenario, v) =>
 			scenario.startsWith("bounds-chain-") &&
 			scenario.endsWith("/ fast-push-chain-then-fast-pop-chain") &&
@@ -71,7 +73,8 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 		summary:
 			"Shared bounds, A → B → C → D settled, then pop twice in quick succession: C's source card (tracking " +
 			"D's close, at about half opacity and expanded) snaps back to its rest rect in one frame when C is " +
-			"popped mid-way through D's close, and B and C step by 45–53 px. Harness only so far; confirm on a device.",
+			"popped mid-way through D's close, and B and C step by 45–53 px. HARNESS SUSPECT: not reproduced on a " +
+			"device (chain lab, pop twice, frame analyzer clean); likely a snap on a screen already closing out of view.",
 		matches: (scenario, v) =>
 			scenario.startsWith("bounds-chain-") &&
 			scenario.endsWith("/ deep-then-double-pop") &&
