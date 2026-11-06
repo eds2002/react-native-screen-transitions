@@ -17,7 +17,8 @@ const passthrough = ({ children }: { children?: React.ReactNode }) =>
 export const PLATFORM = { os: "ios" as "ios" | "android" };
 
 /** Host element types the teleport stand-in renders; the recorder re-parents a portal's content into its host. */
-export const TELEPORT_PORTAL = "TeleportPortal";
+// The real Portal renders the native PortalView, which boundaries also render directly on native.
+export const TELEPORT_PORTAL = "PortalView";
 export const TELEPORT_HOST = "TeleportHost";
 
 let hostViewIds = 0;
