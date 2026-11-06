@@ -5,6 +5,7 @@ import type { LayoutChangeEvent } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated, { useComposedEventHandler } from "react-native-reanimated";
 import {
+	ScrollChainProvider,
 	ScrollMetadataOwnerProvider,
 	useScrollGestureCoordination,
 } from "../providers/motion/gestures/scroll-coordination";
@@ -53,6 +54,7 @@ export function createTransitionAwareComponent<P extends object>(
 			onLayout,
 			nativeGesture,
 			metadataOwnerProviderValue,
+			scrollChain,
 		} = useScrollGestureCoordination({
 			onContentSizeChange: scrollableProps.onContentSizeChange,
 			onLayout: scrollableProps.onLayout,
@@ -99,7 +101,9 @@ export function createTransitionAwareComponent<P extends object>(
 
 		return (
 			<ScrollMetadataOwnerProvider value={metadataOwnerProviderValue}>
-				{coordinatedScrollableComponent}
+				<ScrollChainProvider value={scrollChain}>
+					{coordinatedScrollableComponent}
+				</ScrollChainProvider>
 			</ScrollMetadataOwnerProvider>
 		);
 	});

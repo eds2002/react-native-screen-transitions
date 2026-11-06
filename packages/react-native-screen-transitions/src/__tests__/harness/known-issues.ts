@@ -55,18 +55,6 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 		matches: (scenario, v) => scenario.startsWith("bounds-reveal") && v.rule === "style-range",
 	},
 	{
-		id: "zoom-stale-source-after-list-moved",
-		summary:
-			"Shared bounds + scroll: zoom() closes onto the source card's rect from when it opened. If the list " +
-			"under the zoomed screen moved meanwhile (scrolled, rows inserted, offset restored), or scrolls while " +
-			"it closes, the screen lands where the card used to be. zoom() already corrects for the source " +
-			"list's scroll, but only with keepFocusedVisible (the correction's weight is 0 otherwise); with it " +
-			"both cases land. Confirmed on a device (harness lab scrollbounds).",
-		matches: (scenario, v) =>
-			["scroll-bounds-zoom / zoom-spec / list-moved-while-covered-then-close", "scroll-bounds-zoom / zoom-spec / list-scrolls-during-close"].includes(scenario) &&
-			v.rule === "trajectory",
-	},
-	{
 		id: "zoom-to-bound-scrolled-destination-jump",
 		summary:
 			"Shared bounds + scroll: after the destination is scrolled, closing a zoom({ target: 'bound' }) makes the " +
@@ -82,13 +70,6 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			"boundary off the source card (about 48 px off and 30% small). A button pop from the same state lands.",
 		matches: (scenario, v) =>
 			scenario === "scroll-bounds-zoom-to-bound / zoom-spec / scroll-destination-then-swipe-back" && v.rule === "trajectory",
-	},
-	{
-		id: "zoom-to-bound-no-live-source-scroll",
-		summary:
-			"Shared bounds + scroll: zoom({ target: 'bound' }) measures the source once when the close starts, so a " +
-			"list that scrolls during the close leaves it landing where the card was at that moment.",
-		matches: (scenario, v) => scenario === "scroll-bounds-zoom-to-bound / zoom-spec / list-scrolls-during-close" && v.rule === "trajectory",
 	},
 	{
 		id: "zoom-visible-hard-cut-unverified",

@@ -160,6 +160,56 @@ export const getVisualScrollAxisDelta = (
 	return currentAxisState.offset - capturedOffset;
 };
 
+/** A scrollable around a measured view and its (clamped) offset at measurement time. */
+export type ScrollChainSnapshot = {
+	id: string;
+	axis: ScrollGestureAxis;
+	offset: number;
+};
+
+/**
+ * Offsets of the scrollables around a view (outermost first), clamped like a measurement: the
+ * scrollables are looked up by id in the screen's scroll metadata. A scrollable that has not
+ * reported yet is left out, so nothing is corrected against it.
+ */
+export const snapshotScrollChain = (
+	scroll: ScrollMetadataState | null | undefined,
+	chain: readonly { id: string; axis: ScrollGestureAxis }[],
+): ScrollChainSnapshot[] => {
+	"worklet";
+
+	const snapshot: ScrollChainSnapshot[] = [];
+	for (let i = 0; i < chain.length; i++) {
+		const link = chain[i];
+		const offset = clampScrollAxisOffset(scroll?.views?.[link.id]);
+		if (offset === null) continue;
+		snapshot.push({ id: link.id, axis: link.axis, offset });
+	}
+	return snapshot;
+};
+
+/**
+ * How far the scrollables around a view have scrolled along `axis` since `snapshot`, summed over
+ * every level of nesting. The live side stays raw, so iOS rubber-banding is followed as drawn.
+ */
+export const getScrollChainAxisDelta = (
+	current: ScrollMetadataState | null | undefined,
+	snapshot: readonly ScrollChainSnapshot[],
+	axis: ScrollGestureAxis,
+): number => {
+	"worklet";
+
+	let delta = 0;
+	for (let i = 0; i < snapshot.length; i++) {
+		const link = snapshot[i];
+		if (link.axis !== axis) continue;
+		const view = current?.views?.[link.id];
+		if (!view) continue;
+		delta += view.offset - link.offset;
+	}
+	return delta;
+};
+
 /**
  * Route-keyed scroll geometry used by gesture activation and bounds measurement.
  * Coordination tracks gesture-owner scoped ScrollView offsets and dimensions;

@@ -531,64 +531,58 @@ describe("zoom focused visibility", () => {
 		expect(keptVisibleStyle).not.toHaveProperty("opacity");
 	});
 
-	it("tracks live source scroll while keeping focused closing content visible", () => {
+	// Source scroll: the content follows the source's live scroll with or without keepFocusedVisible,
+	// measured against a frame where the source did not scroll.
+	const verticalScroll = (offset: number, isTouched = false) => ({
+		vertical: { offset, contentSize: 1200, layoutSize: 800, isTouched },
+		horizontal: null,
+	});
+	const zoomTranslateY = ({
+		liveOffset,
+		entering = false,
+		keepFocusedVisible = false,
+	}: {
+		liveOffset: number;
+		entering?: boolean;
+		keepFocusedVisible?: boolean;
+	}) => {
+		const props = createZoomProps({ focused: true, progress: 0.5 });
+		if (entering) {
+			props.active.closing = false;
+			props.active.entering = true;
+		}
+		props.inactive = {
+			...props.previous,
+			layouts: { scroll: verticalScroll(liveOffset, liveOffset < 0) },
+		};
+		const transform = buildZoomStyles({
+			tag: "card",
+			props,
+			zoomOptions: { target: "bound", keepFocusedVisible },
+		}).content?.style?.transform as any[];
+		return {
+			x: transform[0]?.translateX as number,
+			y: transform[1]?.translateY as number,
+		};
+	};
+
+	it("tracks live source scroll while closing, with or without keepFocusedVisible", () => {
 		BoundStore.link.setSource(
 			PAIR_KEY,
 			"card",
 			"screen-a",
-			{
-				...SOURCE_BOUNDS,
-				scroll: {
-					vertical: {
-						offset: 100,
-						contentSize: 1200,
-						layoutSize: 800,
-						isTouched: false,
-					},
-					horizontal: null,
-				},
-			} as any,
+			{ ...SOURCE_BOUNDS, scroll: verticalScroll(100) } as any,
 			{ borderRadius: 14 },
 		);
 		registerDestination();
 
-		const props = createZoomProps({ focused: true, progress: 0.5 });
-		props.inactive = {
-			...props.previous,
-			layouts: {
-				scroll: {
-					vertical: {
-						offset: 140,
-						contentSize: 1200,
-						layoutSize: 800,
-						isTouched: false,
-					},
-					horizontal: null,
-				},
-			},
-		};
-
-		const defaultTransform = buildZoomStyles({
-			tag: "card",
-			props,
-			zoomOptions: { target: "bound" },
-		}).content?.style?.transform as any[];
-		const trackedTransform = buildZoomStyles({
-			tag: "card",
-			props,
-			zoomOptions: {
-				target: "bound",
-				keepFocusedVisible: true,
-			},
-		}).content?.style?.transform as any[];
-
-		expect(trackedTransform[0]?.translateX).toBe(
-			defaultTransform[0]?.translateX,
-		);
-		expect(trackedTransform[1]?.translateY).toBeCloseTo(
-			(defaultTransform[1]?.translateY as number) - 20,
-			10,
-		);
+		const still = zoomTranslateY({ liveOffset: 100 });
+		for (const keepFocusedVisible of [false, true]) {
+			const scrolled = zoomTranslateY({ liveOffset: 140, keepFocusedVisible });
+			expect(scrolled.x).toBe(still.x);
+			// 40 px of scroll, half applied at progress 0.5.
+			expect(scrolled.y).toBeCloseTo(still.y - 20, 10);
+		}
 	});
 
 	it("does not apply a captured in-range scroll offset while entering", () => {
@@ -651,58 +645,17 @@ describe("zoom focused visibility", () => {
 			PAIR_KEY,
 			"card",
 			"screen-a",
-			{
-				...SOURCE_BOUNDS,
-				scroll: {
-					vertical: {
-						offset: -60,
-						contentSize: 1200,
-						layoutSize: 800,
-						isTouched: true,
-					},
-					horizontal: null,
-				},
-			} as any,
+			{ ...SOURCE_BOUNDS, scroll: verticalScroll(-60, true) } as any,
 			{ borderRadius: 14 },
 		);
 		registerDestination();
 
-		const props = createZoomProps({ focused: true, progress: 0.5 });
-		props.active.closing = false;
-		props.active.entering = true;
-		props.inactive = {
-			...props.previous,
-			layouts: {
-				scroll: {
-					vertical: {
-						offset: -60,
-						contentSize: 1200,
-						layoutSize: 800,
-						isTouched: true,
-					},
-					horizontal: null,
-				},
-			},
-		};
-
-		const defaultTransform = buildZoomStyles({
-			tag: "card",
-			props,
-			zoomOptions: { target: "bound" },
-		}).content?.style?.transform as any[];
-		const trackedTransform = buildZoomStyles({
-			tag: "card",
-			props,
-			zoomOptions: {
-				target: "bound",
-				keepFocusedVisible: true,
-			},
-		}).content?.style?.transform as any[];
-
-		expect(trackedTransform[1]?.translateY).toBeCloseTo(
-			(defaultTransform[1]?.translateY as number) + 30,
-			10,
-		);
+		// The capture is clamped to 0 (measurement drops the rubber band); the live side stays raw.
+		const atRest = zoomTranslateY({ liveOffset: 0, entering: true });
+		for (const keepFocusedVisible of [false, true]) {
+			const overscrolled = zoomTranslateY({ liveOffset: -60, entering: true, keepFocusedVisible });
+			expect(overscrolled.y).toBeCloseTo(atRest.y + 30, 10);
+		}
 	});
 });
 

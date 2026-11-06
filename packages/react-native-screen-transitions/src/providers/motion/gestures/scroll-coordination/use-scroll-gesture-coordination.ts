@@ -17,14 +17,17 @@ import type {
 	ScrollGestureState,
 	ScrollMetadataState,
 } from "../types";
+import { type ScrollChainLink, useScrollChain } from "./scroll-chain";
 import {
 	useOptionalScrollMetadataOwnerStore,
 	useScrollMetadataOwnerProviderValue,
 } from "./scroll-metadata-owner";
 import {
 	clearScrollMetadataAxisState,
+	removeScrollViewState,
 	updateScrollGestureAxisState,
 	updateScrollMetadataAxisState,
+	updateScrollViewState,
 } from "./update-scroll-gesture-state";
 
 interface ScrollGestureCoordinationProps {
@@ -60,6 +63,20 @@ const modifyScrollMetadataAxisState = (
 	scrollState.modify(<T extends ScrollMetadataState | null>(state: T): T => {
 		"worklet";
 		return updateScrollMetadataAxisState(state, axis, patch) as T;
+	});
+};
+
+const modifyScrollViewState = (
+	scrollState: SharedValue<ScrollMetadataState | null>,
+	id: string,
+	axis: ScrollGestureAxis,
+	patch: Partial<ScrollGestureAxisState>,
+) => {
+	"worklet";
+
+	scrollState.modify(<T extends ScrollMetadataState | null>(state: T): T => {
+		"worklet";
+		return updateScrollViewState(state, id, axis, patch) as T;
 	});
 };
 
@@ -107,6 +124,29 @@ export const useScrollGestureCoordination = (
 		[routeKey],
 	);
 
+	// Every scrollable, nested or not, also records its own geometry under its id, and tells the
+	// views inside it which scrollables contain them (see ScrollChainProvider).
+	const parentScrollChain = useScrollChain();
+	const scrollChain = useMemo<readonly ScrollChainLink[]>(
+		() => [
+			...parentScrollChain,
+			{ id: metadataWriterId, axis: scrollDirection },
+		],
+		[parentScrollChain, metadataWriterId, scrollDirection],
+	);
+
+	useLayoutEffect(() => {
+		if (!metadataState) return;
+		return () => {
+			metadataState.modify(
+				<T extends ScrollMetadataState | null>(state: T): T => {
+					"worklet";
+					return removeScrollViewState(state, metadataWriterId) as T;
+				},
+			);
+		};
+	}, [metadataState, metadataWriterId]);
+
 	useLayoutEffect(() => {
 		if (!routeKey || !isFirstMetadataWriterInTree) {
 			setWritesMetadata(false);
@@ -129,11 +169,7 @@ export const useScrollGestureCoordination = (
 
 			if (!released || !metadataState) return;
 
-			if (!ScrollStore.hasMetadataWriters(routeKey)) {
-				metadataState.set(null);
-				return;
-			}
-
+			// Clears the axis; the state goes back to null once nothing else is recorded in it.
 			clearScrollMetadataAxis(metadataState, scrollDirection);
 		};
 	}, [
@@ -253,6 +289,17 @@ export const useScrollGestureCoordination = (
 					isTouched: metadataState.get()?.[scrollDirection]?.isTouched ?? true,
 				});
 			}
+
+			if (metadataState) {
+				modifyScrollViewState(
+					metadataState,
+					metadataWriterId,
+					scrollDirection,
+					{
+						offset,
+					},
+				);
+			}
 		},
 	});
 
@@ -272,6 +319,17 @@ export const useScrollGestureCoordination = (
 				modifyScrollMetadataAxisState(metadataState, scrollDirection, {
 					contentSize,
 				});
+			}
+
+			if (metadataState) {
+				modifyScrollViewState(
+					metadataState,
+					metadataWriterId,
+					scrollDirection,
+					{
+						contentSize,
+					},
+				);
 			}
 		},
 	);
@@ -293,6 +351,12 @@ export const useScrollGestureCoordination = (
 				layoutSize,
 			});
 		}
+
+		if (metadataState) {
+			modifyScrollViewState(metadataState, metadataWriterId, scrollDirection, {
+				layoutSize,
+			});
+		}
 	});
 
 	return {
@@ -302,5 +366,6 @@ export const useScrollGestureCoordination = (
 		onLayout,
 		nativeGesture,
 		metadataOwnerProviderValue,
+		scrollChain,
 	};
 };

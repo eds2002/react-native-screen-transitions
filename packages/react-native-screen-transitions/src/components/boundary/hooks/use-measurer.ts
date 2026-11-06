@@ -3,6 +3,7 @@ import type { View } from "react-native";
 import { useWindowDimensions } from "react-native";
 import type { AnimatedRef, StyleProps } from "react-native-reanimated";
 import { useMotionStore } from "../../../providers/motion";
+import { useScrollChain } from "../../../providers/motion/gestures/scroll-coordination";
 import { setEntry } from "../../../stores/bounds/internals/entries";
 import {
 	setDestination,
@@ -45,6 +46,7 @@ export const useMeasurer = ({
 
 	const scrollState = ScrollStore.getValue(currentScreenKey, "coordination");
 	const scrollMetadata = ScrollStore.getValue(currentScreenKey, "metadata");
+	const scrollChain = useScrollChain();
 	const pendingLifecycleStartBlockCount = useMotionStore(
 		(store) => store.state.pendingLifecycleStartBlockCount,
 	);
@@ -103,6 +105,7 @@ export const useMeasurer = ({
 			const measuredWithScroll = attachScrollSnapshotToMeasuredBounds(
 				correctedMeasured,
 				scrollMetadata.get(),
+				scrollChain,
 			);
 
 			// Refresh the public bounds entry on every accepted measurement.
@@ -145,6 +148,7 @@ export const useMeasurer = ({
 			viewportHeight,
 			scrollState,
 			scrollMetadata,
+			scrollChain,
 			pendingLifecycleStartBlockCount,
 			isScreenReady,
 		],

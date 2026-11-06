@@ -34,11 +34,24 @@ export type ScrollGestureAxisState = {
 };
 
 /**
+ * One transition-aware scrollable's geometry along its axis.
+ */
+export type ScrollViewState = ScrollGestureAxisState & {
+	axis: ScrollGestureAxis;
+};
+
+/**
  * Scroll metadata exposed through screen transition layouts.
  */
 export type ScrollMetadataState = {
 	vertical: ScrollGestureAxisState | null;
 	horizontal: ScrollGestureAxisState | null;
+	/**
+	 * Every transition-aware scrollable on the screen, nested ones included, by id. Written in the
+	 * scroll event itself, so styles that read it move in the same frame as the scroll.
+	 * @internal
+	 */
+	views?: Record<string, ScrollViewState>;
 };
 
 /**

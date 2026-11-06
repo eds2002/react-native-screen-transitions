@@ -1,6 +1,10 @@
 import { interpolate } from "react-native-reanimated";
 import { EPSILON } from "../../../../constants";
-import { getVisualScrollAxisDelta } from "../../../../stores/scroll.store";
+import {
+	getScrollChainAxisDelta,
+	getVisualScrollAxisDelta,
+	type ScrollChainSnapshot,
+} from "../../../../stores/scroll.store";
 import type { ScrollMetadataState } from "../../../../types/gesture.types";
 import { createBoundsAccessorCore } from "../../helpers/create-bounds-accessor-core";
 import { computeContentTransformGeometry } from "../../helpers/geometry";
@@ -147,29 +151,51 @@ export function buildZoomStyles({
 				})
 			: { x: 0, y: 0 };
 
+	// The source may have scrolled since it was measured (a list moved under the destination, or
+	// scrolls during the close): follow it through every scrollable around it. The source screen is
+	// `inactive` from both sides. Scroll metadata is written in the scroll event, so this lands in
+	// the same frame as the scroll.
+	const capturedSource = sourceBounds as typeof sourceBounds & {
+		scroll?: ScrollMetadataState | null;
+		scrollChain?: ScrollChainSnapshot[];
+	};
+	const liveSourceScroll = props.inactive?.layouts.scroll;
+	const tracksSourceScroll = active.entering || active.closing;
+	const sourceScrollOffsetX = !tracksSourceScroll
+		? 0
+		: capturedSource.scrollChain
+			? getScrollChainAxisDelta(
+					liveSourceScroll,
+					capturedSource.scrollChain,
+					"horizontal",
+				)
+			: getVisualScrollAxisDelta(
+					liveSourceScroll,
+					capturedSource.scroll,
+					"horizontal",
+				);
+	const sourceScrollOffsetY = !tracksSourceScroll
+		? 0
+		: capturedSource.scrollChain
+			? getScrollChainAxisDelta(
+					liveSourceScroll,
+					capturedSource.scrollChain,
+					"vertical",
+				)
+			: getVisualScrollAxisDelta(
+					liveSourceScroll,
+					capturedSource.scroll,
+					"vertical",
+				);
+	const sourceScrollProgress = Math.min(
+		Math.max(activeTransitionProgress, 0),
+		1,
+	);
+
 	if (focused) {
-		const capturedSourceScroll = (
-			sourceBounds as typeof sourceBounds & {
-				scroll?: ScrollMetadataState | null;
-			}
-		).scroll;
-		const liveSourceScroll = props.inactive?.layouts.scroll;
-		const sourceScrollWeight =
-			keepFocusedVisible && (active.entering || active.closing)
-				? 1 - Math.min(Math.max(activeTransitionProgress, 0), 1)
-				: 0;
-		const sourceScrollDeltaX =
-			getVisualScrollAxisDelta(
-				liveSourceScroll,
-				capturedSourceScroll,
-				"horizontal",
-			) * sourceScrollWeight;
-		const sourceScrollDeltaY =
-			getVisualScrollAxisDelta(
-				liveSourceScroll,
-				capturedSourceScroll,
-				"vertical",
-			) * sourceScrollWeight;
+		// The content lands on the live source: the correction fades in as progress reaches 0.
+		const sourceScrollDeltaX = sourceScrollOffsetX * (1 - sourceScrollProgress);
+		const sourceScrollDeltaY = sourceScrollOffsetY * (1 - sourceScrollProgress);
 		const sourceBorderRadius = getSourceBorderRadius(link);
 		const backdropOpacity = resolveZoomBackdropOpacity({
 			transitionProgress,
@@ -345,13 +371,23 @@ export function buildZoomStyles({
 		rotation: drag.rotation,
 	});
 
+	// The source element already moved with its scrollables; it follows the destination content,
+	// which only reaches the live source at progress 0.
 	return {
 		content: unfocusedContent,
 		[link.id]: {
 			style: {
 				transform: [
-					{ translateX: trackedSourceElement.translateX },
-					{ translateY: trackedSourceElement.translateY },
+					{
+						translateX:
+							trackedSourceElement.translateX +
+							sourceScrollOffsetX * sourceScrollProgress,
+					},
+					{
+						translateY:
+							trackedSourceElement.translateY +
+							sourceScrollOffsetY * sourceScrollProgress,
+					},
 					{ rotateZ: `${drag.rotation}rad` },
 					{ scaleX: trackedSourceElement.scaleX },
 					{ scaleY: trackedSourceElement.scaleY },
