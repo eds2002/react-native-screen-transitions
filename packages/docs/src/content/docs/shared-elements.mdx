@@ -259,6 +259,14 @@ npm install react-native-teleport@1.2.0
 
 Version 1.2.0 or later provides the native reparenting path used by live boundary handoff.
 
+## Screens That Move
+
+`styles()` follows the screens it travels between. When a screen slides, scales or is dragged by its gesture, the bound stays on the path between where the two screens show its ends right now: it leaves the source slot, lands on the destination slot as that screen arrives, rides along while the screen is dragged, and lands back on the source slot. No `offset` is needed for that.
+
+The same holds when transitions overlap: push and pop again quickly, or push a third screen while the second is still opening, and the element continues from where it is drawn instead of starting over from its slot.
+
+`values()` returns window-space numbers as measured; compose screen movement yourself when you use it.
+
 ## Bounds with Offsets
 
 Because `styles()` and `values()` accept an `offset` option, you can feed any live x/y values into the matched transform.

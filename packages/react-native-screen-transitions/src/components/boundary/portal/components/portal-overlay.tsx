@@ -88,6 +88,7 @@ export const PortalOverlay = memo(function PortalOverlay({
 				host={host}
 				hostBounds={measurement.hostBounds}
 				scrollMetadata={scrollMetadata}
+				atContentOrigin={fallback}
 			/>
 		</View>
 	));
@@ -129,6 +130,11 @@ type BoundaryPortalPlacementProps = {
 	host: ActivePortalBoundaryHost;
 	hostBounds: SharedValue<HostBounds | null>;
 	scrollMetadata: SharedValue<ScrollMetadataState | null>;
+	/**
+	 * The screen's own overlay sits at its content's origin: a boundary measured with its place in
+	 * that content goes there, however the screen was drawn when either was measured.
+	 */
+	atContentOrigin: boolean;
 };
 
 /** Positions one receiver using captured boundary and overlay measurements. */
@@ -136,6 +142,7 @@ const BoundaryPortalPlacement = memo(function BoundaryPortalPlacement({
 	host,
 	hostBounds,
 	scrollMetadata,
+	atContentOrigin,
 }: BoundaryPortalPlacementProps) {
 	useAnimatedReaction(
 		() => {
@@ -163,9 +170,14 @@ const BoundaryPortalPlacement = memo(function BoundaryPortalPlacement({
 		const live = scrollMetadata.get();
 		const boundaryChain = boundaryBounds.scrollChain ?? [];
 		const hostChain = host$?.scrollChain ?? [];
+		const inContent = atContentOrigin
+			? boundaryBounds.contentOffset
+			: undefined;
 		return resolvePortalOffsetStyle({
-			bounds: boundaryBounds,
-			hostBounds: host$,
+			bounds: inContent
+				? { ...boundaryBounds, pageX: inContent.x, pageY: inContent.y }
+				: boundaryBounds,
+			hostBounds: inContent ? null : host$,
 			scrollDeltaX:
 				getScrollChainAxisDelta(live, boundaryChain, "horizontal") -
 				getScrollChainAxisDelta(live, hostChain, "horizontal"),

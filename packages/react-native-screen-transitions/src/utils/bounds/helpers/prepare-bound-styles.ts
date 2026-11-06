@@ -96,7 +96,12 @@ export const prepareBoundStyles = <T extends BoundsInternalOptions>({
 			previous: props.previous,
 			current: props.current,
 			next: props.next,
-			progress: resolved.progress ?? props.progress,
+			// The leaving copy follows the next screen's own progress: while this screen is still
+			// moving itself (a chain pushed or popped quickly), the combined progress stays outside
+			// the leaving range and would hold the copy at its slot.
+			progress:
+				resolved.progress ??
+				(props.next ? 1 + props.next.progress : props.progress),
 			dimensions: props.layouts.screen,
 			interpolationProps: props,
 		},

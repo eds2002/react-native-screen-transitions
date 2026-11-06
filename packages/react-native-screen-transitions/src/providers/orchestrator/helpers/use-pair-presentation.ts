@@ -4,7 +4,7 @@ import {
 	useRef,
 	useSyncExternalStore,
 } from "react";
-import { useDerivedValue } from "react-native-reanimated";
+import { type SharedValue, useDerivedValue } from "react-native-reanimated";
 import { NO_STYLES } from "../../../constants";
 import {
 	getDestinationScreenKeyFromPairKey,
@@ -18,6 +18,10 @@ import type {
 } from "../../../types/animation.types";
 import { useBuilderStore } from "../../builder";
 import { useMotionStore } from "../../motion";
+import {
+	applyBoundsScreenFrames,
+	type ScreenTransform,
+} from "../styles/helpers/bounds-screen-frames";
 import { createInterpolatorScope } from "../styles/helpers/create-interpolator-scope";
 import { normalizeSlots } from "../styles/helpers/normalize-slots";
 import { selectInterpolatorFrame } from "../styles/helpers/select-interpolator-frame";
@@ -132,12 +136,15 @@ export const usePairDestinationKeys = (known: readonly string[]) => {
 	return useSyncExternalStore(subscribePairDestinations, getSnapshot);
 };
 
+const NO_TRANSFORMS: Record<string, ScreenTransform | undefined> = {};
+
 // Each destination owns the output of its incoming pair, even when its source
 // has moved on to another route. All boundaries read this same UI value.
-export function usePairPresentation({
-	screenInterpolatorProps,
-	currentInterpolator,
-}: ScreenAnimationPipeline) {
+export function usePairPresentation(
+	{ screenInterpolatorProps, currentInterpolator }: ScreenAnimationPipeline,
+	/** The stack's screen transforms by key (others are read by key; see applyBoundsScreenFrames). */
+	screenTransforms?: SharedValue<Record<string, ScreenTransform | undefined>>,
+) {
 	const stackPairKey = useBuilderStore((s) => s.derivations.destinationPairKey);
 	const currentScreenKey = useBuilderStore(
 		(s) => s.derivations.currentScreenKey,
@@ -179,11 +186,14 @@ export function usePairPresentation({
 			destinationKey: frame.current.route.key,
 			ready: ready.get(),
 			closing: !!frame.current.closing,
-			source: runBoundaryInterpolator(currentInterpolator, source, "source"),
-			destination: runBoundaryInterpolator(
-				currentInterpolator,
-				frame,
-				"destination",
+			// Both sides as their screens draw them this frame (see applyBoundsScreenFrames).
+			source: applyBoundsScreenFrames(
+				runBoundaryInterpolator(currentInterpolator, source, "source"),
+				screenTransforms?.get() ?? NO_TRANSFORMS,
+			),
+			destination: applyBoundsScreenFrames(
+				runBoundaryInterpolator(currentInterpolator, frame, "destination"),
+				screenTransforms?.get() ?? NO_TRANSFORMS,
 			),
 		} satisfies BoundaryPairPresentation;
 	});

@@ -3,6 +3,7 @@ import { StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import { useBuilderStore } from "../../../providers/builder";
 import { useMotionStore } from "../../../providers/motion";
+import { useOrchestratorStore } from "../../../providers/orchestrator/orchestrator.provider";
 import {
 	useSlotProps,
 	useSlotStyles,
@@ -32,6 +33,9 @@ export const ContentLayer = memo(
 
 		const handleContentLayout = useContentLayout("content");
 
+		const contentMeasureRef = useOrchestratorStore(
+			(store) => store.contentMeasureRef,
+		);
 		const contentStyle = useSlotStyles("content");
 		const contentProps = useSlotProps("content");
 
@@ -54,6 +58,12 @@ export const ContentLayer = memo(
 					pointerEvents={contentPointerEvents}
 				>
 					<Clip pointerEvents={contentPointerEvents}>
+						<View
+							ref={contentMeasureRef}
+							collapsable={false}
+							pointerEvents="none"
+							style={StyleSheet.absoluteFill}
+						/>
 						<SurfaceLayer pointerEvents={contentPointerEvents}>
 							{screenChildren}
 						</SurfaceLayer>

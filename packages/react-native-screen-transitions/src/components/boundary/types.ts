@@ -62,7 +62,11 @@ export type MeasureTarget =
 export type MeasureBoundary = (target: MeasureTarget) => void;
 
 export type BoundaryLocalMeasurement = {
-	bounds: MeasuredDimensions & { scrollChain?: ScrollChainSnapshot[] };
+	bounds: MeasuredDimensions & {
+		scrollChain?: ScrollChainSnapshot[];
+		/** Where the boundary sits inside its screen's content (see measureScreenAt). */
+		contentOffset?: { x: number; y: number };
+	};
 	pairKey: ScreenPairKey;
 	/**
 	 * Every pair this boundary has been measured for while mounted. A boundary in the middle of a

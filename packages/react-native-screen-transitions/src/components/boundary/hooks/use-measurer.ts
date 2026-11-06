@@ -1,14 +1,18 @@
 import { useCallback, useMemo } from "react";
 import type { View } from "react-native";
 import { useWindowDimensions } from "react-native";
-import type {
-	AnimatedRef,
-	SharedValue,
-	StyleProps,
+import {
+	type AnimatedRef,
+	type MeasuredDimensions,
+	measure,
+	type SharedValue,
+	type StyleProps,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { useMotionStore } from "../../../providers/motion";
 import { useScrollChain } from "../../../providers/motion/gestures/scroll-coordination";
+import { useOptionalOrchestratorStore } from "../../../providers/orchestrator/orchestrator.provider";
+import { getScreenTransform } from "../../../providers/orchestrator/styles/helpers/screen-transform-registry";
 import { setEntry } from "../../../stores/bounds/internals/entries";
 import {
 	setDestination,
@@ -16,6 +20,7 @@ import {
 } from "../../../stores/bounds/internals/links";
 import type { BoundTag } from "../../../stores/bounds/types";
 import { ScrollStore } from "../../../stores/scroll.store";
+import type { MeasuredScreenTransform } from "../../../utils/bounds/helpers/styles/screen-frame";
 import { getVisibilityBlockOffset } from "../../../utils/visibility-block-offset";
 import type {
 	BoundaryLocalMeasurementValue,
@@ -43,6 +48,8 @@ export type ScreenMeasureContext = {
 	scrollMetadata: ReturnType<typeof ScrollStore.getValue<"metadata">>;
 	pendingLifecycleStartBlockCount: SharedValue<number>;
 	isScreenReady: SharedValue<boolean>;
+	/** A full-size view inside the screen's content: where the screen is drawn when measured. */
+	contentRef: AnimatedRef<View> | null;
 };
 
 /** What measuring one boundary needs of its own: data, registered with its screen's coordinator. */
@@ -62,6 +69,7 @@ export type BoundaryMeasureData = {
 /** One per screen (its coordinator, or a destination's handshake): the screen side of measuring. */
 export const useScreenMeasureContext = (
 	currentScreenKey: string,
+	contentRef: AnimatedRef<View> | null,
 ): ScreenMeasureContext => {
 	const { width: viewportWidth, height: viewportHeight } =
 		useWindowDimensions();
@@ -80,6 +88,7 @@ export const useScreenMeasureContext = (
 			scrollMetadata,
 			pendingLifecycleStartBlockCount,
 			isScreenReady,
+			contentRef,
 		}),
 		[
 			currentScreenKey,
@@ -89,8 +98,62 @@ export const useScreenMeasureContext = (
 			scrollMetadata,
 			pendingLifecycleStartBlockCount,
 			isScreenReady,
+			contentRef,
 		],
 	);
+};
+
+const SCREEN_TRANSFORM_EPSILON = 0.01;
+
+type ScreenAtMeasure = {
+	/** Where the screen was drawn (absent when it was not moved). */
+	transform?: MeasuredScreenTransform;
+	/** The boundary's place inside its screen's content, from the same native frame. */
+	contentOffset: { x: number; y: number };
+};
+
+/**
+ * Where the screen was drawn at this measurement, from its content's reference view measured the
+ * same moment (so it matches what the boundary measurement includes, frame for frame).
+ * Measurements are in window space: recording the screen's transform lets bounds elements correct
+ * only for how far the screen has moved since, and the boundary's offset inside the content places
+ * its escaped frame in the screen's overlay (which sits at the content's origin) however the screen
+ * was drawn. `gateDeltaY` is the visibility-gate correction applied to the boundary itself.
+ * Assumes the screen's content sits at the window's origin when it is not transformed.
+ */
+const measureScreenAt = (
+	screen: ScreenMeasureContext,
+	boundary: MeasuredDimensions,
+	gateDeltaY: number,
+): ScreenAtMeasure | undefined => {
+	"worklet";
+	const { contentRef, currentScreenKey, viewportWidth, viewportHeight } =
+		screen;
+	if (!contentRef) return undefined;
+	const content = measure(contentRef);
+	if (!content || content.width <= 0 || content.height <= 0) {
+		return undefined;
+	}
+	const now = getScreenTransform(currentScreenKey);
+	const width = now?.width || viewportWidth;
+	const height = now?.height || viewportHeight;
+	const sx = content.width / width;
+	const sy = content.height / height;
+	const contentOffset = {
+		x: (boundary.pageX - content.pageX) / sx,
+		y: (boundary.pageY - content.pageY) / sy,
+	};
+	const tx = content.pageX + content.width / 2 - width / 2;
+	const ty = content.pageY + gateDeltaY + content.height / 2 - height / 2;
+	if (
+		Math.abs(sx - 1) < SCREEN_TRANSFORM_EPSILON &&
+		Math.abs(sy - 1) < SCREEN_TRANSFORM_EPSILON &&
+		Math.abs(tx) < 0.5 &&
+		Math.abs(ty) < 0.5
+	) {
+		return { contentOffset };
+	}
+	return { transform: { sx, sy, tx, ty, width, height }, contentOffset };
 };
 
 /** Measures one boundary for a transition and records it (bounds entry, pair link, escape placement). */
@@ -154,11 +217,23 @@ export const measureBoundaryWith = (
 
 	if (!viewportAllowsDestinationWrite) return;
 
-	const measuredWithScroll = attachScrollSnapshotToMeasuredBounds(
+	const measuredWithScrollOnly = attachScrollSnapshotToMeasuredBounds(
 		correctedMeasured,
 		scrollMetadata.get(),
 		scrollChain,
 	);
+	const screenAt = measureScreenAt(
+		screen,
+		measured,
+		correctedMeasured.pageY - measured.pageY,
+	);
+	const measuredWithScroll = screenAt
+		? {
+				...measuredWithScrollOnly,
+				contentOffset: screenAt.contentOffset,
+				...(screenAt.transform ? { screenTransform: screenAt.transform } : {}),
+			}
+		: measuredWithScrollOnly;
 
 	// Handoff can render into the destination boundary's escape host too.
 	// Capture only accepted geometry, correcting the destination visibility gate. The scroll
@@ -205,7 +280,10 @@ export const measureBoundaryWith = (
 export const useMeasurer = (
 	data: Omit<BoundaryMeasureData, "scrollChain"> & { currentScreenKey: string },
 ): MeasureBoundary => {
-	const screen = useScreenMeasureContext(data.currentScreenKey);
+	const contentRef = useOptionalOrchestratorStore(
+		(store) => store?.contentMeasureRef ?? null,
+	);
+	const screen = useScreenMeasureContext(data.currentScreenKey, contentRef);
 	const scrollChain = useScrollChain();
 	const {
 		enabled,

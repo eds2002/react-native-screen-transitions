@@ -1,4 +1,9 @@
-import { useAnimatedReaction, useSharedValue } from "react-native-reanimated";
+import type { View } from "react-native";
+import {
+	type AnimatedRef,
+	useAnimatedReaction,
+	useSharedValue,
+} from "react-native-reanimated";
 import { useBuilderStore } from "../../../providers/builder";
 import { useOptionalMotionStore } from "../../../providers/motion";
 import {
@@ -33,7 +38,10 @@ type MeasureSignal = {
  * The signals are the same pure functions the per-boundary reactions used; a boundary measures
  * when its signal changes, as before.
  */
-export function useBoundaryMeasureCoordinator(enabled: boolean) {
+export function useBoundaryMeasureCoordinator(
+	enabled: boolean,
+	contentRef: AnimatedRef<View> | null,
+) {
 	const currentScreenKey = useBuilderStore(
 		(s) => s.derivations.currentScreenKey,
 	);
@@ -62,7 +70,7 @@ export function useBoundaryMeasureCoordinator(enabled: boolean) {
 	// a fast swipe back through a chain), and its source must be measured where it is now.
 	const lastClosing = useSharedValue(false);
 	// The screen side of measuring, once for all of this screen's boundaries.
-	const screen = useScreenMeasureContext(currentScreenKey);
+	const screen = useScreenMeasureContext(currentScreenKey, contentRef);
 
 	useAnimatedReaction(
 		() => {

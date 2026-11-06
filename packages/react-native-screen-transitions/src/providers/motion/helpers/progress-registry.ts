@@ -8,14 +8,25 @@ import { scheduleOnUI } from "react-native-worklets";
  * as routes leave (a screen closing under another closing screen stops being its `previous`); this
  * reads a screen's progress by key.
  */
-type Entry = { progress: SharedValue<number>; closing: SharedValue<number> };
+type Entry = {
+	progress: SharedValue<number>;
+	closing: SharedValue<number>;
+	/** When it was mounted, relative to the others: a screen pushed later has a higher number. */
+	order: number;
+};
 const screenProgress = makeMutable<Record<string, Entry>>({});
+const mountCount = makeMutable(0);
 
-const register = (key: string, entry: Entry) => {
+const register = (
+	key: string,
+	entry: { progress: SharedValue<number>; closing: SharedValue<number> },
+) => {
 	"worklet";
+	const order = mountCount.get() + 1;
+	mountCount.set(order);
 	screenProgress.modify((state) => {
 		"worklet";
-		state[key] = entry;
+		state[key] = { ...entry, order };
 		return state;
 	});
 };
@@ -33,6 +44,21 @@ const unregister = (key: string, progress: SharedValue<number>) => {
 export const getScreenProgress = (key: string): number | undefined => {
 	"worklet";
 	return screenProgress.get()[key]?.progress.get();
+};
+
+/** When `key` was mounted relative to other screens (higher is later), or 0 when it is not. */
+export const getScreenMountOrder = (key: string): number => {
+	"worklet";
+	return screenProgress.get()[key]?.order ?? 0;
+};
+
+/** Whether `key` was mounted after `other` (both mounted). */
+export const isScreenNewer = (key: string, other: string): boolean => {
+	"worklet";
+	const state = screenProgress.get();
+	const a = state[key];
+	const b = state[other];
+	return !!a && !!b && a.order > b.order;
 };
 
 export const isScreenClosing = (key: string): boolean => {
