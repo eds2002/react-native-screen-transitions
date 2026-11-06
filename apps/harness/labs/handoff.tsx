@@ -7,6 +7,7 @@
  * receiving screen and takes whatever that screen does):
  *   ho-mode-size       bounds("card").styles({ method: "size" }): the content re-lays out as it grows
  *   ho-mode-transform  bounds("card").styles(): translate and scale
+ *   ho-same        every slot the card's size, each somewhere else (the content only moves; on)
  *   ho-card        opens the detail; ho-next pushes the theater (another slot, another size: the live
  *                  content hands off again); ho-back / ho-back-2 close them
  *
@@ -35,6 +36,12 @@ const Stack = createBlankStackNavigator();
 const mode = makeMutable("size");
 // "fixed": the live content has a hardcoded size (the card's) instead of filling its boundary.
 let fixedSize: { width: number; height: number } | null = null;
+// "same size": every slot is the card's size, each in another place (the content only moves).
+let sameSize = true;
+const cardSize = (width: number) => ({
+	width: width * 0.42,
+	height: width * 0.42 * 1.2,
+});
 
 function LiveContent() {
 	const [count, setCount] = useState(0);
@@ -89,6 +96,7 @@ function List({ navigation }) {
 	const { width } = useWindowDimensions();
 	const [current, setCurrent] = useState(mode.get());
 	const [fixed, setFixed] = useState(fixedSize !== null);
+	const [same, setSame] = useState(sameSize);
 	const size = width * 0.42;
 	return (
 		<View
@@ -124,9 +132,17 @@ function List({ navigation }) {
 					setFixed(!fixed);
 				}}
 			/>
+			<Button
+				label={same ? "• same size" : "same size"}
+				testID="ho-same"
+				onPress={() => {
+					sameSize = !same;
+					setSame(!same);
+				}}
+			/>
 			<Probe
 				testID="ho-mode"
-				value={`mode:${current}${fixed ? " fixed" : ""}`}
+				value={`mode:${current}${fixed ? " fixed" : ""}${same ? " same" : ""}`}
 			/>
 			<Transition.Boundary
 				key={fixed ? "fixed" : "flex"}
@@ -152,7 +168,11 @@ function Detail({ navigation }) {
 			<Transition.Boundary
 				id="card"
 				handoff
-				style={{ width, height: width * 0.85 }}
+				style={
+					sameSize
+						? { ...cardSize(width), alignSelf: "flex-end", marginRight: 20 }
+						: { width, height: width * 0.85 }
+				}
 			/>
 			<View style={{ paddingHorizontal: 20, gap: 12 }}>
 				<Text style={{ color: "white", fontSize: 26, fontWeight: "800" }}>
@@ -213,7 +233,11 @@ function Theater({ navigation }) {
 			<Transition.Boundary
 				id="card"
 				handoff
-				style={{ width: width * 0.8, height: width * 0.45, marginTop: 60 }}
+				style={
+					sameSize
+						? { ...cardSize(width), marginTop: 60 }
+						: { width: width * 0.8, height: width * 0.45, marginTop: 60 }
+				}
 			/>
 			<Pressable
 				testID="ho-back-2"
