@@ -6,7 +6,7 @@ import {
 	type EntryOp,
 } from "../../../stores/bounds/internals/entries";
 import type { BoundTag, ScreenKey, TagID } from "../../../stores/bounds/types";
-import type { MeasureBoundary } from "../types";
+import type { BoundaryMeasureData } from "../hooks/use-measurer";
 import { forgetAppliedStyleKeys } from "../utils/applied-style-keys";
 import { forgetLocalMeasurements } from "../utils/local-measurements";
 
@@ -19,7 +19,8 @@ export type RegisteredBoundary = {
 	id: number;
 	linkKey: BoundTag["linkKey"];
 	group?: BoundTag["group"];
-	measure: MeasureBoundary;
+	/** What measuring this boundary needs of its own (its screen's coordinator brings the rest). */
+	data: BoundaryMeasureData;
 };
 
 export type BoundaryMeasureRegistry = Record<
@@ -134,12 +135,12 @@ export function useBoundaryMeasureRegistration({
 	enabled,
 	boundTag,
 	currentScreenKey,
-	measureBoundary,
+	measureData,
 }: {
 	enabled: boolean;
 	boundTag: BoundTag;
 	currentScreenKey: ScreenKey;
-	measureBoundary: MeasureBoundary;
+	measureData: BoundaryMeasureData;
 }) {
 	const { tag, linkKey, group } = boundTag;
 	useLayoutEffect(() => {
@@ -148,10 +149,10 @@ export function useBoundaryMeasureRegistration({
 		queueRegistryOp({
 			screenKey: currentScreenKey,
 			tag,
-			entry: { id, linkKey, group, measure: measureBoundary },
+			entry: { id, linkKey, group, data: measureData },
 		});
 		return () => {
 			queueRegistryOp({ screenKey: currentScreenKey, tag, removeId: id });
 		};
-	}, [enabled, tag, linkKey, group, currentScreenKey, measureBoundary]);
+	}, [enabled, tag, linkKey, group, currentScreenKey, measureData]);
 }

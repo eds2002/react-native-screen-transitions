@@ -6,7 +6,12 @@ import {
 	getPairKeyForSource,
 } from "../../../stores/bounds/internals/links";
 import { pairs } from "../../../stores/bounds/internals/state";
-import type { MeasureBoundary, MeasureTarget } from "../types";
+import {
+	type BoundaryMeasureData,
+	measureBoundaryWith,
+	useScreenMeasureContext,
+} from "../hooks/use-measurer";
+import type { MeasureTarget } from "../types";
 import { getRefreshBoundarySignal } from "../utils/refresh-signals";
 import { getInitialSourceCaptureSignal } from "../utils/source-signals";
 import { boundaryMeasureRegistry } from "./measure-registry";
@@ -15,7 +20,7 @@ type MeasureSignal = {
 	/** Registration id plus kind: a remounted boundary starts with no history. */
 	key: string;
 	signal: string;
-	measure: MeasureBoundary;
+	data: BoundaryMeasureData;
 	target: MeasureTarget;
 };
 
@@ -51,6 +56,8 @@ export function useBoundaryMeasureCoordinator(enabled: boolean) {
 		(store) => store.state.closing,
 	);
 	const lastSignals = useSharedValue<Record<string, string>>({});
+	// The screen side of measuring, once for all of this screen's boundaries.
+	const screen = useScreenMeasureContext(currentScreenKey);
 
 	useAnimatedReaction(
 		() => {
@@ -69,7 +76,7 @@ export function useBoundaryMeasureCoordinator(enabled: boolean) {
 
 			const signals: MeasureSignal[] = [];
 			for (const tag in boundaries) {
-				const { id, linkKey, group, measure } = boundaries[tag];
+				const { id, linkKey, group, data } = boundaries[tag];
 				const sourcePairKey =
 					getPairKeyForSource(tag, currentScreenKey) ?? undefined;
 
@@ -84,7 +91,7 @@ export function useBoundaryMeasureCoordinator(enabled: boolean) {
 					signals.push({
 						key: `${id}|source`,
 						signal: source.signal,
-						measure,
+						data,
 						target: { type: "source", pairKey: source.pairKey },
 					});
 				}
@@ -110,7 +117,7 @@ export function useBoundaryMeasureCoordinator(enabled: boolean) {
 					signals.push({
 						key: `${id}|refresh`,
 						signal: refresh.signal,
-						measure,
+						data,
 						target: { type: refresh.type, pairKey: refresh.pairKey },
 					} as MeasureSignal);
 				}
@@ -121,9 +128,9 @@ export function useBoundaryMeasureCoordinator(enabled: boolean) {
 			"worklet";
 			const previous = lastSignals.get();
 			const next: Record<string, string> = {};
-			for (const { key, signal, measure, target } of signals ?? []) {
+			for (const { key, signal, data, target } of signals ?? []) {
 				next[key] = signal;
-				if (previous[key] !== signal) measure(target);
+				if (previous[key] !== signal) measureBoundaryWith(screen, data, target);
 			}
 			lastSignals.set(next);
 		},

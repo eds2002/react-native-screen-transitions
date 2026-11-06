@@ -4,7 +4,7 @@ import {
 	memo,
 	type ReactNode,
 } from "react";
-import { StyleSheet, type View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated, { type AnimatedRef } from "react-native-reanimated";
 import { logger } from "../../../../utils/logger";
 import { usePlaceholderStyles } from "../hooks/use-placeholder-styles";
@@ -103,6 +103,8 @@ function EnabledPortal({
 	);
 }
 
+// A plain view: its size is JS state, nothing animates it (an animated component costs each boundary
+// a Reanimated wrapper for nothing). The UI thread measures it through its animated ref.
 function PortalPlaceholder({
 	children,
 	pinned,
@@ -110,7 +112,7 @@ function PortalPlaceholder({
 }: Pick<PortalProps, "children" | "placeholderRef"> & { pinned: boolean }) {
 	const { handleOnLayout, placeholderStyle } = usePlaceholderStyles(pinned);
 	return (
-		<Animated.View
+		<View
 			ref={placeholderRef}
 			onLayout={handleOnLayout}
 			style={placeholderStyle}
@@ -118,6 +120,6 @@ function PortalPlaceholder({
 			collapsable={false}
 		>
 			{children}
-		</Animated.View>
+		</View>
 	);
 }

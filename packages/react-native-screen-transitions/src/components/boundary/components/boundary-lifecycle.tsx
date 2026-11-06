@@ -2,16 +2,16 @@ import { memo, useMemo } from "react";
 import type { View } from "react-native";
 import type { AnimatedRef } from "react-native-reanimated";
 import { useBuilderStore } from "../../../providers/builder";
+import { useScrollChain } from "../../../providers/motion/gestures/scroll-coordination";
 import type { BoundTag } from "../../../stores/bounds/types";
 import { prepareStyleForBounds } from "../../../utils/bounds/helpers/styles/styles";
 import { useBoundaryMeasureRegistration } from "../coordinator/measure-registry";
 import { useBoundaryPresence } from "../hooks/lifecycles/use-boundary-presence";
 import { useInitialDestinationMeasurement } from "../hooks/lifecycles/use-initial-destination-measurement";
-import { useMeasurer } from "../hooks/use-measurer";
+import { type BoundaryMeasureData, useMeasurer } from "../hooks/use-measurer";
 import type {
 	BoundaryConfigProps,
 	BoundaryLocalMeasurementValue,
-	MeasureBoundary,
 } from "../types";
 
 interface BoundaryLifecycleProps {
@@ -52,17 +52,32 @@ export const BoundaryLifecycle = memo(function BoundaryLifecycle({
 	);
 	const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
 
-	const measureBoundary = useMeasurer({
-		enabled,
-		boundTag,
-		currentScreenKey,
-		preparedStyles,
-		measuredAnimatedRef: measuredRef,
-		handoff,
-		escapeClipping,
-		localMeasurement,
-		firstEscapeMeasureKey,
-	});
+	const scrollChain = useScrollChain();
+	// What measuring this boundary needs of its own; its screen's coordinator brings the rest.
+	const measureData = useMemo<BoundaryMeasureData>(
+		() => ({
+			enabled,
+			boundTag,
+			preparedStyles,
+			measuredAnimatedRef: measuredRef,
+			handoff,
+			escapeClipping,
+			localMeasurement,
+			firstEscapeMeasureKey,
+			scrollChain,
+		}),
+		[
+			enabled,
+			boundTag,
+			preparedStyles,
+			measuredRef,
+			handoff,
+			escapeClipping,
+			localMeasurement,
+			firstEscapeMeasureKey,
+			scrollChain,
+		],
+	);
 
 	// Presence and source capture must not depend on this screen owning an
 	// interpolator: a nested source can participate in a transition owned by a
@@ -81,13 +96,14 @@ export const BoundaryLifecycle = memo(function BoundaryLifecycle({
 		enabled,
 		boundTag,
 		currentScreenKey,
-		measureBoundary,
+		measureData,
 	});
 
 	return runtimeEnabled && isReceivingDestination ? (
 		<DestinationHandshake
 			boundTag={boundTag}
-			measureBoundary={measureBoundary}
+			currentScreenKey={currentScreenKey}
+			measureData={measureData}
 		/>
 	) : null;
 });
@@ -100,11 +116,14 @@ export const BoundaryLifecycle = memo(function BoundaryLifecycle({
  */
 const DestinationHandshake = memo(function DestinationHandshake({
 	boundTag,
-	measureBoundary,
+	currentScreenKey,
+	measureData,
 }: {
 	boundTag: BoundTag;
-	measureBoundary: MeasureBoundary;
+	currentScreenKey: string;
+	measureData: BoundaryMeasureData;
 }) {
+	const measureBoundary = useMeasurer({ ...measureData, currentScreenKey });
 	useInitialDestinationMeasurement({
 		boundTag,
 		enabled: true,
