@@ -1374,6 +1374,27 @@ export const buildBoundsChainCatalog = (window: { width: number; height: number 
 			{ op: "expectRoutes", names: ["A"] },
 			{ op: "expectScene", name: "A", state: "shown" },
 		]);
+		// Pushed mid-open (each card measured while its screen still zooms in), then closed once at
+		// rest: the close lands on the card where it is, by a pop and by a swipe.
+		const fastPush: Step[] = [
+			{ op: "push", name: "B", params: { id: pairId(0) } },
+			{ op: "frames", count: 5 },
+			{ op: "push", name: "C", params: { id: pairId(1) } },
+			{ op: "frames", count: 5 },
+			{ op: "push", name: "D", params: { id: pairId(2) } },
+			{ op: "settle" },
+		];
+		// (Both end back on A: a custom kit navigator unmounted with screens open leaks into its next
+		// mount; see the follow-up in the README.)
+		const backToA: Step[] = [{ op: "pop" }, { op: "settle" }, { op: "pop" }, { op: "settle" }, { op: "expectRoutes", names: ["A"] }];
+		add("fast-push-then-pop", [...fastPush, { op: "pop" }, closesOnto(3), { op: "expectRoutes", names: ["A", "B", "C"] }, ...backToA]);
+		add("fast-push-then-swipe", [
+			...fastPush,
+			{ op: "swipe", direction: "vertical", distance: 0.6, durationMs: 200 },
+			closesOnto(3),
+			{ op: "expectRoutes", names: ["A", "B", "C"] },
+			...backToA,
+		]);
 		// Deep, then pop two levels in quick succession: the middle screen closes mid-flight.
 		add("deep-then-double-pop", [
 			{ op: "push", name: "B", params: { id: pairId(0) } },

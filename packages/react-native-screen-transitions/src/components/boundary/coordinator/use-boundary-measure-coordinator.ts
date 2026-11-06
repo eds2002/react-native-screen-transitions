@@ -2,6 +2,7 @@ import { useAnimatedReaction, useSharedValue } from "react-native-reanimated";
 import { useBuilderStore } from "../../../providers/builder";
 import { useOptionalMotionStore } from "../../../providers/motion";
 import {
+	getMeasuredSourcePairKey,
 	getPairKeyForDestination,
 	getPairKeyForSource,
 } from "../../../stores/bounds/internals/links";
@@ -56,6 +57,10 @@ export function useBoundaryMeasureCoordinator(enabled: boolean) {
 		(store) => store.state.closing,
 	);
 	const lastSignals = useSharedValue<Record<string, string>>({});
+	// Whether the next screen was closing at the last run: a close starting refreshes like a
+	// willAnimate pulse. A close can start without one (a drag released while the screen still moves:
+	// a fast swipe back through a chain), and its source must be measured where it is now.
+	const lastClosing = useSharedValue(false);
 	// The screen side of measuring, once for all of this screen's boundaries.
 	const screen = useScreenMeasureContext(currentScreenKey);
 
@@ -70,9 +75,11 @@ export function useBoundaryMeasureCoordinator(enabled: boolean) {
 
 			const canRefresh =
 				hasConfiguredInterpolator && !!willAnimate && !!progressSettled;
-			const shouldRefresh = canRefresh && !!willAnimate?.get();
-			const settled = canRefresh && !!progressSettled?.get();
 			const isClosing = !!closing?.get();
+			const closeStarted = canRefresh && isClosing && !lastClosing.get();
+			const shouldRefresh =
+				(canRefresh && !!willAnimate?.get()) || closeStarted;
+			const settled = canRefresh && !!progressSettled?.get();
 
 			const signals: MeasureSignal[] = [];
 			for (const tag in boundaries) {
@@ -103,7 +110,13 @@ export function useBoundaryMeasureCoordinator(enabled: boolean) {
 				const refresh = getRefreshBoundarySignal({
 					enabled: true,
 					currentScreenKey,
-					sourcePairKey,
+					// A source without a destination boundary (a zoom to the screen) refreshes too: its
+					// close lands on it, and it may have moved since it was measured (or been measured while
+					// its own screen was still opening).
+					sourcePairKey:
+						sourcePairKey ??
+						getMeasuredSourcePairKey(tag, currentScreenKey) ??
+						undefined,
 					destinationPairKey:
 						getPairKeyForDestination(tag, currentScreenKey) ?? undefined,
 					linkId: linkKey,
@@ -133,6 +146,7 @@ export function useBoundaryMeasureCoordinator(enabled: boolean) {
 				if (previous[key] !== signal) measureBoundaryWith(screen, data, target);
 			}
 			lastSignals.set(next);
+			lastClosing.set(!!closing?.get());
 		},
 	);
 }

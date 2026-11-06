@@ -75,15 +75,18 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 	{
 		id: "zoom-chain-fast-push-pop-snaps",
 		summary:
-			"Shared bounds over a chain (A → B → C → D): pushing each level while the last is still opening, " +
-			"then popping back the same way, makes background screens snap (a 52.8 px step: the zoom background " +
-			"scale dropping to full size in one frame), part of A vanish in one frame, and the source cards of B " +
-			"and C jump between their tracked and rest rects. HARNESS SUSPECT: not reproduced on a device (chain lab, " +
-			"fast push / fast pop, frame analyzer clean and nothing visible); likely changes on screens that are " +
-			"covered or faded at that moment, which the harness does not occlude.",
+			"Shared bounds over a chain (A → B → C → D): pushing each level while the last is still opening " +
+			"makes background screens snap (a 52.8 px step: the zoom background scale dropping to full size in " +
+			"one frame), part of A vanish in one frame, and the source cards of B and C jump between their " +
+			"tracked and rest rects (popping back the same way too). The screen steps were not visible on a " +
+			"device (covered or faded at that moment). The cards were: a card is measured while its screen " +
+			"still zooms in, so its close landed off (fixed: the source is measured again as the close starts); " +
+			"see the README follow-up on measure().",
 		matches: (scenario, v) =>
 			scenario.startsWith("bounds-chain-") &&
-			scenario.endsWith("/ fast-push-chain-then-fast-pop-chain") &&
+			["fast-push-chain-then-fast-pop-chain", "fast-push-then-pop", "fast-push-then-swipe"].includes(
+				sequenceOf(scenario),
+			) &&
 			["spike", "vanish", "element-teleport", "element-spike"].includes(v.rule),
 	},
 	{
@@ -106,14 +109,6 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			"placed from its open-time rect, then re-measured where it scrolled to).",
 		matches: (scenario, v) =>
 			scenario.startsWith("scroll-bounds-zoom-to-bound / zoom-spec / scroll-destination-then-") && v.rule === "element-spike",
-	},
-	{
-		id: "zoom-to-bound-scrolled-destination-swipe-landing",
-		summary:
-			"Shared bounds + scroll: swiping back from a scrolled zoom({ target: 'bound' }) destination lands the " +
-			"boundary off the source card (about 48 px off and 30% small). A button pop from the same state lands.",
-		matches: (scenario, v) =>
-			scenario === "scroll-bounds-zoom-to-bound / zoom-spec / scroll-destination-then-swipe-back" && v.rule === "trajectory",
 	},
 	{
 		id: "zoom-visible-hard-cut-unverified",

@@ -40,6 +40,19 @@ HARNESS_REPORT=/tmp/report.json bun test catalog
 - Touches go to every gesture above the touched screen; the first to activate wins unless composed with `Gesture.Simultaneous`. Other gesture relations are not modelled yet.
 - Environments vary platform, window, insets and display rate, not RTL yet.
 - Scroll views move their content by their offset, for the recorder and for `measure()` alike; boundaries can sit inside scroll content (`scroll.bounds`), and a covered screen can be scrolled (`scrollTo` with `screen`).
-- `measure()` reports a view's layout and scroll position without animated styles, as Reanimated's measure does on a device (animated styles are applied on the UI thread, outside layout).
+- `measure()` reports a view's layout and scroll position without animated styles. **Not what a device does**
+  (iOS sim, Reanimated 4.3, Fabric): animated props are committed to the shadow tree, so a device measures a
+  boundary with its screen's transform applied. A card measured while its screen still zooms in (a push
+  landing mid-open) is measured small and off where it rests; the harness measures it at rest and misses it.
 - Teleport is modelled at the recorder: a teleported view's box composes its host's ancestors. Paint order is not (an escaped view hit-tests in its portal's place in the tree, not on top).
 - Not covered yet: virtualized lists, the native-stack adapter.
+
+## Follow-ups
+
+- Make `measure()` include animated transforms, as a device does, then fix what it finds. The bounds-chain
+  known issues marked HARNESS SUSPECT are likely real: on a device a fast push measured C's card at
+  `pageY 882, width 70` (it rests at `602, 176`).
+- A custom navigator on the kit (`catalog-custom-navigator`), unmounted while screens are open, changes how
+  the next mount behaves (start latency, closes not landing, ghost screens in `bounds-chain middle-reopen`
+  run right after a scenario that ends on C). Blank Stack does not. Scenarios end on their first screen
+  until this is found.

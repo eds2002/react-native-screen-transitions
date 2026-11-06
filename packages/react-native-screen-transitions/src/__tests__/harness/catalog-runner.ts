@@ -24,11 +24,11 @@ export const runCatalog = async (
 	);
 	const presets = await import("../../configs/presets");
 	const { interpolate } = await import("react-native-reanimated");
-	// HARNESS_ONLY=<substring> runs the matching scenarios only (known issues outside them can't reproduce, so strictness is off).
+	// HARNESS_ONLY=<substring>[|<substring>...] runs the matching scenarios only (known issues outside them can't reproduce, so strictness is off).
 	const only = process.env.HARNESS_ONLY;
 	const catalog = buildFullCatalog(presets as never, interpolate as never, WINDOW, HarnessOverlay, (await import("../../configs/specs")) as never).filter(
 		(scenario) =>
-			(!only || scenario.name.includes(only)) &&
+			(!only || only.split("|").some((part) => scenario.name.includes(part))) &&
 			(!scenario.environments || scenario.environments.includes(label)),
 	);
 

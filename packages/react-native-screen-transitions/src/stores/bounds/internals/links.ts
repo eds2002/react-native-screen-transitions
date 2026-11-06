@@ -431,6 +431,24 @@ function getPairKeyForSource(
 	return latestPairAwaitingSource ?? latestPairKey;
 }
 
+/**
+ * The latest pair this screen's boundary was measured as the source of, with or without a
+ * destination boundary (a zoom to the screen has none): the pair whose close lands on it.
+ */
+function getMeasuredSourcePairKey(
+	tag: TagID,
+	screenKey: ScreenKey,
+): ScreenPairKey | null {
+	"worklet";
+	const state = pairs.get();
+	let latest: ScreenPairKey | null = null;
+	for (const pairKey in state) {
+		if (getSourceScreenKeyFromPairKey(pairKey) !== screenKey) continue;
+		if (getResolvedLink(pairKey, tag).link?.source) latest = pairKey;
+	}
+	return latest;
+}
+
 function getPairKeyForDestination(
 	tag: TagID,
 	screenKey: ScreenKey,
@@ -464,6 +482,7 @@ export {
 	getActiveGroupId,
 	getDestination,
 	getLink,
+	getMeasuredSourcePairKey,
 	getPairKeyForDestination,
 	getPairKeyForSource,
 	getResolvedLink,
