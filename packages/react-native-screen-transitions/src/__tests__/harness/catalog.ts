@@ -1696,6 +1696,9 @@ export const buildHandoffCatalog = (window: { width: number; height: number }, s
 		before?: Step[];
 		/** Steps run while the destination is open and settled (scrolling it). */
 		whileOpen?: Step[];
+		/** Before a swipe dismiss: a scrolled destination is scrolled back to its top first (a swipe on a
+		 * scrolled list scrolls it, it dismisses only at the top). */
+		beforeDismiss?: Step[];
 		tapAt: { x: number; y: number };
 	};
 	const SCROLL = H * 0.5;
@@ -1732,6 +1735,13 @@ export const buildHandoffCatalog = (window: { width: number; height: number }, s
 			closedRest: card,
 			openRest: shift(hero, -200),
 			whileOpen: [...scrollBy(200), { op: "settle" }],
+			beforeDismiss: [
+				...Array.from({ length: 10 }, (_, i) => [
+					{ op: "scrollTo", offset: 200 - (i + 1) * 20 } as Step,
+					{ op: "frames", count: 1 } as Step,
+				]).flat(),
+				{ op: "settle" },
+			],
 			tapAt: centerOf(card),
 		},
 		"cross-stack": {
@@ -1781,7 +1791,17 @@ export const buildHandoffCatalog = (window: { width: number; height: number }, s
 				[...opened, { op: "pop" }, { op: "frames", count: 4 }, reopen, { op: "settle" }, { op: "expectPath", names: t.openPath }],
 				"fresh",
 			);
-			add("swipe-dismiss", [...opened, { op: "swipe", direction: "vertical", distance: 0.5, durationMs: 250 }, { op: "settle" }], false);
+			add(
+				"swipe-dismiss",
+				[
+					...opened,
+					...(t.beforeDismiss ?? []),
+					{ op: "swipe", direction: "vertical", distance: 0.5, durationMs: 250 },
+					{ op: "settle" },
+					{ op: "expectPath", names: t.closedPath },
+				],
+				false,
+			);
 			// Spam: open and close every two frames, five times, then let it land closed.
 			const spam: Step[] = [];
 			for (let i = 0; i < 5; i++) spam.push(i ? reopen : tap, { op: "frames", count: 2 }, { op: "pop" }, { op: "frames", count: 2 });

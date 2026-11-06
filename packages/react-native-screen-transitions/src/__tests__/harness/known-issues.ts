@@ -50,18 +50,6 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			v.rule === "element-teleport",
 	},
 	{
-		id: "handoff-scrolled-destination-dismiss",
-		summary:
-			"Swipe-dismissing a destination scrolled while open: the payload stays at the destination slot (off " +
-			"the top) instead of returning to its card.",
-		environments: ["teleport"],
-		matches: (scenario, v) =>
-			scenario.startsWith("handoff-") &&
-			topologyOf(scenario) === "scrolled-destination" &&
-			sequenceOf(scenario) === "swipe-dismiss" &&
-			v.rule === "payload-rest",
-	},
-	{
 		id: "interrupted-navigation",
 		summary:
 			"A push landing during another push still steps the screens: the first screen's progress is " +
