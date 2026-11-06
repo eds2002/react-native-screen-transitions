@@ -1,6 +1,17 @@
+import {
+	useCallback,
+	useLayoutEffect,
+	useRef,
+	useSyncExternalStore,
+} from "react";
 import { useDerivedValue } from "react-native-reanimated";
 import { NO_STYLES } from "../../../constants";
+import {
+	getDestinationScreenKeyFromPairKey,
+	getSourceScreenKeyFromPairKey,
+} from "../../../stores/bounds/helpers/link-pairs.helpers";
 import { pairs } from "../../../stores/bounds/internals/state";
+import type { ScreenPairKey } from "../../../stores/bounds/types";
 import type {
 	NormalizedTransitionInterpolatedStyle,
 	ScreenStyleInterpolator,
@@ -59,17 +70,88 @@ export function runBoundaryInterpolator(
 		: NO_STYLES;
 }
 
+type PairLinks = NonNullable<
+	ReturnType<typeof pairs.get>[ScreenPairKey]
+>["links"];
+
+/**
+ * The pair this screen is the destination of. Within a stack it is the previous route's; across
+ * stacks (a card in a nested stack opening a screen on the root) the source is a screen of another
+ * stack, so the pair is found by its destination in the bounds store.
+ */
+const resolveIncomingPair = (
+	stackPairKey: ScreenPairKey | undefined,
+	destinationKey: string,
+): { pairKey: ScreenPairKey; links: PairLinks } | null => {
+	"worklet";
+	const all = pairs.get();
+	if (stackPairKey && all[stackPairKey]?.links)
+		return { pairKey: stackPairKey, links: all[stackPairKey].links };
+	for (const key in all) {
+		const pairKey = key as ScreenPairKey;
+		if (getDestinationScreenKeyFromPairKey(pairKey) !== destinationKey)
+			continue;
+		const links = all[pairKey]?.links;
+		if (links) return { pairKey, links };
+	}
+	return null;
+};
+
+// Screens that are a pair's destination, wherever they are in the route tree: a boundary following
+// its pairs reads their presentations as well as its own stack's (a pair can cross stacks).
+const pairDestinationListeners = new Set<() => void>();
+let pairDestinationKeys: readonly string[] = [];
+const setPairDestination = (key: string, present: boolean) => {
+	const has = pairDestinationKeys.includes(key);
+	if (has === present) return;
+	pairDestinationKeys = present
+		? [...pairDestinationKeys, key]
+		: pairDestinationKeys.filter((k) => k !== key);
+	for (const listener of pairDestinationListeners) listener();
+};
+const subscribePairDestinations = (listener: () => void) => {
+	pairDestinationListeners.add(listener);
+	return () => {
+		pairDestinationListeners.delete(listener);
+	};
+};
+const EMPTY_KEYS: readonly string[] = [];
+/** Pair destinations outside `known` (a boundary's own stack); stable while those don't change. */
+export const usePairDestinationKeys = (known: readonly string[]) => {
+	const cache = useRef<readonly string[]>(EMPTY_KEYS);
+	const getSnapshot = useCallback(() => {
+		const next = pairDestinationKeys.filter((key) => !known.includes(key));
+		const prev = cache.current;
+		if (next.length === prev.length && next.every((key, i) => key === prev[i]))
+			return prev;
+		cache.current = next.length ? next : EMPTY_KEYS;
+		return cache.current;
+	}, [known]);
+	return useSyncExternalStore(subscribePairDestinations, getSnapshot);
+};
+
 // Each destination owns the output of its incoming pair, even when its source
 // has moved on to another route. All boundaries read this same UI value.
 export function usePairPresentation({
 	screenInterpolatorProps,
 	currentInterpolator,
 }: ScreenAnimationPipeline) {
-	const pairKey = useBuilderStore((s) => s.derivations.destinationPairKey);
+	const stackPairKey = useBuilderStore((s) => s.derivations.destinationPairKey);
+	const currentScreenKey = useBuilderStore(
+		(s) => s.derivations.currentScreenKey,
+	);
 	const ready = useMotionStore((s) => s.isScreenReady);
+	const isPairDestination = !!stackPairKey && !!currentInterpolator;
+	useLayoutEffect(() => {
+		if (!isPairDestination) return;
+		setPairDestination(currentScreenKey, true);
+		return () => setPairDestination(currentScreenKey, false);
+	}, [isPairDestination, currentScreenKey]);
 	return useDerivedValue(() => {
-		const links = pairKey ? pairs.get()[pairKey]?.links : undefined;
-		if (!pairKey || !links || !currentInterpolator) return undefined;
+		if (!stackPairKey || !currentInterpolator) return undefined;
+		const incoming = resolveIncomingPair(stackPairKey, currentScreenKey);
+		if (!incoming) return undefined;
+		const { pairKey, links } = incoming;
 		let hasPortal = false;
 		for (const key in links) {
 			const { source, destination } = links[key];
@@ -89,7 +171,9 @@ export function usePairPresentation({
 		if (!source) return undefined;
 		return {
 			pairKey,
-			sourceKey: source.current.route.key,
+			// The pair's own source: across stacks, a screen of another stack (not this stack's
+			// previous route, whose frame still runs the source side of the interpolator).
+			sourceKey: getSourceScreenKeyFromPairKey(pairKey),
 			destinationKey: frame.current.route.key,
 			ready: ready.get(),
 			source: runBoundaryInterpolator(currentInterpolator, source, "source"),

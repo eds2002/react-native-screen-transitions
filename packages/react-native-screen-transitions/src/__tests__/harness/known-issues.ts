@@ -35,7 +35,6 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 		matches: (scenario, v) =>
 			scenario.startsWith("handoff-") &&
 			!recipeOf(scenario).startsWith("still-") &&
-			topologyOf(scenario) !== "cross-stack" &&
 			(v.rule === "payload-hidden" ||
 				(v.scene === "List#payload-card" && ["element-teleport", "element-spike"].includes(v.rule))),
 	},
@@ -49,20 +48,6 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			sequenceOf(scenario) === "open-pop-open" &&
 			v.scene === "List#bound:card" &&
 			v.rule === "element-teleport",
-	},
-	{
-		id: "handoff-cross-stack-returns-to-source",
-		summary:
-			"A handoff from a card in a nested stack to a screen on the root stack: once the open settles, the " +
-			"payload jumps from the destination slot back to the card under the open screen (the slot is left " +
-			"empty), and the first frame of the close jumps it back (the card's stack can't see the pair). The " +
-			"screen-animating recipes also fade it as in handoff-payload-rides-destination-screen.",
-		environments: ["teleport"],
-		matches: (scenario, v) =>
-			scenario.startsWith("handoff-") &&
-			topologyOf(scenario) === "cross-stack" &&
-			(v.rule.startsWith("payload-") ||
-				(v.scene === "List#payload-card" && ["element-teleport", "element-spike"].includes(v.rule))),
 	},
 	{
 		id: "handoff-scrolled-destination-dismiss",

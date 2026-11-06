@@ -7,12 +7,16 @@ import {
 } from "react-native-reanimated";
 import { NO_PROPS, NO_STYLES } from "../../../constants";
 import { useBuilderStore } from "../../../providers/builder";
-import { useScreenRelationships } from "../../../providers/builder/topology";
+import {
+	screenTopology,
+	useScreenRelationships,
+} from "../../../providers/builder/topology";
 import { useOptionalScreenHostStore } from "../../../providers/host/screen-host.provider";
 import {
 	useOptionalOrchestratorStore,
 	useOrchestratorStore,
 } from "../../../providers/orchestrator";
+import { usePairDestinationKeys } from "../../../providers/orchestrator/helpers/use-pair-presentation";
 import {
 	areResettableStatesBySlotEqual,
 	type ResettableStyleStatesBySlot,
@@ -67,9 +71,15 @@ export function useBoundaryPresentation(
 ): BoundaryPresentationHandles {
 	const screenKey = useBuilderStore((s) => s.derivations.currentScreenKey);
 	const scenes = useOptionalScreenHostStore((s) => s?.scenes);
-	const keys = useMemo(
+	const own = useMemo(
 		() => scenes?.map((s) => s.route.key) ?? [screenKey],
 		[scenes, screenKey],
+	);
+	// Destinations in other stacks (a pair can cross stacks); none, and no render, within one stack.
+	const otherDestinations = usePairDestinationKeys(own);
+	const keys = useMemo(
+		() => (otherDestinations.length ? [...own, ...otherDestinations] : own),
+		[own, otherDestinations],
 	);
 	const pairPresentations = useOptionalOrchestratorStore(
 		keys,
@@ -82,14 +92,38 @@ export function useBoundaryPresentation(
 		parentScreenKey,
 		(s) => s.slotsMap,
 	);
+	// The screens this one is nested in, nearest first. A card in a nested stack is covered by the
+	// next route of whichever ancestor has one (its own stack may have none).
+	const ancestorKeys = useMemo(() => {
+		const out: string[] = [];
+		let key: string | null | undefined = parentScreenKey;
+		while (key && !out.includes(key)) {
+			out.push(key);
+			key = screenTopology.getRelationships(key).parentScreenKey;
+		}
+		return out;
+	}, [parentScreenKey]);
+	const ancestorFrames = useOptionalOrchestratorStore(
+		ancestorKeys,
+		(s) => s.screenInterpolatorProps,
+	);
 	const previous = useSharedValue<ResettableStyleStatesBySlot>(NO_PROPS);
 
 	const presentation = useDerivedValue<BoundaryPresentationValue>(() => {
+		function followedRoute(): string | undefined {
+			const own = frame.get().next?.route.key;
+			if (own) return own;
+			for (const ancestor of ancestorFrames) {
+				const next = ancestor?.get().next?.route.key;
+				if (next) return next;
+			}
+			return undefined;
+		}
 		const state: BoundaryPresentationState = {
 			presentations: pairPresentations,
 			pairs: pairs.get(),
 			entries: boundaryRegistry.get(),
-			following: frame.get().next?.route.key,
+			following: followedRoute(),
 		};
 		const owner = resolveBoundaryPresentation(screenKey, boundaryId, state);
 		const receiver = resolveBoundaryHandoff(screenKey, boundaryId, state);
