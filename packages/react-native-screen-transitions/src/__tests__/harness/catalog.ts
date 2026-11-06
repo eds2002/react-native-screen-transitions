@@ -1632,8 +1632,9 @@ export const buildGlobalBoundsCatalog = (window: { width: number; height: number
 
 /**
  * Handoff (true shared elements): one live payload moves between matching `handoff` boundaries
- * instead of a copy on each screen. Each recipe (a transform morph, a size morph, zoom) runs the
- * usual sequences plus spam, from a scrolled list, into a scrolled destination and across stacks.
+ * instead of a copy on each screen. As designed, only the boundaries animate (transform and size),
+ * through the usual sequences plus spam, from a scrolled list, into a scrolled destination and
+ * across stacks.
  * Besides the usual rules, the payload must never be hidden and must rest on its card (closed) or
  * on the destination slot (open).
  */
@@ -1645,37 +1646,16 @@ export const buildHandoffCatalog = (window: { width: number; height: number }, s
 	const hero = { x: 0, y: H * 0.1, width: W, height: H * 0.4 };
 	const centerOf = (r: typeof card) => ({ x: r.x + r.width / 2, y: r.y + r.height / 2 });
 	const shift = (r: typeof card, dy: number) => ({ ...r, y: r.y + dy });
+	// Handoff as designed: the screens stay still, only the boundaries animate (the live payload is in
+	// the receiving screen and takes whatever that screen does).
 	const recipes: Record<string, (props: any) => any> = {
-		// As handoff was designed: the screens stay still, only the boundaries animate.
-		"still-transform": (props: any) => {
+		transform: (props: any) => {
 			"worklet";
 			return { card: { style: props.bounds("card").styles() } };
 		},
-		"still-size": (props: any) => {
+		size: (props: any) => {
 			"worklet";
 			return { card: { style: props.bounds("card").styles({ method: "size" }) } };
-		},
-		// The morphs hide the (now empty) source frame while it is covered, as zoom does.
-		"morph-transform": (props: any) => {
-			"worklet";
-			if (props.next) return { card: { style: { opacity: 0 } } };
-			return {
-				content: { style: { opacity: Math.min(props.progress, 1) } },
-				card: { style: props.bounds("card").styles() },
-			};
-		},
-		"morph-size": (props: any) => {
-			"worklet";
-			if (props.next) return { card: { style: { opacity: 0 } } };
-			return {
-				content: { style: { opacity: Math.min(props.progress, 1) } },
-				card: { style: props.bounds("card").styles({ method: "size" }) },
-			};
-		},
-		zoom: (props: any) => {
-			"worklet";
-			// The destination slot maps onto the card, so the payload's frame is continuous at the handover.
-			return props.bounds("card").navigation.zoom({ target: "bound" });
 		},
 	};
 	const source = (pushTo?: string) => ({ id: "card", rect: card, pushTo, handoff: true, payload: true });
@@ -1775,7 +1755,7 @@ export const buildHandoffCatalog = (window: { width: number; height: number }, s
 					steps: [...(t.before ?? []), ...steps],
 					expect: {
 						mayOvershoot: true,
-						stillScreens: recipe.startsWith("still-"),
+						stillScreens: true,
 						payloadRest: { "payload-card": open === "scrolled" ? t.openRest : open === "fresh" ? hero : t.closedRest },
 					},
 				});

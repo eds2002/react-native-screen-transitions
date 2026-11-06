@@ -17,38 +17,8 @@ export type KnownIssue = {
 const sequenceOf = (scenario: string) => scenario.split(" / ")[2];
 const transitionOf = (scenario: string) => scenario.split(" / ")[0];
 
-const recipeOf = (scenario: string) => transitionOf(scenario).replace("handoff-", "");
-const topologyOf = (scenario: string) => scenario.split(" / ")[1];
 
 export const KNOWN_ISSUES: KnownIssue[] = [
-	{
-		id: "handoff-payload-rides-destination-screen",
-		summary:
-			"A handoff payload is placed in the receiving boundary's host inside its screen's content layer, so " +
-			"it takes that screen's fade: it goes to the destination as the open starts (still transparent) and " +
-			"fades in, and on close fades out with it and pops back onto the card. Zoom also scales the " +
-			"destination slot uniformly, so on the handover frame the payload changes shape (the card's 168 px " +
-			"height to 122) - hidden today by the same fade. A true shared element needs a layer of its own above " +
-			"both screens, placed by the pair's geometry.",
-		environments: ["teleport"],
-		// Only recipes that animate the screens: with the screens still (handoff as designed) it is fine.
-		matches: (scenario, v) =>
-			scenario.startsWith("handoff-") &&
-			!recipeOf(scenario).startsWith("still-") &&
-			(v.rule === "payload-hidden" ||
-				(v.scene === "List#payload-card" && ["element-teleport", "element-spike"].includes(v.rule))),
-	},
-	{
-		id: "handoff-zoom-reopen-source-opacity-step",
-		summary:
-			"Zoom to a bound, re-opened while closing: the source frame's opacity steps from 1 to 0.41 in one frame.",
-		environments: ["teleport"],
-		matches: (scenario, v) =>
-			recipeOf(scenario) === "zoom" &&
-			sequenceOf(scenario) === "open-pop-open" &&
-			v.scene === "List#bound:card" &&
-			v.rule === "element-teleport",
-	},
 	{
 		id: "interrupted-navigation",
 		summary:

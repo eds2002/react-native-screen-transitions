@@ -3,11 +3,12 @@
  * handoff: a true shared element. The card's content is live (a counter that keeps ticking and a bar
  * that keeps spinning): with `handoff`, the same view moves into the detail's slot instead of a copy
  * on each screen, so the counter never restarts.
- *   ho-mode-zoom   zoom to the slot (bounds("card").navigation.zoom({ target: "bound" }))
- *   ho-mode-morph  the slot morphs from the card while the detail fades in (bounds("card").styles())
- *   ho-mode-still  handoff as designed: the screens don't animate, only the boundaries do
- *                  (bounds("card").styles({ method: "size" }))
- *   ho-card        opens the detail; ho-back closes it
+ * As designed, the screens don't animate, only the boundaries do (the live content is in the
+ * receiving screen and takes whatever that screen does):
+ *   ho-mode-size       bounds("card").styles({ method: "size" }): the content re-lays out as it grows
+ *   ho-mode-transform  bounds("card").styles(): translate and scale
+ *   ho-card        opens the detail; ho-next pushes the theater (another slot, another size: the live
+ *                  content hands off again); ho-back / ho-back-2 close them
  *
  * What to look at: the live content should stay fully visible the whole way, in both directions.
  */
@@ -31,7 +32,7 @@ import {
 } from "./ui";
 
 const Stack = createBlankStackNavigator();
-const mode = makeMutable("zoom");
+const mode = makeMutable("size");
 // "fixed": the live content has a hardcoded size (the card's) instead of filling its boundary.
 let fixedSize: { width: number; height: number } | null = null;
 
@@ -103,7 +104,7 @@ function List({ navigation }) {
 				handoff
 			</Text>
 			<View style={{ flexDirection: "row", gap: 8 }}>
-				{["zoom", "morph", "still"].map((m) => (
+				{["size", "transform"].map((m) => (
 					<Button
 						key={m}
 						label={m === current ? `• ${m}` : m}
@@ -161,6 +162,20 @@ function Detail({ navigation }) {
 					The live card above is the same view as on the list.
 				</Text>
 				<Pressable
+					testID="ho-next"
+					accessibilityLabel="ho-next"
+					onPress={() => navigation.push("Theater")}
+					style={{
+						alignSelf: "flex-start",
+						backgroundColor: "#2563eb",
+						paddingHorizontal: 16,
+						paddingVertical: 10,
+						borderRadius: 14,
+					}}
+				>
+					<Text style={{ color: "white", fontWeight: "800" }}>Next</Text>
+				</Pressable>
+				<Pressable
 					testID="ho-back"
 					accessibilityLabel="ho-back"
 					onPress={() => navigation.goBack()}
@@ -179,6 +194,44 @@ function Detail({ navigation }) {
 	);
 }
 
+// A third screen: the same live content in a smaller, wider slot lower down.
+function Theater({ navigation }) {
+	const { width } = useWindowDimensions();
+	return (
+		<View
+			style={{
+				flex: 1,
+				backgroundColor: "#0b0b0f",
+				paddingTop: 140,
+				alignItems: "center",
+				gap: 20,
+			}}
+		>
+			<Text style={{ color: "white", fontSize: 26, fontWeight: "800" }}>
+				Theater
+			</Text>
+			<Transition.Boundary
+				id="card"
+				handoff
+				style={{ width: width * 0.8, height: width * 0.45, marginTop: 60 }}
+			/>
+			<Pressable
+				testID="ho-back-2"
+				accessibilityLabel="ho-back-2"
+				onPress={() => navigation.goBack()}
+				style={{
+					backgroundColor: "#000c",
+					paddingHorizontal: 16,
+					paddingVertical: 10,
+					borderRadius: 14,
+				}}
+			>
+				<Text style={{ color: "white", fontWeight: "800" }}>Back</Text>
+			</Pressable>
+		</View>
+	);
+}
+
 const detail = {
 	gestureEnabled: true,
 	gestureDirection: ["vertical", "pinch-in"],
@@ -187,16 +240,12 @@ const detail = {
 		: undefined,
 	screenStyleInterpolator: (props) => {
 		"worklet";
-		if (mode.get() === "zoom")
-			return props.bounds("card").navigation.zoom({ target: "bound" });
-		if (mode.get() === "still")
-			return {
-				card: { style: props.bounds("card").styles({ method: "size" }) },
-			};
-		if (props.next) return { card: { style: { opacity: 0 } } };
 		return {
-			content: { style: { opacity: Math.min(props.progress, 1) } },
-			card: { style: props.bounds("card").styles() },
+			card: {
+				style: props
+					.bounds("card")
+					.styles(mode.get() === "size" ? { method: "size" } : undefined),
+			},
 		};
 	},
 };
@@ -207,6 +256,7 @@ function Component() {
 			<Stack.Navigator>
 				<Stack.Screen name="List" component={List} />
 				<Stack.Screen name="Detail" component={Detail} options={detail} />
+				<Stack.Screen name="Theater" component={Theater} options={detail} />
 			</Stack.Navigator>
 		</LabContainer>
 	);
@@ -216,6 +266,6 @@ export const lab: Lab = {
 	id: "handoff",
 	title: "handoff",
 	covers:
-		"A true shared element: a live card handed off into the detail (zoom and morph)",
+		"A true shared element: a live card handed off into the detail, only the boundaries animating (size and transform)",
 	Component,
 };

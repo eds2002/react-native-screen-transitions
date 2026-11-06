@@ -41,12 +41,9 @@ Bounds handoff still chooses its owner automatically by default. Version 4 also 
 screenStyleInterpolator: ({ active, bounds }) => {
   "worklet";
 
-  const styles = bounds("hero").navigation.zoom();
-
   return {
-    ...styles,
     hero: {
-      ...styles.hero,
+      style: bounds("hero").styles({ method: "size" }),
       props: {
         handoffTarget:
           active.closing && active.progress <= 0.5

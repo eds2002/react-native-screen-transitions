@@ -222,6 +222,20 @@ Use `handoff` when the same live payload should move between matching boundaries
 
 Every matching boundary that should participate in the handoff should set `handoff`. The destination defines the receiving bounds; it does not need to render a second copy of the live child.
 
+Animate the boundary, not the screen. The live child is placed in the receiving boundary, inside its screen, so it takes whatever that screen does: if the screen fades or zooms, so does the live child. Keep the screens still and let the boundary carry the motion:
+
+```tsx
+screenStyleInterpolator: ({ bounds }) => {
+  "worklet";
+
+  return {
+    video: { style: bounds("video").styles({ method: "size" }) },
+  };
+};
+```
+
+`method: "size"` animates the boundary's width and height, so the live child lays out at every size instead of being scaled.
+
 ### Escaping clipping
 
 A boundary inside a `ScrollView`, a `FlatList` or any `overflow: hidden` parent would be cut off as it grows out of it. With `react-native-teleport` installed, boundaries escape that clipping on their own: while a transition runs, the boundary's frame moves to its screen's overlay and a placeholder keeps its slot. It keeps following its scroll views while it's out, so a list that scrolls during the close carries it along. Nothing to configure:
