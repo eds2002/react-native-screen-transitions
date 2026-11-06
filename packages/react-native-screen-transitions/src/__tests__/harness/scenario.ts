@@ -26,7 +26,7 @@ export type Step =
 	| { op: "push"; name: string; params?: object }
 	| { op: "navigate"; name: string; params?: object }
 	/** Pushes onto the nested stack at `path` (route names from the root). */
-	| { op: "pushIn"; path: string[]; name: string }
+	| { op: "pushIn"; path: string[]; name: string; params?: object }
 	| { op: "pop" }
 	| { op: "replace"; name: string }
 	| { op: "settle" }
@@ -211,7 +211,7 @@ const runStep = async (stack: StackHarness, step: Step, expectations: Expectatio
 		case "navigate":
 			return stack.navigate(step.name, step.params);
 		case "pushIn":
-			return stack.pushIn(step.path, step.name);
+			return stack.pushIn(step.path, step.name, step.params);
 		case "expectPath": {
 			await stack.settle();
 			const names = stack.focusedPath();

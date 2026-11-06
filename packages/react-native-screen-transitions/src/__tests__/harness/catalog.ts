@@ -1294,6 +1294,156 @@ export const buildScrollBoundsCatalog = (window: { width: number; height: number
 	return scenarios;
 };
 
+// ---------------------------------------------------------------------------
+// Shared bounds over longer flows: chains (A → B → C → D, each middle screen the destination of
+// one pair and the source of the next), fast pushes and pops through them, deep pops, and a zoom
+// from an outer stack into a nested one. Every landing must be on the card that opened it.
+
+export const buildBoundsChainCatalog = (window: { width: number; height: number }, specs: { Zoom?: unknown }): Scenario[] => {
+	const W = window.width;
+	const H = window.height;
+	const zoomSpec = specs.Zoom ?? DEFAULT_SPEC;
+	const full = { x: 0, y: 0, ...window };
+	// Every screen's source card sits low; a zoom-to-bound destination boundary sits at the top.
+	const card = { x: W * 0.1, y: H * 0.6, width: W * 0.36, height: H * 0.2 };
+	const top = { x: 0, y: 0, width: W, height: W * (card.height / card.width) };
+	const centerOf = (r: typeof card) => ({ x: r.x + r.width / 2, y: r.y + r.height / 2 });
+	const zoom = (zoomOptions?: Record<string, unknown>) => ({
+		gestureEnabled: true,
+		gestureDirection: ["bidirectional", "pinch-in"],
+		transitionSpec: { open: zoomSpec, close: zoomSpec },
+		// The pair is named by the card that opened the screen (its route's params.id).
+		screenStyleInterpolator: (props: any) => {
+			"worklet";
+			const id = props.active?.route?.params?.id ?? props.current?.route?.params?.id;
+			if (!id) return {};
+			return props.bounds(id).navigation.zoom(zoomOptions);
+		},
+	});
+	const LEVELS = ["A", "B", "C", "D"];
+	const pairId = (i: number) => `${LEVELS[i]}${LEVELS[i + 1]}`.toLowerCase();
+	const kinds: Record<string, { options: Record<string, unknown>; bound: boolean }> = {
+		zoom: { options: zoom(), bound: false },
+		"zoom-to-bound": { options: zoom({ target: "bound" }), bound: true },
+	};
+	const scenarios: Scenario[] = [];
+	for (const [kind, { options, bound }] of Object.entries(kinds)) {
+		const screens: ScreenSpec[] = LEVELS.map((name, i) => {
+			const sources = i + 1 < LEVELS.length ? [{ id: pairId(i), rect: card, pushTo: LEVELS[i + 1] }] : [];
+			const destination = i > 0 && bound ? [{ id: pairId(i - 1), rect: top }] : [];
+			return { name, ...(i > 0 ? { options } : {}), bounds: [...destination, ...sources] };
+		});
+		// What lands on the card when level `i` closes: the screen, or its destination boundary.
+		const moving = (i: number) => (bound ? { scene: LEVELS[i], element: `bound:${pairId(i - 1)}` } : { scene: LEVELS[i] });
+		const opened = bound ? top : full;
+		const closesOnto = (i: number): Step => ({ op: "expectTrajectory", ...moving(i), to: card, tolerance: 40, throughFade: true });
+		const add = (sequence: string, steps: Step[]) =>
+			scenarios.push({ name: `bounds-chain-${kind} / zoom-spec / ${sequence}`, screens, steps, expect: { mayOvershoot: true } });
+		const tapCard: Step = { op: "tap", at: centerOf(card) };
+
+		// Step through the chain by tapping, then come all the way back, one level at a time.
+		add("open-chain-then-close-chain", [
+			tapCard,
+			{ op: "expectTrajectory", ...moving(1), from: card, to: opened, tolerance: 40 },
+			tapCard,
+			{ op: "expectTrajectory", ...moving(2), from: card, to: opened, tolerance: 40 },
+			tapCard,
+			{ op: "expectTrajectory", ...moving(3), from: card, to: opened, tolerance: 40 },
+			{ op: "expectRoutes", names: LEVELS },
+			{ op: "pop" },
+			closesOnto(3),
+			{ op: "pop" },
+			closesOnto(2),
+			{ op: "pop" },
+			closesOnto(1),
+			{ op: "expectRoutes", names: ["A"] },
+		]);
+		// Spam down the chain (each push lands mid-open of the last), then back up the same way.
+		add("fast-push-chain-then-fast-pop-chain", [
+			{ op: "push", name: "B", params: { id: pairId(0) } },
+			{ op: "frames", count: 5 },
+			{ op: "push", name: "C", params: { id: pairId(1) } },
+			{ op: "frames", count: 5 },
+			{ op: "push", name: "D", params: { id: pairId(2) } },
+			{ op: "frames", count: 5 },
+			{ op: "pop" },
+			{ op: "frames", count: 4 },
+			{ op: "pop" },
+			{ op: "frames", count: 4 },
+			{ op: "pop" },
+			{ op: "expectRoutes", names: ["A"] },
+			{ op: "expectScene", name: "A", state: "shown" },
+		]);
+		// Deep, then pop two levels in quick succession: the middle screen closes mid-flight.
+		add("deep-then-double-pop", [
+			{ op: "push", name: "B", params: { id: pairId(0) } },
+			{ op: "settle" },
+			{ op: "push", name: "C", params: { id: pairId(1) } },
+			{ op: "settle" },
+			{ op: "push", name: "D", params: { id: pairId(2) } },
+			{ op: "settle" },
+			{ op: "pop" },
+			{ op: "frames", count: 3 },
+			{ op: "pop" },
+			{ op: "expectRoutes", names: ["A", "B"] },
+			closesOnto(2),
+			{ op: "pop" },
+			closesOnto(1),
+			{ op: "expectRoutes", names: ["A"] },
+		]);
+		// Back and forth in the middle of a chain: B is a destination (from A) and a source (to C).
+		add("middle-reopen", [
+			tapCard,
+			{ op: "settle" },
+			tapCard,
+			{ op: "settle" },
+			{ op: "pop" },
+			closesOnto(2),
+			tapCard,
+			{ op: "expectTrajectory", ...moving(2), from: card, to: opened, tolerance: 40 },
+			{ op: "pop" },
+			closesOnto(2),
+			{ op: "pop" },
+			closesOnto(1),
+			{ op: "expectRoutes", names: ["A"] },
+		]);
+	}
+
+	// Nested: a card in the outer stack zooms into the first screen of a nested stack, whose own
+	// card zooms one level deeper inside it.
+	const nested: ScreenSpec[] = [
+		{ name: "A", bounds: [{ id: "an", rect: card, pushTo: "N" }] },
+		{
+			name: "N",
+			options: zoom(),
+			stack: {
+				screens: [
+					{ name: "N1", bounds: [{ id: "n12", rect: card, pushTo: "N2" }] },
+					{ name: "N2", options: zoom() },
+				],
+			},
+		},
+	];
+	scenarios.push({
+		name: "bounds-chain-nested / zoom-spec / outer-into-nested-and-deeper",
+		screens: nested,
+		expect: { mayOvershoot: true },
+		steps: [
+			{ op: "tap", at: centerOf(card) },
+			{ op: "expectTrajectory", scene: "N1", from: card, to: full, tolerance: 40 },
+			{ op: "tap", at: centerOf(card) },
+			{ op: "expectTrajectory", scene: "N2", from: card, to: full, tolerance: 40 },
+			{ op: "expectPath", names: ["N", "N2"] },
+			{ op: "pop" },
+			{ op: "expectTrajectory", scene: "N2", to: card, tolerance: 40, throughFade: true },
+			{ op: "pop" },
+			{ op: "expectTrajectory", scene: "N1", to: card, tolerance: 40, throughFade: true },
+			{ op: "expectPath", names: ["A"] },
+		],
+	});
+	return scenarios;
+};
+
 export const buildFullCatalog = (
 	presets: Presets,
 	interpolate: InterpolateFn,
@@ -1312,4 +1462,5 @@ export const buildFullCatalog = (
 	...buildScrollCatalog(interpolate, window),
 	...buildBoundsCatalog(interpolate, window, specs ?? {}),
 	...buildScrollBoundsCatalog(window, specs ?? {}),
+	...buildBoundsChainCatalog(window, specs ?? {}),
 ];

@@ -55,6 +55,29 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 		matches: (scenario, v) => scenario.startsWith("bounds-reveal") && v.rule === "style-range",
 	},
 	{
+		id: "zoom-chain-fast-push-pop-snaps",
+		summary:
+			"Shared bounds over a chain (A → B → C → D): pushing each level while the last is still opening, " +
+			"then popping back the same way, makes background screens snap (a 52.8 px step: the zoom background " +
+			"scale dropping to full size in one frame), part of A vanish in one frame, and the source cards of B " +
+			"and C jump between their tracked and rest rects. Harness only so far; confirm on a device.",
+		matches: (scenario, v) =>
+			scenario.startsWith("bounds-chain-") &&
+			scenario.endsWith("/ fast-push-chain-then-fast-pop-chain") &&
+			["spike", "vanish", "element-teleport", "element-spike"].includes(v.rule),
+	},
+	{
+		id: "zoom-chain-pop-during-pop-source-snap",
+		summary:
+			"Shared bounds, A → B → C → D settled, then pop twice in quick succession: C's source card (tracking " +
+			"D's close, at about half opacity and expanded) snaps back to its rest rect in one frame when C is " +
+			"popped mid-way through D's close, and B and C step by 45–53 px. Harness only so far; confirm on a device.",
+		matches: (scenario, v) =>
+			scenario.startsWith("bounds-chain-") &&
+			scenario.endsWith("/ deep-then-double-pop") &&
+			["spike", "element-teleport", "element-spike"].includes(v.rule),
+	},
+	{
 		id: "zoom-to-bound-scrolled-destination-jump",
 		summary:
 			"Shared bounds + scroll: after the destination is scrolled, closing a zoom({ target: 'bound' }) makes the " +
