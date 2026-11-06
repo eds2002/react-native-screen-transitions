@@ -1,8 +1,15 @@
-import { memo, useLayoutEffect, useState } from "react";
-import { type SharedValue, useAnimatedProps } from "react-native-reanimated";
+import { memo, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import {
+	type SharedValue,
+	useAnimatedProps,
+	useAnimatedReaction,
+} from "react-native-reanimated";
+import { scheduleOnUI } from "react-native-worklets";
+import { screenTopology } from "../../../../providers/builder/topology";
 import type { BoundaryPresentationValue } from "../../hooks/use-boundary-presentation";
 import { useBoundaryRootStore } from "../../providers/boundary-root.provider";
 import type { BoundaryLocalMeasurementValue } from "../../types";
+import { setHandoffLending } from "../stores/handoff-lenders.store";
 import { useActiveHostKey } from "../stores/host-registry.store";
 import { isBoundaryEscaped } from "../utils/is-escaped";
 import {
@@ -66,6 +73,46 @@ export function usePortalDestination(boundaryId: string, mode: PortalMode) {
 	};
 }
 
+let nextLenderId = 0;
+
+/**
+ * While a handoff boundary's content is presented in another screen, marks its screen (and the
+ * screens it is nested in) as lending it, so the navigator does not hide or pause them.
+ */
+function useHandoffLending(
+	enabled: boolean,
+	currentScreenKey: string,
+	presentation: SharedValue<BoundaryPresentationValue>,
+) {
+	const lenderKey = useMemo(() => String(++nextLenderId), []);
+	const screenKeys = useMemo(() => {
+		const out = [currentScreenKey];
+		let key = screenTopology.getRelationships(currentScreenKey).parentScreenKey;
+		while (key && !out.includes(key)) {
+			out.push(key);
+			key = screenTopology.getRelationships(key).parentScreenKey;
+		}
+		return out;
+	}, [currentScreenKey]);
+	useAnimatedReaction(
+		() => {
+			"worklet";
+			if (!enabled) return false;
+			const receiver = presentation.get().receiver;
+			return !!receiver && receiver !== currentScreenKey;
+		},
+		(lending, previous) => {
+			"worklet";
+			if (lending === previous) return;
+			setHandoffLending(screenKeys, lenderKey, lending);
+		},
+	);
+	useEffect(
+		() => () => scheduleOnUI(setHandoffLending, screenKeys, lenderKey, false),
+		[screenKeys, lenderKey],
+	);
+}
+
 const TeleportPropsDriver = memo(function TeleportPropsDriver({
 	boundaryId,
 	currentScreenKey,
@@ -85,6 +132,7 @@ const TeleportPropsDriver = memo(function TeleportPropsDriver({
 	portalHostReady: SharedValue<boolean>;
 	presentation: SharedValue<BoundaryPresentationValue>;
 }) {
+	useHandoffLending(mode === "handoff", currentScreenKey, presentation);
 	const teleportProps = useAnimatedProps(() => {
 		"worklet";
 		const { receiver, slots } = presentation.get();
@@ -96,10 +144,10 @@ const TeleportPropsDriver = memo(function TeleportPropsDriver({
 		} = slot?.props ?? {};
 		let hostName: string | null = PORTAL_HOST_NAME_RESET_VALUE;
 		if (mode === "handoff") {
-			hostName = createHandoffHostName(
-				receiver ?? currentScreenKey,
-				boundaryId,
-			);
+			// At home the content stays in place (no host): moved into a host, even its own, it would be
+			// laid out at that host's last known size for a frame.
+			if (receiver && receiver !== currentScreenKey)
+				hostName = createHandoffHostName(receiver, boundaryId);
 		} else if (
 			isBoundaryEscaped({
 				boundaryId,

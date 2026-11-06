@@ -43,7 +43,7 @@ it("routes handoff content without registering or waiting for an overlay host", 
  act(()=>renderer!.unmount());
 });
 
-it("keeps an escaped frame inline until its host and matching pair are ready", () => {
+it("keeps an escaped frame inline until its host is ready and it is measured for its pair", () => {
  let destination: ReturnType<typeof usePortalDestination>;
  function Probe(){destination=usePortalDestination("photo","escapeClipping");return destination.teleportDriver;}
  let renderer: ReturnType<typeof create>;
@@ -55,8 +55,15 @@ it("keeps an escaped frame inline until its host and matching pair are ready", (
  hostReady=true;
  act(()=>renderer!.update(<Probe key="ready"/>));
  expect(destination!.teleportProps).toEqual({opacity:0.5,hostName:"overlay-photo"});
+ // Measured since for another pair (a chain's next hop): the pair it was measured for keeps it.
  writeLocalMeasurement(localMeasurement, {pairKey:"a<>c"} as any);
  act(()=>renderer!.update(<Probe key="other-pair"/>));
+ expect(destination!.teleportProps?.hostName).toBe("overlay-photo");
+ // A pair it was never measured for does not.
+ const owner = boundaryPresentation.get().owner;
+ boundaryPresentation.set({...boundaryPresentation.get(),owner:{pairKey:"a<>d",ready:true}});
+ act(()=>renderer!.update(<Probe key="unmeasured-pair"/>));
  expect(destination!.teleportProps?.hostName).toBeNull();
+ boundaryPresentation.set({...boundaryPresentation.get(),owner});
  act(()=>renderer!.unmount());
 });

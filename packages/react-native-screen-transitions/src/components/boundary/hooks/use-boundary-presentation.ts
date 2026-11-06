@@ -29,7 +29,8 @@ import {
 import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
 import {
 	type BoundaryPresentationState,
-	resolveBoundaryHandoff,
+	type resolveBoundaryHandoff,
+	resolveBoundaryHandoffTarget,
 	resolveBoundaryPresentation,
 } from "../helpers/presentation";
 
@@ -37,6 +38,12 @@ export type BoundaryPresentationValue = {
 	owner: ReturnType<typeof resolveBoundaryPresentation> | null;
 	/** Where a handoff boundary's content goes; null outside any transition. */
 	receiver: ReturnType<typeof resolveBoundaryHandoff> | null;
+	/**
+	 * The receiver's size this frame while the content is in another screen's receiver. The content
+	 * takes it in the same frame as the move: laid out through its portal, it would only learn the
+	 * receiver's size a frame later (and a resizing receiver would leave it a frame behind).
+	 */
+	receiverSize?: { width: number; height: number } | null;
 	slots: NormalizedTransitionInterpolatedStyle;
 };
 
@@ -85,6 +92,11 @@ export function useBoundaryPresentation(
 		keys,
 		(s) => s.pairPresentation,
 	);
+	// The same screens' frames: a payload handed on along a chain follows each screen's next route.
+	const keyFrames = useOptionalOrchestratorStore(
+		keys,
+		(s) => s.screenInterpolatorProps,
+	);
 	const localSlots = useOrchestratorStore((s) => s.slotsMap);
 	const frame = useOrchestratorStore((s) => s.screenInterpolatorProps);
 	const { parentScreenKey } = useScreenRelationships();
@@ -119,14 +131,33 @@ export function useBoundaryPresentation(
 			}
 			return undefined;
 		}
+		const nextByScreen: Record<string, string | undefined> = {};
+		for (let i = 0; i < keys.length; i++) {
+			nextByScreen[keys[i]] = keyFrames[i]?.get().next?.route.key;
+		}
 		const state: BoundaryPresentationState = {
 			presentations: pairPresentations,
 			pairs: pairs.get(),
 			entries: boundaryRegistry.get(),
 			following: followedRoute(),
+			nextByScreen,
 		};
 		const owner = resolveBoundaryPresentation(screenKey, boundaryId, state);
-		const receiver = resolveBoundaryHandoff(screenKey, boundaryId, state);
+		const target = resolveBoundaryHandoffTarget(screenKey, boundaryId, state);
+		const receiver = target.receiver;
+		let receiverSize: BoundaryPresentationValue["receiverSize"] = null;
+		if (receiver !== screenKey) {
+			const style = target.slot?.style as
+				| { width?: unknown; height?: unknown }
+				| undefined;
+			const bounds = state.entries[boundaryId]?.screens[receiver]?.bounds;
+			const width =
+				typeof style?.width === "number" ? style.width : bounds?.width;
+			const height =
+				typeof style?.height === "number" ? style.height : bounds?.height;
+			if (width !== undefined && height !== undefined)
+				receiverSize = { width, height };
+		}
 		const ownedSlot = owner?.ready
 			? (owner.sourceKey === screenKey ? owner.source : owner.destination)[
 					boundaryId
@@ -150,7 +181,7 @@ export function useBoundaryPresentation(
 		) {
 			previous.set(nextPreviousStyleStatesBySlot);
 		}
-		return { owner, receiver, slots: resolvedStylesMap };
+		return { owner, receiver, receiverSize, slots: resolvedStylesMap };
 	});
 	const slotsMap = useDerivedValue(() => presentation.get().slots);
 	const portalHostReady = useSharedValue(false);

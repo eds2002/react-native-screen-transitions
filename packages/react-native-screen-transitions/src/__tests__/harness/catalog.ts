@@ -1788,6 +1788,47 @@ export const buildHandoffCatalog = (window: { width: number; height: number }, s
 			add("spam", [...spam, { op: "settle" }, { op: "expectPath", names: t.closedPath }], false);
 		}
 	}
+	// Chain: the slot can hand off again. List's card -> Detail's slot -> Theater's slot (another size
+	// and shape) and back down, with spam across both hops.
+	const theater = { x: W * 0.1, y: H * 0.55, width: W * 0.8, height: H * 0.22 };
+	for (const [recipe, interpolator] of Object.entries(recipes)) {
+		const options = {
+			gestureEnabled: true,
+			gestureDirection: "vertical",
+			transitionSpec: { open: spec, close: spec },
+			screenStyleInterpolator: interpolator,
+		};
+		const screens: ScreenSpec[] = [
+			{ name: "List", bounds: [source("Detail")] },
+			{ name: "Detail", options, bounds: [{ ...destination, pushTo: "Theater" }] },
+			{ name: "Theater", options, bounds: [{ id: "card", rect: theater, handoff: true }] },
+		];
+		const rest = { List: card, Detail: hero, Theater: theater };
+		const add = (sequence: string, steps: Step[], at: keyof typeof rest) =>
+			scenarios.push({
+				name: `handoff-${recipe} / chain / ${sequence}`,
+				environments: ["teleport"],
+				screens,
+				steps,
+				expect: { mayOvershoot: true, stillScreens: true, payloadRest: { "payload-card": rest[at] } },
+			});
+		const openFirst: Step = { op: "tap", at: centerOf(card) };
+		const openSecond: Step = { op: "tap", at: centerOf(hero) };
+		const both: Step[] = [openFirst, { op: "settle" }, openSecond, { op: "settle" }, { op: "expectPath", names: ["Theater"] }];
+		add("open-both", both, "Theater");
+		add("back-one", [...both, { op: "pop" }, { op: "settle" }, { op: "expectPath", names: ["Detail"] }], "Detail");
+		add("back-both", [...both, { op: "pop" }, { op: "settle" }, { op: "pop" }, { op: "settle" }, { op: "expectPath", names: ["List"] }], "List");
+		add("pop-pop-quickly", [...both, { op: "pop" }, { op: "frames", count: 3 }, { op: "pop" }, { op: "settle" }, { op: "expectPath", names: ["List"] }], "List");
+		add(
+			"reopen-second",
+			[...both, { op: "pop" }, { op: "frames", count: 4 }, { op: "push", name: "Theater" }, { op: "settle" }, { op: "expectPath", names: ["Theater"] }],
+			"Theater",
+		);
+		const spam: Step[] = [openFirst, { op: "settle" }];
+		for (let i = 0; i < 4; i++)
+			spam.push({ op: "push", name: "Theater" }, { op: "frames", count: 2 }, { op: "pop" }, { op: "frames", count: 2 });
+		add("spam-second", [...spam, { op: "settle" }, { op: "expectPath", names: ["Detail"] }], "Detail");
+	}
 	return scenarios;
 };
 

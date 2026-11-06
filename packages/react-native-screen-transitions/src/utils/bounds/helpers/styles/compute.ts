@@ -5,6 +5,8 @@ import {
 	FULLSCREEN_DIMENSIONS,
 	NO_STYLES,
 } from "../../../../constants";
+import { getScreenProgress } from "../../../../providers/motion/helpers/progress-registry";
+import { getEntry } from "../../../../stores/bounds/internals/entries";
 import { requestSourceMeasure } from "../../../../stores/bounds/internals/links";
 import {
 	resolveScreenPairKey,
@@ -31,6 +33,48 @@ import {
 	type ElementComposeParams,
 } from "./composers";
 import { attachBoundsLocalTransform } from "./local-transform";
+
+const lerp = (a: number, b: number, t: number) => {
+	"worklet";
+	return a + (b - a) * t;
+};
+
+/**
+ * Handed-off content passed along a chain (List -> Detail -> Theater) lives in one place. While the
+ * middle screen is itself moving (Theater closing while Detail closes too, or Theater pushed while
+ * Detail still opens), the slot the content goes back to is not at rest: it is wherever Detail's
+ * own pair has it now. Aiming there keeps both hops one motion; aiming at the resting slot lands
+ * the content there and then jumps onto Detail's pair, already part way along.
+ */
+const resolveMovingHandoffSource = (
+	tag: string,
+	sourceBounds: MeasuredDimensions,
+	sourceScreenKey: string | null,
+): MeasuredDimensions => {
+	"worklet";
+	if (!sourceScreenKey) return sourceBounds;
+	const t = getScreenProgress(sourceScreenKey);
+	if (t === undefined || t === 1 || !getEntry(tag, sourceScreenKey)?.handoff) {
+		return sourceBounds;
+	}
+	const upstream = resolveTransitionPair(tag, {
+		currentScreenKey: sourceScreenKey,
+		entering: true,
+	});
+	const from = upstream.sourceBounds;
+	const to = upstream.destinationBounds;
+	if (!from || !to || upstream.destinationScreenKey !== sourceScreenKey) {
+		return sourceBounds;
+	}
+	return {
+		x: lerp(from.x, to.x, t),
+		y: lerp(from.y, to.y, t),
+		width: lerp(from.width, to.width, t),
+		height: lerp(from.height, to.height, t),
+		pageX: lerp(from.pageX, to.pageX, t),
+		pageY: lerp(from.pageY, to.pageY, t),
+	};
+};
 
 const resolveStartEnd = (params: {
 	id: BoundId;
@@ -102,7 +146,13 @@ const resolveStartEnd = (params: {
 		};
 	}
 
-	const start = sourceBounds;
+	const start = entering
+		? resolveMovingHandoffSource(
+				String(params.id),
+				sourceBounds,
+				resolvedPair.sourceScreenKey,
+			)
+		: sourceBounds;
 	let end = destinationBounds ?? fullscreen;
 
 	if (isFullscreenTarget) {

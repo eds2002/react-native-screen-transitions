@@ -25,6 +25,8 @@ export type BoundaryPresentationState = {
 	 * moves on, instead of jumping to the new pair's start.
 	 */
 	following?: string;
+	/** Each screen's own next route, for receivers further along a handoff chain. */
+	nextByScreen?: Record<string, string | undefined>;
 };
 
 export function resolveBoundaryPresentation(
@@ -76,17 +78,30 @@ export function resolveBoundaryReceiver(
 		: presentation.sourceKey;
 }
 
-export function resolveBoundaryHandoff(
+/**
+ * Where a handoff boundary's content is presented: the screen whose receiver it is in, and that
+ * receiver's slot (its style says how big the receiver is this frame).
+ */
+export function resolveBoundaryHandoffTarget(
 	screenKey: string,
 	boundaryId: string,
 	state: BoundaryPresentationState,
 ) {
 	"worklet";
 	let receiver = screenKey;
+	let receiverSlot: BoundaryPairPresentation["source"][string] | undefined;
 	const visited: Record<string, true> = {};
+	// `following` is this boundary's own screen's next route; further along the chain (a payload
+	// handed on from screen to screen) each receiver follows its own screen's next route.
 	while (!visited[receiver]) {
 		visited[receiver] = true;
-		const p = resolveBoundaryPresentation(receiver, boundaryId, state);
+		const p = resolveBoundaryPresentation(
+			receiver,
+			boundaryId,
+			receiver === screenKey
+				? state
+				: { ...state, following: state.nextByScreen?.[receiver] },
+		);
 		if (!p) break;
 		const slot = (p.sourceKey === receiver ? p.source : p.destination)[
 			boundaryId
@@ -101,6 +116,18 @@ export function resolveBoundaryHandoff(
 		if (next === receiver || !state.entries[boundaryId]?.screens[next]?.handoff)
 			break;
 		receiver = next;
+		receiverSlot = (next === p.destinationKey ? p.destination : p.source)[
+			boundaryId
+		];
 	}
-	return receiver;
+	return { receiver, slot: receiverSlot };
+}
+
+export function resolveBoundaryHandoff(
+	screenKey: string,
+	boundaryId: string,
+	state: BoundaryPresentationState,
+) {
+	"worklet";
+	return resolveBoundaryHandoffTarget(screenKey, boundaryId, state).receiver;
 }

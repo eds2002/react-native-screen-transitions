@@ -21,6 +21,11 @@ await mockModule(
 	}),
 );
 await mockModule("../../components/boundary/portal/hooks/use-portal-destination", () => ({usePortalDestination}));
+const { makeMutable } = await import("react-native-reanimated");
+const boundaryPresentation = makeMutable<any>({ owner: null, receiver: null, receiverSize: null, slots: {} });
+await mockModule("../../components/boundary/providers/boundary-root.provider", () => ({
+	useBoundaryRootStore: (select: any) => select({ boundaryPresentation }),
+}));
 await mockModule(
 	"../../components/boundary/portal/hooks/use-placeholder-styles",
 	() => ({
@@ -81,11 +86,14 @@ describe("disabled boundary portals", () => {
 	});
 });
 
-it("mounts the handoff receiver beside the payload without a layout wrapper", () => {
+it("mounts the handoff receiver beside the payload, the payload sized to fill it at rest", () => {
  let renderer: ReactTestRenderer;
  act(() => {renderer=create(<BoundaryContentPortal boundaryId="card" enabled>payload</BoundaryContentPortal>);});
  const output = renderer!.toJSON() as any[];
- expect(output[0]).toBe("payload");
+ expect(output[0].children).toEqual(["payload"]);
+ const style = [output[0].props.style].flat(Infinity).reduce((a: any, b: any) => ({ ...a, ...b }), {});
+ expect(style.width).toBe("100%");
+ expect(style.height).toBe("100%");
  expect(output[1].type).toBe("native-host");
  expect(output[1].props.name).toBe("screen:card");
  expect(output[1].props.pointerEvents).toBe("box-none");

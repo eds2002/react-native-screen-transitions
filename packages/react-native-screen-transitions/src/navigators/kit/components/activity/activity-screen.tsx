@@ -6,6 +6,7 @@ import {
 	ActivityView,
 	type ActivityViewMode,
 } from "../../../../components/activity/activity-view";
+import { handoffLenders } from "../../../../components/boundary/portal/stores/handoff-lenders.store";
 import { IS_WEB } from "../../../../constants";
 import { useSharedValueState } from "../../../../hooks/reanimated/use-shared-value-state";
 import { useOptionalMotionStore } from "../../../../providers/motion";
@@ -38,10 +39,8 @@ export const ActivityScreen = memo(function ActivityScreen({
 	);
 
 	const inactiveBehavior =
-		(scene.descriptor.options as { inactiveBehavior?: InactiveBehavior })
-			.inactiveBehavior ?? DEFAULT_INACTIVE_BEHAVIOR;
-
-	const hasNestedState = "state" in scene.route;
+		(scene?.descriptor.options as { inactiveBehavior?: InactiveBehavior })
+			?.inactiveBehavior ?? DEFAULT_INACTIVE_BEHAVIOR;
 
 	const paintDriverProgress = useOptionalMotionStore(
 		paintDriverRouteKey ?? null,
@@ -65,14 +64,37 @@ export const ActivityScreen = memo(function ActivityScreen({
 		return paintDriverProgress.get() >= 1;
 	});
 
+	/**
+	 * A screen whose handoff content is presented in another screen keeps running as it is: the
+	 * content's native views are still its own, so hiding, pausing or unmounting it would take the
+	 * content away from the screen showing it.
+	 */
+	const isLendingHandoff = useDerivedValue(() => {
+		"worklet";
+		return !!handoffLenders.get()[routeKey];
+	});
+
 	const isPaintDriverSettledOnJS = useSharedValueState(isPaintDriverSettled);
+	const isLendingHandoffOnJS = useSharedValueState(isLendingHandoff);
+
+	// Its own state (lending, paint) can update once the route has left the store, before the
+	// container drops it.
+	if (!scene) {
+		return null;
+	}
+
+	const hasNestedState = "state" in scene.route;
 
 	let activityViewMode: ActivityViewMode =
 		scene.activity === "active" ? "normal" : "inert";
 	let visible = scene.activity !== "inactive";
 
 	if (scene.activity === "inactive") {
-		if (inactiveBehavior === "keep" || !isPaintDriverSettledOnJS) {
+		if (
+			inactiveBehavior === "keep" ||
+			!isPaintDriverSettledOnJS ||
+			isLendingHandoffOnJS
+		) {
 			visible = true;
 		} else if (inactiveBehavior === "pause") {
 			activityViewMode = "paused";
@@ -87,7 +109,8 @@ export const ActivityScreen = memo(function ActivityScreen({
 		inactiveBehavior === "unmount" &&
 		scene.activity === "inactive" &&
 		!hasNestedState &&
-		isPaintDriverSettledOnJS;
+		isPaintDriverSettledOnJS &&
+		!isLendingHandoffOnJS;
 
 	if (shouldUnmount) {
 		return null;

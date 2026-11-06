@@ -64,6 +64,12 @@ export type MeasureBoundary = (target: MeasureTarget) => void;
 export type BoundaryLocalMeasurement = {
 	bounds: MeasuredDimensions & { scrollChain?: ScrollChainSnapshot[] };
 	pairKey: ScreenPairKey;
+	/**
+	 * Every pair this boundary has been measured for while mounted. A boundary in the middle of a
+	 * chain is measured for its incoming pair and then its outgoing one; when the outgoing one
+	 * ends first, the incoming pair owns it again and it is still measured for it.
+	 */
+	pairKeys: Record<ScreenPairKey, true>;
 };
 
 /**

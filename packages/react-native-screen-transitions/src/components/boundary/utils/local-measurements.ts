@@ -26,14 +26,25 @@ export const readLocalMeasurement = (
 
 export const writeLocalMeasurement = (
 	ref: BoundaryLocalMeasurementValue,
-	measurement: BoundaryLocalMeasurement,
+	measurement: Omit<BoundaryLocalMeasurement, "pairKeys">,
 ) => {
 	"worklet";
 	ref.map.modify((byBoundary) => {
 		"worklet";
-		byBoundary[ref.key] = measurement;
+		const pairKeys = byBoundary[ref.key]?.pairKeys ?? {};
+		pairKeys[measurement.pairKey] = true;
+		byBoundary[ref.key] = { ...measurement, pairKeys };
 		return byBoundary;
 	});
+};
+
+/** Whether this boundary has been measured for `pairKey` (see `BoundaryLocalMeasurement.pairKeys`). */
+export const isLocallyMeasuredFor = (
+	ref: BoundaryLocalMeasurementValue,
+	pairKey: string,
+) => {
+	"worklet";
+	return !!ref.map.get()[ref.key]?.pairKeys[pairKey];
 };
 
 export const forgetLocalMeasurements = (keys: readonly number[]) => {

@@ -1,7 +1,7 @@
 import type { SharedValue } from "react-native-reanimated";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../../types/animation.types";
 import type { BoundaryLocalMeasurementValue } from "../../types";
-import { readLocalMeasurement } from "../../utils/local-measurements";
+import { isLocallyMeasuredFor } from "../../utils/local-measurements";
 
 type Presentation = {
 	get: () => {
@@ -33,7 +33,8 @@ export const isBoundaryEscaped = ({
 	const { owner, slots } = presentation.get();
 	return (
 		!!owner?.ready &&
-		readLocalMeasurement(localMeasurement)?.pairKey === owner.pairKey &&
+		!!owner.pairKey &&
+		isLocallyMeasuredFor(localMeasurement, owner.pairKey) &&
 		slots[boundaryId] !== undefined &&
 		portalHostReady.get()
 	);

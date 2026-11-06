@@ -5,6 +5,7 @@ import createProvider from "../../utils/create-provider";
 import { useBuilderStore } from "../builder";
 import { useMotionAnimationPipeline } from "./animation/pipeline";
 import { useScreenGestures } from "./gestures/use-screen-gestures";
+import { useRegisterScreenProgress } from "./helpers/progress-registry";
 import { useMaybeBlockVisibility } from "./hooks/use-maybe-block-visibility";
 import { useMotionValues } from "./hooks/use-motion-values";
 import { useScreenOptions } from "./options/use-screen-options";
@@ -50,6 +51,7 @@ export const {
 	const gestures = useScreenGestures(options, values, onDismissRequest);
 
 	const state = useMotionAnimationPipeline(values);
+	useRegisterScreenProgress(screenKey, state.visualProgress);
 
 	const { animatedStyle, animatedProps, isScreenReady } =
 		useMaybeBlockVisibility({ motion: values, ancestorIsScreenReady });

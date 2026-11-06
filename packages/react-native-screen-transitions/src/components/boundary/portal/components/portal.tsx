@@ -5,8 +5,12 @@ import {
 	type ReactNode,
 } from "react";
 import { type StyleProp, StyleSheet, View, type ViewStyle } from "react-native";
-import Animated, { type AnimatedRef } from "react-native-reanimated";
+import Animated, {
+	type AnimatedRef,
+	useAnimatedStyle,
+} from "react-native-reanimated";
 import { logger } from "../../../../utils/logger";
+import { useBoundaryRootStore } from "../../providers/boundary-root.provider";
 import { usePlaceholderStyles } from "../hooks/use-placeholder-styles";
 import {
 	type PortalMode,
@@ -89,7 +93,11 @@ function EnabledPortal({
 				pointerEvents={PORTAL_POINTER_EVENTS}
 				style={mode === "handoff" ? StyleSheet.absoluteFill : styles.fill}
 			>
-				{children}
+				{mode === "handoff" ? (
+					<HandoffPayload>{children}</HandoffPayload>
+				) : (
+					children
+				)}
 			</EnabledNativePortal>
 		</>
 	);
@@ -107,6 +115,33 @@ function EnabledPortal({
 		>
 			{content}
 		</PortalPlaceholder>
+	);
+}
+
+/**
+ * The handed-off content, sized to its receiver while it is in another screen's receiver. Content
+ * moved by a portal is laid out through the portal, which learns the receiver's size from native
+ * layout a frame later: a receiver animating its size would have the content trail it a frame
+ * (a visible shake), and a move into a differently sized receiver would show one frame at the old
+ * size. Setting the size here lands with the move and with every size change, in the same frame.
+ */
+function HandoffPayload({ children }: { children: ReactNode }) {
+	const presentation = useBoundaryRootStore((s) => s.boundaryPresentation);
+	const sizeStyle = useAnimatedStyle(() => {
+		const size = presentation.get().receiverSize;
+		return {
+			width: size ? size.width : "100%",
+			height: size ? size.height : "100%",
+		};
+	});
+	return (
+		<Animated.View
+			style={sizeStyle}
+			pointerEvents={PORTAL_POINTER_EVENTS}
+			collapsable={false}
+		>
+			{children}
+		</Animated.View>
 	);
 }
 
