@@ -8,13 +8,14 @@ import { scheduleOnUI } from "react-native-worklets";
  * as routes leave (a screen closing under another closing screen stops being its `previous`); this
  * reads a screen's progress by key.
  */
-const screenProgress = makeMutable<Record<string, SharedValue<number>>>({});
+type Entry = { progress: SharedValue<number>; closing: SharedValue<number> };
+const screenProgress = makeMutable<Record<string, Entry>>({});
 
-const register = (key: string, progress: SharedValue<number>) => {
+const register = (key: string, entry: Entry) => {
 	"worklet";
 	screenProgress.modify((state) => {
 		"worklet";
-		state[key] = progress;
+		state[key] = entry;
 		return state;
 	});
 };
@@ -24,22 +25,28 @@ const unregister = (key: string, progress: SharedValue<number>) => {
 	screenProgress.modify((state) => {
 		"worklet";
 		// Only the registration that is leaving: a remount with the same key may already be in.
-		if (state[key] === progress) delete state[key];
+		if (state[key]?.progress === progress) delete state[key];
 		return state;
 	});
 };
 
 export const getScreenProgress = (key: string): number | undefined => {
 	"worklet";
-	return screenProgress.get()[key]?.get();
+	return screenProgress.get()[key]?.progress.get();
+};
+
+export const isScreenClosing = (key: string): boolean => {
+	"worklet";
+	return !!screenProgress.get()[key]?.closing.get();
 };
 
 export function useRegisterScreenProgress(
 	key: string,
 	progress: SharedValue<number>,
+	closing: SharedValue<number>,
 ) {
 	useLayoutEffect(() => {
-		scheduleOnUI(register, key, progress);
+		scheduleOnUI(register, key, { progress, closing });
 		return () => scheduleOnUI(unregister, key, progress);
-	}, [key, progress]);
+	}, [key, progress, closing]);
 }

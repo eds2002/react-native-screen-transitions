@@ -5,13 +5,24 @@ import {
 	FULLSCREEN_DIMENSIONS,
 	NO_STYLES,
 } from "../../../../constants";
-import { getScreenProgress } from "../../../../providers/motion/helpers/progress-registry";
+import {
+	getScreenProgress,
+	isScreenClosing,
+} from "../../../../providers/motion/helpers/progress-registry";
+import {
+	getDestinationScreenKeyFromPairKey,
+	getSourceScreenKeyFromPairKey,
+} from "../../../../stores/bounds/helpers/link-pairs.helpers";
 import { getEntry } from "../../../../stores/bounds/internals/entries";
-import { requestSourceMeasure } from "../../../../stores/bounds/internals/links";
+import {
+	getResolvedLink,
+	requestSourceMeasure,
+} from "../../../../stores/bounds/internals/links";
 import {
 	resolveScreenPairKey,
 	resolveTransitionPair,
 } from "../../../../stores/bounds/internals/resolver";
+import { pairs } from "../../../../stores/bounds/internals/state";
 import type { ResolvedTransitionPair } from "../../../../stores/bounds/types";
 import type { ScreenTransitionState } from "../../../../types/animation.types";
 import type { Layout } from "../../../../types/screen.types";
@@ -46,13 +57,69 @@ const lerp = (a: number, b: number, t: number) => {
  * own pair has it now. Aiming there keeps both hops one motion; aiming at the resting slot lands
  * the content there and then jumps onto Detail's pair, already part way along.
  */
+const lerpRect = (
+	from: MeasuredDimensions,
+	to: MeasuredDimensions,
+	t: number,
+): MeasuredDimensions => {
+	"worklet";
+	return {
+		x: lerp(from.x, to.x, t),
+		y: lerp(from.y, to.y, t),
+		width: lerp(from.width, to.width, t),
+		height: lerp(from.height, to.height, t),
+		pageX: lerp(from.pageX, to.pageX, t),
+		pageY: lerp(from.pageY, to.pageY, t),
+	};
+};
+
+/**
+ * Handed-off content still in flight to another screen pushed from the same source, now closing (a
+ * push, a pop and a push again, quickly): the newer screen takes the content where it is in that
+ * close, not from its resting slot. The furthest-open one is where it is shown.
+ */
+const resolveInFlightSibling = (
+	tag: string,
+	sourceScreenKey: string,
+	destinationScreenKey: string | null,
+): MeasuredDimensions | null => {
+	"worklet";
+	const state = pairs.get();
+	let best: MeasuredDimensions | null = null;
+	let bestProgress = 0;
+	for (const pairKey in state) {
+		if (getSourceScreenKeyFromPairKey(pairKey) !== sourceScreenKey) continue;
+		const destination = getDestinationScreenKeyFromPairKey(pairKey);
+		if (!destination || destination === destinationScreenKey) continue;
+		if (!isScreenClosing(destination)) continue;
+		const t = getScreenProgress(destination);
+		if (t === undefined || t <= 0 || t >= 1 || t <= bestProgress) continue;
+		const link = getResolvedLink(pairKey, tag).link;
+		const from = link?.source?.bounds;
+		const to = link?.destination?.bounds;
+		if (!from || !to) continue;
+		best = lerpRect(from, to, t);
+		bestProgress = t;
+	}
+	return best;
+};
+
 const resolveMovingHandoffSource = (
 	tag: string,
 	sourceBounds: MeasuredDimensions,
 	sourceScreenKey: string | null,
+	destinationScreenKey: string | null,
 ): MeasuredDimensions => {
 	"worklet";
 	if (!sourceScreenKey) return sourceBounds;
+	if (getEntry(tag, sourceScreenKey)?.handoff) {
+		const sibling = resolveInFlightSibling(
+			tag,
+			sourceScreenKey,
+			destinationScreenKey,
+		);
+		if (sibling) return sibling;
+	}
 	const t = getScreenProgress(sourceScreenKey);
 	if (t === undefined || t === 1 || !getEntry(tag, sourceScreenKey)?.handoff) {
 		return sourceBounds;
@@ -66,14 +133,7 @@ const resolveMovingHandoffSource = (
 	if (!from || !to || upstream.destinationScreenKey !== sourceScreenKey) {
 		return sourceBounds;
 	}
-	return {
-		x: lerp(from.x, to.x, t),
-		y: lerp(from.y, to.y, t),
-		width: lerp(from.width, to.width, t),
-		height: lerp(from.height, to.height, t),
-		pageX: lerp(from.pageX, to.pageX, t),
-		pageY: lerp(from.pageY, to.pageY, t),
-	};
+	return lerpRect(from, to, t);
 };
 
 const resolveStartEnd = (params: {
@@ -151,6 +211,7 @@ const resolveStartEnd = (params: {
 				String(params.id),
 				sourceBounds,
 				resolvedPair.sourceScreenKey,
+				resolvedPair.destinationScreenKey,
 			)
 		: sourceBounds;
 	let end = destinationBounds ?? fullscreen;

@@ -33,6 +33,8 @@ export type BoundaryPairPresentation = {
 	sourceKey: string;
 	destinationKey: string;
 	ready: boolean;
+	/** The destination is closing: a newer screen pushed over its source is on top of it. */
+	closing: boolean;
 	source: NormalizedTransitionInterpolatedStyle;
 	destination: NormalizedTransitionInterpolatedStyle;
 };
@@ -176,6 +178,7 @@ export function usePairPresentation({
 			sourceKey: getSourceScreenKeyFromPairKey(pairKey),
 			destinationKey: frame.current.route.key,
 			ready: ready.get(),
+			closing: !!frame.current.closing,
 			source: runBoundaryInterpolator(currentInterpolator, source, "source"),
 			destination: runBoundaryInterpolator(
 				currentInterpolator,

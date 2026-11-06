@@ -79,6 +79,39 @@ export function resolveBoundaryReceiver(
 }
 
 /**
+ * A receiver whose pair is closing while a newer screen was pushed from it (spam: push, pop, push):
+ * the newer screen is on top. The closing one may still cover more (it is followed until the two
+ * cross), but content left in it would be under the newer one, out of sight. The open pair takes it;
+ * it starts from where the content is in the closing pair (see resolveMovingHandoffSource), so the
+ * move does not jump.
+ */
+function preferOpenPair(
+	receiver: string,
+	boundaryId: string,
+	state: BoundaryPresentationState,
+	p: BoundaryPairPresentation | undefined,
+) {
+	"worklet";
+	if (!p?.closing || p.sourceKey !== receiver) return p;
+	const linkKey = getLinkKeyFromTag(boundaryId);
+	for (const value of state.presentations) {
+		const candidate = value?.get();
+		if (!candidate?.ready || candidate.closing) continue;
+		if (candidate.pairKey === p.pairKey) continue;
+		const link = state.pairs[candidate.pairKey]?.links[linkKey];
+		if (!link) continue;
+		const sourceKey = link.source?.screenKey ?? candidate.sourceKey;
+		if (sourceKey !== receiver) continue;
+		return {
+			...candidate,
+			sourceKey,
+			destinationKey: link.destination?.screenKey ?? candidate.destinationKey,
+		};
+	}
+	return p;
+}
+
+/**
  * Where a handoff boundary's content is presented: the screen whose receiver it is in, and that
  * receiver's slot (its style says how big the receiver is this frame).
  */
@@ -95,12 +128,17 @@ export function resolveBoundaryHandoffTarget(
 	// handed on from screen to screen) each receiver follows its own screen's next route.
 	while (!visited[receiver]) {
 		visited[receiver] = true;
-		const p = resolveBoundaryPresentation(
+		const p = preferOpenPair(
 			receiver,
 			boundaryId,
-			receiver === screenKey
-				? state
-				: { ...state, following: state.nextByScreen?.[receiver] },
+			state,
+			resolveBoundaryPresentation(
+				receiver,
+				boundaryId,
+				receiver === screenKey
+					? state
+					: { ...state, following: state.nextByScreen?.[receiver] },
+			),
 		);
 		if (!p) break;
 		const slot = (p.sourceKey === receiver ? p.source : p.destination)[

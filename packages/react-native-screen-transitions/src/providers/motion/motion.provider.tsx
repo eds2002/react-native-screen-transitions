@@ -51,7 +51,7 @@ export const {
 	const gestures = useScreenGestures(options, values, onDismissRequest);
 
 	const state = useMotionAnimationPipeline(values);
-	useRegisterScreenProgress(screenKey, state.visualProgress);
+	useRegisterScreenProgress(screenKey, state.visualProgress, state.closing);
 
 	const { animatedStyle, animatedProps, isScreenReady } =
 		useMaybeBlockVisibility({ motion: values, ancestorIsScreenReady });
