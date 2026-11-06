@@ -12,6 +12,7 @@ import { useMeasurer } from "../hooks/use-measurer";
 import type {
 	BoundaryConfigProps,
 	BoundaryLocalMeasurementValue,
+	MeasureBoundary,
 } from "../types";
 
 interface BoundaryLifecycleProps {
@@ -45,6 +46,11 @@ export const BoundaryLifecycle = memo(function BoundaryLifecycle({
 	);
 
 	const runtimeEnabled = enabled && hasConfiguredInterpolator;
+	// Only a screen pushed as a pair's destination (and not covered by another screen) can run the
+	// destination handshake. Everywhere else, such as a list of sources, it is never mounted.
+	const isReceivingDestination = useBuilderStore(
+		(s) => !s.derivations.nextScreenKey && !!s.derivations.destinationPairKey,
+	);
 	const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
 
 	const measureBoundary = useMeasurer({
@@ -77,17 +83,37 @@ export const BoundaryLifecycle = memo(function BoundaryLifecycle({
 		boundTag,
 	});
 
-	useInitialDestinationMeasurement({
-		boundTag,
-		enabled: runtimeEnabled,
-		measureBoundary,
-	});
-
 	useRefreshBoundary({
 		enabled: runtimeEnabled,
 		boundTag,
 		measureBoundary,
 	});
 
+	return runtimeEnabled && isReceivingDestination ? (
+		<DestinationHandshake
+			boundTag={boundTag}
+			measureBoundary={measureBoundary}
+		/>
+	) : null;
+});
+
+/**
+ * The destination handshake (lifecycle block, measure, retries) as its own component, mounted only
+ * while it can act: it costs five shared values, two worklets and a reaction per boundary.
+ * Remounting it after the screen above pops is harmless: with this screen's progress above zero it
+ * neither blocks nor measures.
+ */
+const DestinationHandshake = memo(function DestinationHandshake({
+	boundTag,
+	measureBoundary,
+}: {
+	boundTag: BoundTag;
+	measureBoundary: MeasureBoundary;
+}) {
+	useInitialDestinationMeasurement({
+		boundTag,
+		enabled: true,
+		measureBoundary,
+	});
 	return null;
 });
