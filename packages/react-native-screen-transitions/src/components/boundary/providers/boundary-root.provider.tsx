@@ -22,7 +22,11 @@ import type { BoundTag } from "../../../stores/bounds/types";
 import createProvider from "../../../utils/create-provider";
 import { logger } from "../../../utils/logger";
 import { BoundaryLifecycle } from "../components/boundary-lifecycle";
-import { useBoundaryPresentation } from "../hooks/use-boundary-presentation";
+import {
+	BoundaryPresentationDriver,
+	type BoundaryPresentationHandles,
+	useIdleBoundaryPresentation,
+} from "../hooks/use-boundary-presentation";
 import { useComposedBoundaryStyle } from "../hooks/use-composed-boundary-style";
 import { resolveBoundaryPortal } from "../portal/utils/resolve-portal";
 import type {
@@ -44,10 +48,8 @@ export const TARGET_OUTSIDE_ROOT_WARNING =
 	"Boundary.Target must be rendered inside Transition.Boundary or a component created by createBoundaryComponent.";
 
 export type BoundaryRootRenderState = {
-	boundaryPresentation: ReturnType<
-		typeof useBoundaryPresentation
-	>["presentation"];
-	slotsMap: ReturnType<typeof useBoundaryPresentation>["slotsMap"];
+	boundaryPresentation: BoundaryPresentationHandles["presentation"];
+	slotsMap: BoundaryPresentationHandles["slotsMap"];
 	attachedStyle: unknown;
 	boundTag: BoundTag;
 	currentScreenKey: string;
@@ -145,14 +147,18 @@ export const {
 
 		// Following pair presentations costs UI work on every bounds change and every transition
 		// frame: only boundaries taking part in a transition (handoff, or escaping and measured for a
-		// pair) do it. The rest only read their own screen's slots.
-		const { presentation: boundaryPresentation, slotsMap } =
-			useBoundaryPresentation(
-				boundTag.tag,
-				enabled &&
-					(portalRuntime.handoff ||
-						(portalRuntime.escapeClipping && escapeMeasured)),
-			);
+		// pair) do it, through a driver mounted while they do. The rest read their screen's slots.
+		const engaged =
+			enabled &&
+			(portalRuntime.handoff ||
+				(portalRuntime.escapeClipping && escapeMeasured));
+		const idlePresentation = useIdleBoundaryPresentation();
+		const [engagedPresentation, setEngagedPresentation] =
+			useState<BoundaryPresentationHandles | null>(null);
+		const presentationReady = engaged && engagedPresentation !== null;
+		const { presentation: boundaryPresentation, slotsMap } = presentationReady
+			? engagedPresentation
+			: idlePresentation;
 
 		const associatedStyles = useComposedBoundaryStyle(
 			slotsMap,
@@ -206,7 +212,8 @@ export const {
 				attachedStyle,
 				boundTag,
 				currentScreenKey,
-				escapeMeasured,
+				// The overlay host and the escape portal start once the boundary follows its pairs.
+				escapeMeasured: escapeMeasured && presentationReady,
 				handoffEnabled,
 				localMeasurement,
 				measurementRef,
@@ -223,6 +230,7 @@ export const {
 				boundTag,
 				currentScreenKey,
 				escapeMeasured,
+				presentationReady,
 				handoffEnabled,
 				hasTarget,
 				localMeasurement,
@@ -239,6 +247,12 @@ export const {
 			children: (
 				<>
 					{children(value)}
+					{engaged ? (
+						<BoundaryPresentationDriver
+							boundaryId={boundTag.tag}
+							onChange={setEngagedPresentation}
+						/>
+					) : null}
 					<BoundaryLifecycle
 						boundTag={boundTag}
 						config={config}

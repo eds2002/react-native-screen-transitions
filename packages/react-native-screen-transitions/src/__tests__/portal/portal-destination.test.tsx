@@ -19,18 +19,20 @@ beforeEach(()=>{hostReady=false;registeredScope=undefined;root.escapeMeasured=tr
 it("registers no overlay host for a boundary never measured for a transition", () => {
  root.escapeMeasured=false;
  let destination: ReturnType<typeof usePortalDestination>;
- function Probe(){destination=usePortalDestination("photo","escapeClipping");return null;}
+ function Probe(){destination=usePortalDestination("photo","escapeClipping");return destination.teleportDriver;}
  let renderer: ReturnType<typeof create>;
  act(()=>{renderer=create(<Probe/>);});
  expect(registeredScope).toBeUndefined();
  expect(destination!.pinned).toBe(false);
- expect(destination!.teleportProps.hostName).toBeNull();
+ // It renders inline as a plain portal: no animated props, nothing running on the UI thread.
+ expect(destination!.teleportDriver).toBeNull();
+ expect(destination!.teleportProps).toBeUndefined();
  act(()=>renderer!.unmount());
 });
 
 it("routes handoff content without registering or waiting for an overlay host", () => {
  let destination: ReturnType<typeof usePortalDestination>;
- function Probe(){destination=usePortalDestination("photo","handoff");return null;}
+ function Probe(){destination=usePortalDestination("photo","handoff");return destination.teleportDriver;}
  let renderer: ReturnType<typeof create>;
  act(()=>{renderer=create(<Probe/>);});
  expect(registeredScope).toBeUndefined();
@@ -41,16 +43,18 @@ it("routes handoff content without registering or waiting for an overlay host", 
 
 it("keeps an escaped frame inline until its host and matching pair are ready", () => {
  let destination: ReturnType<typeof usePortalDestination>;
- function Probe(){destination=usePortalDestination("photo","escapeClipping");return null;}
+ function Probe(){destination=usePortalDestination("photo","escapeClipping");return destination.teleportDriver;}
  let renderer: ReturnType<typeof create>;
  act(()=>{renderer=create(<Probe/>);});
  expect(registeredScope).toBe("overlay");
- expect(destination!.teleportProps.hostName).toBeNull();
+ expect(destination!.teleportProps?.hostName).toBeNull();
+ // The test stand-in computes animated props on render (the real ones follow their shared values on
+ // the UI thread): remount to read them again.
  hostReady=true;
- act(()=>renderer!.update(<Probe/>));
+ act(()=>renderer!.update(<Probe key="ready"/>));
  expect(destination!.teleportProps).toEqual({opacity:0.5,hostName:"overlay-photo"});
  localMeasurement.set({pairKey:"a<>c"});
- act(()=>renderer!.update(<Probe/>));
- expect(destination!.teleportProps.hostName).toBeNull();
+ act(()=>renderer!.update(<Probe key="other-pair"/>));
+ expect(destination!.teleportProps?.hostName).toBeNull();
  act(()=>renderer!.unmount());
 });

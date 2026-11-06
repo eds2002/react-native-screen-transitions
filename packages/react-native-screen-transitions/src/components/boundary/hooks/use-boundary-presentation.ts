@@ -1,5 +1,9 @@
-import { useMemo } from "react";
-import { useDerivedValue, useSharedValue } from "react-native-reanimated";
+import { memo, useLayoutEffect, useMemo } from "react";
+import {
+	type SharedValue,
+	useDerivedValue,
+	useSharedValue,
+} from "react-native-reanimated";
 import { NO_PROPS, NO_STYLES } from "../../../constants";
 import { useBuilderStore } from "../../../providers/builder";
 import { useScreenRelationships } from "../../../providers/builder/topology";
@@ -17,20 +21,46 @@ import {
 	boundaryRegistry,
 	pairs,
 } from "../../../stores/bounds/internals/state";
+import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
 import {
 	type BoundaryPresentationState,
 	resolveBoundaryHandoff,
 	resolveBoundaryPresentation,
 } from "../helpers/presentation";
 
+export type BoundaryPresentationValue = {
+	owner: ReturnType<typeof resolveBoundaryPresentation> | null;
+	/** Where a handoff boundary's content goes; null outside any transition. */
+	receiver: ReturnType<typeof resolveBoundaryHandoff> | null;
+	slots: NormalizedTransitionInterpolatedStyle;
+};
+
+export type BoundaryPresentationHandles = {
+	presentation: SharedValue<BoundaryPresentationValue>;
+	slotsMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
+};
+
+/**
+ * A boundary outside any transition follows no pair: it reads its screen's slots, through values
+ * the screen owns, so it runs no UI work of its own (a long list of boundaries costs that much less
+ * to mount). It switches to `useBoundaryPresentation` once it takes part in a transition.
+ */
+export function useIdleBoundaryPresentation(): BoundaryPresentationHandles {
+	const presentation = useOrchestratorStore((s) => s.idleBoundaryPresentation);
+	const slotsMap = useOrchestratorStore((s) => s.slotsMap);
+	return useMemo(() => ({ presentation, slotsMap }), [presentation, slotsMap]);
+}
+
 // Screens are discovered through existing providers. React only wires subscriptions;
 // their live UI values decide ownership, including retained closing screens.
-export function useBoundaryPresentation(boundaryId: string, enabled = true) {
+export function useBoundaryPresentation(
+	boundaryId: string,
+): BoundaryPresentationHandles {
 	const screenKey = useBuilderStore((s) => s.derivations.currentScreenKey);
 	const scenes = useOptionalScreenHostStore((s) => s?.scenes);
 	const keys = useMemo(
-		() => (enabled ? (scenes?.map((s) => s.route.key) ?? [screenKey]) : []),
-		[scenes, screenKey, enabled],
+		() => scenes?.map((s) => s.route.key) ?? [screenKey],
+		[scenes, screenKey],
 	);
 	const pairPresentations = useOptionalOrchestratorStore(
 		keys,
@@ -45,7 +75,7 @@ export function useBoundaryPresentation(boundaryId: string, enabled = true) {
 	);
 	const previous = useSharedValue<ResettableStyleStatesBySlot>(NO_PROPS);
 
-	const presentation = useDerivedValue(() => {
+	const presentation = useDerivedValue<BoundaryPresentationValue>(() => {
 		const state: BoundaryPresentationState = {
 			presentations: pairPresentations,
 			pairs: pairs.get(),
@@ -80,5 +110,27 @@ export function useBoundaryPresentation(boundaryId: string, enabled = true) {
 		return { owner, receiver, slots: resolvedStylesMap };
 	});
 	const slotsMap = useDerivedValue(() => presentation.get().slots);
-	return { presentation, slotsMap };
+	return useMemo(() => ({ presentation, slotsMap }), [presentation, slotsMap]);
 }
+
+/**
+ * Runs `useBoundaryPresentation` for a boundary taking part in a transition and hands its values to
+ * the boundary root (in a layout effect, so the root renders with them before the frame). Mounted
+ * only while the boundary is engaged.
+ */
+export const BoundaryPresentationDriver = memo(
+	function BoundaryPresentationDriver({
+		boundaryId,
+		onChange,
+	}: {
+		boundaryId: string;
+		onChange: (handles: BoundaryPresentationHandles | null) => void;
+	}) {
+		const handles = useBoundaryPresentation(boundaryId);
+		useLayoutEffect(() => {
+			onChange(handles);
+			return () => onChange(null);
+		}, [handles, onChange]);
+		return null;
+	},
+);

@@ -1,0 +1,120 @@
+import { memo, useLayoutEffect, useState } from "react";
+import { type SharedValue, useAnimatedProps } from "react-native-reanimated";
+import type { BoundaryPresentationValue } from "../../hooks/use-boundary-presentation";
+import { useBoundaryRootStore } from "../../providers/boundary-root.provider";
+import type { BoundaryLocalMeasurementValue } from "../../types";
+import { useActiveHostKey } from "../stores/host-registry.store";
+import { isBoundaryEscaped } from "../utils/is-escaped";
+import {
+	createHandoffHostName,
+	PORTAL_HOST_NAME_RESET_VALUE,
+} from "../utils/naming";
+import { useActivePortalBoundaryHost } from "./use-active-portal-boundary-host";
+
+export type PortalMode = "handoff" | "escapeClipping";
+
+type TeleportProps = ReturnType<typeof useAnimatedProps>;
+
+export function usePortalDestination(boundaryId: string, mode: PortalMode) {
+	const {
+		currentScreenKey,
+		escapeMeasured,
+		localMeasurement,
+		portalHostReady,
+		slotsMap,
+		boundaryPresentation,
+	} = useBoundaryRootStore((s) => s);
+	// Every boundary can escape, but only one taking part in a transition needs a host in the
+	// overlay: it registers the first time the boundary is measured for a pair (a source on press, a
+	// destination on mount), not on mount. A long list of boundaries costs the overlay nothing.
+	const escapeHostKey = useActiveHostKey(
+		mode === "escapeClipping" && escapeMeasured ? currentScreenKey : null,
+	);
+	const portalHostName = useActivePortalBoundaryHost({
+		boundaryId,
+		escapeHostKey,
+		localMeasurement,
+		portalHostReady,
+		slotsMap,
+	});
+	// The teleport's animated props (which host the content is in) run on the UI thread, so a
+	// boundary only gets them once it can leave: a handoff boundary from mount, an escaping one once
+	// it is measured for a transition. Until then it renders inline, as a plain portal. Once started
+	// they stay (they return the portal inline when the boundary goes back to rest), so the native
+	// view never keeps a host name nothing updates.
+	const [teleportProps, setTeleportProps] = useState<TeleportProps | null>(
+		null,
+	);
+	const [started, setStarted] = useState(false);
+	if (!started && (mode === "handoff" || escapeMeasured)) setStarted(true);
+	return {
+		pinned: escapeMeasured,
+		teleportProps: teleportProps ?? undefined,
+		teleportDriver: started ? (
+			<TeleportPropsDriver
+				boundaryId={boundaryId}
+				currentScreenKey={currentScreenKey}
+				localMeasurement={localMeasurement}
+				mode={mode}
+				onChange={setTeleportProps}
+				portalHostName={portalHostName}
+				portalHostReady={portalHostReady}
+				presentation={boundaryPresentation}
+			/>
+		) : null,
+		localHostName: createHandoffHostName(currentScreenKey, boundaryId),
+	};
+}
+
+const TeleportPropsDriver = memo(function TeleportPropsDriver({
+	boundaryId,
+	currentScreenKey,
+	localMeasurement,
+	mode,
+	onChange,
+	portalHostName,
+	portalHostReady,
+	presentation,
+}: {
+	boundaryId: string;
+	currentScreenKey: string;
+	localMeasurement: BoundaryLocalMeasurementValue;
+	mode: PortalMode;
+	onChange: (props: TeleportProps | null) => void;
+	portalHostName: string | null;
+	portalHostReady: SharedValue<boolean>;
+	presentation: SharedValue<BoundaryPresentationValue>;
+}) {
+	const teleportProps = useAnimatedProps(() => {
+		"worklet";
+		const { receiver, slots } = presentation.get();
+		const slot = slots[boundaryId];
+		const {
+			pointerEvents: _pointerEvents,
+			handoffTarget: _handoffTarget,
+			...props
+		} = slot?.props ?? {};
+		let hostName: string | null = PORTAL_HOST_NAME_RESET_VALUE;
+		if (mode === "handoff") {
+			hostName = createHandoffHostName(
+				receiver ?? currentScreenKey,
+				boundaryId,
+			);
+		} else if (
+			isBoundaryEscaped({
+				boundaryId,
+				presentation,
+				localMeasurement,
+				portalHostReady,
+			})
+		) {
+			hostName = portalHostName;
+		}
+
+		return { ...props, hostName };
+	});
+	useLayoutEffect(() => {
+		onChange(teleportProps);
+	}, [teleportProps, onChange]);
+	return null;
+});

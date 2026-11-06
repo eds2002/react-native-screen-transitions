@@ -1,6 +1,7 @@
 import { type ReactNode, useMemo } from "react";
-import type { SharedValue } from "react-native-reanimated";
+import { type SharedValue, useDerivedValue } from "react-native-reanimated";
 import { useBoundaryMeasureCoordinator } from "../../components/boundary/coordinator/use-boundary-measure-coordinator";
+import type { BoundaryPresentationValue } from "../../components/boundary/hooks/use-boundary-presentation";
 import type { NormalizedTransitionInterpolatedStyle } from "../../types/animation.types";
 import type { BoundsAccessor } from "../../types/bounds.types";
 import { createBoundsAccessor } from "../../utils/bounds";
@@ -25,6 +26,8 @@ export type OrchestratorState = ReturnType<
 	boundsAccessor: BoundsAccessor;
 	pairPresentation: ReturnType<typeof usePairPresentation>;
 	slotsMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
+	/** What boundaries outside any transition present: no pair, this screen's slots. */
+	idleBoundaryPresentation: SharedValue<BoundaryPresentationValue>;
 };
 
 export const {
@@ -44,6 +47,10 @@ export const {
 
 	const localStylesMaps = useInterpolatedStylesMap({ pipeline });
 	const slotsMap = useResolvedStylesMap({ localStylesMaps });
+
+	const idleBoundaryPresentation = useDerivedValue<BoundaryPresentationValue>(
+		() => ({ owner: null, receiver: null, slots: slotsMap.get() }),
+	);
 
 	const { screenInterpolatorProps } = pipeline;
 
@@ -73,6 +80,7 @@ export const {
 			pairPresentation,
 			boundsAccessor,
 			slotsMap,
+			idleBoundaryPresentation,
 		},
 	};
 });

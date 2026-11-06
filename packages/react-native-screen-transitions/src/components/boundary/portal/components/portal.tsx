@@ -74,20 +74,21 @@ function EnabledPortal({
 			"A boundary portal was rendered without an id; rendering inline.",
 		);
 	}
-	const { teleportProps, localHostName, pinned } = usePortalDestination(
-		boundaryId,
-		mode,
-	);
+	const { teleportProps, teleportDriver, localHostName, pinned } =
+		usePortalDestination(boundaryId, mode);
 
 	const content = (
-		<EnabledNativePortal
-			animatedProps={teleportProps}
-			name={boundaryId}
-			pointerEvents={PORTAL_POINTER_EVENTS}
-			style={mode === "handoff" ? StyleSheet.absoluteFill : undefined}
-		>
-			{children}
-		</EnabledNativePortal>
+		<>
+			{teleportDriver}
+			<EnabledNativePortal
+				animatedProps={teleportProps}
+				name={boundaryId}
+				pointerEvents={PORTAL_POINTER_EVENTS}
+				style={mode === "handoff" ? StyleSheet.absoluteFill : undefined}
+			>
+				{children}
+			</EnabledNativePortal>
+		</>
 	);
 
 	return mode === "handoff" ? (
