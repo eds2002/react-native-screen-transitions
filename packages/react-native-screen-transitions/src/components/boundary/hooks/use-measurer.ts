@@ -14,6 +14,7 @@ import type { BoundTag } from "../../../stores/bounds/types";
 import { ScrollStore } from "../../../stores/scroll.store";
 import { getVisibilityBlockOffset } from "../../../utils/visibility-block-offset";
 import type { BoundaryLocalMeasurementValue, MeasureBoundary } from "../types";
+import { notifyFirstEscapeMeasure } from "../utils/first-escape-measure";
 import {
 	attachScrollSnapshotToMeasuredBounds,
 	correctMeasuredBoundsForVisibilityGate,
@@ -30,7 +31,8 @@ interface UseMeasurerParams {
 	handoff: boolean;
 	escapeClipping: boolean;
 	localMeasurement: BoundaryLocalMeasurementValue;
-	onFirstEscapeMeasure: () => void;
+	/** Key for `notifyFirstEscapeMeasure` (a number, so no per-boundary JS function reaches the UI thread). */
+	firstEscapeMeasureKey: number;
 }
 
 export const useMeasurer = ({
@@ -42,7 +44,7 @@ export const useMeasurer = ({
 	handoff,
 	escapeClipping,
 	localMeasurement,
-	onFirstEscapeMeasure,
+	firstEscapeMeasureKey,
 }: UseMeasurerParams): MeasureBoundary => {
 	const { width: viewportWidth, height: viewportHeight } =
 		useWindowDimensions();
@@ -107,7 +109,8 @@ export const useMeasurer = ({
 			// snapshot lets the escaped frame follow its scroll views while it is in the overlay.
 			if (escapeClipping) {
 				// The first measurement is what gives this boundary a host in the overlay.
-				if (localMeasurement.get() === null) scheduleOnRN(onFirstEscapeMeasure);
+				if (localMeasurement.get() === null)
+					scheduleOnRN(notifyFirstEscapeMeasure, firstEscapeMeasureKey);
 				localMeasurement.set({
 					bounds: measuredWithScroll,
 					pairKey: target.pairKey,
@@ -150,7 +153,7 @@ export const useMeasurer = ({
 			handoff,
 			escapeClipping,
 			localMeasurement,
-			onFirstEscapeMeasure,
+			firstEscapeMeasureKey,
 			viewportWidth,
 			viewportHeight,
 			scrollState,

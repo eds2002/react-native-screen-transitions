@@ -8,15 +8,18 @@ const motion = {isScreenReady:makeMutable(false), state:{pendingLifecycleStartBl
 const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
 await mockModule('../../providers/motion', () => ({useMotionStore:(select:any)=>select(motion)}));
 const {useMeasurer} = await import('../../components/boundary/hooks/use-measurer');
+const {useFirstEscapeMeasureKey} = await import('../../components/boundary/utils/first-escape-measure');
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
 let firstMeasures = 0;
+const onFirstMeasure = () => {firstMeasures++;};
 it('captures destination escape placement in corrected coordinates and rejects invalid captures', async () => {
  const localMeasurement = makeMutable<BoundaryLocalMeasurement | null>(null);
  const ref = {current:{measurement:{x:0,y:0,pageX:0,pageY:1915,width:310,height:100}}};
  let measureBoundary: MeasureBoundary;
  function Probe() {
-  measureBoundary = useMeasurer({enabled:true,boundTag:{tag:'box',linkKey:'box'},currentScreenKey:'B',preparedStyles:{},measuredAnimatedRef:ref as never,handoff:true,escapeClipping:true,localMeasurement,onFirstEscapeMeasure:()=>{firstMeasures++;}});
+  const firstEscapeMeasureKey = useFirstEscapeMeasureKey(onFirstMeasure);
+  measureBoundary = useMeasurer({enabled:true,boundTag:{tag:'box',linkKey:'box'},currentScreenKey:'B',preparedStyles:{},measuredAnimatedRef:ref as never,handoff:true,escapeClipping:true,localMeasurement,firstEscapeMeasureKey});
   return null;
  }
  let root: ReturnType<typeof create>;

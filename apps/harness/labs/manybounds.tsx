@@ -6,6 +6,9 @@
  *   plain      the same with plain Views (the baseline)
  *   list       a FlatList of 1000 boundary cards to fling through (virtualized mounting while scrolling;
  *              read harness-state perf for dropped UI frames)
+ *   cycles     mount and clear 300 boundaries 12 (or 40) times; mb-cycles-result lists commit/frame and the
+ *              JS heap per cycle. Both stay flat; growth means unmounted boundaries are kept alive (a
+ *              per-boundary JS function captured by a UI worklet did that: see first-escape-measure.ts)
  */
 import { memo, useLayoutEffect, useRef, useState } from "react";
 import { FlatList, ScrollView, Text, View, useWindowDimensions } from "react-native";
@@ -51,6 +54,30 @@ function Home() {
 	const size = (width - 40 - 20) / 3;
 	const runs = useRef(0);
 
+	const [cycles, setCycles] = useState("");
+
+	// Mount and clear 300 of them n times. Each line is commit/first frame (ms) and the JS heap (MB) before
+	// that mount: both must stay flat. A boundary that leaks its tree grows them every cycle.
+	const runCycles = async (plain, n) => {
+		setCycles("running");
+		const heap = () => Math.round((globalThis.HermesInternal?.getInstrumentedStats?.().js_heapSize ?? 0) / 1e6);
+		const out = [];
+		for (let i = 0; i < n; i++) {
+			setRun(null);
+			await new Promise((r) => setTimeout(r, 500));
+			const h = heap();
+			const r = await new Promise((resolve) => {
+				requestAnimationFrame(() => {
+					runs.current += 1;
+					setRun({ count: 300, plain, started: performance.now(), key: runs.current, done: (cm, fr) => resolve(`${Math.round(cm)}/${Math.round(fr)}`) });
+				});
+			});
+			out.push(`${i + 1}:${r} h${h}`);
+		}
+		setRun(null);
+		setCycles(`${plain ? "plain" : "bounds"} ${out.join(" ")} END`);
+	};
+
 	const start = (count, plain) => {
 		setRun(null);
 		setResult("…");
@@ -74,6 +101,12 @@ function Home() {
 					<Button label="clear" testID="mb-clear" onPress={() => { setRun(null); setResult("idle"); }} />
 				</View>
 				<Probe testID="mb-result" value={result} />
+				<View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+					<Button label="cycles ×12" testID="mb-cycles" onPress={() => runCycles(false, 12)} />
+					<Button label="cycles ×40" testID="mb-cycles-40" onPress={() => runCycles(false, 40)} />
+					<Button label="plain cycles ×12" testID="mb-cycles-plain" onPress={() => runCycles(true, 12)} />
+				</View>
+				<Probe testID="mb-cycles-result" value={cycles} />
 			</View>
 			{list ? (
 				<FlatList
@@ -92,7 +125,7 @@ function Home() {
 							count={run.count}
 							plain={run.plain}
 							started={run.started}
-							onCommitted={(commit, frame) => setResult(`${run.plain ? "plain" : "bounds"} ${run.count}: commit ${commit.toFixed(0)}ms frame ${frame.toFixed(0)}ms`)}
+							onCommitted={(commit, frame) => run.done ? run.done(commit, frame) : setResult(`${run.plain ? "plain" : "bounds"} ${run.count}: commit ${commit.toFixed(0)}ms frame ${frame.toFixed(0)}ms`)}
 						/>
 					) : null}
 				</ScrollView>

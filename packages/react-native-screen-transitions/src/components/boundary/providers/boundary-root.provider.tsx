@@ -32,6 +32,7 @@ import type {
 	BoundaryLocalMeasurementValue,
 	BoundaryOwnProps,
 } from "../types";
+import { useFirstEscapeMeasureKey } from "../utils/first-escape-measure";
 
 type BoundaryRootContextValue = BoundaryRootRenderState;
 
@@ -139,6 +140,8 @@ export const {
 		const portalHostReady = useSharedValue(false);
 		const [escapeMeasured, setEscapeMeasured] = useState(false);
 		const onFirstEscapeMeasure = useCallback(() => setEscapeMeasured(true), []);
+		const firstEscapeMeasureKey =
+			useFirstEscapeMeasureKey(onFirstEscapeMeasure);
 
 		// Following pair presentations costs UI work on every bounds change and every transition
 		// frame: only boundaries taking part in a transition (handoff, or escaping and measured for a
@@ -245,7 +248,7 @@ export const {
 						handoff={portalRuntime.handoff}
 						localMeasurement={localMeasurement}
 						measuredRef={measuredRef}
-						onFirstEscapeMeasure={onFirstEscapeMeasure}
+						firstEscapeMeasureKey={firstEscapeMeasureKey}
 						style={hasTarget ? targetStyle : style}
 					/>
 				</>
