@@ -12,6 +12,7 @@ import { scheduleOnRN } from "react-native-worklets";
 import { useMotionStore } from "../../../providers/motion";
 import { useScrollChain } from "../../../providers/motion/gestures/scroll-coordination";
 import { useOptionalOrchestratorStore } from "../../../providers/orchestrator/orchestrator.provider";
+import { toLayoutSpace } from "../../../providers/orchestrator/styles/helpers/bounds-screen-frames";
 import { getScreenTransform } from "../../../providers/orchestrator/styles/helpers/screen-transform-registry";
 import { setEntry } from "../../../stores/bounds/internals/entries";
 import {
@@ -210,10 +211,23 @@ export const measureBoundaryWith = (
 	const shouldGuardDestinationViewport =
 		pendingLifecycleStartBlockCount.get() > 0 || !!boundTag.group;
 
+	// Where the screen was drawn at this measurement (see measureScreenAt). The viewport guard reads
+	// the boundary where its screen lays it out: a destination measured while its screen's own
+	// transition has it off-screen (sliding in from the side) is still a valid measurement.
+	const screenAt = measureScreenAt(
+		screen,
+		measured,
+		correctedMeasured.pageY - measured.pageY,
+	);
+
 	const viewportAllowsDestinationWrite =
 		target.type !== "destination" ||
 		!shouldGuardDestinationViewport ||
-		isMeasurementInViewport(correctedMeasured, viewportWidth, viewportHeight);
+		isMeasurementInViewport(
+			toLayoutSpace(correctedMeasured, screenAt?.transform),
+			viewportWidth,
+			viewportHeight,
+		);
 
 	if (!viewportAllowsDestinationWrite) return;
 
@@ -221,11 +235,6 @@ export const measureBoundaryWith = (
 		correctedMeasured,
 		scrollMetadata.get(),
 		scrollChain,
-	);
-	const screenAt = measureScreenAt(
-		screen,
-		measured,
-		correctedMeasured.pageY - measured.pageY,
 	);
 	const measuredWithScroll = screenAt
 		? {
