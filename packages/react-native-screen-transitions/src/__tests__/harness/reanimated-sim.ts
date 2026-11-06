@@ -344,6 +344,22 @@ export const createReanimatedSim = ({ frameMs = 1000 / 60 }: { frameMs?: number 
 		return value;
 	};
 
+	// What each animated style held when the last frame was drawn. A device's measure() reads the
+	// committed view (Reanimated commits animated props once per frame), not values changed since.
+	const committed = new WeakMap<AnimatedHandle, unknown>();
+	const handles = new Set<AnimatedHandle>();
+	const commit = () => {
+		for (const handle of handles) committed.set(handle, handle.factory());
+	};
+	const resolveCommitted = (value: unknown): unknown => {
+		if (Array.isArray(value)) return value.map(resolveCommitted);
+		if (value && typeof value === "object" && ANIMATED in (value as object)) {
+			const handle = value as AnimatedHandle;
+			return committed.has(handle) ? committed.get(handle) : handle.factory();
+		}
+		return value;
+	};
+
 	const isAnimatedHandle = (value: unknown): value is AnimatedHandle =>
 		!!value && typeof value === "object" && ANIMATED in (value as object);
 
@@ -351,6 +367,13 @@ export const createReanimatedSim = ({ frameMs = 1000 / 60 }: { frameMs?: number 
 		const ref = React.useRef<AnimatedHandle | null>(null);
 		if (!ref.current) ref.current = { [ANIMATED]: kind, factory };
 		ref.current.factory = factory;
+		React.useEffect(() => {
+			const handle = ref.current as AnimatedHandle;
+			handles.add(handle);
+			return () => {
+				handles.delete(handle);
+			};
+		}, []);
 		return ref.current;
 	};
 
@@ -480,6 +503,10 @@ export const createReanimatedSim = ({ frameMs = 1000 / 60 }: { frameMs?: number 
 			return tasks.length;
 		},
 		resolveAnimated,
+		/** Animated values as the last committed frame drew them (see commit). */
+		resolveCommitted,
+		/** Ends a frame: what each animated style draws is what measure() reads until the next one. */
+		commit,
 		isAnimatedHandle,
 		/** True when no animation runs or waits to start and no thread hop is queued. */
 		isIdle: () =>

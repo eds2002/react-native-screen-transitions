@@ -52,9 +52,13 @@ export const BOUND_MARKER = "harness-bound:";
 const hasOwnLayout = (st: Record<string, unknown>) =>
 	typeof st.width === "number" && typeof st.height === "number" && (typeof st.left === "number" || typeof st.top === "number");
 
-export const elementBox = (node: ReactTestInstance, sim: ReanimatedSim, { layoutOnly = false } = {}) => {
+export const elementBox = (node: ReactTestInstance, sim: ReanimatedSim, { layoutOnly = false, committed = false } = {}) => {
 	const path = pathTo(node).filter((n) => typeof n.type === "string");
-	const styles = path.map((n) => flattenStyle(layoutOnly ? staticStyle(n.props.style, sim) : sim.resolveAnimated(n.props.style)));
+	const styles = path.map((n) =>
+		flattenStyle(
+			layoutOnly ? staticStyle(n.props.style, sim) : committed ? sim.resolveCommitted(n.props.style) : sim.resolveAnimated(n.props.style),
+		),
+	);
 	let layoutIndex = -1;
 	for (let i = path.length - 1; i >= 0; i--) {
 		if (hasOwnLayout(styles[i])) {
@@ -766,7 +770,9 @@ export const mountStack = async (
 			return null;
 		}
 		if (!node) return null;
-		const box = elementBox(node, sim, { layoutOnly: true });
+		// As a device does (Reanimated commits animated props to the shadow tree): the view as the last
+		// frame drew it, with its own and its ancestors' animated transforms.
+		const box = elementBox(node, sim, { committed: true });
 		return { x: box.x, y: box.y, width: box.width, height: box.height, pageX: box.x, pageY: box.y };
 	};
 	await act(async () => {
@@ -862,6 +868,7 @@ export const mountStack = async (
 			sim.frame();
 			// JS work can schedule more UI work and vice versa; drain both hops.
 			for (let i = 0; i < 5 && sim.flushRN() > 0; i++) sim.runReactions();
+			sim.commit();
 		});
 		return record(label);
 	};

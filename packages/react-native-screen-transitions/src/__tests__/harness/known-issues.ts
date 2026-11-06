@@ -20,6 +20,36 @@ const transitionOf = (scenario: string) => scenario.split(" / ")[0];
 
 export const KNOWN_ISSUES: KnownIssue[] = [
 	{
+		id: "boundary-measures-own-motion-without-teleport",
+		summary:
+			"Without react-native-teleport there is no escape placeholder: the boundary's own root is measured, and it " +
+			"carries the boundary's animated style. A source measured again as a close starts (a swipe released while " +
+			"styles() still moves the card) includes the card's own motion, so its path starts where the card was drawn, " +
+			"and both copies step ~100 px. With teleport the unstyled placeholder is measured. Fix: measure the root's " +
+			"layout without its own animated transform (or always measure a placeholder).",
+		matches: (scenario, v) =>
+			scenario === "bounds-styles / preset-spec / swipe-dismiss" && v.rule === "element-spike",
+		environments: ["ios", "android", "compact", "120hz", "custom-navigator"],
+	},
+	{
+		id: "zoom-measured-mid-zoom",
+		summary:
+			"Found once measure() included animated transforms, as a device does. zoom() composes window-space " +
+			"measurements; a boundary measured again while zoom still scales its screen (a pop mid-open, open-pop-open, a " +
+			"fast push then a swipe, a scrolled destination swiped back) is measured scaled and off its rest, and the zoom " +
+			"lands there (trajectory) or steps (element-spike/teleport). styles() works in layout space (measurements " +
+			"undo the screen transform they were taken with); zoom() should too (same root as zoom-settled-background-reset).",
+		matches: (scenario, v) =>
+			(scenario.startsWith("bounds-zoom-to-bound") ||
+				scenario.startsWith("scroll-bounds-zoom-to-bound") ||
+				scenario.startsWith("bounds-chain-zoom-to-bound") ||
+				scenario.startsWith("bounds-global-")) &&
+			["pop-mid-open", "open-pop-open", "open-pop-open-from-scrolled-list", "fast-push-then-swipe", "scroll-destination-then-swipe-back"].includes(
+				sequenceOf(scenario),
+			) &&
+			["trajectory", "element-spike", "element-teleport"].includes(v.rule),
+	},
+	{
 		id: "interrupted-navigation",
 		summary:
 			"A push landing during another push still steps the screens: the first screen's progress is " +
