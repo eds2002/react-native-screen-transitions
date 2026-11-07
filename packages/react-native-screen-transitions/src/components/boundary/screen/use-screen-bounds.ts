@@ -16,6 +16,7 @@ import { useOptionalOrchestratorStore } from "../../../providers/orchestrator/or
 import type { LocalStyleLayers } from "../../../providers/orchestrator/styles/helpers/resolve-slot-styles";
 import type { InterpolatorRuns } from "../../../providers/orchestrator/styles/hooks/use-interpolated-style-maps";
 import {
+	pairs,
 	registerScreenScroll,
 	registerScreenTransform,
 	unregisterScreenScroll,
@@ -35,6 +36,18 @@ import { applyBoundsScreenFrames } from "../../../utils/bounds/helpers/styles/ap
 import { useBoundaryMeasureCoordinator } from "../measure/use-boundary-measure-coordinator";
 import type { BoundaryPresentationValue } from "../presentation/use-boundary-presentation";
 import { usePairPresentation } from "../presentation/use-pair-presentation";
+
+const NO_SCREEN_TRANSFORMS: Record<string, ScreenTransform | undefined> = {};
+
+/**
+ * Whether any pair exists. A screen's transform is only read by bounds elements, which follow a
+ * pair (their styles carry its screens' keys); with none, no transform is needed.
+ */
+const hasAnyPair = () => {
+	"worklet";
+	for (const _key in pairs.get()) return true;
+	return false;
+};
 
 export type ScreenBounds = {
 	boundsAccessor: BoundsAccessor;
@@ -85,6 +98,11 @@ export function useScreenBounds({
 		IDENTITY_SCREEN_TRANSFORM,
 	);
 	const screenTransform = useDerivedValue<ScreenTransform>(() => {
+		if (!hasAnyPair()) {
+			if (lastScreenTransform.get() !== IDENTITY_SCREEN_TRANSFORM)
+				lastScreenTransform.set(IDENTITY_SCREEN_TRANSFORM);
+			return IDENTITY_SCREEN_TRANSFORM;
+		}
 		const screen = screenInterpolatorProps.get().layouts.screen;
 		const layers = localStylesMaps.get();
 		let contentStyle: StyleProps | undefined;
@@ -127,6 +145,7 @@ export function useScreenBounds({
 	const screenTransforms = useDerivedValue<
 		Record<string, ScreenTransform | undefined>
 	>(() => {
+		if (!hasAnyPair()) return NO_SCREEN_TRANSFORMS;
 		const transforms: Record<string, ScreenTransform | undefined> = {};
 		for (let index = 0; index < stackKeys.length; index++) {
 			transforms[stackKeys[index]] = stackScreenTransforms[index]?.get();
