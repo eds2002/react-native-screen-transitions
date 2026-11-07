@@ -28,7 +28,7 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			"source's disagree for 1-2 frames (up to ~60 px); (2) popping two levels quickly, the top screen's copy " +
 			"closes toward where the middle one's card is in flight while the source's copy shows that card directly: " +
 			"~15 px apart, meeting within ~8 frames; (3) one frame as the second pop starts, where the middle screen " +
-			"itself steps (interrupted-navigation); (4) without Teleport only (copies render inline): dragging the middle " +
+			"itself steps (fixed: a closing screen keeps the one still closing above it as its next); (4) without Teleport only (copies render inline): dragging the middle " +
 			"screen back right after the top one was swiped away, its copy and the source's disagree for ~39 frames " +
 			"(found once the harness swipe started on the screen under the finger, not the one leaving).",
 		matches: (scenario, v) =>
@@ -89,8 +89,8 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			"chain (pushes or pops 2-6 frames apart, pop to the root at once, churn, spam). Open: a screen pushed and popped " +
 			"again before it settles closes with every copy hidden for a few frames (device: the card leaves with the " +
 			"closing screen, then appears on the slot below); copies split for 1-3 frames as a newer pair takes the card; " +
-			"the card steps at the handover; the middle screen's own one-frame step as a second pop starts " +
-			"(interrupted-navigation).",
+			"the card steps at the handover. (The middle screen's one-frame step as a second pop starts, and the " +
+			"copies it dropped with it, are fixed.)",
 		matches: (scenario, v) =>
 			/^bounds-deep-/.test(scenario) &&
 			["chain-5-fast", "chain-5-faster", "pop-to-root-at-once", "churn", "spam", "swipe-cancel-then-pop-fast", "swipe-back-through-chain", "swipe-while-opening"].includes(
@@ -115,17 +115,6 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 				sequenceOf(scenario),
 			) &&
 			["trajectory", "element-spike", "element-teleport"].includes(v.rule),
-	},
-	{
-		id: "interrupted-navigation",
-		summary:
-			"A push landing during another push still steps the screens: the first screen's progress is " +
-			"driven below 0, so it jumps off-screen and flies back in (rapid, rapid-push-pop). A push during a " +
-			"pop is continuous: the closing screen stays and finishes, and the screen underneath follows " +
-			"whichever of the two covers it more.",
-		matches: (scenario, v) =>
-			["rapid", "rapid-push-pop"].includes(sequenceOf(scenario)) &&
-			["vanish", "spike", "teleport", "flash", "turns-back"].includes(v.rule),
 	},
 	{
 		id: "zoom-pinch-background-snap",

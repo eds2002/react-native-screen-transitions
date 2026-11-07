@@ -63,13 +63,18 @@ export function resolveSceneNeighbors<T extends SceneWithKey>(
 	}
 
 	if (isRouteClosing(current.route.key)) {
+		// The screen right above may still be on its way out (a second pop landed during the first):
+		// it still covers this one, which keeps following it, or it would drop to uncovered in one
+		// frame as its own close starts. A screen pushed above it since is not its next.
+		const above = scenes[sceneIndex + 1];
 		return {
 			previousDescriptor: findPreviousDescriptor(
 				scenes,
 				sceneIndex,
 				isRouteClosing,
 			),
-			nextDescriptor: undefined,
+			nextDescriptor:
+				above && isRouteClosing(above.route.key) ? above.descriptor : undefined,
 		};
 	}
 

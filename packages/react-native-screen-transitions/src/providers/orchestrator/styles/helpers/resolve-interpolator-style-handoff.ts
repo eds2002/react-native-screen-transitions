@@ -9,6 +9,7 @@ const mergeBuckets = (
 	frozen: Record<string, unknown> | undefined,
 	live: Record<string, unknown> | undefined,
 	composeTransforms: boolean,
+	multiplyOpacity = false,
 ) => {
 	"worklet";
 
@@ -41,6 +42,18 @@ const mergeBuckets = (
 			continue;
 		}
 
+		// Closing under a screen that still closes above it, this screen fades out itself (its own
+		// opacity) inside the cover the next screen adds: the two nest like the transforms.
+		if (
+			multiplyOpacity &&
+			key === "opacity" &&
+			typeof frozenValue === "number" &&
+			typeof liveValue === "number"
+		) {
+			merged[key] = frozenValue * liveValue;
+			continue;
+		}
+
 		merged[key] = liveValue;
 	}
 
@@ -50,6 +63,7 @@ const mergeBuckets = (
 const mergeSlots = (
 	frozen: NormalizedTransitionSlotStyle | undefined,
 	live: NormalizedTransitionSlotStyle,
+	multiplyOpacity: boolean,
 ): NormalizedTransitionSlotStyle => {
 	"worklet";
 
@@ -65,6 +79,7 @@ const mergeSlots = (
 		frozen.style as Record<string, unknown> | undefined,
 		live.style as Record<string, unknown> | undefined,
 		true,
+		multiplyOpacity,
 	);
 
 	if (style) {
@@ -88,6 +103,7 @@ const mergeSlots = (
 const composeCurrentAndNextStyles = (
 	current: NormalizedTransitionInterpolatedStyle,
 	next: NormalizedTransitionInterpolatedStyle,
+	multiplyOpacity: boolean,
 ) => {
 	"worklet";
 	const composed: NormalizedTransitionInterpolatedStyle = { ...current };
@@ -96,7 +112,7 @@ const composeCurrentAndNextStyles = (
 		const nextSlot = next[slotId];
 
 		if (nextSlot) {
-			composed[slotId] = mergeSlots(current[slotId], nextSlot);
+			composed[slotId] = mergeSlots(current[slotId], nextSlot, multiplyOpacity);
 		}
 	}
 
@@ -107,10 +123,13 @@ export const resolveInterpolatorStyleHandoff = ({
 	currentOwnsInterpolator,
 	currentStylesMap,
 	nextStylesMap,
+	currentClosing = false,
 }: {
 	currentOwnsInterpolator: boolean;
 	currentStylesMap: NormalizedTransitionInterpolatedStyle | undefined;
 	nextStylesMap: NormalizedTransitionInterpolatedStyle | undefined;
+	/** This screen is closing itself (under a screen still closing above it). */
+	currentClosing?: boolean;
 }): {
 	localStylesMaps: LocalStyleLayers;
 } => {
@@ -136,7 +155,11 @@ export const resolveInterpolatorStyleHandoff = ({
 
 	return {
 		localStylesMaps: [
-			composeCurrentAndNextStyles(currentStylesMap, nextStylesMap),
+			composeCurrentAndNextStyles(
+				currentStylesMap,
+				nextStylesMap,
+				currentClosing,
+			),
 		],
 	};
 };

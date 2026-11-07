@@ -312,6 +312,7 @@ export const useInterpolatedStylesMap = ({
 			currentOwnsInterpolator: false,
 			currentStylesMap: currentResult?.stylesMap,
 			nextStylesMap: nextResult?.stylesMap,
+			currentClosing: !!props.current.closing && isNextClosing,
 		});
 
 		return handoff.localStylesMaps.length
