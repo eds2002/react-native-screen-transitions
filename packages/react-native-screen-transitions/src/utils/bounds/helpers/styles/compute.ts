@@ -124,6 +124,29 @@ const isTakenByNewerScreen = (
 };
 
 /**
+ * Whether the element of a pair into `destinationScreenKey` has moved on: a newer screen pushed on
+ * top of the destination opened its own pair from it (a chain pushed while the first pair still
+ * opens). The source's copy of the first pair stops drawing: the destination's copy carries the
+ * element on, from where it is drawn (resolveStartChain). Seen through a translucent destination,
+ * the source's copy would otherwise keep heading for the destination's slot: a second card.
+ */
+const isMovedOnFrom = (tag: string, destinationScreenKey: string): boolean => {
+	"worklet";
+	const state = pairs.get();
+	for (const pairKey in state) {
+		if (getSourceScreenKeyFromPairKey(pairKey) !== destinationScreenKey)
+			continue;
+		const destination = getDestinationScreenKeyFromPairKey(pairKey);
+		if (!destination || !isScreenNewer(destination, destinationScreenKey))
+			continue;
+		const t = getScreenProgress(destination);
+		if (t === undefined || t <= 0) continue;
+		if (getResolvedLink(pairKey, tag).link?.destination?.bounds) return true;
+	}
+	return false;
+};
+
+/**
  * The pair whose element a pair from `sourceScreenKey` to `destinationScreenKey` starts from, when
  * the element is not at its source slot right now:
  * - an older screen still closing draws it (push, pop and push again quickly): that one;
@@ -429,8 +452,11 @@ export const computeBoundStyles = (
 	const taken =
 		!!sourceScreenKey &&
 		!!destinationScreenKey &&
-		(entering ? currentScreenKey === destinationScreenKey : true) &&
-		isTakenByNewerScreen(tag, destinationScreenKey);
+		(((entering ? currentScreenKey === destinationScreenKey : true) &&
+			isTakenByNewerScreen(tag, destinationScreenKey)) ||
+			(!entering &&
+				currentScreenKey === sourceScreenKey &&
+				isMovedOnFrom(tag, destinationScreenKey)));
 	return attachBoundsScreenFrame(
 		taken ? { ...withLocalTransform, opacity: 0 } : withLocalTransform,
 		{

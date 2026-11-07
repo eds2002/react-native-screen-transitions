@@ -11,19 +11,43 @@ import { scheduleOnUI } from "react-native-worklets";
 type Entry = {
 	progress: SharedValue<number>;
 	closing: SharedValue<number>;
-	/** When it was mounted, relative to the others: a screen pushed later has a higher number. */
+	/** When it was pushed, relative to the others: a screen pushed later has a higher number. */
 	order: number;
 };
 const screenProgress = makeMutable<Record<string, Entry>>({});
 const mountCount = makeMutable(0);
+/**
+ * The order each route key first registered with, kept across remounts: a screen deep in the stack
+ * unmounts its motion while covered and registers again as the screens above it close, and it must
+ * not become "newer" than them (route keys are unique per push, so the first registration is the
+ * push). Bounded: past MAX_ORDERS the oldest keys that are not mounted are forgotten.
+ */
+const firstOrders = makeMutable<Record<string, number>>({});
+const MAX_ORDERS = 500;
 
 const register = (
 	key: string,
 	entry: { progress: SharedValue<number>; closing: SharedValue<number> },
 ) => {
 	"worklet";
-	const order = mountCount.get() + 1;
-	mountCount.set(order);
+	const known = firstOrders.get()[key];
+	const order = known ?? mountCount.get() + 1;
+	if (known === undefined) {
+		mountCount.set(order);
+		firstOrders.modify((orders) => {
+			"worklet";
+			orders[key] = order;
+			const keys = Object.keys(orders);
+			if (keys.length > MAX_ORDERS) {
+				const mounted = screenProgress.get();
+				keys.sort((a, b) => orders[a] - orders[b]);
+				for (let i = 0; i < keys.length - MAX_ORDERS; i++) {
+					if (!mounted[keys[i]]) delete orders[keys[i]];
+				}
+			}
+			return orders;
+		});
+	}
 	screenProgress.modify((state) => {
 		"worklet";
 		state[key] = { ...entry, order };
@@ -53,7 +77,7 @@ export const getScreenMountOrder = (key: string): number => {
 };
 
 /**
- * Whether `key` was mounted after `other` (a mounted screen). A screen not registered yet is newer
+ * Whether `key` was pushed after `other` (a mounted screen). A screen not registered yet is newer
  * than every registered one: it registers a frame after it mounts, and its first frame already
  * transitions (a screen just pushed over one still closing).
  */
