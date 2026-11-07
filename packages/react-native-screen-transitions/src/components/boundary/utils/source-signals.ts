@@ -1,4 +1,7 @@
-import { getLinkKeyFromTag } from "../../../stores/bounds/helpers/link-pairs.helpers";
+import {
+	getLinkKeyFromTag,
+	isActiveGroupMember,
+} from "../../../stores/bounds/helpers/link-pairs.helpers";
 import type {
 	LinkPairsState,
 	ScreenPairKey,
@@ -12,16 +15,15 @@ type SourceCaptureSignal = {
 };
 
 export const getInitialSourceCaptureSignal = (params: {
-	enabled: boolean;
 	sourcePairKey?: ScreenPairKey;
 	linkId: string;
 	group?: string;
 	linkState?: LinkPairsState;
 }): SourceCaptureSignal | null => {
 	"worklet";
-	const { enabled, sourcePairKey, linkId, group, linkState } = params;
+	const { sourcePairKey, linkId, group, linkState } = params;
 
-	if (!enabled || !sourcePairKey) {
+	if (!sourcePairKey) {
 		return null;
 	}
 
@@ -34,14 +36,9 @@ export const getInitialSourceCaptureSignal = (params: {
 		return null;
 	}
 
-	if (group) {
-		const activeId = linkState?.[sourcePairKey]?.groups?.[group]?.activeId;
-
-		// Passive grouped sources should not measure every mounted item. Once a
-		// group has an active id, only that concrete member can auto-capture.
-		if (activeId && activeId !== linkKey) {
-			return null;
-		}
+	// Passive grouped sources should not measure every mounted item: only the active member.
+	if (group && !isActiveGroupMember(linkState, sourcePairKey, group, linkKey)) {
+		return null;
 	}
 
 	const signalParts = group ? [group, linkKey] : [linkKey];

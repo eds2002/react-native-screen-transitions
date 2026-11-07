@@ -37,7 +37,6 @@ describe("refresh boundary signals", () => {
 
 		const getSignal = (linkId: string) =>
 			getRefreshBoundarySignal({
-				enabled: true,
 				currentScreenKey: "screen-a",
 				nextScreenKey: "screen-b",
 				sourcePairKey,
@@ -68,7 +67,6 @@ describe("refresh boundary signals", () => {
 
 		const getSignal = (linkId: string) =>
 			getRefreshBoundarySignal({
-				enabled: true,
 				currentScreenKey: "screen-b",
 				destinationPairKey: pairKey,
 				linkId,
@@ -90,7 +88,6 @@ describe("refresh boundary signals", () => {
 
 		expect(
 			getRefreshBoundarySignal({
-				enabled: true,
 				currentScreenKey: "detail",
 				sourcePairKey: pairKey,
 				linkId: "hot-coral",
@@ -132,7 +129,6 @@ describe("refresh boundary signals", () => {
 
 		expect(
 			getRefreshBoundarySignal({
-				enabled: true,
 				currentScreenKey: "palette",
 				sourcePairKey: pairKey,
 				linkId: "electric-violet",
@@ -161,7 +157,6 @@ describe("refresh boundary signals", () => {
 
 		expect(
 			getRefreshBoundarySignal({
-				enabled: true,
 				currentScreenKey: "palette",
 				sourcePairKey: pairKey,
 				linkId: "hot-coral",
@@ -179,7 +174,6 @@ describe("refresh boundary signals", () => {
 
 		expect(
 			getRefreshBoundarySignal({
-				enabled: true,
 				currentScreenKey: "detail",
 				destinationPairKey: pairKey,
 				linkId: "hot-coral",
@@ -208,7 +202,6 @@ describe("refresh boundary signals", () => {
 		};
 		const getSourceSignal = (shouldRefresh: boolean, settled: boolean) =>
 			getRefreshBoundarySignal({
-				enabled: true,
 				currentScreenKey: "palette",
 				sourcePairKey: pairKey,
 				linkId: "hot-coral",
@@ -220,7 +213,6 @@ describe("refresh boundary signals", () => {
 			});
 		const getDestinationSignal = () =>
 			getRefreshBoundarySignal({
-				enabled: true,
 				currentScreenKey: "detail",
 				destinationPairKey: pairKey,
 				linkId: "hot-coral",
@@ -322,7 +314,6 @@ describe("refresh boundary signals", () => {
 			startPanBase(runtime as any);
 
 			const signal = getRefreshBoundarySignal({
-				enabled: true,
 				currentScreenKey: "palette",
 				nextScreenKey: routeKey,
 				sourcePairKey: pairKey,

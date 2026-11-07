@@ -117,7 +117,6 @@ export function useBoundaryMeasureCoordinator(
 					getPairKeyForSource(tag, currentScreenKey) ?? undefined;
 
 				const source = getInitialSourceCaptureSignal({
-					enabled: true,
 					sourcePairKey,
 					linkId: linkKey,
 					group,
@@ -138,7 +137,6 @@ export function useBoundaryMeasureCoordinator(
 				if (!canRefresh || !closing || (!shouldRefresh && (!group || !settled)))
 					continue;
 				const refresh = getRefreshBoundarySignal({
-					enabled: true,
 					currentScreenKey,
 					// A source without a destination boundary (a zoom to the screen) refreshes too: its
 					// close lands on it, and it may have moved since it was measured (or been measured while

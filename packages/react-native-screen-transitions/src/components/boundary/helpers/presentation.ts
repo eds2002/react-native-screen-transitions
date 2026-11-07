@@ -1,9 +1,13 @@
 import type { DerivedValue } from "react-native-reanimated";
-import { getLinkKeyFromTag } from "../../../stores/bounds/helpers/link-pairs.helpers";
+import {
+	getLinkKeyFromTag,
+	isActiveGroupMember,
+} from "../../../stores/bounds/helpers/link-pairs.helpers";
 import type {
 	boundaryRegistry,
 	pairs,
 } from "../../../stores/bounds/internals/state";
+import type { ScreenPairKey } from "../../../stores/bounds/types";
 import type { BoundaryHandoffTarget } from "../../../types/animation.types";
 
 export type { BoundaryPairPresentation } from "../../../providers/orchestrator/helpers/use-pair-presentation";
@@ -43,7 +47,16 @@ export function resolveBoundaryPresentation(
 		if (!presentation) continue;
 		const pair = state.pairs[presentation.pairKey];
 		const link = pair?.links[linkKey];
-		if (!link || (link.group && pair.groups[link.group]?.activeId !== linkKey))
+		if (
+			!link ||
+			(link.group &&
+				!isActiveGroupMember(
+					state.pairs,
+					presentation.pairKey as ScreenPairKey,
+					link.group,
+					linkKey,
+				))
+		)
 			continue;
 		const sourceKey = link.source?.screenKey ?? presentation.sourceKey;
 		const destinationKey =

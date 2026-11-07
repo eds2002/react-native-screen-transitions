@@ -1,6 +1,6 @@
 import {
-	getActiveGroupId,
 	getLinkKeyFromTag,
+	isActiveGroupMember,
 } from "../../../stores/bounds/helpers/link-pairs.helpers";
 import type {
 	LinkPairsState,
@@ -54,10 +54,7 @@ export const getInitialDestinationMeasurementSignal = (params: {
 	}
 
 	const linkKey = getLinkKeyFromTag(linkId);
-	const activeGroupId =
-		group && linkState ? getActiveGroupId(linkState, pairKey, group) : null;
-
-	if (activeGroupId && activeGroupId !== linkKey) {
+	if (group && !isActiveGroupMember(linkState, pairKey, group, linkKey)) {
 		return { pairKey, action: "release" };
 	}
 

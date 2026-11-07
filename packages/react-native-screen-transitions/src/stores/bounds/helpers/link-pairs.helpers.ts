@@ -182,6 +182,20 @@ export const getDestination = (
 	return getLink(state, pairKey, linkKey)?.destination ?? null;
 };
 
+/**
+ * Whether a link is its group's active member in a pair: the member the transition shows. A group
+ * with no active member yet has none, so no member acts for it.
+ */
+export const isActiveGroupMember = (
+	state: LinkPairsState | undefined,
+	pairKey: ScreenPairKey,
+	group: GroupKey,
+	linkKey: LinkKey,
+): boolean => {
+	"worklet";
+	return state?.[pairKey]?.groups?.[group]?.activeId === linkKey;
+};
+
 export const getActiveGroupId = (
 	state: LinkPairsState,
 	pairKey: ScreenPairKey,

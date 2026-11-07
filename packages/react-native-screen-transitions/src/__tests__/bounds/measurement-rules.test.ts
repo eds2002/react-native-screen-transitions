@@ -133,7 +133,6 @@ describe("bounds client measurement contract", () => {
 
 		const runAutoSourceReaction = () => {
 			const captureSignal = getInitialSourceCaptureSignal({
-				enabled: true,
 				sourcePairKey: pairKey,
 				linkId: "card",
 				linkState: pairs.get(),
@@ -181,7 +180,6 @@ describe("bounds client measurement contract", () => {
 
 		expect(
 			getInitialSourceCaptureSignal({
-				enabled: true,
 				sourcePairKey: pairKey,
 				linkId: tag,
 				linkState: pairs.get(),
@@ -192,13 +190,39 @@ describe("bounds client measurement contract", () => {
 		});
 	});
 
+	it("captures only a group's active member, none while the group has no active member", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		pairs.modify((state) => {
+			"worklet";
+			state[pairKey] = {
+				links: {},
+				groups: {},
+				sourceRequests: { "photo-1": true, "photo-2": true },
+			} as any;
+			return state;
+		});
+		const capture = (linkId: string) =>
+			getInitialSourceCaptureSignal({
+				sourcePairKey: pairKey,
+				linkId,
+				group: "photos",
+				linkState: pairs.get(),
+			});
+
+		expect(capture("photo-1")).toBeNull();
+
+		BoundStore.link.setActiveGroupId(pairKey, "photos", "photo-2");
+
+		expect(capture("photo-1")).toBeNull();
+		expect(capture("photo-2")?.pairKey).toBe(pairKey);
+	});
+
 	it("does not request source capture for normal bounds without destination", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 
 		expect(requestBoundStyle("card")).toEqual({});
 		expect(
 			getInitialSourceCaptureSignal({
-				enabled: true,
 				sourcePairKey: pairKey,
 				linkId: "card",
 				linkState: pairs.get(),
@@ -212,7 +236,6 @@ describe("bounds client measurement contract", () => {
 		expect(requestBoundStyle("card", "fullscreen")).toEqual({});
 		expect(
 			getInitialSourceCaptureSignal({
-				enabled: true,
 				sourcePairKey: pairKey,
 				linkId: "card",
 				linkState: pairs.get(),
@@ -227,7 +250,6 @@ describe("bounds client measurement contract", () => {
 		expect(pairs.get()[pairKey].sourceRequests?.card).toBeUndefined();
 		expect(
 			getInitialSourceCaptureSignal({
-				enabled: true,
 				sourcePairKey: pairKey,
 				linkId: "card",
 				linkState: pairs.get(),
@@ -241,7 +263,6 @@ describe("bounds client measurement contract", () => {
 		expect(requestBoundStyle("card", createBounds())).toEqual({});
 		expect(
 			getInitialSourceCaptureSignal({
-				enabled: true,
 				sourcePairKey: pairKey,
 				linkId: "card",
 				linkState: pairs.get(),
@@ -259,7 +280,6 @@ describe("bounds client measurement contract", () => {
 		expect(requestBoundStyle("colors:1", "fullscreen")).toEqual({});
 		expect(
 			getInitialSourceCaptureSignal({
-				enabled: true,
 				sourcePairKey: pairKey,
 				linkId: "1",
 				group: "colors",
@@ -270,7 +290,6 @@ describe("bounds client measurement contract", () => {
 		expect(requestBoundStyle("colors:2", "fullscreen")).toEqual({});
 		expect(
 			getInitialSourceCaptureSignal({
-				enabled: true,
 				sourcePairKey: pairKey,
 				linkId: "2",
 				group: "colors",
@@ -430,7 +449,6 @@ describe("bounds client measurement contract", () => {
 
 		const getSignal = (linkId: string) =>
 			getRefreshBoundarySignal({
-				enabled: true,
 				currentScreenKey: "screen-a",
 				sourcePairKey: pairKey,
 				linkId,
@@ -465,7 +483,6 @@ describe("bounds client measurement contract", () => {
 
 		const getSignal = (linkId: string) =>
 			getRefreshBoundarySignal({
-				enabled: true,
 				currentScreenKey: "screen-b",
 				destinationPairKey: pairKey,
 				linkId,
@@ -500,7 +517,6 @@ describe("bounds client measurement contract", () => {
 
 		const runRefreshReaction = () => {
 			const refreshSignal = getRefreshBoundarySignal({
-				enabled: true,
 				currentScreenKey: "screen-b",
 				destinationPairKey: pairKey,
 				linkId: "card",
@@ -542,7 +558,6 @@ describe("bounds client measurement contract", () => {
 
 		expect(
 			getRefreshBoundarySignal({
-				enabled: true,
 				currentScreenKey: "nested-index",
 				sourcePairKey: nestedPairKey,
 				ancestorDestinationPairKey: ancestorPairKey,

@@ -155,7 +155,6 @@ describe("zoom bound target", () => {
 		});
 
 		const refresh = getRefreshBoundarySignal({
-			enabled: true,
 			currentScreenKey: "screen-b",
 			pairKey: PAIR_KEY,
 			linkId: "card",
@@ -476,7 +475,6 @@ describe("zoom source-only target", () => {
 
 		expect(
 			getInitialSourceCaptureSignal({
-				enabled: true,
 				sourcePairKey: PAIR_KEY,
 				linkId: "card",
 				linkState: pairs.get(),
