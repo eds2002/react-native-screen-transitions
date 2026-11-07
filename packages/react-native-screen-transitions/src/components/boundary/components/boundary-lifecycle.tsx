@@ -19,7 +19,6 @@ interface BoundaryLifecycleProps {
 	config: BoundaryConfigProps;
 	currentScreenKey: string;
 	enabled: boolean;
-	escapeClipping: boolean;
 	handoff: boolean;
 	localMeasurement: BoundaryLocalMeasurementValue;
 	measuredRef: AnimatedRef<View>;
@@ -33,7 +32,6 @@ export const BoundaryLifecycle = memo(function BoundaryLifecycle({
 	config,
 	currentScreenKey,
 	enabled,
-	escapeClipping,
 	handoff,
 	firstEscapeMeasureKey,
 	localMeasurement,
@@ -61,7 +59,6 @@ export const BoundaryLifecycle = memo(function BoundaryLifecycle({
 			preparedStyles,
 			measuredAnimatedRef: measuredRef,
 			handoff,
-			escapeClipping,
 			localMeasurement,
 			firstEscapeMeasureKey,
 			scrollChain,
@@ -72,7 +69,6 @@ export const BoundaryLifecycle = memo(function BoundaryLifecycle({
 			preparedStyles,
 			measuredRef,
 			handoff,
-			escapeClipping,
 			localMeasurement,
 			firstEscapeMeasureKey,
 			scrollChain,
@@ -88,7 +84,6 @@ export const BoundaryLifecycle = memo(function BoundaryLifecycle({
 		currentScreenKey,
 		boundaryConfig: config,
 		handoff,
-		escapeClipping,
 	});
 
 	// Source capture and refresh run from the screen's coordinator (one reaction per screen).

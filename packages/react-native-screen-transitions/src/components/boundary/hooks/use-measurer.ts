@@ -23,6 +23,7 @@ import type { BoundTag } from "../../../stores/bounds/types";
 import { ScrollStore } from "../../../stores/scroll.store";
 import type { MeasuredScreenTransform } from "../../../utils/bounds/helpers/styles/screen-frame";
 import { getVisibilityBlockOffset } from "../../../utils/visibility-block-offset";
+import { isTeleportAvailable } from "../portal/teleport";
 import type {
 	BoundaryLocalMeasurementValue,
 	MeasureBoundary,
@@ -60,7 +61,6 @@ export type BoundaryMeasureData = {
 	preparedStyles: StyleProps;
 	measuredAnimatedRef: AnimatedRef<View>;
 	handoff: boolean;
-	escapeClipping: boolean;
 	localMeasurement: BoundaryLocalMeasurementValue;
 	/** Key for `notifyFirstEscapeMeasure` (a number, so no per-boundary JS function reaches the UI thread). */
 	firstEscapeMeasureKey: number;
@@ -174,7 +174,6 @@ export const measureBoundaryWith = (
 		preparedStyles,
 		measuredAnimatedRef,
 		handoff,
-		escapeClipping,
 		localMeasurement,
 		firstEscapeMeasureKey,
 		scrollChain,
@@ -202,7 +201,7 @@ export const measureBoundaryWith = (
 				last,
 				preparedStyles,
 				boundTag.group,
-				{ handoff, escapeClipping },
+				{ handoff },
 			);
 		} else {
 			setDestination(
@@ -279,7 +278,7 @@ export const measureBoundaryWith = (
 	// Handoff can render into the destination boundary's escape host too.
 	// Capture only accepted geometry, correcting the destination visibility gate. The scroll
 	// snapshot lets the escaped frame follow its scroll views while it is in the overlay.
-	if (escapeClipping) {
+	if (isTeleportAvailable) {
 		// The first measurement is what gives this boundary a host in the overlay.
 		if (readLocalMeasurement(localMeasurement) === null)
 			scheduleOnRN(notifyFirstEscapeMeasure, firstEscapeMeasureKey);
@@ -300,7 +299,7 @@ export const measureBoundaryWith = (
 			measuredWithScroll,
 			preparedStyles,
 			boundTag.group,
-			{ handoff, escapeClipping },
+			{ handoff },
 		);
 	}
 
@@ -332,7 +331,6 @@ export const useMeasurer = (
 		preparedStyles,
 		measuredAnimatedRef,
 		handoff,
-		escapeClipping,
 		localMeasurement,
 		firstEscapeMeasureKey,
 	} = data;
@@ -347,7 +345,6 @@ export const useMeasurer = (
 					preparedStyles,
 					measuredAnimatedRef,
 					handoff,
-					escapeClipping,
 					localMeasurement,
 					firstEscapeMeasureKey,
 					scrollChain,
@@ -362,7 +359,6 @@ export const useMeasurer = (
 			preparedStyles,
 			measuredAnimatedRef,
 			handoff,
-			escapeClipping,
 			localMeasurement,
 			firstEscapeMeasureKey,
 			scrollChain,

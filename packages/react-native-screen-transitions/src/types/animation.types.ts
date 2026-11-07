@@ -1,5 +1,5 @@
 import type { TextStyle, ViewStyle } from "react-native";
-import type { StyleProps, TransformArrayItem } from "react-native-reanimated";
+import type { StyleProps } from "react-native-reanimated";
 import type { EdgeInsets } from "react-native-safe-area-context";
 import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
@@ -345,7 +345,6 @@ export type TransitionClip = {
 export type NormalizedTransitionSlotStyle = {
 	style?: StyleProps;
 	props?: TransitionSlotProps;
-	boundsLocalTransform?: TransformArrayItem[];
 	/** A bounds element styles() placed this frame (its style moves it along a shared-bound path). */
 	boundsPlaced?: true;
 };

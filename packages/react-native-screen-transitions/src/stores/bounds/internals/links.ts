@@ -179,7 +179,6 @@ const createLinkSide = (
 		bounds,
 		styles: snapshotStyles(styles),
 		handoff: runtimeFlags.handoff ? true : undefined,
-		escapeClipping: runtimeFlags.escapeClipping ? true : undefined,
 	};
 };
 

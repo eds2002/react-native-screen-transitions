@@ -58,7 +58,6 @@ describe("resolveSlotStyles", () => {
 						props: {
 							testID: "merged-card",
 						},
-						boundsLocalTransform: [{ scale: 0.58 }],
 					},
 				},
 			],
@@ -74,7 +73,6 @@ describe("resolveSlotStyles", () => {
 				pointerEvents: "none",
 				testID: "merged-card",
 			},
-			boundsLocalTransform: [{ scale: 0.58 }],
 		});
 	});
 

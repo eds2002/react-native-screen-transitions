@@ -15,7 +15,6 @@ import Animated, {
 import { NO_STYLES } from "../../../../constants";
 import { useBuilderStore } from "../../../../providers/builder";
 import { useScrollChain } from "../../../../providers/motion/gestures/scroll-coordination";
-import { composeSlotStyleWithLocalTransform } from "../../../../providers/orchestrator/styles/helpers/compose-slot-style";
 import {
 	getScrollChainAxisDelta,
 	ScrollStore,
@@ -207,13 +206,7 @@ const BoundaryPortalPlacement = memo(function BoundaryPortalPlacement({
 
 	const slotStyle = useAnimatedStyle(() => {
 		"worklet";
-		const slot = host.slotsMap.get()[host.boundaryId];
-
-		return composeSlotStyleWithLocalTransform(
-			slot?.style ?? NO_STYLES,
-			undefined,
-			slot?.boundsLocalTransform,
-		);
+		return host.slotsMap.get()[host.boundaryId]?.style ?? NO_STYLES;
 	});
 
 	return (

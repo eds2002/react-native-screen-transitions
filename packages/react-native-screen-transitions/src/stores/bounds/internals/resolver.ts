@@ -56,8 +56,6 @@ function resolveTransitionPair(
 	return {
 		sourceBounds: matchedLink?.source?.bounds ?? null,
 		destinationBounds: matchedLink?.destination?.bounds ?? null,
-		sourceStyles: matchedLink?.source?.styles ?? null,
-		destinationStyles: matchedLink?.destination?.styles ?? null,
 		sourceScreenKey: matchedLink?.source?.screenKey ?? null,
 		destinationScreenKey: matchedLink?.destination?.screenKey ?? null,
 	};

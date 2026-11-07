@@ -20,6 +20,7 @@ import {
 	measureBoundaryWith,
 	useScreenMeasureContext,
 } from "../hooks/use-measurer";
+import { isTeleportAvailable } from "../portal/teleport";
 import type { MeasureTarget } from "../types";
 import { getRefreshBoundarySignal } from "../utils/refresh-signals";
 import { getInitialSourceCaptureSignal } from "../utils/source-signals";
@@ -182,7 +183,7 @@ export function useBoundaryMeasureCoordinator(
 				// are always taken fresh.
 				const slot = slots[tag];
 				const moving =
-					!data.escapeClipping &&
+					!isTeleportAvailable &&
 					!!slot?.boundsPlaced &&
 					isMovedByStyle(slot.style);
 				measureBoundaryWith(screen, data, target, moving);

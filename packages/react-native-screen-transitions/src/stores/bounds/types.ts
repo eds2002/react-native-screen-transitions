@@ -28,7 +28,6 @@ export type { ScreenKey } from "../../types/screen.types";
 
 export type BoundaryRuntimeFlags = {
 	handoff?: boolean;
-	escapeClipping?: boolean;
 };
 
 type BoundaryConfig = {
@@ -53,7 +52,6 @@ export type EntryPatch = {
 	styles?: StyleProps | null;
 	boundaryConfig?: BoundaryConfig | null;
 	handoff?: boolean | null;
-	escapeClipping?: boolean | null;
 };
 
 export type ScreenIdentifier = {
@@ -113,8 +111,6 @@ export type ResolveTransitionContext = {
 export type ResolvedTransitionPair = {
 	sourceBounds: MeasuredDimensions | null;
 	destinationBounds: MeasuredDimensions | null;
-	sourceStyles: StyleProps | null;
-	destinationStyles: StyleProps | null;
 	sourceScreenKey: ScreenKey | null;
 	destinationScreenKey: ScreenKey | null;
 };

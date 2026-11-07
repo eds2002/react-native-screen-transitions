@@ -1,4 +1,3 @@
-import type { BoundaryRuntimeFlags } from "../../../../stores/bounds/types";
 import { logger } from "../../../../utils/logger";
 import { isTeleportAvailable } from "../teleport";
 
@@ -11,7 +10,11 @@ import { isTeleportAvailable } from "../teleport";
 export const resolveBoundaryPortal = ({
 	handoff = false,
 	escapeClipping,
-}: BoundaryRuntimeFlags) => {
+}: {
+	handoff?: boolean;
+	/** @deprecated Ignored (see above). */
+	escapeClipping?: boolean;
+}) => {
 	if (escapeClipping !== undefined) {
 		logger.warnOnce(
 			"boundary:escape-clipping-deprecated",

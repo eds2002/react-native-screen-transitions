@@ -3,7 +3,6 @@ import {
 	getActiveGroupId,
 	setActiveGroupId,
 } from "../../../stores/bounds/internals/links";
-import type { ResolvedTransitionPair } from "../../../stores/bounds/types";
 import type { BoundsInterpolationProps } from "../../../types/bounds.types";
 import { DEFAULT_BOUNDS_OPTIONS } from "../constants";
 import type {
@@ -20,7 +19,6 @@ type BaseInterpolatorProps = BoundsInterpolationProps;
 type ComputeResolvedBoundsStylesParams<T extends BoundsInternalOptions> = {
 	props: BaseInterpolatorProps;
 	options: T;
-	resolvedPair?: ResolvedTransitionPair;
 };
 
 type BuildBoundsOptionsParams = {
@@ -79,7 +77,6 @@ export const syncActiveGroupId = (params: {
 export const prepareBoundStyles = <T extends BoundsInternalOptions>({
 	props,
 	options,
-	resolvedPair,
 }: ComputeResolvedBoundsStylesParams<T>): BoundsOptionsResult<T> => {
 	"worklet";
 
@@ -106,6 +103,5 @@ export const prepareBoundStyles = <T extends BoundsInternalOptions>({
 			interpolationProps: props,
 		},
 		resolved,
-		resolvedPair,
 	) as BoundsOptionsResult<T>;
 };

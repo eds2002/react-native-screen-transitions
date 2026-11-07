@@ -3,12 +3,6 @@ import {
 	composeSlotStyleWithLocalTransform,
 	getLocalTransformForSlotComposition,
 } from "../../providers/orchestrator/styles/helpers/compose-slot-style";
-import {
-	attachBoundsLocalTransform,
-	BOUNDS_LOCAL_TRANSFORM_STYLE_KEY,
-	getBoundsLocalTransform,
-	stripBoundsLocalTransform,
-} from "../../utils/bounds/helpers/styles/local-transform";
 
 const createSharedValue = (initial: number) => ({
 	_isReanimatedSharedValue: true,
@@ -63,48 +57,4 @@ describe("composeSlotStyleWithLocalTransform", () => {
 		).toBe(transform);
 	});
 
-	it("uses measured bounds transform snapshots before live local transforms", () => {
-		const liveScale = createSharedValue(0.8);
-		const slotStyle = attachBoundsLocalTransform(
-			{
-				opacity: 0.8,
-				transform: [{ translateX: 24 }, { scaleX: 1.2 }],
-			},
-			{ transform: [{ scale: 0.5 }] },
-		);
-		const boundsLocalTransform = getBoundsLocalTransform(slotStyle);
-		const normalizedSlotStyle = stripBoundsLocalTransform(slotStyle);
-
-		expect(
-			composeSlotStyleWithLocalTransform(
-				normalizedSlotStyle,
-				[{ scale: liveScale }],
-				boundsLocalTransform,
-			),
-		).toEqual({
-			opacity: 0.8,
-			transform: [{ translateX: 24 }, { scaleX: 1.2 }, { scale: 0.5 }],
-		});
-
-		liveScale.value = 1.1;
-
-		expect(
-			composeSlotStyleWithLocalTransform(
-				normalizedSlotStyle,
-				[{ scale: liveScale }],
-				boundsLocalTransform,
-			),
-		).toEqual({
-			opacity: 0.8,
-			transform: [{ translateX: 24 }, { scaleX: 1.2 }, { scale: 0.5 }],
-		});
-		expect(
-			BOUNDS_LOCAL_TRANSFORM_STYLE_KEY in
-				(composeSlotStyleWithLocalTransform(
-					normalizedSlotStyle,
-					[{ scale: liveScale }],
-					boundsLocalTransform,
-				) as Record<string, unknown>),
-		).toBe(false);
-	});
 });

@@ -60,7 +60,7 @@ const registerBoundaryPresence = (
 	tag: string,
 	screenKey: string,
 	boundaryConfig?: NonNullable<EntryPatch["boundaryConfig"]>,
-	runtimeFlags?: Pick<EntryPatch, "handoff" | "escapeClipping">,
+	runtimeFlags?: Pick<EntryPatch, "handoff">,
 ) => {
 	BoundStore.entry.set(tag, screenKey, {
 		boundaryConfig,
@@ -162,26 +162,21 @@ describe("BoundStore.entry", () => {
 		expect(hasBoundaryPresence("card", "screen-a")).toBe(false);
 	});
 
-	it("tracks and clears portal runtime flags on boundary presence entries", () => {
+	it("tracks and clears the handoff flag on boundary presence entries", () => {
 		registerBoundaryPresence(
 			"card",
 			"screen-a",
 			{ method: "size" },
-			{ handoff: true, escapeClipping: true },
+			{ handoff: true },
 		);
 
 		expect(BoundStore.entry.get("card", "screen-a")?.handoff).toBe(true);
-		expect(BoundStore.entry.get("card", "screen-a")?.escapeClipping).toBe(true);
 
 		BoundStore.entry.set("card", "screen-a", {
 			handoff: null,
-			escapeClipping: null,
 		});
 
 		expect(BoundStore.entry.get("card", "screen-a")?.handoff).toBeUndefined();
-		expect(
-			BoundStore.entry.get("card", "screen-a")?.escapeClipping,
-		).toBeUndefined();
 	});
 });
 
@@ -211,7 +206,7 @@ describe("measured bounds store writes", () => {
 			source,
 			{ borderRadius: 16 },
 			undefined,
-			{ handoff: true, escapeClipping: true },
+			{ handoff: true },
 		);
 		BoundStore.entry.set("card", "screen-b", { bounds: destination });
 		BoundStore.link.setDestination(
@@ -228,11 +223,9 @@ describe("measured bounds store writes", () => {
 		expect(link?.source.bounds).toEqual(source);
 		expect(link?.source.styles).toEqual({ borderRadius: 16 });
 		expect(link?.source.handoff).toBe(true);
-		expect(link?.source.escapeClipping).toBe(true);
 		expect(link?.destination?.bounds).toEqual(destination);
 		expect(link?.destination?.styles).toEqual({ borderRadius: 20 });
 		expect(link?.destination?.handoff).toBe(true);
-		expect(link?.destination?.escapeClipping).toBeUndefined();
 	});
 
 	it("snapshots shared style values when links are measured", () => {
@@ -817,7 +810,7 @@ describe("BoundsAccessor", () => {
 });
 
 describe("boundary runtime source links", () => {
-	it("stores handoff and escape flags on source links", () => {
+	it("stores the handoff flag on source links", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 
 		BoundStore.link.setSource(
@@ -827,13 +820,10 @@ describe("boundary runtime source links", () => {
 			createBounds(0, 0),
 			{},
 			undefined,
-			{ handoff: true, escapeClipping: true },
+			{ handoff: true },
 		);
 
 		expect(BoundStore.link.getSource(pairKey, "card")?.handoff).toBe(true);
-		expect(BoundStore.link.getSource(pairKey, "card")?.escapeClipping).toBe(
-			true,
-		);
 	});
 
 	it("does not preserve runtime flags when a source refresh omits them", () => {
@@ -846,14 +836,11 @@ describe("boundary runtime source links", () => {
 			createBounds(0, 0),
 			{},
 			undefined,
-			{ handoff: true, escapeClipping: true },
+			{ handoff: true },
 		);
 		BoundStore.link.setSource(pairKey, "card", "screen-a", createBounds(0, 4));
 
 		expect(BoundStore.link.getSource(pairKey, "card")?.handoff).toBeUndefined();
-		expect(
-			BoundStore.link.getSource(pairKey, "card")?.escapeClipping,
-		).toBeUndefined();
 	});
 
 	it("does not shift source paths by destination scroll", () => {

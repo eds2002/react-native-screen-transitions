@@ -103,11 +103,7 @@ export function useComposedBoundaryStyle(
 					aspectRatio: aspectRatio ?? baseLayout.aspectRatio,
 				};
 			}
-			return composeSlotStyleWithLocalTransform(
-				value,
-				local,
-				slot?.boundsLocalTransform,
-			);
+			return composeSlotStyleWithLocalTransform(value, local);
 		}
 	});
 }

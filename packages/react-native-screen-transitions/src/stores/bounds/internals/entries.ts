@@ -49,12 +49,6 @@ const applyEntryPatch = (entry: Entry, patch: EntryPatch) => {
 	} else if (patch.handoff !== undefined) {
 		entry.handoff = patch.handoff;
 	}
-
-	if (patch.escapeClipping === null) {
-		delete entry.escapeClipping;
-	} else if (patch.escapeClipping !== undefined) {
-		entry.escapeClipping = patch.escapeClipping;
-	}
 };
 
 function getEntry(tag: TagID, key: ScreenKey): Entry | null {

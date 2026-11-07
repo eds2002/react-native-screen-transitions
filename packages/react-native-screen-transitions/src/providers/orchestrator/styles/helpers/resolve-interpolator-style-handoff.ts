@@ -70,14 +70,7 @@ const mergeSlots = (
 	// A bounds element the next screen places (bounds().styles()) is placed whole: its path already
 	// starts wherever the element is drawn (in flight in this screen's own pair, a chain). Composing
 	// this screen's own bounds transform onto it would move it twice.
-	const liveFrame = getBoundsScreenFrame(live.style);
-	// The next screen's pair has landed (it is closing, its element all but home) and this screen is
-	// in a pair of its own (closing too, popped as the one above lands): this screen's own pair
-	// carries the element now.
-	if (frozen && liveFrame?.pairLanded && getBoundsScreenFrame(frozen.style)) {
-		return frozen;
-	}
-	if (!frozen || liveFrame) {
+	if (!frozen || getBoundsScreenFrame(live.style)) {
 		return live;
 	}
 
@@ -95,13 +88,6 @@ const mergeSlots = (
 
 	if (frozen.props || live.props) {
 		merged.props = mergeBuckets(frozen.props, live.props, false);
-	}
-
-	const boundsLocalTransform =
-		live.boundsLocalTransform ?? frozen.boundsLocalTransform;
-
-	if (boundsLocalTransform) {
-		merged.boundsLocalTransform = boundsLocalTransform;
 	}
 
 	return merged;

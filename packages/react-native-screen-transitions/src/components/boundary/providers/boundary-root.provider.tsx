@@ -285,7 +285,6 @@ export const {
 						config={config}
 						currentScreenKey={currentScreenKey}
 						enabled={enabled}
-						escapeClipping={portalRuntime.escapeClipping}
 						handoff={portalRuntime.handoff}
 						localMeasurement={localMeasurement}
 						measuredRef={measuredRef}

@@ -5,6 +5,7 @@ import {
 	useSyncExternalStore,
 } from "react";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
+import { isTeleportAvailable } from "../../../components/boundary/portal/teleport";
 import { NO_STYLES } from "../../../constants";
 import {
 	getDestinationScreenKeyFromPairKey,
@@ -161,20 +162,17 @@ export function usePairPresentation(
 		const incoming = resolveIncomingPair(stackPairKey, currentScreenKey);
 		if (!incoming) return undefined;
 		const { pairKey, links } = incoming;
-		let hasPortal = false;
+		// Only escaped boundaries (with Teleport) draw from pair presentations.
+		if (!isTeleportAvailable) return undefined;
+		let linked = false;
 		for (const key in links) {
 			const { source, destination } = links[key];
-			if (
-				source?.handoff ||
-				source?.escapeClipping ||
-				destination?.handoff ||
-				destination?.escapeClipping
-			) {
-				hasPortal = true;
+			if (source || destination?.handoff) {
+				linked = true;
 				break;
 			}
 		}
-		if (!hasPortal) return undefined;
+		if (!linked) return undefined;
 		const frame = screenInterpolatorProps.get();
 		const source = boundarySourceFrame(frame);
 		if (!source) return undefined;

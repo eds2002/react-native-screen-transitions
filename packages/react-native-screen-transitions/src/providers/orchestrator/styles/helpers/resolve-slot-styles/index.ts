@@ -171,7 +171,6 @@ const getResolvedSlotOutput = ({
 		resolvedSlot: materializeResolvedSlot({
 			baseStyle: state.baseStyle,
 			baseProps: state.baseProps,
-			boundsLocalTransform: slot?.boundsLocalTransform,
 			previousState,
 			styleKeys: state.styleKeys,
 			propKeys: state.propKeys,
@@ -229,9 +228,6 @@ const getMergedLocalSlot = (
 	"worklet";
 	let mergedStyle: Record<string, unknown> | undefined;
 	let mergedProps: Record<string, unknown> | undefined;
-	let boundsLocalTransform:
-		| NormalizedTransitionSlotStyle["boundsLocalTransform"]
-		| undefined;
 
 	for (let index = 0; index < context.localStylesMaps.length; index++) {
 		const slot = context.localStylesMaps[index]?.[slotId];
@@ -245,20 +241,13 @@ const getMergedLocalSlot = (
 			slot.style as Record<string, unknown> | undefined,
 		);
 		mergedProps = mergeBucket(mergedProps, slot.props);
-		if (slot.boundsLocalTransform?.length) {
-			boundsLocalTransform = slot.boundsLocalTransform;
-		}
 	}
 
-	if (!mergedStyle && !mergedProps && !boundsLocalTransform) {
+	if (!mergedStyle && !mergedProps) {
 		return undefined;
 	}
 
-	return {
-		style: mergedStyle,
-		props: mergedProps,
-		boundsLocalTransform,
-	};
+	return { style: mergedStyle, props: mergedProps };
 };
 
 const getSlotForId = (context: ResolveSlotStylesContext, slotId: string) => {
@@ -415,11 +404,7 @@ const areSlotsEqual = (
 
 	return (
 		areFlatObjectsEqual(left.style, right.style) &&
-		areFlatObjectsEqual(left.props, right.props) &&
-		areTransformArraysEqual(
-			left.boundsLocalTransform,
-			right.boundsLocalTransform,
-		)
+		areFlatObjectsEqual(left.props, right.props)
 	);
 };
 

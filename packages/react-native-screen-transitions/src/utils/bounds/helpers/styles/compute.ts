@@ -28,7 +28,6 @@ import {
 	resolveTransitionPair,
 } from "../../../../stores/bounds/internals/resolver";
 import { pairs } from "../../../../stores/bounds/internals/state";
-import type { ResolvedTransitionPair } from "../../../../stores/bounds/types";
 import type { ScreenTransitionState } from "../../../../types/animation.types";
 import type { Layout } from "../../../../types/screen.types";
 import type {
@@ -48,7 +47,6 @@ import {
 	composeTransformRelative,
 	type ElementComposeParams,
 } from "./composers";
-import { attachBoundsLocalTransform } from "./local-transform";
 import {
 	attachBoundsScreenFrame,
 	type MeasuredScreenTransform,
@@ -263,7 +261,6 @@ const resolveStartEnd = (params: {
 	toRect?: Partial<MeasuredDimensions>;
 	dimensions: Layout;
 	computeOptions: BoundsInternalOptions;
-	resolvedPair?: ResolvedTransitionPair;
 }) => {
 	"worklet";
 
@@ -284,14 +281,12 @@ const resolveStartEnd = (params: {
 		nextScreenKey,
 	});
 
-	const resolvedPair =
-		params.resolvedPair ??
-		resolveTransitionPair(String(params.id), {
-			currentScreenKey,
-			previousScreenKey,
-			nextScreenKey,
-			entering,
-		});
+	const resolvedPair = resolveTransitionPair(String(params.id), {
+		currentScreenKey,
+		previousScreenKey,
+		nextScreenKey,
+		entering,
+	});
 
 	const sourceBounds = resolvedPair.sourceBounds;
 	const destinationBounds = resolvedPair.destinationBounds;
@@ -369,7 +364,6 @@ export const computeBoundStyles = (
 		interpolationProps,
 	}: BoundsComputeParams,
 	computeOptions: BoundsInternalOptions = { id: "bound-id" },
-	resolvedPair?: ResolvedTransitionPair,
 ) => {
 	"worklet";
 
@@ -394,7 +388,6 @@ export const computeBoundStyles = (
 		next,
 		computeOptions,
 		dimensions,
-		resolvedPair,
 	});
 
 	if (!start || !end) {
@@ -481,14 +474,8 @@ export const computeBoundStyles = (
 			? composeTransformAbsolute(common)
 			: composeTransformRelative(common);
 
-	const withLocalTransform = attachBoundsLocalTransform(
-		style,
-		entering
-			? (resolvedPair?.destinationStyles ?? null)
-			: (resolvedPair?.sourceStyles ?? null),
-	);
 	// Raw values are composed by their caller (the navigation helpers move the screen themselves).
-	if (computeOptions.raw || isAbsolute) return withLocalTransform;
+	if (computeOptions.raw || isAbsolute) return style;
 	const tag = String(id);
 	// A pair a newer screen has taken the element from (its destination closing): neither copy draws
 	// it any more, the newer one does, from where this pair had it. The source's copy too: its screen
@@ -510,8 +497,7 @@ export const computeBoundStyles = (
 	// A closing pair whose element has landed (isPairLanded). Its destination's copy still draws on top
 	// of the source's while its spring settles, long after its screen has gone: once its screen no
 	// longer covers the source's copy (applyBoundsScreenFrames), it stops, so the leaving copy's content
-	// (scaled, or styled for its own screen) doesn't linger. A screen below popped then follows its own
-	// pair, not this one (resolveInterpolatorStyleHandoff).
+	// (scaled, or styled for its own screen) doesn't linger.
 	const pairLanded =
 		isTeleportAvailable &&
 		!!sourceScreenKey &&
@@ -523,25 +509,20 @@ export const computeBoundStyles = (
 	// Only escaped copies draw outside their screens: inline (no Teleport), the leaving copy is clipped
 	// away with its screen, and the source's copy may not be drawing.
 	const landed =
-		isTeleportAvailable &&
 		pairLanded &&
 		!taken &&
 		entering &&
 		currentScreenKey === destinationScreenKey;
-	return attachBoundsScreenFrame(
-		taken ? { ...withLocalTransform, opacity: 0 } : withLocalTransform,
-		{
-			tag,
-			t,
-			sourceScreenKey,
-			destinationScreenKey,
-			screenKey: currentScreenKey,
-			layout: ownLayout,
-			start: pathStart,
-			end: pathEnd,
-			startChain,
-			landed,
-			pairLanded,
-		},
-	);
+	return attachBoundsScreenFrame(taken ? { ...style, opacity: 0 } : style, {
+		tag,
+		t,
+		sourceScreenKey,
+		destinationScreenKey,
+		screenKey: currentScreenKey,
+		layout: ownLayout,
+		start: pathStart,
+		end: pathEnd,
+		startChain,
+		landed,
+	});
 };
