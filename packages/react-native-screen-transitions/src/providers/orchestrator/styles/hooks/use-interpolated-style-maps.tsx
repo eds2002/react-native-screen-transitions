@@ -42,6 +42,28 @@ type InterpolatorResult = {
 	rawStyleMap: TransitionInterpolatedStyle | undefined;
 };
 
+/**
+ * What this screen's interpolators produced this frame, before layering. Other screens read it: a
+ * pair's presentation needs the destination's interpolator on the destination's current-only frame
+ * and on the source's frame, which these runs already are (see usePairPresentation).
+ */
+export type InterpolatorRuns = {
+	/** The screen these runs styled. */
+	screenKey: string;
+	/** Its own interpolator; `currentOnly` when it ran on the current-only frame. */
+	current: InterpolatorResult | undefined;
+	currentOnly: boolean;
+	/** The next screen's interpolator on this screen, when it ran; `nextExact` when on this screen's plain frame. */
+	next: InterpolatorResult | undefined;
+	nextKey: string | undefined;
+	nextExact: boolean;
+	/** The destination's first styles are held back until it is ready. */
+	withheld: boolean;
+	currentOwnsInterpolator: boolean;
+	interpolatorOptionsOwner: "current" | "next";
+	currentClosing: boolean;
+};
+
 type RunInterpolatorParams = {
 	interpolator: ScreenStyleInterpolator | undefined;
 	props: ScreenInterpolatorFrame;
@@ -179,7 +201,7 @@ export const useInterpolatedStylesMap = ({
 		},
 	);
 
-	const localStylesMaps = useDerivedValue<LocalStyleLayers>(() => {
+	const interpolatorRuns = useDerivedValue<InterpolatorRuns>(() => {
 		const props = screenInterpolatorProps.get();
 
 		const { current, next } = props;
@@ -258,12 +280,43 @@ export const useInterpolatedStylesMap = ({
 			isScreenReady: isScreenReady.get(),
 			stylesReady: !!initialDestinationStylesReady.get(),
 		});
-
-		if (initialDestinationStyleGate.shouldWithholdStyles) {
-			return NO_STYLE_LAYERS;
+		const runs: InterpolatorRuns = {
+			screenKey: current.route.key,
+			current: currentResult,
+			currentOnly: isInGestureMode || !!nextInterpolator || !next,
+			next: undefined,
+			nextKey: next?.route.key,
+			nextExact: false,
+			withheld: initialDestinationStyleGate.shouldWithholdStyles,
+			currentOwnsInterpolator,
+			interpolatorOptionsOwner,
+			currentClosing: !!current.closing && isNextClosing,
+		};
+		if (runs.withheld || currentOwnsInterpolator) {
+			return runs;
 		}
 
-		if (currentOwnsInterpolator) {
+		const composedWithCurrent = !!currentResult?.stylesMap;
+		runs.next = runInterpolator({
+			interpolator: nextInterpolator,
+			props,
+			selectedFrame: selectNextInterpolatorFrame(props, composedWithCurrent),
+		});
+		// The composed frame sees this screen as fully open; a screen that is fully open is unaffected.
+		runs.nextExact =
+			!composedWithCurrent ||
+			(current.progress === 1 && current.transitionProgress === 1);
+		return runs;
+	});
+
+	const localStylesMaps = useDerivedValue<LocalStyleLayers>(() => {
+		const runs = interpolatorRuns.get();
+		if (runs.withheld) {
+			return NO_STYLE_LAYERS;
+		}
+		const currentResult = runs.current;
+
+		if (runs.currentOwnsInterpolator) {
 			syncSelectedInterpolatorOptions(
 				selectedInterpolatorOptions,
 				"current",
@@ -282,17 +335,8 @@ export const useInterpolatedStylesMap = ({
 				: NO_STYLE_LAYERS;
 		}
 
-		const nextSelectedFrame = selectNextInterpolatorFrame(
-			props,
-			!!currentResult?.stylesMap,
-		);
-		const nextResult = runInterpolator({
-			interpolator: nextInterpolator,
-			props,
-			selectedFrame: nextSelectedFrame,
-		});
-
-		if (interpolatorOptionsOwner === "current") {
+		const nextResult = runs.next;
+		if (runs.interpolatorOptionsOwner === "current") {
 			syncSelectedInterpolatorOptions(
 				selectedInterpolatorOptions,
 				"current",
@@ -312,7 +356,7 @@ export const useInterpolatedStylesMap = ({
 			currentOwnsInterpolator: false,
 			currentStylesMap: currentResult?.stylesMap,
 			nextStylesMap: nextResult?.stylesMap,
-			currentClosing: !!props.current.closing && isNextClosing,
+			currentClosing: runs.currentClosing,
 		});
 
 		return handoff.localStylesMaps.length
@@ -320,5 +364,5 @@ export const useInterpolatedStylesMap = ({
 			: NO_STYLE_LAYERS;
 	});
 
-	return localStylesMaps;
+	return { localStylesMaps, interpolatorRuns };
 };

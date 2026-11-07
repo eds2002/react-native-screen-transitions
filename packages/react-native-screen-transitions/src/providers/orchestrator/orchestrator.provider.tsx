@@ -33,13 +33,16 @@ export const {
 	const gestures = useMotionStore((store) => store.gestures);
 
 	const pipeline = useScreenAnimationPipeline();
-	const localStylesMaps = useInterpolatedStylesMap({ pipeline });
+	const { localStylesMaps, interpolatorRuns } = useInterpolatedStylesMap({
+		pipeline,
+	});
 	const resolvedSlotsMap = useResolvedStylesMap({ localStylesMaps });
 	const bounds = useScreenBounds({
 		currentScreenKey,
 		owner: !screenKey,
 		pipeline,
 		localStylesMaps,
+		interpolatorRuns,
 		resolvedSlotsMap,
 	});
 

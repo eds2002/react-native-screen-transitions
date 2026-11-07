@@ -14,6 +14,7 @@ import { useOptionalScreenHostStore } from "../../../providers/host/screen-host.
 import type { ScreenAnimationPipeline } from "../../../providers/orchestrator/helpers/pipeline";
 import { useOptionalOrchestratorStore } from "../../../providers/orchestrator/orchestrator.provider";
 import type { LocalStyleLayers } from "../../../providers/orchestrator/styles/helpers/resolve-slot-styles";
+import type { InterpolatorRuns } from "../../../providers/orchestrator/styles/hooks/use-interpolated-style-maps";
 import {
 	registerScreenScroll,
 	registerScreenTransform,
@@ -45,6 +46,8 @@ export type ScreenBounds = {
 	contentMeasureRef: AnimatedRef<View>;
 	/** What boundaries outside any transition present: no pair, this screen's slots. */
 	idleBoundaryPresentation: SharedValue<BoundaryPresentationValue>;
+	/** This screen's interpolator runs, for the pair presentation of the screen it opens. */
+	interpolatorRuns: DerivedValue<InterpolatorRuns>;
 };
 
 /**
@@ -59,12 +62,14 @@ export function useScreenBounds({
 	owner,
 	pipeline,
 	localStylesMaps,
+	interpolatorRuns,
 	resolvedSlotsMap,
 }: {
 	currentScreenKey: string;
 	owner: boolean;
 	pipeline: ScreenAnimationPipeline;
 	localStylesMaps: DerivedValue<LocalStyleLayers>;
+	interpolatorRuns: DerivedValue<InterpolatorRuns>;
 	resolvedSlotsMap: DerivedValue<NormalizedTransitionInterpolatedStyle>;
 }): ScreenBounds {
 	const { screenInterpolatorProps } = pipeline;
@@ -132,7 +137,11 @@ export function useScreenBounds({
 	const slotsMap = useDerivedValue<NormalizedTransitionInterpolatedStyle>(() =>
 		applyBoundsScreenFrames(resolvedSlotsMap.get(), screenTransforms.get()),
 	);
-	const pairPresentation = usePairPresentation(pipeline, screenTransforms);
+	const pairPresentation = usePairPresentation(
+		pipeline,
+		interpolatorRuns,
+		screenTransforms,
+	);
 
 	const idleBoundaryPresentation = useDerivedValue<BoundaryPresentationValue>(
 		() => ({ owner: null, receiver: null, slots: slotsMap.get() }),
@@ -157,5 +166,6 @@ export function useScreenBounds({
 		screenTransform,
 		contentMeasureRef,
 		idleBoundaryPresentation,
+		interpolatorRuns,
 	};
 }

@@ -4,7 +4,11 @@ import {
 	useRef,
 	useSyncExternalStore,
 } from "react";
-import { type SharedValue, useDerivedValue } from "react-native-reanimated";
+import {
+	type DerivedValue,
+	type SharedValue,
+	useDerivedValue,
+} from "react-native-reanimated";
 import { NO_STYLES } from "../../../constants";
 import { useBuilderStore } from "../../../providers/builder";
 import { useMotionStore } from "../../../providers/motion";
@@ -13,10 +17,12 @@ import type {
 	ScreenAnimationPipeline,
 	ScreenInterpolatorFrame,
 } from "../../../providers/orchestrator/helpers/pipeline";
+import { useOptionalOrchestratorStore } from "../../../providers/orchestrator/orchestrator.provider";
 import { createInterpolatorScope } from "../../../providers/orchestrator/styles/helpers/create-interpolator-scope";
 import { normalizeSlots } from "../../../providers/orchestrator/styles/helpers/normalize-slots";
 import { selectInterpolatorFrame } from "../../../providers/orchestrator/styles/helpers/select-interpolator-frame";
 import { stripInterpolatorOptions } from "../../../providers/orchestrator/styles/helpers/strip-interpolator-options";
+import type { InterpolatorRuns } from "../../../providers/orchestrator/styles/hooks/use-interpolated-style-maps";
 import type { ScreenPairKey } from "../../../stores/bounds";
 import {
 	getDestinationScreenKeyFromPairKey,
@@ -139,15 +145,30 @@ const NO_TRANSFORMS: Record<string, ScreenTransform | undefined> = {};
 
 // Each destination owns the output of its incoming pair, even when its source
 // has moved on to another route. All boundaries read this same UI value.
+//
+// Both sides are this screen's interpolator: on its current-only frame (the destination) and on its
+// previous screen's frame (the source). The screens already run exactly those every frame for their
+// own styles when they own the relationship, so those runs are read; the interpolator runs again
+// here only when a screen's run was on a different frame (see InterpolatorRuns).
 export function usePairPresentation(
 	{ screenInterpolatorProps, currentInterpolator }: ScreenAnimationPipeline,
+	/** This screen's interpolator runs. */
+	interpolatorRuns?: SharedValue<InterpolatorRuns>,
 	/** The stack's screen transforms by key (others are read by key; see applyBoundsScreenFrames). */
 	screenTransforms?: SharedValue<Record<string, ScreenTransform | undefined>>,
-) {
+): DerivedValue<BoundaryPairPresentation | undefined> {
 	const stackPairKey = useBuilderStore((s) => s.derivations.destinationPairKey);
 	const currentScreenKey = useBuilderStore(
 		(s) => s.derivations.currentScreenKey,
 	);
+	const previousScreenKey = useBuilderStore(
+		(s) => s.derivations.previousScreenKey,
+	);
+	const previousRuns: DerivedValue<InterpolatorRuns> | null =
+		useOptionalOrchestratorStore(
+			previousScreenKey ?? null,
+			(s) => s.interpolatorRuns,
+		);
 	const ready = useMotionStore((s) => s.isScreenReady);
 	const isPairDestination = !!stackPairKey && !!currentInterpolator;
 	useLayoutEffect(() => {
@@ -172,23 +193,41 @@ export function usePairPresentation(
 		}
 		if (!linked) return undefined;
 		const frame = screenInterpolatorProps.get();
-		const source = boundarySourceFrame(frame);
-		if (!source) return undefined;
+		const previous = frame.previous;
+		if (!previous) return undefined;
+		const destinationKey = frame.current.route.key;
+		const own = interpolatorRuns?.get();
+		const destination =
+			own?.current && own.currentOnly && own.screenKey === destinationKey
+				? own.current.stylesMap
+				: runBoundaryInterpolator(currentInterpolator, frame, "destination");
+		const sourceRuns = previousRuns?.get();
+		const source =
+			sourceRuns?.next &&
+			sourceRuns.nextExact &&
+			sourceRuns.screenKey === previous.route.key &&
+			sourceRuns.nextKey === destinationKey
+				? sourceRuns.next.stylesMap
+				: runBoundaryInterpolator(
+						currentInterpolator,
+						boundarySourceFrame(frame) as ScreenInterpolatorFrame,
+						"source",
+					);
 		return {
 			pairKey,
 			// The pair's own source: across stacks, a screen of another stack (not this stack's
 			// previous route, whose frame still runs the source side of the interpolator).
 			sourceKey: getSourceScreenKeyFromPairKey(pairKey),
-			destinationKey: frame.current.route.key,
+			destinationKey,
 			ready: ready.get(),
 			closing: !!frame.current.closing,
 			// Both sides as their screens draw them this frame (see applyBoundsScreenFrames).
 			source: applyBoundsScreenFrames(
-				runBoundaryInterpolator(currentInterpolator, source, "source"),
+				source,
 				screenTransforms?.get() ?? NO_TRANSFORMS,
 			),
 			destination: applyBoundsScreenFrames(
-				runBoundaryInterpolator(currentInterpolator, frame, "destination"),
+				destination,
 				screenTransforms?.get() ?? NO_TRANSFORMS,
 			),
 		} satisfies BoundaryPairPresentation;
