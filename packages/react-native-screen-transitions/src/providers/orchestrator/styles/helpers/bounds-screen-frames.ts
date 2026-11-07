@@ -384,8 +384,8 @@ const resolveCorrection = (
 
 /**
  * Whether the closing destination screen still covers the source's copy of a landed pair (its
- * window rect overlaps where the source draws the element). A screen whose size isn't known yet
- * counts as covering.
+ * window rect overlaps where the source draws the element: its slot, or wherever the element is in
+ * flight when the source screen closes too). A screen whose size isn't known yet counts as covering.
  */
 const coversSource = (
 	frame: BoundsScreenFrame,
@@ -398,7 +398,10 @@ const coversSource = (
 		{ pageX: 0, pageY: 0, width: screen.width, height: screen.height },
 		toAffine(screen),
 	);
-	const source = mapRect(frame.start, toAffine(read(frame.sourceScreenKey)));
+	const source = mapRect(
+		resolveStart(frame, read),
+		toAffine(read(frame.sourceScreenKey)),
+	);
 	return (
 		area.pageX < source.pageX + source.width &&
 		source.pageX < area.pageX + area.width &&
