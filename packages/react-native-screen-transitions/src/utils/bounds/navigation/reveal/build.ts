@@ -1,5 +1,6 @@
 import { interpolate } from "react-native-reanimated";
 import { createBoundsAccessorCore } from "../../helpers/create-bounds-accessor-core";
+import { resolveUniformScale } from "../../helpers/geometry";
 import { getSourceBorderRadius } from "../helpers";
 import {
 	CLOSE_SOURCE_HANDOFF_PROGRESS,
@@ -28,7 +29,6 @@ import {
 	resolveRevealGestureHandoff,
 	resolveSafeScale,
 	resolveTrackedSourceElementTransform,
-	resolveUniformScale,
 	resolveUnitDragTranslation,
 } from "./math";
 import type { BuildRevealStylesParams, RevealInterpolatedStyle } from "./types";
@@ -165,12 +165,10 @@ export function buildRevealStyles({
 			const contentTargetBounds =
 				initialDestinationTarget ?? link.destination.bounds;
 
-			const sourceContentScale = resolveUniformScale({
-				sourceWidth: link.source.bounds.width,
-				sourceHeight: link.source.bounds.height,
-				destinationWidth: contentTargetBounds.width,
-				destinationHeight: contentTargetBounds.height,
-			});
+			const sourceContentScale = resolveUniformScale(
+				link.source.bounds,
+				contentTargetBounds,
+			);
 
 			contentScale = resolveDismissScaleHandoff({
 				progress: activeTransitionProgress,
@@ -360,12 +358,10 @@ export function buildRevealStyles({
 	});
 	let trackingContentScale = trackingContentBaseTransform.scale * dragScale;
 	if (props.active.gesture.dismissing) {
-		const trackingTargetScale = resolveUniformScale({
-			sourceWidth: link.source.bounds.width,
-			sourceHeight: link.source.bounds.height,
-			destinationWidth: trackingContentTarget.width,
-			destinationHeight: trackingContentTarget.height,
-		});
+		const trackingTargetScale = resolveUniformScale(
+			link.source.bounds,
+			trackingContentTarget,
+		);
 		trackingContentScale = resolveDismissScaleHandoff({
 			progress: activeTransitionProgress,
 			releaseScale: dragScale,

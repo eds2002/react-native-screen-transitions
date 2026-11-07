@@ -9,7 +9,7 @@ import type { BoundsAnchor, BoundsScaleMode } from "../types/options";
 /**
  * Get the anchor point coordinates for a given bound
  */
-function getAnchorPoint(
+export function getAnchorPoint(
 	bounds: MeasuredDimensions,
 	anchor: BoundsAnchor = "center",
 ): { x: number; y: number } {
@@ -43,6 +43,23 @@ function getAnchorPoint(
 }
 
 /**
+ * One scale for both axes taking `from` to `to`: the larger axis scale when their aspect ratios
+ * match (within 0.1), so the result covers; otherwise the smaller, so it fits.
+ */
+export function resolveUniformScale(
+	from: { width: number; height: number },
+	to: { width: number; height: number },
+): number {
+	"worklet";
+	const sx = from.width / to.width;
+	const sy = from.height / to.height;
+	const aspectDifference = Math.abs(
+		from.width / from.height - to.width / to.height,
+	);
+	return aspectDifference < 0.1 ? Math.max(sx, sy) : Math.min(sx, sy);
+}
+
+/**
  * Relative geometry between start/end bounds.
  */
 export function computeRelativeGeometry({
@@ -67,16 +84,8 @@ export function computeRelativeGeometry({
 		scaleX = 1;
 		scaleY = 1;
 	} else if (scaleMode === "uniform") {
-		const sx = start.width / end.width;
-		const sy = start.height / end.height;
-
-		const startAspect = start.width / start.height;
-		const endAspect = end.width / end.height;
-		const aspectDifference = Math.abs(startAspect - endAspect);
-
-		const scale = aspectDifference < 0.1 ? Math.max(sx, sy) : Math.min(sx, sy);
-		scaleX = scale;
-		scaleY = scale;
+		scaleX = resolveUniformScale(start, end);
+		scaleY = scaleX;
 	} else {
 		scaleX = start.width / end.width;
 		scaleY = start.height / end.height;
@@ -123,14 +132,7 @@ export function computeContentTransformGeometry({
 	if (scaleMode === "none") {
 		s = 1;
 	} else if (scaleMode === "uniform") {
-		const sx = start.width / end.width;
-		const sy = start.height / end.height;
-
-		const startAspect = start.width / start.height;
-		const endAspect = end.width / end.height;
-		const aspectDifference = Math.abs(startAspect - endAspect);
-
-		s = aspectDifference < 0.1 ? Math.max(sx, sy) : Math.min(sx, sy);
+		s = resolveUniformScale(start, end);
 	} else {
 		// "match" mode: use a cover strategy so the scaled content always
 		// fills the mask area. max() ensures no gaps inside the mask clip.

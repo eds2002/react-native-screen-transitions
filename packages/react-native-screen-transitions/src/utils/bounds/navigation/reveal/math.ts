@@ -76,29 +76,6 @@ export function resolveRevealDirectionalDragScale(
 	return mixUnit(1, DRAG_DIRECTIONAL_SCALE_MAX, oppositeDrag);
 }
 
-export function resolveUniformScale({
-	sourceWidth,
-	sourceHeight,
-	destinationWidth,
-	destinationHeight,
-}: {
-	sourceWidth: number;
-	sourceHeight: number;
-	destinationWidth: number;
-	destinationHeight: number;
-}) {
-	"worklet";
-
-	const sx = sourceWidth / destinationWidth;
-	const sy = sourceHeight / destinationHeight;
-
-	const sourceAspect = sourceWidth / sourceHeight;
-	const destinationAspect = destinationWidth / destinationHeight;
-	const aspectDifference = Math.abs(sourceAspect - destinationAspect);
-
-	return aspectDifference < 0.1 ? Math.max(sx, sy) : Math.min(sx, sy);
-}
-
 export function resolveRevealGestureHandoff({
 	rawDrag,
 	maxSensitivity,

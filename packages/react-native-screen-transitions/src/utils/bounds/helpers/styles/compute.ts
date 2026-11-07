@@ -37,8 +37,7 @@ import {
 import { type ScreenTransform, toLayoutSpace } from "../screen-transform";
 import {
 	composeContentStyle,
-	composeSizeAbsolute,
-	composeSizeRelative,
+	composeSize,
 	composeTransformAbsolute,
 	composeTransformRelative,
 	type ElementComposeParams,
@@ -431,9 +430,7 @@ export const computeBoundStyles = (
 	};
 
 	const style = isSize
-		? isAbsolute
-			? composeSizeAbsolute(common)
-			: composeSizeRelative(common)
+		? composeSize(common, isAbsolute)
 		: isAbsolute
 			? composeTransformAbsolute(common)
 			: composeTransformRelative(common);

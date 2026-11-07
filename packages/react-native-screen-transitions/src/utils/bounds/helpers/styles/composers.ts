@@ -16,6 +16,7 @@ import type {
 	BoundsInternalOptions,
 	BoundsMotionTransform,
 } from "../../types/options";
+import { getAnchorPoint } from "../geometry";
 
 /**
  * Element-level (relative) params shared by size/transform composers.
@@ -48,36 +49,6 @@ type ContentComposeParams = {
 	ranges: readonly [number, number];
 	computeOptions: BoundsInternalOptions;
 	interpolationProps: BoundsInterpolationProps;
-};
-
-const getAnchorPoint = (
-	bounds: MeasuredDimensions,
-	anchor: BoundsAnchor = "center",
-): { x: number; y: number } => {
-	"worklet";
-
-	const { pageX, pageY, width, height } = bounds;
-
-	switch (anchor) {
-		case "topLeading":
-			return { x: pageX, y: pageY };
-		case "top":
-			return { x: pageX + width / 2, y: pageY };
-		case "topTrailing":
-			return { x: pageX + width, y: pageY };
-		case "leading":
-			return { x: pageX, y: pageY + height / 2 };
-		case "center":
-			return { x: pageX + width / 2, y: pageY + height / 2 };
-		case "trailing":
-			return { x: pageX + width, y: pageY + height / 2 };
-		case "bottomLeading":
-			return { x: pageX, y: pageY + height };
-		case "bottom":
-			return { x: pageX + width / 2, y: pageY + height };
-		case "bottomTrailing":
-			return { x: pageX + width, y: pageY + height };
-	}
 };
 
 const getAnchorOffset = ({
@@ -231,116 +202,29 @@ const composeMotionTransform = (
 	return transform;
 };
 
-export function composeSizeAbsolute(params: ElementComposeParams): StyleProps {
-	"worklet";
-	const { start, end, progress, ranges, computeOptions } = params;
-	const anchor = computeOptions.anchor ?? "center";
-	const startAnchor = getAnchorPoint(start, anchor);
-	const endAnchor = getAnchorPoint(end, anchor);
-
-	const width = interpolate(
-		progress,
-		ranges,
-		[start.width, end.width],
-		Extrapolation.CLAMP,
-	);
-	const height = interpolate(
-		progress,
-		ranges,
-		[start.height, end.height],
-		Extrapolation.CLAMP,
-	);
-
-	const anchorX = interpolate(
-		progress,
-		ranges,
-		[startAnchor.x, endAnchor.x],
-		Extrapolation.CLAMP,
-	);
-	const anchorY = interpolate(
-		progress,
-		ranges,
-		[startAnchor.y, endAnchor.y],
-		Extrapolation.CLAMP,
-	);
-	const anchorOffset = getAnchorOffset({ width, height, anchor });
-
-	const translateX = anchorX - anchorOffset.x;
-	const translateY = anchorY - anchorOffset.y;
-	const motion = resolveMotionTransform({
-		computeOptions,
-		interpolationProps: params.interpolationProps,
-		progress,
-		ranges,
-		start,
-		end,
-		current: {
-			x: translateX,
-			y: translateY,
-			scale: 1,
-		},
-	});
-	const resolvedWidth = width * motion.scale;
-	const resolvedHeight = height * motion.scale;
-
-	if (computeOptions.raw) {
-		return {
-			width: resolvedWidth,
-			height: resolvedHeight,
-			translateX: motion.x,
-			translateY: motion.y,
-			rotate: motion.rotate ?? 0,
-			rotateX: motion.rotateX ?? 0,
-			rotateY: motion.rotateY ?? 0,
-			transformOrigin: motion.transformOrigin,
-		};
-	}
-
-	return {
-		width: resolvedWidth,
-		height: resolvedHeight,
-		transform: composeMotionTransform(motion),
-		transformOrigin: motion.transformOrigin,
-	};
-}
-
-export function composeSizeRelative(params: ElementComposeParams): StyleProps {
+/**
+ * Size method: the element's box grows from its start rect to its end rect, its anchor moving along
+ * the path. `absolute` places it in window space; otherwise relative to where its screen lays it out
+ * (the destination's slot entering, the source's leaving).
+ */
+export function composeSize(
+	params: ElementComposeParams,
+	absolute: boolean,
+): StyleProps {
 	"worklet";
 	const { start, end, geometry, progress, ranges, computeOptions } = params;
 	const anchor = computeOptions.anchor ?? "center";
 	const startAnchor = getAnchorPoint(start, anchor);
 	const endAnchor = getAnchorPoint(end, anchor);
-	const baseX = geometry.entering ? end.pageX : start.pageX;
-	const baseY = geometry.entering ? end.pageY : start.pageY;
+	const base = absolute ? null : geometry.entering ? end : start;
+	const at = (from: number, to: number) => {
+		"worklet";
+		return interpolate(progress, ranges, [from, to], Extrapolation.CLAMP);
+	};
 
-	const width = interpolate(
-		progress,
-		ranges,
-		[start.width, end.width],
-		Extrapolation.CLAMP,
-	);
-	const height = interpolate(
-		progress,
-		ranges,
-		[start.height, end.height],
-		Extrapolation.CLAMP,
-	);
-	const anchorX = interpolate(
-		progress,
-		ranges,
-		[startAnchor.x, endAnchor.x],
-		Extrapolation.CLAMP,
-	);
-	const anchorY = interpolate(
-		progress,
-		ranges,
-		[startAnchor.y, endAnchor.y],
-		Extrapolation.CLAMP,
-	);
+	const width = at(start.width, end.width);
+	const height = at(start.height, end.height);
 	const anchorOffset = getAnchorOffset({ width, height, anchor });
-
-	const translateX = anchorX - (baseX + anchorOffset.x);
-	const translateY = anchorY - (baseY + anchorOffset.y);
 	const motion = resolveMotionTransform({
 		computeOptions,
 		interpolationProps: params.interpolationProps,
@@ -349,8 +233,8 @@ export function composeSizeRelative(params: ElementComposeParams): StyleProps {
 		start,
 		end,
 		current: {
-			x: translateX,
-			y: translateY,
+			x: at(startAnchor.x, endAnchor.x) - ((base?.pageX ?? 0) + anchorOffset.x),
+			y: at(startAnchor.y, endAnchor.y) - ((base?.pageY ?? 0) + anchorOffset.y),
 			scale: 1,
 		},
 	});
@@ -359,22 +243,22 @@ export function composeSizeRelative(params: ElementComposeParams): StyleProps {
 
 	if (computeOptions.raw) {
 		return {
+			width: resolvedWidth,
+			height: resolvedHeight,
 			translateX: motion.x,
 			translateY: motion.y,
 			rotate: motion.rotate ?? 0,
 			rotateX: motion.rotateX ?? 0,
 			rotateY: motion.rotateY ?? 0,
 			transformOrigin: motion.transformOrigin,
-			width: resolvedWidth,
-			height: resolvedHeight,
 		};
 	}
 
 	return {
-		transform: composeMotionTransform(motion),
-		transformOrigin: motion.transformOrigin,
 		width: resolvedWidth,
 		height: resolvedHeight,
+		transform: composeMotionTransform(motion),
+		transformOrigin: motion.transformOrigin,
 	};
 }
 
