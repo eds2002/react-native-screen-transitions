@@ -258,98 +258,72 @@ const resolveStartEnd = (params: {
 	previous?: ScreenTransitionState;
 	current?: ScreenTransitionState;
 	next?: ScreenTransitionState;
-	toRect?: Partial<MeasuredDimensions>;
 	dimensions: Layout;
 	computeOptions: BoundsInternalOptions;
 }) => {
 	"worklet";
 
 	const entering = !params.next;
-	const fullscreen = FULLSCREEN_DIMENSIONS(params.dimensions);
-
-	const isFullscreenTarget = params.computeOptions.target === "fullscreen";
-	const hasCustomTarget = typeof params.computeOptions.target === "object";
-	const hasTargetOverride = isFullscreenTarget || hasCustomTarget;
+	const target = params.computeOptions.target;
+	const hasTargetOverride =
+		target === "fullscreen" || typeof target === "object";
 
 	const currentScreenKey = params.current?.route.key;
 	const previousScreenKey = params.previous?.route.key;
 	const nextScreenKey = params.next?.route.key;
-	// The screen that has the card, wherever it is in the route tree (not just this stack's neighbour).
-	const sourceMeasurePairKey = resolveScreenPairKey(String(params.id), {
-		currentScreenKey,
-		previousScreenKey,
-		nextScreenKey,
-	});
-
-	const resolvedPair = resolveTransitionPair(String(params.id), {
+	const tag = String(params.id);
+	const pair = resolveTransitionPair(tag, {
 		currentScreenKey,
 		previousScreenKey,
 		nextScreenKey,
 		entering,
 	});
+	const {
+		sourceBounds,
+		destinationBounds,
+		sourceScreenKey,
+		destinationScreenKey,
+	} = pair;
+	const resolved = {
+		entering,
+		currentScreenKey,
+		sourceScreenKey,
+		destinationScreenKey,
+	};
 
-	const sourceBounds = resolvedPair.sourceBounds;
-	const destinationBounds = resolvedPair.destinationBounds;
-
-	if (!sourceBounds) {
-		if (hasTargetOverride && sourceMeasurePairKey) {
-			requestSourceMeasure(sourceMeasurePairKey, String(params.id));
+	// A custom target needs no destination element, only the source.
+	if (!sourceBounds || (!hasTargetOverride && !destinationBounds)) {
+		if (!sourceBounds && hasTargetOverride) {
+			// The screen that has the card, wherever it is in the route tree (not just this stack's
+			// neighbour).
+			const sourcePairKey = resolveScreenPairKey(tag, {
+				currentScreenKey,
+				previousScreenKey,
+				nextScreenKey,
+			});
+			if (sourcePairKey) requestSourceMeasure(sourcePairKey, tag);
 		}
-
 		return {
+			...resolved,
 			start: null,
 			end: null,
-			entering,
-			currentScreenKey,
-			sourceScreenKey: resolvedPair.sourceScreenKey,
-			destinationScreenKey: resolvedPair.destinationScreenKey,
-			hasTargetOverride,
 			layout: null,
-			sourceMeasured: null,
-			destinationMeasured: null,
+			destinationBounds: null,
 		};
-	}
-
-	// When target is overridden, destination element is not required
-	if (!hasTargetOverride && !destinationBounds) {
-		return {
-			start: null,
-			end: null,
-			entering,
-			currentScreenKey,
-			sourceScreenKey: resolvedPair.sourceScreenKey,
-			destinationScreenKey: resolvedPair.destinationScreenKey,
-			hasTargetOverride,
-			layout: null,
-			sourceMeasured: null,
-			destinationMeasured: null,
-		};
-	}
-
-	const start = sourceBounds;
-	let end = destinationBounds ?? fullscreen;
-
-	if (isFullscreenTarget) {
-		end = fullscreen;
-	}
-
-	const customTarget = params.computeOptions.target;
-	if (typeof customTarget === "object") {
-		end = customTarget;
 	}
 
 	return {
-		start,
-		end,
-		entering,
-		currentScreenKey,
-		sourceScreenKey: resolvedPair.sourceScreenKey,
-		destinationScreenKey: resolvedPair.destinationScreenKey,
-		hasTargetOverride,
+		...resolved,
+		start: sourceBounds,
+		end:
+			typeof target === "object"
+				? target
+				: target === "fullscreen" || !destinationBounds
+					? FULLSCREEN_DIMENSIONS(params.dimensions)
+					: destinationBounds,
 		// Where this element is laid out: the destination's slot entering, the source's leaving.
 		layout: entering ? destinationBounds : sourceBounds,
-		sourceMeasured: sourceBounds,
-		destinationMeasured: destinationBounds,
+		destinationBounds,
 	};
 };
 
@@ -379,8 +353,7 @@ export const computeBoundStyles = (
 		sourceScreenKey,
 		destinationScreenKey,
 		layout,
-		sourceMeasured,
-		destinationMeasured,
+		destinationBounds,
 	} = resolveStartEnd({
 		id,
 		previous,
@@ -429,15 +402,14 @@ export const computeBoundStyles = (
 	// lay the element out, without the transforms the screens had when measured, and drawn through
 	// where the screens are now. Raw values keep the window-space rects their callers compose with.
 	const followsScreens = !computeOptions.raw && !isAbsolute;
-	const sourceMeasuredWith = (sourceMeasured as MeasuredWith | null)
-		?.screenTransform;
-	const destinationMeasuredWith = (destinationMeasured as MeasuredWith | null)
+	const sourceMeasuredWith = (start as MeasuredWith).screenTransform;
+	const destinationMeasuredWith = (destinationBounds as MeasuredWith | null)
 		?.screenTransform;
 	const pathStart = followsScreens
 		? toLayoutSpace(start, sourceMeasuredWith)
 		: start;
 	const pathEnd =
-		followsScreens && end === destinationMeasured
+		followsScreens && end === destinationBounds
 			? toLayoutSpace(end, destinationMeasuredWith)
 			: end;
 	const ownLayout =
