@@ -2107,8 +2107,13 @@ export const buildDeepChainBoundsCatalog = (interpolate: InterpolateFn, window: 
 				(!handoff || (HANDOFF_MOTIONS.includes(motion) && HANDOFF_SEQUENCES.includes(sequence))) &&
 				scenarios.push({
 					name: `bounds-deep-${motion}${handoff ? "-handoff" : ""} / preset-spec / ${sequence}`,
-					// Without react-native-teleport, handoff renders inline by design: nothing to hand off.
-					environments: handoff ? ["teleport-deep"] : ["ios", "android", "120hz"],
+					// Without react-native-teleport, handoff renders inline by design: nothing to hand off. A pop in
+					// the previous close's tail also runs with Teleport: escaped copies draw outside their screens.
+					environments: handoff
+						? ["teleport-deep"]
+						: sequence.startsWith("pop-in-close-tail")
+							? ["ios", "android", "120hz", "teleport-deep"]
+							: ["ios", "android", "120hz"],
 					screens,
 					steps,
 					expect: { mayOvershoot: true, ...(handoff ? { payloadRest: { "payload-card": rects[restOn] } } : {}) },
@@ -2155,6 +2160,11 @@ export const buildDeepChainBoundsCatalog = (interpolate: InterpolateFn, window: 
 					{ op: "settle" },
 				],
 			);
+			// Pop again as the previous close lands (its spring's tail): the screen below starts closing while
+			// the one above has all but left.
+			for (const gap of [24, 32]) {
+				add(`pop-in-close-tail-${gap}`, [...pushAll("settle"), ...popAll(gap), { op: "settle" }]);
+			}
 			// Swipe the top screen back while it is still opening.
 			add("swipe-while-opening", [...pushAll("settle").slice(0, 6), { op: "push", name: "E" }, { op: "frames", count: 8 }, swipeBack("E"), { op: "settle" }], "D");
 		}

@@ -68,6 +68,8 @@ export type BoundsScreenFrame = {
 	startChain: StartPair[];
 	/** A closing destination's copy within 2 px of the source's (see compute). */
 	landed: boolean;
+	/** This frame's pair is closing and its element has landed (either side's copy). */
+	pairLanded: boolean;
 	/** The scroll positions `start`, `end` and the element's own box were measured at. */
 	startScroll: MeasuredScroll;
 	endScroll: MeasuredScroll;
@@ -109,6 +111,7 @@ export const attachBoundsScreenFrame = (
 		end: MeasuredDimensions;
 		startChain: StartPair[];
 		landed?: boolean;
+		pairLanded?: boolean;
 	},
 ): StyleProps => {
 	"worklet";
@@ -139,6 +142,7 @@ export const attachBoundsScreenFrame = (
 		},
 		startChain: params.startChain,
 		landed: !!params.landed,
+		pairLanded: !!params.pairLanded,
 		startScroll: scrollOf(params.start),
 		endScroll: scrollOf(params.end),
 		ownScroll: scrollOf(layout),

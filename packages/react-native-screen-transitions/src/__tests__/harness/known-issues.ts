@@ -72,6 +72,29 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			["payload-hidden", "element-teleport", "element-flash", "element-spike", "payload-rest"].includes(v.rule),
 	},
 	{
+		id: "deep-close-start-cover-step",
+		summary:
+			"Teleport, a pop as the screen above lands (its close's tail): for ~6 frames as its own close starts, the " +
+			"middle screen's copy is drawn offset by the cover's parallax (117 px in slide-left), then snaps back as the " +
+			"screen above unmounts. Placement inputs are right (both its own pair and the landed one put it on its " +
+			"slot); suspected in the escaped overlay's placement at the close start. Predates the landed-pair handover.",
+		environments: ["teleport-deep"],
+		matches: (scenario, v) =>
+			/^bounds-deep-[a-z-]+ \//.test(scenario) &&
+			sequenceOf(scenario).startsWith("pop-in-close-tail") &&
+			["element-spike", "element-teleport", "bound-vanish", "bound-split", "element-flash"].includes(v.rule),
+	},
+	{
+		id: "deep-fading-copies",
+		environments: ["120hz"],
+		summary:
+			"Screens that fade (fade): each copy fades with its screen, so popping as the screen above lands, every copy " +
+			"you can see is all but transparent for a frame between the two fades. The card should not take its screen's " +
+			"opacity (the shared-element layer above the screens, as deep-handoff-fading-screen).",
+		matches: (scenario, v) =>
+			/^bounds-deep-fade \//.test(scenario) && sequenceOf(scenario).startsWith("pop-in-close-tail") && v.rule === "bound-vanish",
+	},
+	{
 		id: "deep-swipe-without-teleport",
 		summary:
 			"Without Teleport (copies inline): swiping back through a chain, each screen right after the one above " +

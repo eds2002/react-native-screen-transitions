@@ -1,4 +1,5 @@
 import type { MeasuredDimensions } from "react-native-reanimated";
+import { isTeleportAvailable } from "../../../../components/boundary/portal/teleport";
 import {
 	ENTER_RANGE,
 	EXIT_RANGE,
@@ -102,9 +103,49 @@ const resolveClosingPresenter = (
 	return { ...latest, t };
 };
 
+/** How far apart two rects are (the larger of their position and size differences). */
+const spanOf = (
+	a: { pageX: number; pageY: number; width: number; height: number },
+	b: { pageX: number; pageY: number; width: number; height: number },
+) => {
+	"worklet";
+	return Math.max(
+		Math.abs(b.pageX - a.pageX),
+		Math.abs(b.pageY - a.pageY),
+		Math.abs(b.width - a.width),
+		Math.abs(b.height - a.height),
+	);
+};
+
+/** Within this many px of its source slot, a closing pair's element has landed. */
+const LANDED_PX = 2;
+
+/**
+ * Whether a closing pair's element has landed: its destination is closing and the element is
+ * within LANDED_PX of its source slot (its spring's tail, the screen all but gone). A landed pair
+ * no longer holds the element: popping the screen below then is carried by that screen's own pair.
+ * Never for handoff (the live content is in the destination's slot until it lands home), and only
+ * with Teleport: inline, the leaving copy is clipped away with its screen and never carries on.
+ */
+const isPairLanded = (
+	pairKey: string,
+	tag: string,
+	destination: string,
+): boolean => {
+	"worklet";
+	if (!isTeleportAvailable || !isScreenClosing(destination)) return false;
+	if (getEntry(tag, destination)?.handoff) return false;
+	const link = getResolvedLink(pairKey, tag).link;
+	const from = link?.source?.bounds;
+	const to = link?.destination?.bounds;
+	const t = getScreenProgress(destination);
+	if (!from || !to || t === undefined) return false;
+	return t * spanOf(from, to) < LANDED_PX;
+};
+
 /**
  * A closing screen whose element a newer screen has taken (see resolveClosingPresenter) no longer
- * draws it: the newer one does, from where this one had it.
+ * draws it: the newer one does, from where this one had it. A newer pair that has landed doesn't.
  */
 const isTakenByNewerScreen = (
 	tag: string,
@@ -119,6 +160,7 @@ const isTakenByNewerScreen = (
 		if (!isScreenNewer(destination, destinationScreenKey)) continue;
 		const t = getScreenProgress(destination);
 		if (t === undefined || t <= 0) continue;
+		if (isPairLanded(pairKey, tag, destination)) continue;
 		if (getResolvedLink(pairKey, tag).link?.destination?.bounds) return true;
 	}
 	return false;
@@ -142,6 +184,7 @@ const isMovedOnFrom = (tag: string, destinationScreenKey: string): boolean => {
 			continue;
 		const t = getScreenProgress(destination);
 		if (t === undefined || t <= 0) continue;
+		if (isPairLanded(pairKey, tag, destination)) continue;
 		if (getResolvedLink(pairKey, tag).link?.destination?.bounds) return true;
 	}
 	return false;
@@ -464,28 +507,27 @@ export const computeBoundStyles = (
 		sourceScreenKey,
 		destinationScreenKey,
 	);
-	// A closing screen's copy has landed once it is within 2 px of the source's copy. It still
-	// draws on top of it while its spring settles, long after its screen has gone: once its screen no
-	// longer covers the source's copy (applyBoundsScreenFrames), the source's copy takes over, so the
-	// leaving copy's content (scaled, or styled for its own screen) doesn't linger.
-	const span = Math.max(
-		Math.abs(pathEnd.pageX - pathStart.pageX),
-		Math.abs(pathEnd.pageY - pathStart.pageY),
-		Math.abs(pathEnd.width - pathStart.width),
-		Math.abs(pathEnd.height - pathStart.height),
-	);
-	const landed =
-		!taken &&
-		entering &&
+	// A closing pair whose element has landed (isPairLanded). Its destination's copy still draws on top
+	// of the source's while its spring settles, long after its screen has gone: once its screen no
+	// longer covers the source's copy (applyBoundsScreenFrames), it stops, so the leaving copy's content
+	// (scaled, or styled for its own screen) doesn't linger. A screen below popped then follows its own
+	// pair, not this one (resolveInterpolatorStyleHandoff).
+	const pairLanded =
+		isTeleportAvailable &&
 		!!sourceScreenKey &&
 		!!destinationScreenKey &&
-		currentScreenKey === destinationScreenKey &&
-		startChain.length === 0 &&
 		isScreenClosing(destinationScreenKey) &&
-		t * span < 2 &&
-		!isMovedOnFrom(tag, destinationScreenKey) &&
+		t * spanOf(pathStart, pathEnd) < LANDED_PX &&
 		// Handoff: the live content is in this slot until it lands home.
 		!getEntry(tag, destinationScreenKey)?.handoff;
+	// Only escaped copies draw outside their screens: inline (no Teleport), the leaving copy is clipped
+	// away with its screen, and the source's copy may not be drawing.
+	const landed =
+		isTeleportAvailable &&
+		pairLanded &&
+		!taken &&
+		entering &&
+		currentScreenKey === destinationScreenKey;
 	return attachBoundsScreenFrame(
 		taken ? { ...withLocalTransform, opacity: 0 } : withLocalTransform,
 		{
@@ -499,6 +541,7 @@ export const computeBoundStyles = (
 			end: pathEnd,
 			startChain,
 			landed,
+			pairLanded,
 		},
 	);
 };
