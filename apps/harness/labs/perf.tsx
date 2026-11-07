@@ -118,8 +118,10 @@ function CardGrid() {
 function CardDetail({ route }) {
 	const { id } = route.params;
 	const destination = route.name !== "zoom";
+	// The morph screen stays see-through (its backdrop dims the grid), so the card morphs over the grid.
+	const background = route.name === "zoom" ? colorFor(id) : route.name === "morph" ? "transparent" : "#0b0b0f";
 	return (
-		<View style={{ flex: 1, backgroundColor: route.name === "zoom" ? colorFor(id) : "#0b0b0f", paddingTop: 110, paddingHorizontal: 20, gap: 12 }}>
+		<View style={{ flex: 1, backgroundColor: background, paddingTop: 110, paddingHorizontal: 20, gap: 12 }}>
 			{destination ? (
 				<Transition.Boundary id={id} group={GROUP} style={{ height: 300, borderRadius: 28, backgroundColor: colorFor(id), justifyContent: "flex-end", padding: 18 }}>
 					<Text style={{ color: "white", fontSize: 40, fontWeight: "800" }}>{id}</Text>
