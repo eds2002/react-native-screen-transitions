@@ -233,10 +233,13 @@ const runStep = async (stack: StackHarness, step: Step, expectations: Expectatio
 		case "frames":
 			return stack.frames(step.count);
 		case "swipe": {
-			// Start on the focused screen wherever it is now (cards shrink and move).
+			// Start on the focused screen wherever it is now (cards shrink and move). A focused screen that is
+			// no longer touchable is on its way out (released by a swipe, still closing): a finger lands on the
+			// topmost screen that still takes touches.
 			const focusedKey = stack.leafRoutes().at(-1)?.key;
 			const scenes = stack.trace.at(-1)?.scenes ?? [];
-			const top = (scenes.find((s) => s.key === focusedKey) ?? scenes.at(-1))?.rect;
+			const focused = scenes.find((s) => s.key === focusedKey);
+			const top = (focused?.touchable ? focused : ([...scenes].reverse().find((s) => s.touchable && s.opacity > 0) ?? scenes.at(-1)))?.rect;
 			const path = swipePath(step.direction, step.distance, top);
 			const from = step.from ?? path.from;
 			const to = step.from ? { x: from.x + path.to.x - path.from.x, y: from.y + path.to.y - path.from.y } : path.to;

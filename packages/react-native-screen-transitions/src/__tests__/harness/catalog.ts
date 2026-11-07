@@ -1967,9 +1967,15 @@ export const buildMovingBoundsCatalog = (interpolate: InterpolateFn, window: { w
 			const add = (sequence: string, steps: Step[]) =>
 				scenarios.push({
 					name: `bounds-moving-${motion}${handoff ? "-handoff" : ""} / preset-spec / ${sequence}`,
+					// Without react-native-teleport, handoff renders inline by design: nothing to hand off.
+					...(handoff ? { environments: ["teleport"] } : {}),
 					screens,
 					steps,
-					expect: { mayOvershoot: true },
+					expect: {
+						mayOvershoot: true,
+						// The live payload rests in the top screen's slot (B after a cancelled swipe, A otherwise).
+						...(handoff ? { payloadRest: { "payload-card": sequence === "swipe-cancel" ? rects.B : rects.A } } : {}),
+					},
 				});
 			add("open-close", [{ op: "push", name: "B" }, { op: "settle" }, { op: "pop" }, { op: "settle" }]);
 			add("swipe-dismiss", [{ op: "push", name: "B" }, { op: "settle" }, swipe(0.75), { op: "settle" }]);

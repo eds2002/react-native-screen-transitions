@@ -28,19 +28,23 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			"source's disagree for 1-2 frames (up to ~60 px); (2) popping two levels quickly, the top screen's copy " +
 			"closes toward where the middle one's card is in flight while the source's copy shows that card directly: " +
 			"~15 px apart, meeting within ~8 frames; (3) one frame as the second pop starts, where the middle screen " +
-			"itself steps (interrupted-navigation).",
+			"itself steps (interrupted-navigation); (4) without Teleport only (copies render inline): dragging the middle " +
+			"screen back right after the top one was swiped away, its copy and the source's disagree for ~39 frames " +
+			"(found once the harness swipe started on the screen under the finger, not the one leaving).",
 		matches: (scenario, v) =>
 			/^bounds-moving-(slide|slide-scale|slide-up) \//.test(scenario) &&
 			["spam", "chain-fast", "push-pop-push", "swipe-chain-quickly", "chain"].includes(sequenceOf(scenario)) &&
-			["bound-split", "bound-vanish", "element-spike", "element-teleport", "element-flash", "spike", "error"].includes(v.rule),
+			["bound-split", "bound-vanish", "element-spike", "element-teleport", "element-flash", "spike"].includes(v.rule),
 	},
 	{
 		id: "moving-bounds-handoff",
+		environments: ["teleport"],
 		summary:
-			"Handoff on screens that move: the live payload is placed for the screen that styles it, but it lives in the " +
-			"receiving screen's host, and the hidden-copy rule can hide the boundary that holds it. It teleports, spikes " +
-			"and hides. Handoff on still screens passes (bounds-handoff family).",
-		matches: (scenario) => /^bounds-moving-[a-z-]+-handoff \//.test(scenario),
+			"Handoff on screens that move is clean (teleport run; without Teleport handoff renders inline by design). " +
+			"What is left is not the payload: as the second pop of a fast chain starts, the middle screen itself steps " +
+			"one frame (35 px), the same step as moving-bounds-overlap (3) without handoff.",
+		matches: (scenario, v) =>
+			/^bounds-moving-[a-z-]+-handoff \//.test(scenario) && sequenceOf(scenario) === "chain-fast" && v.rule === "spike",
 	},
 
 
