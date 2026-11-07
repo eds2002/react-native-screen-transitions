@@ -3,6 +3,7 @@ import {
 	type ComponentType,
 	memo,
 	type ReactNode,
+	useMemo,
 } from "react";
 import { type StyleProp, StyleSheet, View, type ViewStyle } from "react-native";
 import Animated, {
@@ -11,7 +12,10 @@ import Animated, {
 } from "react-native-reanimated";
 import { logger } from "../../../../utils/logger";
 import { useBoundaryRootStore } from "../../root/boundary-root.provider";
-import { usePlaceholderStyles } from "../hooks/use-placeholder-styles";
+import {
+	resolveSizedAxes,
+	usePlaceholderStyles,
+} from "../hooks/use-placeholder-styles";
 import {
 	type PortalMode,
 	usePortalDestination,
@@ -156,8 +160,12 @@ function PortalPlaceholder({
 }: Pick<PortalProps, "children" | "placeholderRef" | "placeholderStyle"> & {
 	pinned: boolean;
 }) {
+	const sized = useMemo(
+		() => resolveSizedAxes(placeholderStyle),
+		[placeholderStyle],
+	);
 	const { handleOnLayout, placeholderStyle: pinnedStyle } =
-		usePlaceholderStyles(pinned);
+		usePlaceholderStyles(pinned, sized);
 	return (
 		<View
 			ref={placeholderRef}

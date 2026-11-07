@@ -29,6 +29,7 @@ await mockModule("../../components/boundary/root/boundary-root.provider", () => 
 await mockModule(
 	"../../components/boundary/portal/hooks/use-placeholder-styles",
 	() => ({
+		resolveSizedAxes: () => ({ width: true, height: true }),
 		usePlaceholderStyles: () => ({
 			handleOnLayout: () => {},
 			placeholderStyle: {},
