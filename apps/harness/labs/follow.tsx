@@ -7,11 +7,15 @@
  *   fo-mode-slide   content translateX (slide + parallax)
  *   fo-mode-scale   the detail also scales while it moves (a card-like screen)
  *   fo-mode-still   the screens don't move (the reference: only the bound animates)
+ *   fo-mode-slide-left / fade / zoom-in / card-stack / diagonal / slide-fade: more screen motions
+ *   fo-mode-mixed   each screen arrives its own way (Detail slides and fades, Theater rises as a
+ *                   card over a shrinking Detail, Gallery zooms in, Profile flies in diagonally)
  *   fo-method       toggles transform / size
  *   fo-handoff      the card is one live view handed between the slots (handoff) instead of a copy per screen
  *   fo-card         opens the detail; fo-next pushes the theater (the card hands on to a third slot);
  *                   fo-back / fo-back-2 close them; swipe right from the left edge drags the top one
- *   bar (fixed, for spam): fo-bar-next pushes the next screen (List -> Detail -> Theater),
+ *   bar (fixed, for spam): fo-bar-next pushes the next screen (List -> Detail -> Theater -> Gallery
+ *                   -> Profile: the card is bigger on Gallery, smaller on Profile),
  *                   fo-bar-back pops; their positions never move
  *
  * What to look at: one card the whole way. It leaves the list's slot and lands on the detail's slot
@@ -27,7 +31,9 @@ import { Button, createBlankStackNavigator, interpolate, type Lab, LabContainer,
 const Stack = createBlankStackNavigator();
 const mode = makeMutable("slide");
 const method = makeMutable("transform");
-const MODES = ["slide", "scale", "still"];
+const MODES = ["slide", "scale", "still", "slide-left", "fade", "zoom-in", "card-stack", "diagonal", "slide-fade", "mixed"];
+const MIXED = { Detail: "slide-fade", Theater: "card-stack", Gallery: "zoom-in", Profile: "diagonal" };
+const CHAIN = ["List", "Detail", "Theater", "Gallery", "Profile"];
 // Handoff: the list's card (a live counter) is the only content; the other slots receive it.
 let handoffOn = false;
 
@@ -62,7 +68,7 @@ function List({ navigation }) {
 	return (
 		<View style={{ flex: 1, backgroundColor: "#111827", paddingTop: 110, paddingHorizontal: 20, gap: 12 }}>
 			<Text style={{ color: "white", fontSize: 30, fontWeight: "800" }}>follow</Text>
-			<View style={{ flexDirection: "row", gap: 8 }}>
+			<View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
 				{MODES.map((value) => (
 					<Button
 						key={value}
@@ -146,6 +152,14 @@ function Theater({ navigation }) {
 				{handoffOn ? null : <Card color="#22c55e" />}
 			</Transition.Boundary>
 			<Pressable
+				testID="fo-next-2"
+				accessibilityLabel="fo-next-2"
+				onPress={() => navigation.push("Gallery")}
+				style={{ backgroundColor: "#2563eb", paddingHorizontal: 16, paddingVertical: 10, borderRadius: 14 }}
+			>
+				<Text style={{ color: "white", fontWeight: "800" }}>Next</Text>
+			</Pressable>
+			<Pressable
 				testID="fo-back-2"
 				accessibilityLabel="fo-back-2"
 				onPress={() => navigation.goBack()}
@@ -157,20 +171,78 @@ function Theater({ navigation }) {
 	);
 }
 
-const detail = {
-	gestureEnabled: true,
-	gestureDirection: "horizontal",
-	transitionSpec: { open: SPEC, close: SPEC },
-	screenStyleInterpolator: ({ progress, bounds, layouts: { screen } }) => {
-		"worklet";
-		const m = mode.get();
-		const card = { style: bounds("card").styles(method.get() === "size" ? { method: "size" } : undefined) };
-		if (m === "still") return { card };
-		const x = interpolate(progress, [0, 1, 2], [screen.width, 0, -screen.width * 0.3]);
-		const transform = [{ translateX: x }];
-		if (m === "scale") transform.push({ scale: interpolate(progress, [0, 1, 2], [0.8, 1, 0.9]) });
-		return { content: { style: { transform } }, card };
-	},
+// Gallery: the card big, top left. Profile: the card small, low right.
+function Gallery({ navigation }) {
+	const { width } = useWindowDimensions();
+	return (
+		<View style={{ flex: 1, backgroundColor: "#3b0764", paddingTop: 110, paddingHorizontal: 20, gap: 16 }}>
+			<Transition.Boundary id="card" handoff={handoffOn} style={{ width: width * 0.6, height: width * 0.75 }}>
+				{handoffOn ? null : <Card color="#e879f9" />}
+			</Transition.Boundary>
+			<Text style={{ color: "white", fontSize: 26, fontWeight: "800" }}>Gallery</Text>
+			<Pressable testID="fo-next-3" accessibilityLabel="fo-next-3" onPress={() => navigation.push("Profile")} style={{ alignSelf: "flex-start", backgroundColor: "#2563eb", paddingHorizontal: 16, paddingVertical: 10, borderRadius: 14 }}>
+				<Text style={{ color: "white", fontWeight: "800" }}>Next</Text>
+			</Pressable>
+		</View>
+	);
+}
+
+function Profile() {
+	const { width } = useWindowDimensions();
+	return (
+		<View style={{ flex: 1, backgroundColor: "#052e16", paddingTop: 140, paddingHorizontal: 20, gap: 16 }}>
+			<Text style={{ color: "white", fontSize: 26, fontWeight: "800" }}>Profile</Text>
+			<Transition.Boundary id="card" handoff={handoffOn} style={{ width: width * 0.28, height: width * 0.35, alignSelf: "flex-end", marginTop: 260 }}>
+				{handoffOn ? null : <Card color="#facc15" />}
+			</Transition.Boundary>
+		</View>
+	);
+}
+
+/** The content motion for `m` at progress (0 entering, 1 open, 2 covered); null for still. */
+const motionStyle = (m, progress, screen) => {
+	"worklet";
+	const W = screen.width;
+	const H = screen.height;
+	if (m === "slide") return { transform: [{ translateX: interpolate(progress, [0, 1, 2], [W, 0, -W * 0.3]) }] };
+	if (m === "scale")
+		return { transform: [{ translateX: interpolate(progress, [0, 1, 2], [W, 0, -W * 0.3]) }, { scale: interpolate(progress, [0, 1, 2], [0.8, 1, 0.9]) }] };
+	if (m === "slide-left") return { transform: [{ translateX: interpolate(progress, [0, 1, 2], [-W, 0, W * 0.3]) }] };
+	if (m === "fade") return { opacity: interpolate(progress, [0, 1, 2], [0, 1, 1]) };
+	if (m === "zoom-in")
+		return { opacity: interpolate(progress, [0, 0.6, 1, 2], [0, 1, 1, 1]), transform: [{ scale: interpolate(progress, [0, 1, 2], [0.85, 1, 1.1]) }] };
+	if (m === "card-stack")
+		return { transform: [{ translateY: interpolate(progress, [0, 1, 2], [H, 0, -H * 0.02]) }, { scale: interpolate(progress, [0, 1, 2], [1, 1, 0.92]) }] };
+	if (m === "diagonal")
+		return {
+			transform: [
+				{ translateX: interpolate(progress, [0, 1, 2], [W, 0, -W * 0.2]) },
+				{ translateY: interpolate(progress, [0, 1, 2], [H * 0.3, 0, -H * 0.1]) },
+				{ scale: interpolate(progress, [0, 1, 2], [0.6, 1, 0.85]) },
+			],
+		};
+	if (m === "slide-fade")
+		return { opacity: interpolate(progress, [0, 1, 2], [0, 1, 0.4]), transform: [{ translateX: interpolate(progress, [0, 1, 2], [W * 0.5, 0, -W * 0.15]) }] };
+	return null;
+};
+
+const dismissOf = (m) => (m === "slide-left" ? "horizontal-inverted" : m === "fade" || m === "zoom-in" || m === "card-stack" ? "vertical" : "horizontal");
+
+// Options are read per screen: the mode and gesture direction are picked when the screen is pushed.
+const detailFor = (name) => {
+	const pick = () => (mode.get() === "mixed" ? MIXED[name] : mode.get());
+	return {
+		gestureEnabled: true,
+		gestureDirection: dismissOf(pick()),
+		transitionSpec: { open: SPEC, close: SPEC },
+		screenStyleInterpolator: ({ progress, bounds, layouts: { screen } }) => {
+			"worklet";
+			const m = mode.get() === "mixed" ? MIXED[name] : mode.get();
+			const card = { style: bounds("card").styles(method.get() === "size" ? { method: "size" } : undefined) };
+			const content = motionStyle(m, progress, screen);
+			return content ? { content: { style: content }, card } : { card };
+		},
+	};
 };
 
 function Component() {
@@ -184,8 +256,8 @@ function Component() {
 							label: "next",
 							onPress: () => {
 								const name = ref.getCurrentRoute()?.name;
-								if (name === "List") ref.dispatch(StackActions.push("Detail"));
-								else if (name === "Detail") ref.dispatch(StackActions.push("Theater"));
+								const next = CHAIN[CHAIN.indexOf(name) + 1];
+								if (next) ref.dispatch(StackActions.push(next));
 							},
 						},
 						{ id: "fo-bar-back", label: "back", onPress: () => ref.canGoBack() && ref.goBack() },
@@ -195,8 +267,10 @@ function Component() {
 		>
 			<Stack.Navigator>
 				<Stack.Screen name="List" component={List} />
-				<Stack.Screen name="Detail" component={Detail} options={detail} />
-				<Stack.Screen name="Theater" component={Theater} options={detail} />
+				<Stack.Screen name="Detail" component={Detail} options={() => detailFor("Detail")} />
+				<Stack.Screen name="Theater" component={Theater} options={() => detailFor("Theater")} />
+				<Stack.Screen name="Gallery" component={Gallery} options={() => detailFor("Gallery")} />
+				<Stack.Screen name="Profile" component={Profile} options={() => detailFor("Profile")} />
 			</Stack.Navigator>
 		</LabContainer>
 	);

@@ -1984,6 +1984,184 @@ export const buildHandoffCatalog = (window: { width: number; height: number }, s
  * drawn by a moving screen. The one-element rule checks every copy you can see agrees, frame by frame,
  * through hops, swipes, chains and spam; `handoff` runs the same with a live payload.
  */
+/**
+ * Deep chains over many kinds of screen motion: five screens (A..E), the card in a different place
+ * and size on each (same 4:5 shape), every screen moving its own way. Motions cover translation on
+ * every axis, scale in and out, opacity, a card stack (the screen below shrinks), and a mixed chain
+ * where each screen arrives differently. Sequences push and pop the whole chain at several speeds,
+ * pop to the root in one frame, churn, spam (a fixed pseudo-random run) and swipe back through it.
+ * `handoff` runs the same with one live payload (Teleport only).
+ */
+export const buildDeepChainBoundsCatalog = (interpolate: InterpolateFn, window: { width: number; height: number }): Scenario[] => {
+	const W = window.width;
+	const H = window.height;
+	const card = (x: number, y: number, scale = 1) => ({ x: W * x, y: H * y, width: W * 0.4 * scale, height: W * 0.5 * scale });
+	const rects: Record<string, { x: number; y: number; width: number; height: number }> = {
+		A: card(0.05, 0.45),
+		B: card(0.55, 0.12),
+		C: card(0.3, 0.5),
+		D: card(0.1, 0.15, 1.5),
+		E: card(0.55, 0.6, 0.7),
+	};
+	const NAMES = ["A", "B", "C", "D", "E"] as const;
+	type Motion = { content: (progress: number) => Record<string, unknown>; dismiss: SwipeDirection };
+	const motions: Record<string, Motion> = {
+		"slide-left": {
+			content: (p) => ({ transform: [{ translateX: interpolate(p, [0, 1, 2], [-W, 0, W * 0.3]) }] }),
+			dismiss: "horizontal-inverted",
+		},
+		fade: { content: (p) => ({ opacity: interpolate(p, [0, 1, 2], [0, 1, 1]) }), dismiss: "vertical" },
+		"zoom-in": {
+			content: (p) => ({
+				opacity: interpolate(p, [0, 0.6, 1, 2], [0, 1, 1, 1]),
+				transform: [{ scale: interpolate(p, [0, 1, 2], [0.85, 1, 1.1]) }],
+			}),
+			dismiss: "vertical",
+		},
+		"card-stack": {
+			content: (p) => ({
+				transform: [{ translateY: interpolate(p, [0, 1, 2], [H, 0, -H * 0.02]) }, { scale: interpolate(p, [0, 1, 2], [1, 1, 0.92]) }],
+			}),
+			dismiss: "vertical",
+		},
+		"diagonal-scale": {
+			content: (p) => ({
+				transform: [
+					// Fully off screen at 0 (scaled 0.6 about its center, it needs a full width to clear).
+					{ translateX: interpolate(p, [0, 1, 2], [W, 0, -W * 0.2]) },
+					{ translateY: interpolate(p, [0, 1, 2], [H * 0.3, 0, -H * 0.1]) },
+					{ scale: interpolate(p, [0, 1, 2], [0.6, 1, 0.85]) },
+				],
+			}),
+			dismiss: "horizontal",
+		},
+		"slide-fade": {
+			content: (p) => ({
+				opacity: interpolate(p, [0, 1, 2], [0, 1, 0.4]),
+				transform: [{ translateX: interpolate(p, [0, 1, 2], [W * 0.5, 0, -W * 0.15]) }],
+			}),
+			dismiss: "horizontal",
+		},
+	};
+	// Mixed: each screen arrives its own way (B slides, C rises, D zooms, E is a card over a shrinking D).
+	const mixedOrder: Record<string, string> = { B: "slide-fade", C: "card-stack", D: "zoom-in", E: "diagonal-scale" };
+
+	// A fixed pseudo-random spam over the chain (depth 1..5), never popping the root.
+	const spamSteps = (): Step[] => {
+		let seed = 7;
+		const rand = () => {
+			seed = (seed * 1103515245 + 12345) % 2147483648;
+			return seed / 2147483648;
+		};
+		const steps: Step[] = [];
+		let depth = 1;
+		for (let i = 0; i < 28; i++) {
+			const push = depth === 1 || (depth < 5 && rand() < 0.55);
+			if (push) {
+				steps.push({ op: "push", name: NAMES[depth] });
+				depth++;
+			} else {
+				steps.push({ op: "pop" });
+				depth--;
+			}
+			steps.push({ op: "frames", count: 2 + Math.floor(rand() * 6) });
+		}
+		while (depth > 1) {
+			steps.push({ op: "pop" }, { op: "frames", count: 3 });
+			depth--;
+		}
+		steps.push({ op: "settle" });
+		return steps;
+	};
+	const pushAll = (gap: number | "settle"): Step[] =>
+		(["B", "C", "D", "E"] as const).flatMap((name): Step[] => [{ op: "push", name }, gap === "settle" ? { op: "settle" } : { op: "frames", count: gap }]);
+	const popAll = (gap: number | "settle"): Step[] =>
+		[0, 1, 2, 3].flatMap((): Step[] => [{ op: "pop" }, gap === "settle" ? { op: "settle" } : { op: "frames", count: gap }]);
+
+	const scenarios: Scenario[] = [];
+	for (const motion of [...Object.keys(motions), "mixed"]) {
+		const motionOf = (name: string) => motions[motion === "mixed" ? mixedOrder[name] : motion];
+		for (const handoff of [false, true]) {
+			const optionsFor = (name: string) => {
+				const { content, dismiss } = motionOf(name);
+				return {
+					gestureEnabled: true,
+					gestureDirection: dismiss,
+					transitionSpec: { open: DEFAULT_SPEC, close: DEFAULT_SPEC },
+					screenStyleInterpolator: ({ bounds, progress }: any) => {
+						"worklet";
+						return { content: { style: content(progress) }, card: bounds("card").styles() };
+					},
+				};
+			};
+			const screens: ScreenSpec[] = NAMES.map((name, i) => ({
+				name,
+				...(i > 0 ? { options: optionsFor(name) } : {}),
+				bounds: [{ id: "card", rect: rects[name], ...(handoff ? { handoff: true, ...(i === 0 ? { payload: true } : {}) } : {}) }],
+			}));
+			const swipeBack = (name: string): Step => ({ op: "swipe", direction: motionOf(name).dismiss, distance: 0.75, durationMs: 200 });
+			// Handoff is slow to simulate (Teleport): a representative subset of motions and sequences.
+			const HANDOFF_MOTIONS = ["card-stack", "zoom-in", "mixed"];
+			const HANDOFF_SEQUENCES = ["chain-5", "chain-5-fast", "pop-to-root-at-once", "spam", "swipe-back-through-chain"];
+			const add = (sequence: string, steps: Step[], restOn = "A") =>
+				(!handoff || (HANDOFF_MOTIONS.includes(motion) && HANDOFF_SEQUENCES.includes(sequence))) &&
+				scenarios.push({
+					name: `bounds-deep-${motion}${handoff ? "-handoff" : ""} / preset-spec / ${sequence}`,
+					// Without react-native-teleport, handoff renders inline by design: nothing to hand off.
+					environments: handoff ? ["teleport-deep"] : ["ios", "android", "120hz"],
+					screens,
+					steps,
+					expect: { mayOvershoot: true, ...(handoff ? { payloadRest: { "payload-card": rects[restOn] } } : {}) },
+				});
+			add("chain-5", [...pushAll("settle"), ...popAll("settle")]);
+			add("chain-5-fast", [...pushAll(6), { op: "settle" }, ...popAll(6), { op: "settle" }]);
+			add("chain-5-faster", [...pushAll(2), { op: "settle" }, ...popAll(2), { op: "settle" }]);
+			add("pop-to-root-at-once", [...pushAll(6), { op: "settle" }, { op: "pop" }, { op: "pop" }, { op: "pop" }, { op: "pop" }, { op: "settle" }]);
+			add("churn", [
+				{ op: "push", name: "B" },
+				{ op: "frames", count: 4 },
+				{ op: "push", name: "C" },
+				{ op: "frames", count: 4 },
+				{ op: "pop" },
+				{ op: "frames", count: 3 },
+				{ op: "push", name: "C" },
+				{ op: "frames", count: 4 },
+				{ op: "push", name: "D" },
+				{ op: "frames", count: 3 },
+				{ op: "pop" },
+				{ op: "frames", count: 3 },
+				{ op: "pop" },
+				{ op: "frames", count: 4 },
+				{ op: "push", name: "C" },
+				{ op: "frames", count: 3 },
+				{ op: "push", name: "D" },
+				{ op: "frames", count: 3 },
+				{ op: "push", name: "E" },
+				{ op: "settle" },
+				...popAll(5),
+				{ op: "settle" },
+			]);
+			add("spam", spamSteps());
+			// Swipe back through the chain: each swipe right after the previous one released.
+			add("swipe-back-through-chain", [...pushAll("settle"), ...(["E", "D", "C", "B"] as const).flatMap((name): Step[] => [swipeBack(name), { op: "frames", count: 20 }]), { op: "settle" }]);
+			// A cancelled swipe mid-chain, then the chain is popped quickly.
+			add(
+				"swipe-cancel-then-pop-fast",
+				[
+					...pushAll("settle"),
+					{ ...swipeBack("E"), distance: 0.2, durationMs: 300, holdMs: 200 } as Step,
+					{ op: "settle" },
+					...popAll(4),
+					{ op: "settle" },
+				],
+			);
+			// Swipe the top screen back while it is still opening.
+			add("swipe-while-opening", [...pushAll("settle").slice(0, 6), { op: "push", name: "E" }, { op: "frames", count: 8 }, swipeBack("E"), { op: "settle" }], "D");
+		}
+	}
+	return scenarios;
+};
+
 export const buildMovingBoundsCatalog = (interpolate: InterpolateFn, window: { width: number; height: number }): Scenario[] => {
 	const W = window.width;
 	const H = window.height;
@@ -2123,6 +2301,7 @@ export const buildFullCatalog = (
 	...buildScrollBoundsCatalog(window, specs ?? {}),
 	...buildBoundsChainCatalog(window, specs ?? {}),
 	...buildMovingBoundsCatalog(interpolate, window),
+	...buildDeepChainBoundsCatalog(interpolate, window),
 	...buildGlobalBoundsCatalog(window, specs ?? {}),
 	...buildHandoffCatalog(window, specs ?? {}),
 ];

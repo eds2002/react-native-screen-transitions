@@ -13,7 +13,16 @@ import type { ReanimatedSim } from "./reanimated-sim";
  */
 export const runCatalog = async (
 	sim: ReanimatedSim,
-	{ label = "catalog", strictKnownIssues = false }: { label?: string; strictKnownIssues?: boolean } = {},
+	{
+		label = "catalog",
+		strictKnownIssues = false,
+		filter,
+	}: {
+		label?: string;
+		strictKnownIssues?: boolean;
+		/** Runs only the scenarios it accepts (a run dedicated to one family). */
+		filter?: (name: string) => boolean;
+	} = {},
 ) => {
 	const { runScenario } = await import("./scenario");
 	const { buildFullCatalog } = await import("./catalog");
@@ -29,6 +38,7 @@ export const runCatalog = async (
 	const catalog = buildFullCatalog(presets as never, interpolate as never, WINDOW, HarnessOverlay, (await import("../../configs/specs")) as never).filter(
 		(scenario) =>
 			(!only || only.split("|").some((part) => scenario.name.includes(part))) &&
+			(!filter || filter(scenario.name)) &&
 			(!scenario.environments || scenario.environments.includes(label)),
 	);
 
@@ -52,7 +62,8 @@ export const runCatalog = async (
 	if (process.env.HARNESS_REPORT) {
 		await Bun.write(process.env.HARNESS_REPORT.replace(/(\.json)?$/, `.${label}.json`), JSON.stringify(report, null, 1));
 	}
-	const fixed = KNOWN_ISSUES.filter((issue) => !seen.has(issue.id)).map((issue) => issue.id);
+	// A run dedicated to one family can't reproduce the others' issues.
+	const fixed = filter ? [] : KNOWN_ISSUES.filter((issue) => !seen.has(issue.id)).map((issue) => issue.id);
 	if (unexplained.length) console.log(`[${label}] unexplained violations:\n${unexplained.join("\n")}`);
 	if (fixed.length) console.log(`[${label}] known issues that no longer reproduce (delete them): ${fixed.join(", ")}`);
 	expect(unexplained).toEqual([]);

@@ -49,6 +49,56 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 
 
 	{
+		id: "deep-translucent-stack",
+		summary:
+			"Deep chains whose covered screens stay translucent (slide-fade leaves the screen below at 40%): the screen two " +
+			"below the top shows through, and once it is no longer in the moving pair its copy stops being styled and " +
+			"draws at its own slot (a second card), stepping back as it leaves the pair.",
+		environments: ["ios", "android", "120hz"],
+		matches: (scenario, v) =>
+			/^bounds-deep-slide-fade \//.test(scenario) &&
+			["bound-split", "bound-vanish", "element-spike", "element-teleport", "element-flash", "spike", "teleport"].includes(v.rule),
+	},
+	{
+		id: "deep-handoff-fading-screen",
+		summary:
+			"Handoff through screens that fade (zoom-in, mixed): the live payload lives in its receiving screen's layer, so " +
+			"it fades with that screen: it all but vanishes as a fading screen opens (6 frames) and is invisible for a " +
+			"whole close (36 frames) before it lands home. Same root as handoff-payload-rides-destination-screen; the " +
+			"fix is the shared-element layer above the screens.",
+		environments: ["teleport-deep"],
+		matches: (scenario, v) =>
+			/^bounds-deep-(zoom-in|mixed|fade|slide-fade)-handoff \//.test(scenario) &&
+			["payload-hidden", "element-teleport", "element-flash", "element-spike", "payload-rest"].includes(v.rule),
+	},
+	{
+		id: "deep-swipe-without-teleport",
+		summary:
+			"Without Teleport (copies inline): swiping back through a chain, each screen right after the one above " +
+			"released, the copies disagree for ~100 frames (the same as moving-bounds-overlap (4), over more screens).",
+		environments: ["ios", "android", "120hz"],
+		matches: (scenario, v) =>
+			/^bounds-deep-/.test(scenario) &&
+			["swipe-back-through-chain", "swipe-while-opening"].includes(sequenceOf(scenario)) &&
+			["bound-split", "bound-vanish", "element-spike", "element-teleport", "element-flash", "spike", "teleport"].includes(v.rule),
+	},
+	{
+		id: "deep-chain-overlap",
+		summary:
+			"Found by the deep-chain stress family (five screens, many screen motions): transitions overlapping in a deep " +
+			"chain (pushes or pops 2-6 frames apart, pop to the root at once, churn, spam). Open: a screen pushed and popped " +
+			"again before it settles closes with every copy hidden for a few frames (device: the card leaves with the " +
+			"closing screen, then appears on the slot below); copies split for 1-3 frames as a newer pair takes the card; " +
+			"the card steps at the handover; the middle screen's own one-frame step as a second pop starts " +
+			"(interrupted-navigation).",
+		matches: (scenario, v) =>
+			/^bounds-deep-/.test(scenario) &&
+			["chain-5-fast", "chain-5-faster", "pop-to-root-at-once", "churn", "spam", "swipe-cancel-then-pop-fast", "swipe-back-through-chain", "swipe-while-opening"].includes(
+				sequenceOf(scenario),
+			) &&
+			["bound-split", "bound-vanish", "element-spike", "element-teleport", "element-flash", "spike", "teleport", "payload-hidden", "payload-rest"].includes(v.rule),
+	},
+	{
 		id: "zoom-measured-mid-zoom",
 		summary:
 			"Found once measure() included animated transforms, as a device does. zoom() composes window-space " +
