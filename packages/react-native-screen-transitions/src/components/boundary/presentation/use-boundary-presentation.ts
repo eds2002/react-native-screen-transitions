@@ -25,6 +25,7 @@ import {
 	type resolveBoundaryHandoff,
 	resolveBoundaryHandoffTarget,
 	resolveBoundaryPresentation,
+	resolveReceiverSize,
 } from "./resolve-presentation";
 import { usePairDestinationKeys } from "./use-pair-presentation";
 
@@ -139,16 +140,10 @@ export function useBoundaryPresentation(
 		const receiver = target.receiver;
 		let receiverSize: BoundaryPresentationValue["receiverSize"] = null;
 		if (receiver !== screenKey) {
-			const style = target.slot?.style as
-				| { width?: unknown; height?: unknown }
-				| undefined;
-			const bounds = state.entries[boundaryId]?.screens[receiver]?.bounds;
-			const width =
-				typeof style?.width === "number" ? style.width : bounds?.width;
-			const height =
-				typeof style?.height === "number" ? style.height : bounds?.height;
-			if (width !== undefined && height !== undefined)
-				receiverSize = { width, height };
+			receiverSize = resolveReceiverSize(
+				target.slot?.style,
+				state.entries[boundaryId]?.screens[receiver]?.bounds,
+			);
 		}
 		const ownedSlot = owner?.ready
 			? (owner.sourceKey === screenKey ? owner.source : owner.destination)[

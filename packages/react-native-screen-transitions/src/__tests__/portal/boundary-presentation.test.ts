@@ -1,4 +1,4 @@
-import { resolveBoundaryHandoff as handoff } from "../../components/boundary/presentation/resolve-presentation";
+import { resolveBoundaryHandoff as handoff, resolveReceiverSize } from "../../components/boundary/presentation/resolve-presentation";
 import { boundaryRegistry, pairs } from "../../stores/bounds/internals/state";
 import { boundarySourceFrame, runBoundaryInterpolator } from "../../components/boundary/presentation/use-pair-presentation";
 import type { ScreenInterpolatorFrame } from "../../providers/orchestrator/helpers/pipeline";
@@ -149,4 +149,20 @@ it("hands off container-only navigation zoom without requiring a boundary style 
  expect(handoff("home", "photo", state)).toBe("media");
  presentations["home<>media"].ready = false;
  expect(handoff("home", "photo", state)).toBe("home");
+});
+
+describe("handoff receiver size", () => {
+ const window = {x:0,y:0,pageX:20,pageY:40,width:85,height:106};
+ it("follows the slot's size while a transition sets one", () => {
+  expect(resolveReceiverSize({width:150,height:180}, {...window, contentOffset:{x:0,y:0,width:100,height:125}})).toEqual({width:150,height:180});
+ });
+ it("uses the receiver's box in its screen, not its window size from a scaled screen", () => {
+  // Measured while its screen was covered at scale 0.85: the window box is 85x106, the layout box 100x125.
+  expect(resolveReceiverSize(undefined, {...window, contentOffset:{x:0,y:0,width:100,height:125}})).toEqual({width:100,height:125});
+  expect(resolveReceiverSize({opacity:1}, {...window, contentOffset:{x:0,y:0,width:100,height:125}})).toEqual({width:100,height:125});
+ });
+ it("falls back to the window size without a box in the screen, and to nothing without a measurement", () => {
+  expect(resolveReceiverSize(undefined, window)).toEqual({width:85,height:106});
+  expect(resolveReceiverSize(undefined, undefined)).toBeNull();
+ });
 });

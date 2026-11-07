@@ -6,6 +6,7 @@ import type {
 } from "../../../stores/bounds";
 import { getLinkKeyFromTag, isActiveGroupMember } from "../../../stores/bounds";
 import type { BoundaryHandoffTarget } from "../../../types/animation.types";
+import type { BoundaryLocalMeasurement } from "../types";
 
 export type { BoundaryPairPresentation } from "./use-pair-presentation";
 
@@ -178,4 +179,29 @@ export function resolveBoundaryHandoff(
 ) {
 	"worklet";
 	return resolveBoundaryHandoffTarget(screenKey, boundaryId, state).receiver;
+}
+
+/**
+ * The size of a receiver a handoff boundary's content is in: its slot's size this frame when the
+ * slot sets one (a size transition), otherwise its box in its screen's layout. The window-space
+ * measurement includes how the screen was drawn when it was taken: a screen measured while covered
+ * (scaled down) would leave the content that much smaller, so the box inside the screen's content
+ * (unscaled, see measureScreenAt) comes first.
+ */
+export function resolveReceiverSize(
+	slotStyle: unknown,
+	measured:
+		| Pick<
+				BoundaryLocalMeasurement["bounds"],
+				"width" | "height" | "contentOffset"
+		  >
+		| null
+		| undefined,
+): { width: number; height: number } | null {
+	"worklet";
+	const style = slotStyle as { width?: unknown; height?: unknown } | undefined;
+	const box = measured?.contentOffset ?? measured;
+	const width = typeof style?.width === "number" ? style.width : box?.width;
+	const height = typeof style?.height === "number" ? style.height : box?.height;
+	return width !== undefined && height !== undefined ? { width, height } : null;
 }
