@@ -4,6 +4,7 @@ import Animated from "react-native-reanimated";
 import { logger } from "../../../utils/logger";
 import { useComposedBoundaryStyle } from "../hooks/use-composed-boundary-style";
 import { Portal } from "../portal/components/portal";
+import { useBoundaryEscapeState } from "../portal/utils/is-escaped";
 import {
 	TARGET_OUTSIDE_ROOT_WARNING,
 	useOptionalBoundaryRootStore,
@@ -46,20 +47,20 @@ const BoundaryTargetInner = (props: InternalBoundaryTargetProps) => {
 	);
 	const ownStyle = split ? split.inner : style;
 
+	// Only once the root follows its pairs (escapeMeasured) can the target leave.
+	const escapeState = useBoundaryEscapeState(
+		shouldEscapeTargetToScreenHost && !!rootContext?.escapeMeasured,
+		boundaryId,
+		rootContext?.boundaryPresentation,
+		rootContext?.localMeasurement,
+		rootContext?.portalHostReady,
+	);
 	const associatedTargetStyles = useComposedBoundaryStyle(
 		rootContext?.slotsMap,
 		boundaryId,
 		ownStyle,
 		"full",
-		// Only once the root follows its pairs (escapeMeasured) can the target leave.
-		shouldEscapeTargetToScreenHost && rootContext?.escapeMeasured && boundaryId
-			? {
-					boundaryId,
-					presentation: rootContext.boundaryPresentation,
-					localMeasurement: rootContext.localMeasurement,
-					portalHostReady: rootContext.portalHostReady,
-				}
-			: undefined,
+		escapeState,
 	);
 
 	const measurementRef = isActiveTarget

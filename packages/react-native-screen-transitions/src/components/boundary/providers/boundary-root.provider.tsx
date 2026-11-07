@@ -27,6 +27,7 @@ import {
 	useIdleBoundaryPresentation,
 } from "../hooks/use-boundary-presentation";
 import { useComposedBoundaryStyle } from "../hooks/use-composed-boundary-style";
+import { useBoundaryEscapeState } from "../portal/utils/is-escaped";
 import { resolveBoundaryPortal } from "../portal/utils/resolve-portal";
 import type {
 	BoundaryConfigProps,
@@ -172,24 +173,12 @@ export const {
 		// Only a boundary following its pairs can escape: at rest its style needs no escape inputs.
 		const escapesRoot =
 			shouldEscapeBoundaryRootToScreenHost && !hasTarget && presentationReady;
-		// Stable between renders: a new object would restart the style's UI mapper every render.
-		const escapeState = useMemo(
-			() =>
-				escapesRoot
-					? {
-							boundaryId: boundTag.tag,
-							presentation: boundaryPresentation,
-							localMeasurement,
-							portalHostReady,
-						}
-					: undefined,
-			[
-				escapesRoot,
-				boundTag.tag,
-				boundaryPresentation,
-				localMeasurement,
-				portalHostReady,
-			],
+		const escapeState = useBoundaryEscapeState(
+			escapesRoot,
+			boundTag.tag,
+			boundaryPresentation,
+			localMeasurement,
+			portalHostReady,
 		);
 		const associatedStyles = useComposedBoundaryStyle(
 			slotsMap,

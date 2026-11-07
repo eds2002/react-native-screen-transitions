@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import type { SharedValue } from "react-native-reanimated";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../../types/animation.types";
 import type { BoundaryLocalMeasurementValue } from "../../types";
@@ -16,6 +17,29 @@ export type BoundaryEscapeState = {
 	localMeasurement: BoundaryLocalMeasurementValue;
 	portalHostReady: SharedValue<boolean>;
 };
+
+/**
+ * The escape state of a boundary that can escape now (undefined otherwise), stable between renders:
+ * a new object would restart the UI mapper of every style that reads it, every render.
+ */
+export const useBoundaryEscapeState = (
+	enabled: boolean,
+	boundaryId: string | undefined,
+	presentation: Presentation | undefined,
+	localMeasurement: BoundaryLocalMeasurementValue | undefined,
+	portalHostReady: SharedValue<boolean> | undefined,
+): BoundaryEscapeState | undefined =>
+	useMemo(
+		() =>
+			enabled &&
+			boundaryId &&
+			presentation &&
+			localMeasurement &&
+			portalHostReady
+				? { boundaryId, presentation, localMeasurement, portalHostReady }
+				: undefined,
+		[enabled, boundaryId, presentation, localMeasurement, portalHostReady],
+	);
 
 /**
  * Whether the boundary's frame is in its overlay host this frame: its pair owns it, it was measured
