@@ -22,8 +22,7 @@
  *     with no jump as the close starts
  *  3. tap sb-card-5, tap sb-move-list, tap sb-back → it should land on card 5 where it is now
  *  4. tap sb-card-5, tap sb-back-scroll → it should follow card 5 as the list scrolls
- *     (copies / handoff, 2026-11-06: it does not; it closes toward card 5's place before the scroll and
- *     jumps there as the close ends. Zoom follows.)
+ *     (copies / handoff too: fixed 2026-11-06, they used to close toward card 5's place before the scroll)
  */
 import { useEffect, useState } from "react";
 import { Pressable, Text, View, useWindowDimensions } from "react-native";

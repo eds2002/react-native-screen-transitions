@@ -1,5 +1,9 @@
 import type { StyleProps, TransformArrayItem } from "react-native-reanimated";
 import { getResolvedLink } from "../../../../stores/bounds/internals/links";
+import {
+	getScrollChainAxisDelta,
+	getVisualScrollAxisDelta,
+} from "../../../../stores/scroll.store";
 import type {
 	NormalizedTransitionInterpolatedStyle,
 	NormalizedTransitionSlotStyle,
@@ -10,8 +14,12 @@ import {
 	type FrameRect,
 	getBoundsScreenFrame,
 	type MeasuredScreenTransform,
+	type MeasuredScroll,
 } from "../../../../utils/bounds/helpers/styles/screen-frame";
-import { getScreenTransform } from "./screen-transform-registry";
+import {
+	getScreenScroll,
+	getScreenTransform,
+} from "./screen-transform-registry";
 
 /**
  * Where a screen draws its content this frame: `p -> c + s * (p - c) + t` per axis, around the
@@ -219,7 +227,55 @@ export const toLayoutSpace = <T extends FrameRect>(
 	return { ...rect, ...laid };
 };
 
-type MeasuredRect = FrameRect & { screenTransform?: MeasuredScreenTransform };
+type MeasuredRect = FrameRect & {
+	screenTransform?: MeasuredScreenTransform;
+	scrollChain?: NonNullable<MeasuredScroll>["chain"];
+	scroll?: NonNullable<MeasuredScroll>["scroll"];
+};
+
+/** How far a rect measured at `measured` scroll positions has moved since: lists scroll content up. */
+type Shift = { x: number; y: number };
+
+const NO_SHIFT: Shift = { x: 0, y: 0 };
+
+const scrollShift = (measured: MeasuredScroll, screenKey: string): Shift => {
+	"worklet";
+	if (!measured) return NO_SHIFT;
+	const live = getScreenScroll(screenKey);
+	if (!live) return NO_SHIFT;
+	const x = measured.chain
+		? getScrollChainAxisDelta(live, measured.chain, "horizontal")
+		: getVisualScrollAxisDelta(live, measured.scroll, "horizontal");
+	const y = measured.chain
+		? getScrollChainAxisDelta(live, measured.chain, "vertical")
+		: getVisualScrollAxisDelta(live, measured.scroll, "vertical");
+	return x === 0 && y === 0 ? NO_SHIFT : { x: -x, y: -y };
+};
+
+const shiftRect = (rect: FrameRect, shift: Shift): FrameRect => {
+	"worklet";
+	if (shift === NO_SHIFT) return rect;
+	return {
+		pageX: rect.pageX + shift.x,
+		pageY: rect.pageY + shift.y,
+		width: rect.width,
+		height: rect.height,
+	};
+};
+
+/** A measured rect where its screen lays it out now: without the transform it was measured with, moved by the scroll since. */
+const liveLayoutRect = (rect: MeasuredRect, screenKey: string): FrameRect => {
+	"worklet";
+	return shiftRect(
+		toLayoutSpace(rect, rect.screenTransform),
+		scrollShift(
+			rect.scrollChain || rect.scroll
+				? { chain: rect.scrollChain, scroll: rect.scroll }
+				: null,
+			screenKey,
+		),
+	);
+};
 
 /**
  * Where the element of the frame's pair starts this frame, where its source screen lays it out: its
@@ -232,7 +288,11 @@ const resolveStart = (
 ): FrameRect => {
 	"worklet";
 	const chain = frame.startChain;
-	if (!chain.length) return frame.start;
+	const own = shiftRect(
+		frame.start,
+		scrollShift(frame.startScroll, frame.sourceScreenKey),
+	);
+	if (!chain.length) return own;
 	let drawn: FrameRect | null = null;
 	for (let index = chain.length - 1; index >= 0; index--) {
 		const pair = chain[index];
@@ -246,13 +306,13 @@ const resolveStart = (
 		const source = toAffine(read(pair.source));
 		const start = drawn
 			? mapRect(drawn, invert(source))
-			: toLayoutSpace(from, from.screenTransform);
+			: liveLayoutRect(from, pair.source);
 		drawn = mapRect(
-			lerpRect(start, toLayoutSpace(to, to.screenTransform), pair.t),
+			lerpRect(start, liveLayoutRect(to, pair.destination), pair.t),
 			blend(source, toAffine(read(pair.destination)), pair.t),
 		);
 	}
-	if (!drawn) return frame.start;
+	if (!drawn) return own;
 	return mapRect(drawn, invert(toAffine(read(frame.sourceScreenKey))));
 };
 
@@ -273,10 +333,20 @@ const resolveCorrection = (
 	"worklet";
 	const t = frame.t;
 	const start = resolveStart(frame, read);
-	const composed = lerpRect(frame.start, frame.end, t);
+	// Lists scroll under a transition (a list scrolled during the close): each end is where its list
+	// has it now, and the element itself is drawn where its own list moved it (inline, or an escaped
+	// frame following its scroll views).
+	const end = shiftRect(
+		frame.end,
+		scrollShift(frame.endScroll, frame.destinationScreenKey),
+	);
+	const ownShift = scrollShift(frame.ownScroll, frame.screenKey);
+	const composed = shiftRect(lerpRect(frame.start, frame.end, t), ownShift);
 	const actual =
-		start === frame.start ? composed : lerpRect(start, frame.end, t);
-	const path = start === frame.start ? UNIT : rectToRect(composed, actual);
+		start === frame.start && end === frame.end && ownShift === NO_SHIFT
+			? composed
+			: lerpRect(start, end, t);
+	const path = actual === composed ? UNIT : rectToRect(composed, actual);
 	const placement = compose(
 		invert(toAffine(read(frame.screenKey))),
 		compose(
@@ -291,8 +361,8 @@ const resolveCorrection = (
 	// The element scales about its own center (its box: the size method resizes it).
 	const width = typeof style.width === "number" ? style.width : frame.width;
 	const height = typeof style.height === "number" ? style.height : frame.height;
-	const lx = frame.x + width / 2;
-	const ly = frame.y + height / 2;
+	const lx = frame.x + ownShift.x + width / 2;
+	const ly = frame.y + ownShift.y + height / 2;
 	const vx = placement.tx - (1 - placement.sx) * lx;
 	const vy = placement.ty - (1 - placement.sy) * ly;
 	const scaled =
@@ -340,6 +410,9 @@ export const applyBoundsScreenFrames = (
 		const stripped = stripFrame(style);
 		const unmoved =
 			!frame.startChain.length &&
+			!frame.startScroll &&
+			!frame.endScroll &&
+			!frame.ownScroll &&
 			isIdentity(read(frame.sourceScreenKey)) &&
 			isIdentity(read(frame.destinationScreenKey)) &&
 			isIdentity(read(frame.screenKey));

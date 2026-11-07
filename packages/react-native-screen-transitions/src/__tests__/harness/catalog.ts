@@ -1235,6 +1235,64 @@ export const buildScrollBoundsCatalog = (window: { width: number; height: number
 		]);
 	}
 
+	// Shared bounds without a zoom: bounds("card").styles() on both screens, the screens still. Each
+	// screen draws a copy (they must agree), or, with handoff, one live card travels. Every close lands
+	// on the card where the list has it now, also while the list scrolls under the close.
+	const stylesOptions = {
+		gestureEnabled: true,
+		gestureDirection: "horizontal",
+		transitionSpec: { open: DEFAULT_SPEC, close: DEFAULT_SPEC },
+		screenStyleInterpolator: ({ bounds }: any) => {
+			"worklet";
+			return { card: bounds("card").styles() };
+		},
+	};
+	for (const handoff of [false, true]) {
+		const kind = handoff ? "styles-handoff" : "styles";
+		const live = handoff ? { handoff: true } : {};
+		const source = { name: "A", scroll: { contentSize: H * 3, bounds: [{ id: "card", rect: cardContent, pushTo: "Z", ...live, ...(handoff ? { payload: true } : {}) }] } };
+		const destination = { name: "Z", options: stylesOptions, scroll: { contentSize: H * 3, bounds: [{ id: "card", rect: detailContent, ...live }] } };
+		const add = (sequence: string, steps: Step[], rest: typeof full) =>
+			scenarios.push({
+				name: `scroll-bounds-${kind} / preset-spec / ${sequence}`,
+				// Without react-native-teleport, handoff renders inline by design: nothing to hand off.
+				...(handoff ? { environments: ["teleport"] } : {}),
+				screens: [source, destination],
+				steps: [...steps, ...(handoff ? [] : [{ op: "expectTrajectory", scene: "Z", element: "bound:card", to: rest, tolerance: 40, throughFade: true } as Step])],
+				expect: { mayOvershoot: true, stillScreens: true, ...(handoff ? { payloadRest: { "payload-card": rest } } : {}) },
+			});
+		add("open-close-from-scrolled-list", [scrollList(), tapCard(), { op: "settle" }, { op: "pop" }], cardAt(listScroll));
+		// The user scrolls the detail (over ten frames: a scroll, not a jump), then goes back.
+		add(
+			"scroll-destination-then-close",
+			[
+				scrollList(),
+				tapCard(),
+				{ op: "settle" },
+				...Array.from({ length: 10 }, (_, i): Step => ({ op: "scrollTo", offset: H * 0.025 * (i + 1) })),
+				{ op: "pop" },
+			],
+			cardAt(listScroll),
+		);
+		add(
+			"list-moved-while-covered-then-close",
+			[scrollList(), tapCard(), { op: "settle" }, { op: "scrollTo", screen: "A", offset: listScroll + H * 0.3 }, { op: "pop" }],
+			cardAt(listScroll + H * 0.3),
+		);
+		add(
+			"list-scrolls-during-close",
+			[
+				scrollList(),
+				tapCard(),
+				{ op: "settle" },
+				{ op: "pop" },
+				{ op: "frames", count: 6 },
+				...Array.from({ length: 10 }, (_, i): Step => ({ op: "scrollTo", screen: "A", offset: listScroll + H * 0.03 * (i + 1) })),
+			],
+			cardAt(listScroll + H * 0.3),
+		);
+	}
+
 	// Nested: the card sits in a horizontal carousel inside the vertical list. The close follows both
 	// scroll views, whichever moves.
 	const carousel = { x: 0, y: cardContent.y - 10, width: W, height: cardContent.height + 20 };

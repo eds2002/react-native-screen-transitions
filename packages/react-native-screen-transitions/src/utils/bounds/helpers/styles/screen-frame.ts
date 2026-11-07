@@ -1,4 +1,6 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
+import type { ScrollChainSnapshot } from "../../../../stores/scroll.store";
+import type { ScrollMetadataState } from "../../../../types/gesture.types";
 
 /**
  * What a bounds element style needs to stay one element while the screens it travels between move
@@ -40,6 +42,16 @@ export type StartPair = {
 	t: number;
 };
 
+/**
+ * The scroll positions a measured rect was taken at: the scrollables around it (by id) and its
+ * screen's scroll state. A rect measured inside a list that has scrolled since is drawn where the
+ * scroll moved it (see applyBoundsScreenFrames). Null for a rect that was not measured (a custom target).
+ */
+export type MeasuredScroll = {
+	chain?: ScrollChainSnapshot[];
+	scroll?: ScrollMetadataState | null;
+} | null;
+
 export type BoundsScreenFrame = {
 	/** The bound's tag (to read the start pairs' links). */
 	tag: string;
@@ -54,6 +66,10 @@ export type BoundsScreenFrame = {
 	end: FrameRect;
 	/** The pairs the element starts from instead of `start` (nearest first), when it is in flight. */
 	startChain: StartPair[];
+	/** The scroll positions `start`, `end` and the element's own box were measured at. */
+	startScroll: MeasuredScroll;
+	endScroll: MeasuredScroll;
+	ownScroll: MeasuredScroll;
 	/** The element's own box where its screen lays it out. */
 	x: number;
 	y: number;
@@ -63,6 +79,19 @@ export type BoundsScreenFrame = {
 
 type StyleWithScreenFrame = StyleProps & {
 	[BOUNDS_SCREEN_FRAME_STYLE_KEY]?: BoundsScreenFrame;
+};
+
+const scrollOf = (rect: unknown): MeasuredScroll => {
+	"worklet";
+	const measured = rect as
+		| {
+				scrollChain?: ScrollChainSnapshot[];
+				scroll?: ScrollMetadataState | null;
+		  }
+		| null
+		| undefined;
+	if (!measured || (!measured.scrollChain && !measured.scroll)) return null;
+	return { chain: measured.scrollChain, scroll: measured.scroll };
 };
 
 export const attachBoundsScreenFrame = (
@@ -106,6 +135,9 @@ export const attachBoundsScreenFrame = (
 			height: params.end.height,
 		},
 		startChain: params.startChain,
+		startScroll: scrollOf(params.start),
+		endScroll: scrollOf(params.end),
+		ownScroll: scrollOf(layout),
 		x: layout.pageX,
 		y: layout.pageY,
 		width: layout.width,

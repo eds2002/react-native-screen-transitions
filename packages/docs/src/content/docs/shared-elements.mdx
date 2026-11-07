@@ -265,6 +265,8 @@ Version 1.2.0 or later provides the native reparenting path used by live boundar
 
 The same holds when transitions overlap: push and pop again quickly, or push a third screen while the second is still opening, and the element continues from where it is drawn instead of starting over from its slot.
 
+Lists count as movement too. If the source card sits in a `Transition.ScrollView` that scrolls while the transition runs (a flick right after going back, rows arriving), the bound closes onto the card where the list has it now, with copies and with `handoff` alike. A plain `ScrollView` or `FlatList` is not tracked yet: the bound lands where the card was when the close started.
+
 `values()` returns window-space numbers as measured; compose screen movement yourself when you use it.
 
 ## Bounds with Offsets

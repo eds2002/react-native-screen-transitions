@@ -10,6 +10,7 @@ import {
 } from "react-native-reanimated";
 import { useBoundaryMeasureCoordinator } from "../../components/boundary/coordinator/use-boundary-measure-coordinator";
 import type { BoundaryPresentationValue } from "../../components/boundary/hooks/use-boundary-presentation";
+import { ScrollStore } from "../../stores/scroll.store";
 import type { NormalizedTransitionInterpolatedStyle } from "../../types/animation.types";
 import type { BoundsAccessor } from "../../types/bounds.types";
 import { createBoundsAccessor } from "../../utils/bounds";
@@ -27,7 +28,10 @@ import {
 	readScreenTransform,
 	type ScreenTransform,
 } from "./styles/helpers/bounds-screen-frames";
-import { useRegisterScreenTransform } from "./styles/helpers/screen-transform-registry";
+import {
+	useRegisterScreenScroll,
+	useRegisterScreenTransform,
+} from "./styles/helpers/screen-transform-registry";
 import { useInterpolatedStylesMap } from "./styles/hooks/use-interpolated-style-maps";
 import { useResolvedStylesMap } from "./styles/hooks/use-resolved-slot-style-map";
 
@@ -93,6 +97,11 @@ export const {
 		return next;
 	});
 	useRegisterScreenTransform(currentScreenKey, screenTransform, !screenKey);
+	useRegisterScreenScroll(
+		currentScreenKey,
+		ScrollStore.getValue(currentScreenKey, "metadata"),
+		!screenKey,
+	);
 	// The screens this one may share bound elements with: its stack's (closing ones included), read
 	// the same frame (a declared dependency: computed before this screen's styles).
 	const scenes = useOptionalScreenHostStore((store) => store?.scenes);
