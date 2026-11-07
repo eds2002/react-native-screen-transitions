@@ -10,7 +10,7 @@ import Animated, {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { logger } from "../../../../utils/logger";
-import { useBoundaryRootStore } from "../../providers/boundary-root.provider";
+import { useBoundaryRootStore } from "../../root/boundary-root.provider";
 import { usePlaceholderStyles } from "../hooks/use-placeholder-styles";
 import {
 	type PortalMode,

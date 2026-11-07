@@ -4,7 +4,7 @@ import { act, create } from "react-test-renderer";
 import { makeMutable } from "react-native-reanimated";
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
-const {createLocalMeasurementRef, writeLocalMeasurement} = await import("../../components/boundary/utils/local-measurements");
+const {createLocalMeasurementRef, writeLocalMeasurement} = await import("../../components/boundary/measure/local-measurements");
 const localMeasurement = createLocalMeasurementRef(201);
 writeLocalMeasurement(localMeasurement, {pairKey:"a<>b"} as any);
 const boundaryPresentation = makeMutable<any>({owner:{pairKey:"a<>b",ready:true},receiver:"b",slots:{photo:{props:{opacity:0.5,pointerEvents:"none",handoffTarget:"destination"}}}});
@@ -12,7 +12,7 @@ const root = {currentScreenKey:"a",escapeMeasured:true,localMeasurement,portalHo
 let hostReady = false;
 let registeredScope: string | undefined;
 const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
-await mockModule("../../components/boundary/providers/boundary-root.provider", () => ({useBoundaryRootStore:(select:any)=>select(root)}));
+await mockModule("../../components/boundary/root/boundary-root.provider", () => ({useBoundaryRootStore:(select:any)=>select(root)}));
 await mockModule("../../components/boundary/portal/hooks/use-active-portal-boundary-host", () => ({useActivePortalBoundaryHost:({escapeHostKey,portalHostReady}:any)=>{registeredScope=escapeHostKey;portalHostReady.set(hostReady);return escapeHostKey ? "overlay-photo" : null;}}));
 const {usePortalDestination} = await import("../../components/boundary/portal/hooks/use-portal-destination");
 beforeEach(()=>{hostReady=false;registeredScope=undefined;root.escapeMeasured=true;writeLocalMeasurement(localMeasurement, {pairKey:"a<>b"} as any);});

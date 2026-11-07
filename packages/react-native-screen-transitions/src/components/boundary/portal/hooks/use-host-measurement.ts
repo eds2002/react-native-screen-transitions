@@ -10,9 +10,9 @@ import {
 	withTiming,
 } from "react-native-reanimated";
 import { getVisibilityBlockOffset } from "../../../../utils/visibility-block-offset";
+import { readLocalMeasurement } from "../../measure/local-measurements";
+import { correctMeasuredBoundsForVisibilityGate } from "../../measure/measured-bounds";
 import type { BoundaryLocalMeasurementValue } from "../../types";
-import { readLocalMeasurement } from "../../utils/local-measurements";
-import { correctMeasuredBoundsForVisibilityGate } from "../../utils/measured-bounds";
 
 const HOST_MEASUREMENT_RETRY_DELAY_MS = 16;
 const MAX_HOST_MEASUREMENT_ATTEMPTS = 20;

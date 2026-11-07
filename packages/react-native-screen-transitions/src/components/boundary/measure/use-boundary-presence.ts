@@ -1,7 +1,7 @@
 import { useLayoutEffect } from "react";
-import type { BoundTag } from "../../../../stores/bounds";
-import { queueEntryOp } from "../../coordinator/measure-registry";
-import type { BoundaryConfigProps } from "../../types";
+import type { BoundTag } from "../../../stores/bounds";
+import type { BoundaryConfigProps } from "../types";
+import { queueEntryOp } from "./measure-registry";
 
 export const useBoundaryPresence = (params: {
 	enabled: boolean;

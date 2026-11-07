@@ -7,9 +7,9 @@ import type { MeasureBoundary, BoundaryLocalMeasurement } from '../../components
 const motion = {isScreenReady:makeMutable(false), state:{pendingLifecycleStartBlockCount:makeMutable(1)}};
 const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
 await mockModule('../../providers/motion', () => ({useMotionStore:(select:any)=>select(motion)}));
-const {useMeasurer} = await import('../../components/boundary/hooks/use-measurer');
-const {useFirstEscapeMeasureKey} = await import('../../components/boundary/utils/first-escape-measure');
-const {createLocalMeasurementRef, readLocalMeasurement} = await import('../../components/boundary/utils/local-measurements');
+const {useMeasurer} = await import('../../components/boundary/measure/use-measurer');
+const {useFirstEscapeMeasureKey} = await import('../../components/boundary/measure/first-escape-measure');
+const {createLocalMeasurementRef, readLocalMeasurement} = await import('../../components/boundary/measure/local-measurements');
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
 let firstMeasures = 0;

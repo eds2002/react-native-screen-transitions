@@ -19,24 +19,24 @@ import type { BoundTag } from "../../../stores/bounds";
 import { createBoundTag } from "../../../stores/bounds";
 import createProvider from "../../../utils/create-provider";
 import { logger } from "../../../utils/logger";
-import { BoundaryLifecycle } from "../components/boundary-lifecycle";
-import { queueForgetLocalMeasurement } from "../coordinator/measure-registry";
+import { BoundaryLifecycle } from "../measure/boundary-lifecycle";
+import { useFirstEscapeMeasureKey } from "../measure/first-escape-measure";
+import { createLocalMeasurementRef } from "../measure/local-measurements";
+import { queueForgetLocalMeasurement } from "../measure/measure-registry";
+import { useBoundaryEscapeState } from "../portal/utils/is-escaped";
+import { resolveBoundaryPortal } from "../portal/utils/resolve-portal";
 import {
 	BoundaryPresentationDriver,
 	type BoundaryPresentationHandles,
 	useIdleBoundaryPresentation,
-} from "../hooks/use-boundary-presentation";
-import { useComposedBoundaryStyle } from "../hooks/use-composed-boundary-style";
-import { useBoundaryEscapeState } from "../portal/utils/is-escaped";
-import { resolveBoundaryPortal } from "../portal/utils/resolve-portal";
+} from "../presentation/use-boundary-presentation";
+import { useComposedBoundaryStyle } from "../presentation/use-composed-boundary-style";
 import type {
 	BoundaryConfigProps,
 	BoundaryId,
 	BoundaryLocalMeasurementValue,
 	BoundaryOwnProps,
 } from "../types";
-import { useFirstEscapeMeasureKey } from "../utils/first-escape-measure";
-import { createLocalMeasurementRef } from "../utils/local-measurements";
 
 type BoundaryRootContextValue = BoundaryRootRenderState;
 

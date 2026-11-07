@@ -6,16 +6,16 @@ import {
 	useMemo,
 } from "react";
 import Animated from "react-native-reanimated";
+import { Portal } from "./portal/components/portal";
+import { isTeleportAvailable } from "./portal/teleport";
+import { BoundaryRootProvider } from "./root/boundary-root.provider";
 import {
 	BOUNDARY_TARGET_ACTIVE_PROP,
 	BoundaryTarget,
-} from "./components/boundary-target";
-import { Portal } from "./portal/components/portal";
-import { isTeleportAvailable } from "./portal/teleport";
-import { BoundaryRootProvider } from "./providers/boundary-root.provider";
+} from "./root/boundary-target";
+import { resolveBoundaryTarget } from "./root/resolve-boundary-target";
+import { splitBoundaryLayoutStyle } from "./root/split-layout-style";
 import type { BoundaryComponentProps } from "./types";
-import { resolveBoundaryTarget } from "./utils/resolve-boundary-target";
-import { splitBoundaryLayoutStyle } from "./utils/split-layout-style";
 
 interface CreateBoundaryComponentOptions {
 	alreadyAnimated?: boolean;

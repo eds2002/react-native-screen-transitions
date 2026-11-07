@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { getInitialDestinationMeasurementSignal } from "../../components/boundary/utils/destination-signals";
+import { getInitialDestinationMeasurementSignal } from "../../components/boundary/measure/destination-signals";
 import {
 	correctMeasuredBoundsForVisibilityGate,
 	isMeasurementInViewport,
-} from "../../components/boundary/utils/measured-bounds";
-import { getRefreshBoundarySignal } from "../../components/boundary/utils/refresh-signals";
-import { getInitialSourceCaptureSignal } from "../../components/boundary/utils/source-signals";
+} from "../../components/boundary/measure/measured-bounds";
+import { getRefreshBoundarySignal } from "../../components/boundary/measure/refresh-signals";
+import { getInitialSourceCaptureSignal } from "../../components/boundary/measure/source-signals";
 import { BoundStore, type Snapshot } from "./helpers/bound-store";
 import {
 	createPendingPairKey,

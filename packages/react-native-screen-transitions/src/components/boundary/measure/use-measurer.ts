@@ -32,17 +32,17 @@ import type {
 	MeasureBoundary,
 	MeasureTarget,
 } from "../types";
-import { notifyFirstEscapeMeasure } from "../utils/first-escape-measure";
+import { notifyFirstEscapeMeasure } from "./first-escape-measure";
 import {
 	readLocalMeasurement,
 	writeLocalMeasurement,
-} from "../utils/local-measurements";
+} from "./local-measurements";
 import {
 	attachScrollSnapshotToMeasuredBounds,
 	correctMeasuredBoundsForVisibilityGate,
 	isMeasurementInViewport,
 	measureWithOverscrollAwareness,
-} from "../utils/measured-bounds";
+} from "./measured-bounds";
 
 /** What a boundary's measurement needs from its screen: the same for every boundary on it. */
 export type ScreenMeasureContext = {

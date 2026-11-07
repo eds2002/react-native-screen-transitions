@@ -7,10 +7,10 @@ import {
 	withTiming,
 } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
-import { useBuilderStore } from "../../../../providers/builder";
-import { useOptionalScreenHostStore } from "../../../../providers/host/screen-host.provider";
-import { useMotionStore } from "../../../../providers/motion";
-import type { BoundTag } from "../../../../stores/bounds";
+import { useBuilderStore } from "../../../providers/builder";
+import { useOptionalScreenHostStore } from "../../../providers/host/screen-host.provider";
+import { useMotionStore } from "../../../providers/motion";
+import type { BoundTag } from "../../../stores/bounds";
 import {
 	createScreenPairKey,
 	getEntry,
@@ -18,10 +18,10 @@ import {
 	getMatchingSourceScreenKey,
 	getSourceScreenKeyFromPairKey,
 	pairs,
-} from "../../../../stores/bounds";
-import { logger } from "../../../../utils/logger";
-import type { MeasureBoundary } from "../../types";
-import { getInitialDestinationMeasurementSignal } from "../../utils/destination-signals";
+} from "../../../stores/bounds";
+import { logger } from "../../../utils/logger";
+import type { MeasureBoundary } from "../types";
+import { getInitialDestinationMeasurementSignal } from "./destination-signals";
 
 // A missed layout should be retried on the next frame. The previous 100 ms
 // interval made each ordinary Android layout miss visibly delay navigation.

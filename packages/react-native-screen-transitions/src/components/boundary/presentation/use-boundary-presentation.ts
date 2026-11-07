@@ -28,8 +28,8 @@ import {
 	type resolveBoundaryHandoff,
 	resolveBoundaryHandoffTarget,
 	resolveBoundaryPresentation,
-} from "../helpers/presentation";
-import { usePairDestinationKeys } from "../screen/use-pair-presentation";
+} from "./resolve-presentation";
+import { usePairDestinationKeys } from "./use-pair-presentation";
 
 export type BoundaryPresentationValue = {
 	owner: ReturnType<typeof resolveBoundaryPresentation> | null;

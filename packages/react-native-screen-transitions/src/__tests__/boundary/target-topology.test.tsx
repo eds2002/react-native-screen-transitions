@@ -4,7 +4,7 @@ import {
 	Fragment,
 	type ReactNode,
 } from "react";
-import { resolveBoundaryTarget } from "../../components/boundary/utils/resolve-boundary-target";
+import { resolveBoundaryTarget } from "../../components/boundary/root/resolve-boundary-target";
 
 type FixtureProps = {
 	children?: ReactNode;

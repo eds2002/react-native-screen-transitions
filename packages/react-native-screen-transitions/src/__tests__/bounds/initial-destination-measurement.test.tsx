@@ -39,11 +39,11 @@ await mockModule("../../providers/host/screen-host.provider", () => ({
 		selector(stackState),
 }));
 
-let useInitialDestinationMeasurement: typeof import("../../components/boundary/hooks/lifecycles/use-initial-destination-measurement").useInitialDestinationMeasurement;
+let useInitialDestinationMeasurement: typeof import("../../components/boundary/measure/use-initial-destination-measurement").useInitialDestinationMeasurement;
 
 beforeAll(async () => {
 	({ useInitialDestinationMeasurement } = await import(
-		"../../components/boundary/hooks/lifecycles/use-initial-destination-measurement"
+		"../../components/boundary/measure/use-initial-destination-measurement"
 	));
 });
 

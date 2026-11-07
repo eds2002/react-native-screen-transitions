@@ -1,8 +1,8 @@
 import { expect, it } from 'bun:test';
 import { act, create } from 'react-test-renderer';
 import { makeMutable } from 'react-native-reanimated';
-import { createLocalMeasurementRef, writeLocalMeasurement } from '../../components/boundary/utils/local-measurements';
-import { useComposedBoundaryStyle } from '../../components/boundary/hooks/use-composed-boundary-style';
+import { createLocalMeasurementRef, writeLocalMeasurement } from '../../components/boundary/measure/local-measurements';
+import { useComposedBoundaryStyle } from '../../components/boundary/presentation/use-composed-boundary-style';
 import type { NormalizedTransitionInterpolatedStyle } from '../../types/animation.types';
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;

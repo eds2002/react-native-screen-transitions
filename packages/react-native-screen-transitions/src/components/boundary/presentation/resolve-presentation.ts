@@ -7,9 +7,9 @@ import type {
 import { getLinkKeyFromTag, isActiveGroupMember } from "../../../stores/bounds";
 import type { BoundaryHandoffTarget } from "../../../types/animation.types";
 
-export type { BoundaryPairPresentation } from "../screen/use-pair-presentation";
+export type { BoundaryPairPresentation } from "./use-pair-presentation";
 
-import type { BoundaryPairPresentation } from "../screen/use-pair-presentation";
+import type { BoundaryPairPresentation } from "./use-pair-presentation";
 
 export type BoundaryPresentationState = {
 	presentations: readonly (

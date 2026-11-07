@@ -31,9 +31,9 @@ import {
 	type ScreenTransform,
 } from "../../../utils/bounds/helpers/screen-transform";
 import { applyBoundsScreenFrames } from "../../../utils/bounds/helpers/styles/apply-screen-frames";
-import { useBoundaryMeasureCoordinator } from "../coordinator/use-boundary-measure-coordinator";
-import type { BoundaryPresentationValue } from "../hooks/use-boundary-presentation";
-import { usePairPresentation } from "./use-pair-presentation";
+import { useBoundaryMeasureCoordinator } from "../measure/use-boundary-measure-coordinator";
+import type { BoundaryPresentationValue } from "../presentation/use-boundary-presentation";
+import { usePairPresentation } from "../presentation/use-pair-presentation";
 
 export type ScreenBounds = {
 	boundsAccessor: BoundsAccessor;

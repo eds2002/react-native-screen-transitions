@@ -3,9 +3,9 @@ import { makeMutable } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
 import type { BoundTag, ScreenKey, TagID } from "../../../stores/bounds";
 import { applyEntryOps, type EntryOp } from "../../../stores/bounds";
-import type { BoundaryMeasureData } from "../hooks/use-measurer";
-import { forgetAppliedStyleKeys } from "../utils/applied-style-keys";
-import { forgetLocalMeasurements } from "../utils/local-measurements";
+import { forgetAppliedStyleKeys } from "../presentation/applied-style-keys";
+import { forgetLocalMeasurements } from "./local-measurements";
+import type { BoundaryMeasureData } from "./use-measurer";
 
 /**
  * The boundaries each screen's coordinator can measure. Lives on the UI thread; JS only sends

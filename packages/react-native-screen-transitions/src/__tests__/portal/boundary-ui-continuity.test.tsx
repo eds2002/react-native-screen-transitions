@@ -26,12 +26,12 @@ await mockModule("../../providers/orchestrator", () => ({
  useOrchestratorStore: (select:any) => select(orchestrators[0]),
  useOptionalOrchestratorStore: (keys:any,select:any) => keys ? orchestrators.map(select) : null,
 }));
-const {usePairPresentation} = await import("../../components/boundary/screen/use-pair-presentation");
+const {usePairPresentation} = await import("../../components/boundary/presentation/use-pair-presentation");
 function PairOutputs() {
  for(let i=0;i<keys.length;i++) {currentIndex=i;orchestrators[i].pairPresentation=usePairPresentation(orchestrators[i] as any);}
  currentIndex=0;return null;
 }
-const {useBoundaryPresentation} = await import("../../components/boundary/hooks/use-boundary-presentation");
+const {useBoundaryPresentation} = await import("../../components/boundary/presentation/use-boundary-presentation");
 
 it("moves a container-only handoff through ready UI frames and back without a React render", async () => {
  const bounds={x:0,y:0,pageX:0,pageY:0,width:100,height:100};

@@ -15,16 +15,16 @@ import {
 	pairs,
 } from "../../../stores/bounds";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
+import { isTeleportAvailable } from "../portal/teleport";
+import type { MeasureTarget } from "../types";
+import { boundaryMeasureRegistry } from "./measure-registry";
+import { getRefreshBoundarySignal } from "./refresh-signals";
+import { getInitialSourceCaptureSignal } from "./source-signals";
 import {
 	type BoundaryMeasureData,
 	measureBoundaryWith,
 	useScreenMeasureContext,
-} from "../hooks/use-measurer";
-import { isTeleportAvailable } from "../portal/teleport";
-import type { MeasureTarget } from "../types";
-import { getRefreshBoundarySignal } from "../utils/refresh-signals";
-import { getInitialSourceCaptureSignal } from "../utils/source-signals";
-import { boundaryMeasureRegistry } from "./measure-registry";
+} from "./use-measurer";
 
 /** A slot style that moves its view (a bounds transform), not just places it. */
 const isMovedByStyle = (style: StyleProps | undefined) => {

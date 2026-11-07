@@ -2,14 +2,14 @@ import type React from "react";
 import { memo, useLayoutEffect, useMemo } from "react";
 import Animated from "react-native-reanimated";
 import { logger } from "../../../utils/logger";
-import { useComposedBoundaryStyle } from "../hooks/use-composed-boundary-style";
 import { Portal } from "../portal/components/portal";
 import { useBoundaryEscapeState } from "../portal/utils/is-escaped";
+import { useComposedBoundaryStyle } from "../presentation/use-composed-boundary-style";
 import {
 	TARGET_OUTSIDE_ROOT_WARNING,
 	useOptionalBoundaryRootStore,
-} from "../providers/boundary-root.provider";
-import { splitBoundaryLayoutStyle } from "../utils/split-layout-style";
+} from "./boundary-root.provider";
+import { splitBoundaryLayoutStyle } from "./split-layout-style";
 
 type BoundaryTargetProps = Omit<
 	React.ComponentProps<typeof Animated.View>,

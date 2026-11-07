@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import type { SharedValue } from "react-native-reanimated";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../../types/animation.types";
+import { isLocallyMeasuredFor } from "../../measure/local-measurements";
 import type { BoundaryLocalMeasurementValue } from "../../types";
-import { isLocallyMeasuredFor } from "../../utils/local-measurements";
 
 type Presentation = {
 	get: () => {

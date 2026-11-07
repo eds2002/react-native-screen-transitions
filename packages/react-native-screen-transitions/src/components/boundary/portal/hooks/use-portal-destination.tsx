@@ -6,8 +6,8 @@ import {
 } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
 import { screenTopology } from "../../../../providers/builder/topology";
-import type { BoundaryPresentationValue } from "../../hooks/use-boundary-presentation";
-import { useBoundaryRootStore } from "../../providers/boundary-root.provider";
+import type { BoundaryPresentationValue } from "../../presentation/use-boundary-presentation";
+import { useBoundaryRootStore } from "../../root/boundary-root.provider";
 import type { BoundaryLocalMeasurementValue } from "../../types";
 import { setHandoffLending } from "../stores/handoff-lenders.store";
 import { isBoundaryEscaped } from "../utils/is-escaped";

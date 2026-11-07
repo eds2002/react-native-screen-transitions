@@ -12,15 +12,12 @@ import {
 	getLocalTransformForSlotComposition,
 } from "../../../providers/orchestrator/styles/helpers/compose-slot-style";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
-import { queueForgetAppliedStyleKeys } from "../coordinator/measure-registry";
+import { queueForgetAppliedStyleKeys } from "../measure/measure-registry";
 import {
 	type BoundaryEscapeState,
 	isBoundaryEscaped,
 } from "../portal/utils/is-escaped";
-import {
-	appliedStyleKeys,
-	nextAppliedStyleKey,
-} from "../utils/applied-style-keys";
+import { appliedStyleKeys, nextAppliedStyleKey } from "./applied-style-keys";
 
 export function useComposedBoundaryStyle(
 	slots: SharedValue<NormalizedTransitionInterpolatedStyle> | undefined,

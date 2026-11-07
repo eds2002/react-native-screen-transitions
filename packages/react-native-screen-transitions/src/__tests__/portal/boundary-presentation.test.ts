@@ -1,10 +1,10 @@
-import { resolveBoundaryHandoff as handoff } from "../../components/boundary/helpers/presentation";
+import { resolveBoundaryHandoff as handoff } from "../../components/boundary/presentation/resolve-presentation";
 import { boundaryRegistry, pairs } from "../../stores/bounds/internals/state";
-import { boundarySourceFrame, runBoundaryInterpolator } from "../../components/boundary/screen/use-pair-presentation";
+import { boundarySourceFrame, runBoundaryInterpolator } from "../../components/boundary/presentation/use-pair-presentation";
 import type { ScreenInterpolatorFrame } from "../../providers/orchestrator/helpers/pipeline";
 import { createScreenTransitionState } from "../../constants";
 import { beforeEach, describe, expect, it } from "bun:test";
-import { resolveBoundaryPresentation as presentation, resolveBoundaryReceiver, type BoundaryPairPresentation } from "../../components/boundary/helpers/presentation";
+import { resolveBoundaryPresentation as presentation, resolveBoundaryReceiver, type BoundaryPairPresentation } from "../../components/boundary/presentation/resolve-presentation";
 import { setDestination, setSource } from "../../stores/bounds/internals/links";
 import { clear } from "../../stores/bounds/internals/clear";
 

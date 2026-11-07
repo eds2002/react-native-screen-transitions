@@ -23,7 +23,7 @@ await mockModule(
 await mockModule("../../components/boundary/portal/hooks/use-portal-destination", () => ({usePortalDestination}));
 const { makeMutable } = await import("react-native-reanimated");
 const boundaryPresentation = makeMutable<any>({ owner: null, receiver: null, receiverSize: null, slots: {} });
-await mockModule("../../components/boundary/providers/boundary-root.provider", () => ({
+await mockModule("../../components/boundary/root/boundary-root.provider", () => ({
 	useBoundaryRootStore: (select: any) => select({ boundaryPresentation }),
 }));
 await mockModule(

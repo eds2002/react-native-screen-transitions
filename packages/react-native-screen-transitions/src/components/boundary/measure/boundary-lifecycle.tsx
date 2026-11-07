@@ -5,14 +5,14 @@ import { useBuilderStore } from "../../../providers/builder";
 import { useScrollChain } from "../../../providers/motion/gestures/scroll-coordination";
 import type { BoundTag } from "../../../stores/bounds";
 import { prepareStyleForBounds } from "../../../utils/bounds/helpers/styles/styles";
-import { useBoundaryMeasureRegistration } from "../coordinator/measure-registry";
-import { useBoundaryPresence } from "../hooks/lifecycles/use-boundary-presence";
-import { useInitialDestinationMeasurement } from "../hooks/lifecycles/use-initial-destination-measurement";
-import { type BoundaryMeasureData, useMeasurer } from "../hooks/use-measurer";
 import type {
 	BoundaryConfigProps,
 	BoundaryLocalMeasurementValue,
 } from "../types";
+import { useBoundaryMeasureRegistration } from "./measure-registry";
+import { useBoundaryPresence } from "./use-boundary-presence";
+import { useInitialDestinationMeasurement } from "./use-initial-destination-measurement";
+import { type BoundaryMeasureData, useMeasurer } from "./use-measurer";
 
 interface BoundaryLifecycleProps {
 	boundTag: BoundTag;

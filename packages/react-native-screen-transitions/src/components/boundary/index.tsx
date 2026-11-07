@@ -1,8 +1,8 @@
 import { forwardRef } from "react";
 import { View, type ViewProps } from "react-native";
 import { Pressable, type PressableProps } from "react-native-gesture-handler";
-import { BoundaryTarget } from "./components/boundary-target";
 import { createBoundaryComponent } from "./create-boundary-component";
+import { BoundaryTarget } from "./root/boundary-target";
 import type { BoundaryComponentProps } from "./types";
 
 export { createBoundaryComponent };

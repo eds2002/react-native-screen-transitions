@@ -1,5 +1,5 @@
 import { expect, it } from "bun:test";
-import { splitBoundaryLayoutStyle } from "../../components/boundary/utils/split-layout-style";
+import { splitBoundaryLayoutStyle } from "../../components/boundary/root/split-layout-style";
 
 it("gives the placeholder the boundary's box and lets the boundary fill it", () => {
 	const { outer, inner } = splitBoundaryLayoutStyle([
