@@ -115,6 +115,17 @@ and 0–1 dropped frames in the app. Count drops in the app instead:
   load; results on screen and in the app's `Documents/perf.json` (runs on a device with nothing driving it)
 - `python3 threads.py <pid>`: CPU ms per thread of a simulator app (thread 0 is the main thread)
 
+## Tracking perf per commit
+
+`python3 -I perf/track.py <simulator UDID | iPhone name | adb serial>` runs the perf lab's track
+suite (`harness://lab/perf?suite=track`: slide, zoom, zoom to a bound, styles() morph and
+@react-navigation/stack twice each at loads of 0/50/65/80 % of a refresh, then 300 boundaries
+mounted) on a Release build, about ten minutes with nothing driving it, and appends the
+summary to `perf/history.jsonl` against the current commit. It prints the run next to the
+previous one on the same device; `perf/track.py --show [device]` prints the history. Run the
+simulator and the emulator one after the other (they share the Mac's CPU); a phone can run
+alongside them, unlocked with auto-lock off.
+
 ## Showing a bug
 
 `visual/clip.py <spec.json>... --out clip.mp4` cuts an annotated clip from a
