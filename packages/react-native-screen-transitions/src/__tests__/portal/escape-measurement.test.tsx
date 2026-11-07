@@ -21,7 +21,7 @@ it('captures destination escape placement in corrected coordinates and rejects i
  let measureBoundary: MeasureBoundary;
  function Probe() {
   const firstEscapeMeasureKey = useFirstEscapeMeasureKey(onFirstMeasure);
-  measureBoundary = useMeasurer({enabled:true,boundTag:{tag:'box',linkKey:'box'},currentScreenKey:'B',preparedStyles:{},measuredAnimatedRef:ref as never,handoff:true,escapeClipping:true,localMeasurement,firstEscapeMeasureKey});
+  measureBoundary = useMeasurer({enabled:true,boundTag:{tag:'box',linkKey:'box'},preparedStyles:{},measuredAnimatedRef:ref as never,handoff:true,localMeasurement,firstEscapeMeasureKey,scrollChain:[]},'B');
   return null;
  }
  let root: ReturnType<typeof create>;

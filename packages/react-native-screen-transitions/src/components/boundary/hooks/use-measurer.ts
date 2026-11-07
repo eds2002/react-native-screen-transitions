@@ -10,7 +10,7 @@ import {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { useMotionStore } from "../../../providers/motion";
-import { useScrollChain } from "../../../providers/motion/gestures/scroll-coordination";
+import type { useScrollChain } from "../../../providers/motion/gestures/scroll-coordination";
 import { useOptionalOrchestratorStore } from "../../../providers/orchestrator/orchestrator.provider";
 import type { BoundTag } from "../../../stores/bounds";
 import {
@@ -162,6 +162,26 @@ const measureScreenAt = (
 	return { transform: { sx, sy, tx, ty, width, height }, contentOffset };
 };
 
+/** Records a boundary's measurement as its side of the pair being measured for. */
+const recordLink = (
+	target: MeasureTarget,
+	{ boundTag, preparedStyles, handoff }: BoundaryMeasureData,
+	screenKey: string,
+	bounds: MeasuredDimensions,
+) => {
+	"worklet";
+	const record = target.type === "source" ? setSource : setDestination;
+	record(
+		target.pairKey,
+		boundTag.linkKey,
+		screenKey,
+		bounds,
+		preparedStyles,
+		boundTag.group,
+		{ handoff },
+	);
+};
+
 /** Measures one boundary for a transition and records it (bounds entry, pair link, escape placement). */
 export const measureBoundaryWith = (
 	screen: ScreenMeasureContext,
@@ -174,9 +194,7 @@ export const measureBoundaryWith = (
 	const {
 		enabled,
 		boundTag,
-		preparedStyles,
 		measuredAnimatedRef,
-		handoff,
 		localMeasurement,
 		firstEscapeMeasureKey,
 		scrollChain,
@@ -196,27 +214,7 @@ export const measureBoundaryWith = (
 		? getEntry(boundTag.tag, currentScreenKey)?.bounds
 		: undefined;
 	if (last) {
-		if (target.type === "source") {
-			setSource(
-				target.pairKey,
-				boundTag.linkKey,
-				currentScreenKey,
-				last,
-				preparedStyles,
-				boundTag.group,
-				{ handoff },
-			);
-		} else {
-			setDestination(
-				target.pairKey,
-				boundTag.linkKey,
-				currentScreenKey,
-				last,
-				preparedStyles,
-				boundTag.group,
-				{ handoff },
-			);
-		}
+		recordLink(target, data, currentScreenKey, last);
 		return;
 	}
 
@@ -294,77 +292,23 @@ export const measureBoundaryWith = (
 	// Refresh the public bounds entry on every accepted measurement.
 	setEntry(boundTag.tag, currentScreenKey, { bounds: measuredWithScroll });
 
-	if (target.type === "source") {
-		setSource(
-			target.pairKey,
-			boundTag.linkKey,
-			currentScreenKey,
-			measuredWithScroll,
-			preparedStyles,
-			boundTag.group,
-			{ handoff },
-		);
-	}
-
-	if (target.type === "destination") {
-		setDestination(
-			target.pairKey,
-			boundTag.linkKey,
-			currentScreenKey,
-			measuredWithScroll,
-			preparedStyles,
-			boundTag.group,
-			{ handoff },
-		);
-	}
+	recordLink(target, data, currentScreenKey, measuredWithScroll);
 };
 
 /** A boundary's measure function from its own data and its screen's context (the destination handshake). */
 export const useMeasurer = (
-	data: Omit<BoundaryMeasureData, "scrollChain"> & { currentScreenKey: string },
+	data: BoundaryMeasureData,
+	currentScreenKey: string,
 ): MeasureBoundary => {
 	const contentRef = useOptionalOrchestratorStore(
 		(store) => store?.contentMeasureRef ?? null,
 	);
-	const screen = useScreenMeasureContext(data.currentScreenKey, contentRef);
-	const scrollChain = useScrollChain();
-	const {
-		enabled,
-		boundTag,
-		preparedStyles,
-		measuredAnimatedRef,
-		handoff,
-		localMeasurement,
-		firstEscapeMeasureKey,
-	} = data;
+	const screen = useScreenMeasureContext(currentScreenKey, contentRef);
 	return useCallback(
 		(target) => {
 			"worklet";
-			measureBoundaryWith(
-				screen,
-				{
-					enabled,
-					boundTag,
-					preparedStyles,
-					measuredAnimatedRef,
-					handoff,
-					localMeasurement,
-					firstEscapeMeasureKey,
-					scrollChain,
-				},
-				target,
-			);
+			measureBoundaryWith(screen, data, target);
 		},
-		[
-			screen,
-			enabled,
-			boundTag,
-			preparedStyles,
-			measuredAnimatedRef,
-			handoff,
-			localMeasurement,
-			firstEscapeMeasureKey,
-			scrollChain,
-		],
+		[screen, data],
 	);
 };
