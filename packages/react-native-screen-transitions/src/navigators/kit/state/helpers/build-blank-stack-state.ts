@@ -266,14 +266,43 @@ const withSceneRelationships = ({
 		descriptor: scene.descriptor,
 	}));
 
+	// A screen already closing keeps the screen it closes to while that one is mounted below it. A
+	// pop as it lands closes that screen too, and the closing neighbours rule would skip it: this
+	// screen's frame would pair it with the screen further down for the rest of its close, and draw
+	// the element it hands back where that screen is instead of where its own pair has it.
+	const keepClosingPrevious = (
+		routeKey: string,
+		sceneIndex: number,
+		resolved: BlankStackDescriptor | undefined,
+	) => {
+		if (
+			!isRouteClosing(routeKey) ||
+			!previousState?.closingRouteKeys.has(routeKey)
+		) {
+			return resolved;
+		}
+		const keptKey =
+			previousScenesByRouteKey?.get(routeKey)?.previousDescriptor?.route.key;
+		if (!keptKey || keptKey === resolved?.route.key) return resolved;
+		for (let i = sceneIndex - 1; i >= 0; i--) {
+			if (scenes[i].route.key === keptKey) return scenes[i].descriptor;
+		}
+		return resolved;
+	};
+
 	const nextScenes = scenes.map((scene, sceneIndex) => {
-		const { previousDescriptor, nextDescriptor, closingNextDescriptor } =
-			resolveSceneNeighbors(
-				relationshipScenes,
-				sceneIndex,
-				isRouteClosing,
-				(routeKey) => closingRouteOrder.get(routeKey),
-			);
+		const neighbors = resolveSceneNeighbors(
+			relationshipScenes,
+			sceneIndex,
+			isRouteClosing,
+			(routeKey) => closingRouteOrder.get(routeKey),
+		);
+		const { nextDescriptor, closingNextDescriptor } = neighbors;
+		const previousDescriptor = keepClosingPrevious(
+			scene.route.key,
+			sceneIndex,
+			neighbors.previousDescriptor,
+		);
 
 		const nextScene = {
 			...scene,

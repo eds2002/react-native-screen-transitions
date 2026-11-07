@@ -427,6 +427,30 @@ for (const completionOrder of [["C", "B"], ["B", "C"]]) {
  });
 }
 
+it("a closing screen keeps the screen it closes to when that one is popped too", () => {
+	const navigation = createNavigation();
+	const routes = ["A", "B", "C"].map(createRoute);
+	const descriptors = Object.fromEntries(routes.map((route) => [route.key, createDescriptor(route, navigation)]));
+	const props = (count: number) =>
+		createProps(
+			routes.slice(0, count),
+			Object.fromEntries(routes.slice(0, count).map((route) => [route.key, descriptors[route.key]])),
+			navigation,
+		);
+	const controller = createBlankStackController(props(3));
+	const previousOf = (key: string) =>
+		controller.getSnapshot().state.scenes.find((scene) => scene.route.key === key)?.previousDescriptor?.route.key;
+	// Pop C, then B while C still closes: C's pair is still B -> C.
+	controller.update(props(2));
+	expect(previousOf("C")).toBe("B");
+	controller.update(props(1));
+	expect(previousOf("C")).toBe("B");
+	expect(previousOf("B")).toBe("A");
+	// Once B is gone, C closes to A.
+	controller.handleCloseRoute({ route: routes[1] });
+	expect(previousOf("C")).toBe("A");
+});
+
 // From #159 (Vlad Petrenko): a params-only change must render the fresh descriptor.
 it("renders with the fresh descriptor when only route params change", () => {
 	const navigation = createNavigation();

@@ -54,7 +54,7 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			"Deep chains whose covered screens stay translucent (slide-fade leaves the screen below at 40%): the screen two " +
 			"below the top shows through, and once it is no longer in the moving pair its copy stops being styled and " +
 			"draws at its own slot (a second card), stepping back as it leaves the pair.",
-		environments: ["ios", "android", "120hz"],
+		environments: ["ios", "android", "120hz", "teleport-deep"],
 		matches: (scenario, v) =>
 			/^bounds-deep-slide-fade \//.test(scenario) &&
 			["bound-split", "bound-vanish", "element-spike", "element-teleport", "element-flash", "spike", "teleport"].includes(v.rule),
@@ -70,19 +70,6 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 		matches: (scenario, v) =>
 			/^bounds-deep-(zoom-in|mixed|fade|slide-fade)-handoff \//.test(scenario) &&
 			["payload-hidden", "element-teleport", "element-flash", "element-spike", "payload-rest"].includes(v.rule),
-	},
-	{
-		id: "deep-close-start-cover-step",
-		summary:
-			"Teleport, a pop as the screen above lands (its close's tail): for ~6 frames as its own close starts, the " +
-			"middle screen's copy is drawn offset by the cover's parallax (117 px in slide-left), then snaps back as the " +
-			"screen above unmounts. Placement inputs are right (both its own pair and the landed one put it on its " +
-			"slot); suspected in the escaped overlay's placement at the close start. Predates the landed-pair handover.",
-		environments: ["teleport-deep"],
-		matches: (scenario, v) =>
-			/^bounds-deep-[a-z-]+ \//.test(scenario) &&
-			sequenceOf(scenario).startsWith("pop-in-close-tail") &&
-			["element-spike", "element-teleport", "bound-vanish", "bound-split", "element-flash"].includes(v.rule),
 	},
 	{
 		id: "deep-fading-copies",
