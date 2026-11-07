@@ -1,6 +1,6 @@
 import { resolveBoundaryHandoff as handoff } from "../../components/boundary/helpers/presentation";
 import { boundaryRegistry, pairs } from "../../stores/bounds/internals/state";
-import { boundarySourceFrame, runBoundaryInterpolator } from "../../providers/orchestrator/helpers/use-pair-presentation";
+import { boundarySourceFrame, runBoundaryInterpolator } from "../../components/boundary/screen/use-pair-presentation";
 import type { ScreenInterpolatorFrame } from "../../providers/orchestrator/helpers/pipeline";
 import { createScreenTransitionState } from "../../constants";
 import { beforeEach, describe, expect, it } from "bun:test";

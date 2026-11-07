@@ -137,25 +137,7 @@ export const ensurePairSourceRequests = (
 	return pair.sourceRequests;
 };
 
-export const removePairLink = (
-	state: LinkPairsState,
-	pairKey: ScreenPairKey,
-	linkKey: LinkKey,
-) => {
-	"worklet";
-	const pair = state[pairKey];
-	if (!pair) return;
-
-	delete pair.links[linkKey];
-
-	for (const key in pair.links) {
-		if (pair.links[key]) return;
-	}
-
-	delete state[pairKey];
-};
-
-export const getLink = (
+export const getPairLink = (
 	state: LinkPairsState,
 	pairKey: ScreenPairKey,
 	linkKey: LinkKey,
@@ -164,22 +146,22 @@ export const getLink = (
 	return state[pairKey]?.links[linkKey] ?? null;
 };
 
-export const getSource = (
+export const getPairSource = (
 	state: LinkPairsState,
 	pairKey: ScreenPairKey,
 	linkKey: LinkKey,
 ): TagLink["source"] | null => {
 	"worklet";
-	return getLink(state, pairKey, linkKey)?.source ?? null;
+	return getPairLink(state, pairKey, linkKey)?.source ?? null;
 };
 
-export const getDestination = (
+export const getPairDestination = (
 	state: LinkPairsState,
 	pairKey: ScreenPairKey,
 	linkKey: LinkKey,
 ): TagLink["destination"] | null => {
 	"worklet";
-	return getLink(state, pairKey, linkKey)?.destination ?? null;
+	return getPairLink(state, pairKey, linkKey)?.destination ?? null;
 };
 
 /**
@@ -196,7 +178,7 @@ export const isActiveGroupMember = (
 	return state?.[pairKey]?.groups?.[group]?.activeId === linkKey;
 };
 
-export const getActiveGroupId = (
+export const getPairActiveGroupId = (
 	state: LinkPairsState,
 	pairKey: ScreenPairKey,
 	group: GroupKey,

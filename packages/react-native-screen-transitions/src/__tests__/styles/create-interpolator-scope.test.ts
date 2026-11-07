@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "bun:test";
 import type { ScreenInterpolatorFrame } from "../../providers/orchestrator/helpers/pipeline";
 import { createInterpolatorScope } from "../../providers/orchestrator/styles/helpers/create-interpolator-scope";
 import { selectInterpolatorFrame } from "../../providers/orchestrator/styles/helpers/select-interpolator-frame";
-import { BoundStore, type Snapshot } from "../../stores/bounds";
+import { BoundStore, type Snapshot } from "../bounds/helpers/bound-store";
 import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
 
 const createBounds = (x: number): Snapshot["bounds"] => ({

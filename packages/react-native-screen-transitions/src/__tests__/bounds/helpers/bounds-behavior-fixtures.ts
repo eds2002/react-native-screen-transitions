@@ -1,9 +1,5 @@
 import { expect } from "bun:test";
-import {
-	BoundStore,
-	type ResolvedTransitionPair,
-	type Snapshot,
-} from "../../../stores/bounds";
+import { BoundStore, type ResolvedTransitionPair, type Snapshot } from "./bound-store";
 import { createScreenPairKey } from "../../../stores/bounds/helpers/link-pairs.helpers";
 import type {
 	EntryPatch,

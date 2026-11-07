@@ -7,10 +7,10 @@ import {
 	getDestinationScreenKeyFromPairKey,
 	getGroupKeyFromTag,
 	getLinkKeyFromTag,
-	getActiveGroupId as getPairActiveGroupId,
-	getDestination as getPairDestination,
-	getLink as getPairLink,
-	getSource as getPairSource,
+	getPairActiveGroupId,
+	getPairDestination,
+	getPairLink,
+	getPairSource,
 	getSourceScreenKeyFromPairKey,
 } from "../helpers/link-pairs.helpers";
 import type {

@@ -3,7 +3,7 @@ import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 } from "../constants";
-import type { BoundsLink } from "../stores/bounds/types";
+import type { BoundsLink } from "../stores/bounds";
 import type {
 	BoundsComputeOptions,
 	BoundsIdentityInput,
@@ -19,7 +19,7 @@ import type {
 	TransitionSlotStyle,
 } from "./animation.types";
 
-export type { BoundsLink, BoundsLinkStatus } from "../stores/bounds/types";
+export type { BoundsLink, BoundsLinkStatus } from "../stores/bounds";
 
 /**
  * Target style computation.

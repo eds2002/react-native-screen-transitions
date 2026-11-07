@@ -1,18 +1,15 @@
 import type { DerivedValue } from "react-native-reanimated";
-import {
-	getLinkKeyFromTag,
-	isActiveGroupMember,
-} from "../../../stores/bounds/helpers/link-pairs.helpers";
 import type {
 	boundaryRegistry,
 	pairs,
-} from "../../../stores/bounds/internals/state";
-import type { ScreenPairKey } from "../../../stores/bounds/types";
+	ScreenPairKey,
+} from "../../../stores/bounds";
+import { getLinkKeyFromTag, isActiveGroupMember } from "../../../stores/bounds";
 import type { BoundaryHandoffTarget } from "../../../types/animation.types";
 
-export type { BoundaryPairPresentation } from "../../../providers/orchestrator/helpers/use-pair-presentation";
+export type { BoundaryPairPresentation } from "../screen/use-pair-presentation";
 
-import type { BoundaryPairPresentation } from "../../../providers/orchestrator/helpers/use-pair-presentation";
+import type { BoundaryPairPresentation } from "../screen/use-pair-presentation";
 
 export type BoundaryPresentationState = {
 	presentations: readonly (

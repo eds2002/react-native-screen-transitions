@@ -1,5 +1,5 @@
 import type { MeasuredDimensions, SharedValue } from "react-native-reanimated";
-import type { ScreenPairKey } from "../../stores/bounds/types";
+import type { ScreenPairKey } from "../../stores/bounds";
 import type { ScrollChainSnapshot } from "../../stores/scroll.store";
 import type { BoundsOptions } from "../../utils/bounds/types/options";
 

@@ -3,7 +3,7 @@ import { mountMotionTransitionValues } from "../helpers/mount-transition-values"
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { getRefreshBoundarySignal } from "../../components/boundary/utils/refresh-signals";
 import { startPanBase } from "../../providers/motion/gestures/pan/behavior/pan-lifecycle";
-import { BoundStore } from "../../stores/bounds";
+import { BoundStore } from "./helpers/bound-store";
 import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { pairs } from "../../stores/bounds/internals/state";
 

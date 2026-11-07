@@ -5,33 +5,31 @@ import {
 	useSyncExternalStore,
 } from "react";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
-import { isTeleportAvailable } from "../../../components/boundary/portal/teleport";
 import { NO_STYLES } from "../../../constants";
+import { useBuilderStore } from "../../../providers/builder";
+import { useMotionStore } from "../../../providers/motion";
+import { updateDerivations } from "../../../providers/orchestrator/helpers/derivations";
+import type {
+	ScreenAnimationPipeline,
+	ScreenInterpolatorFrame,
+} from "../../../providers/orchestrator/helpers/pipeline";
+import { createInterpolatorScope } from "../../../providers/orchestrator/styles/helpers/create-interpolator-scope";
+import { normalizeSlots } from "../../../providers/orchestrator/styles/helpers/normalize-slots";
+import { selectInterpolatorFrame } from "../../../providers/orchestrator/styles/helpers/select-interpolator-frame";
+import { stripInterpolatorOptions } from "../../../providers/orchestrator/styles/helpers/strip-interpolator-options";
+import type { ScreenPairKey } from "../../../stores/bounds";
 import {
 	getDestinationScreenKeyFromPairKey,
 	getSourceScreenKeyFromPairKey,
-} from "../../../stores/bounds/helpers/link-pairs.helpers";
-import { pairs } from "../../../stores/bounds/internals/state";
-import type { ScreenPairKey } from "../../../stores/bounds/types";
+	pairs,
+} from "../../../stores/bounds";
 import type {
 	NormalizedTransitionInterpolatedStyle,
 	ScreenStyleInterpolator,
 } from "../../../types/animation.types";
-import { useBuilderStore } from "../../builder";
-import { useMotionStore } from "../../motion";
-import {
-	applyBoundsScreenFrames,
-	type ScreenTransform,
-} from "../styles/helpers/bounds-screen-frames";
-import { createInterpolatorScope } from "../styles/helpers/create-interpolator-scope";
-import { normalizeSlots } from "../styles/helpers/normalize-slots";
-import { selectInterpolatorFrame } from "../styles/helpers/select-interpolator-frame";
-import { stripInterpolatorOptions } from "../styles/helpers/strip-interpolator-options";
-import { updateDerivations } from "./derivations";
-import type {
-	ScreenAnimationPipeline,
-	ScreenInterpolatorFrame,
-} from "./pipeline";
+import type { ScreenTransform } from "../../../utils/bounds/helpers/screen-transform";
+import { applyBoundsScreenFrames } from "../../../utils/bounds/helpers/styles/apply-screen-frames";
+import { isTeleportAvailable } from "../portal/teleport";
 
 export type BoundaryPairPresentation = {
 	pairKey: string;

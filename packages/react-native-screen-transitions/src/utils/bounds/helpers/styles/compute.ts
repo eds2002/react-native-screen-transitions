@@ -12,22 +12,17 @@ import {
 	isScreenClosing,
 	isScreenNewer,
 } from "../../../../providers/motion/helpers/progress-registry";
-import { toLayoutSpace } from "../../../../providers/orchestrator/styles/helpers/bounds-screen-frames";
 import {
 	createScreenPairKey,
 	getDestinationScreenKeyFromPairKey,
-	getSourceScreenKeyFromPairKey,
-} from "../../../../stores/bounds/helpers/link-pairs.helpers";
-import { getEntry } from "../../../../stores/bounds/internals/entries";
-import {
+	getEntry,
 	getResolvedLink,
+	getSourceScreenKeyFromPairKey,
+	pairs,
 	requestSourceMeasure,
-} from "../../../../stores/bounds/internals/links";
-import {
 	resolveScreenPairKey,
 	resolveTransitionPair,
-} from "../../../../stores/bounds/internals/resolver";
-import { pairs } from "../../../../stores/bounds/internals/state";
+} from "../../../../stores/bounds";
 import type { ScreenTransitionState } from "../../../../types/animation.types";
 import type { Layout } from "../../../../types/screen.types";
 import type {
@@ -39,6 +34,7 @@ import {
 	computeContentTransformGeometry,
 	computeRelativeGeometry,
 } from "../geometry";
+import { type ScreenTransform, toLayoutSpace } from "../screen-transform";
 import {
 	composeContentStyle,
 	composeSizeAbsolute,
@@ -47,14 +43,10 @@ import {
 	composeTransformRelative,
 	type ElementComposeParams,
 } from "./composers";
-import {
-	attachBoundsScreenFrame,
-	type MeasuredScreenTransform,
-	type StartPair,
-} from "./screen-frame";
+import { attachBoundsScreenFrame, type StartPair } from "./screen-frame";
 
 type MeasuredWith = MeasuredDimensions & {
-	screenTransform?: MeasuredScreenTransform;
+	screenTransform?: ScreenTransform;
 };
 
 const MAX_CHAIN_DEPTH = 6;
@@ -398,7 +390,7 @@ export const computeBoundStyles = (
 
 	const isSize = computeOptions.method === "size";
 	const isAbsolute = computeOptions.space === "absolute";
-	// Styles follow the screens (see bounds-screen-frames): their path is worked out where the screens
+	// Styles follow the screens (see apply-screen-frames): their path is worked out where the screens
 	// lay the element out, without the transforms the screens had when measured, and drawn through
 	// where the screens are now. Raw values keep the window-space rects their callers compose with.
 	const followsScreens = !computeOptions.raw && !isAbsolute;

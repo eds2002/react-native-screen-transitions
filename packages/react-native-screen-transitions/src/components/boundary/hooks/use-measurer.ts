@@ -12,16 +12,19 @@ import { scheduleOnRN } from "react-native-worklets";
 import { useMotionStore } from "../../../providers/motion";
 import { useScrollChain } from "../../../providers/motion/gestures/scroll-coordination";
 import { useOptionalOrchestratorStore } from "../../../providers/orchestrator/orchestrator.provider";
-import { toLayoutSpace } from "../../../providers/orchestrator/styles/helpers/bounds-screen-frames";
-import { getScreenTransform } from "../../../providers/orchestrator/styles/helpers/screen-transform-registry";
-import { getEntry, setEntry } from "../../../stores/bounds/internals/entries";
+import type { BoundTag } from "../../../stores/bounds";
 import {
+	getEntry,
+	getScreenTransform,
 	setDestination,
+	setEntry,
 	setSource,
-} from "../../../stores/bounds/internals/links";
-import type { BoundTag } from "../../../stores/bounds/types";
+} from "../../../stores/bounds";
 import { ScrollStore } from "../../../stores/scroll.store";
-import type { MeasuredScreenTransform } from "../../../utils/bounds/helpers/styles/screen-frame";
+import {
+	type ScreenTransform,
+	toLayoutSpace,
+} from "../../../utils/bounds/helpers/screen-transform";
 import { getVisibilityBlockOffset } from "../../../utils/visibility-block-offset";
 import { isTeleportAvailable } from "../portal/teleport";
 import type {
@@ -108,7 +111,7 @@ const SCREEN_TRANSFORM_EPSILON = 0.01;
 
 type ScreenAtMeasure = {
 	/** Where the screen was drawn (absent when it was not moved). */
-	transform?: MeasuredScreenTransform;
+	transform?: ScreenTransform;
 	/** The boundary's box inside its screen's content (unscaled), from the same native frame. */
 	contentOffset: { x: number; y: number; width: number; height: number };
 };

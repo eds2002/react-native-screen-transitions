@@ -1,8 +1,8 @@
-import { getEntry } from "../../../stores/bounds/internals/entries";
 import {
 	getActiveGroupId,
+	getEntry,
 	setActiveGroupId,
-} from "../../../stores/bounds/internals/links";
+} from "../../../stores/bounds";
 import type { BoundsInterpolationProps } from "../../../types/bounds.types";
 import { DEFAULT_BOUNDS_OPTIONS } from "../constants";
 import type {

@@ -1,8 +1,5 @@
-import { isActiveGroupMember } from "../../../stores/bounds/helpers/link-pairs.helpers";
-import type {
-	LinkPairsState,
-	ScreenPairKey,
-} from "../../../stores/bounds/types";
+import type { LinkPairsState, ScreenPairKey } from "../../../stores/bounds";
+import { isActiveGroupMember } from "../../../stores/bounds";
 import type { MeasureTarget } from "../types";
 
 type RefreshBoundarySignal = MeasureTarget & {

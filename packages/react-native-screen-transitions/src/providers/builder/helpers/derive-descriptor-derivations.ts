@@ -1,5 +1,5 @@
-import { createScreenPairKey } from "../../../stores/bounds/helpers/link-pairs.helpers";
-import type { ScreenPairKey } from "../../../stores/bounds/types";
+import type { ScreenPairKey } from "../../../stores/bounds";
+import { createScreenPairKey } from "../../../stores/bounds";
 import type { BaseStackDescriptor } from "../../../types/stack.types";
 
 export interface DescriptorDerivations {

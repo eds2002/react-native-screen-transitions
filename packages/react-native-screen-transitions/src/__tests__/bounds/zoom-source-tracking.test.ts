@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import type { BoundsInterpolationProps } from "../../types/bounds.types";
-import { BoundStore } from "../../stores/bounds";
+import { BoundStore } from "./helpers/bound-store";
 import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
 import {
 	resolveRevealContentBaseTransform,

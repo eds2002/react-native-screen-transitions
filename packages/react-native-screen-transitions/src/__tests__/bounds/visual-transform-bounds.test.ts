@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import type { MeasuredDimensions } from "react-native-reanimated";
-import { BoundStore } from "../../stores/bounds";
+import { BoundStore } from "./helpers/bound-store";
 import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { createBoundsAccessor } from "../../utils/bounds";
 import { computeBoundStyles } from "../../utils/bounds/helpers/styles/compute";

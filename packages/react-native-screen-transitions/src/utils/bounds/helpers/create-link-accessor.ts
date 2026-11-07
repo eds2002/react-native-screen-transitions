@@ -1,7 +1,7 @@
 import {
 	getPairKeyForDestination,
 	getResolvedLink,
-} from "../../../stores/bounds/internals/links";
+} from "../../../stores/bounds";
 import type {
 	BoundsInterpolationProps,
 	BoundsLink,

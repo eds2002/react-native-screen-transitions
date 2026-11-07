@@ -5,7 +5,7 @@ import { makeMutable } from "react-native-reanimated";
 import { getInitialDestinationMeasurementSignal } from "../../components/boundary/utils/destination-signals";
 import { getRefreshBoundarySignal } from "../../components/boundary/utils/refresh-signals";
 import { getInitialSourceCaptureSignal } from "../../components/boundary/utils/source-signals";
-import { BoundStore } from "../../stores/bounds";
+import { BoundStore } from "./helpers/bound-store";
 import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { pairs } from "../../stores/bounds/internals/state";
 import { buildZoomStyles } from "../../utils/bounds/navigation/zoom/build";

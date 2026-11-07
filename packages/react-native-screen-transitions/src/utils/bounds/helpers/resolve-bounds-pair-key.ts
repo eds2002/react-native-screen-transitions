@@ -1,5 +1,5 @@
-import { resolveScreenPairKey } from "../../../stores/bounds/internals/resolver";
-import type { ScreenPairKey, TagID } from "../../../stores/bounds/types";
+import type { ScreenPairKey, TagID } from "../../../stores/bounds";
+import { resolveScreenPairKey } from "../../../stores/bounds";
 import type { BoundsInterpolationProps } from "../../../types/bounds.types";
 
 /** The pair `tag` belongs to in this frame, wherever its source sits in the route tree. */

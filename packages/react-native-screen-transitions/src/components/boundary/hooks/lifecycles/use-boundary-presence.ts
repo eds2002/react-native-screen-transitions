@@ -1,5 +1,5 @@
 import { useLayoutEffect } from "react";
-import type { BoundTag } from "../../../../stores/bounds/types";
+import type { BoundTag } from "../../../../stores/bounds";
 import { queueEntryOp } from "../../coordinator/measure-registry";
 import type { BoundaryConfigProps } from "../../types";
 

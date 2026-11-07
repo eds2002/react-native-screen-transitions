@@ -12,8 +12,8 @@ import {
 	getMeasuredSourcePairKey,
 	getPairKeyForDestination,
 	getPairKeyForSource,
-} from "../../../stores/bounds/internals/links";
-import { pairs } from "../../../stores/bounds/internals/state";
+	pairs,
+} from "../../../stores/bounds";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
 import {
 	type BoundaryMeasureData,

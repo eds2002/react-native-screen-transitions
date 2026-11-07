@@ -16,16 +16,12 @@ import {
 	useOptionalOrchestratorStore,
 	useOrchestratorStore,
 } from "../../../providers/orchestrator";
-import { usePairDestinationKeys } from "../../../providers/orchestrator/helpers/use-pair-presentation";
 import {
 	areResettableStatesBySlotEqual,
 	type ResettableStyleStatesBySlot,
 	resolveSlotStyles,
 } from "../../../providers/orchestrator/styles/helpers/resolve-slot-styles";
-import {
-	boundaryRegistry,
-	pairs,
-} from "../../../stores/bounds/internals/state";
+import { boundaryRegistry, pairs } from "../../../stores/bounds";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
 import {
 	type BoundaryPresentationState,
@@ -33,6 +29,7 @@ import {
 	resolveBoundaryHandoffTarget,
 	resolveBoundaryPresentation,
 } from "../helpers/presentation";
+import { usePairDestinationKeys } from "../screen/use-pair-presentation";
 
 export type BoundaryPresentationValue = {
 	owner: ReturnType<typeof resolveBoundaryPresentation> | null;

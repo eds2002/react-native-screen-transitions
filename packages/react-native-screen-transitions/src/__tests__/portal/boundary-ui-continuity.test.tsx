@@ -26,7 +26,7 @@ await mockModule("../../providers/orchestrator", () => ({
  useOrchestratorStore: (select:any) => select(orchestrators[0]),
  useOptionalOrchestratorStore: (keys:any,select:any) => keys ? orchestrators.map(select) : null,
 }));
-const {usePairPresentation} = await import("../../providers/orchestrator/helpers/use-pair-presentation");
+const {usePairPresentation} = await import("../../components/boundary/screen/use-pair-presentation");
 function PairOutputs() {
  for(let i=0;i<keys.length;i++) {currentIndex=i;orchestrators[i].pairPresentation=usePairPresentation(orchestrators[i] as any);}
  currentIndex=0;return null;

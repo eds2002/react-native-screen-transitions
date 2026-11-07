@@ -6,7 +6,7 @@ import {
 } from "../../components/boundary/utils/measured-bounds";
 import { getRefreshBoundarySignal } from "../../components/boundary/utils/refresh-signals";
 import { getInitialSourceCaptureSignal } from "../../components/boundary/utils/source-signals";
-import { BoundStore, type Snapshot } from "../../stores/bounds";
+import { BoundStore, type Snapshot } from "./helpers/bound-store";
 import {
 	createPendingPairKey,
 	createScreenPairKey,

@@ -2,7 +2,7 @@ import { mountMotionValues } from "./helpers/mount-motion-values";
 import { beforeEach, describe, expect, it } from "bun:test";
 
 import { resetStoresForScreen } from "../providers/motion/lifecycle/reset-stores-for-screen";
-import { BoundStore } from "../stores/bounds";
+import { BoundStore } from "./bounds/helpers/bound-store";
 import { createPendingPairKey } from "../stores/bounds/helpers/link-pairs.helpers";
 import {
 	hasBoundaryPresence,

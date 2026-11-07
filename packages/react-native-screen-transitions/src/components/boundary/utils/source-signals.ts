@@ -1,11 +1,5 @@
-import {
-	getLinkKeyFromTag,
-	isActiveGroupMember,
-} from "../../../stores/bounds/helpers/link-pairs.helpers";
-import type {
-	LinkPairsState,
-	ScreenPairKey,
-} from "../../../stores/bounds/types";
+import type { LinkPairsState, ScreenPairKey } from "../../../stores/bounds";
+import { getLinkKeyFromTag, isActiveGroupMember } from "../../../stores/bounds";
 
 const SOURCE_SIGNAL_PREFIX = "source|";
 

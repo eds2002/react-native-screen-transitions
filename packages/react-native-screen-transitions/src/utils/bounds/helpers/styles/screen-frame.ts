@@ -13,16 +13,6 @@ import type { ScrollMetadataState } from "../../../../types/gesture.types";
  */
 export const BOUNDS_SCREEN_FRAME_STYLE_KEY = "__screenTransitionsBoundsFrame";
 
-/** A screen's translate/scale, about its center, when a boundary on it was measured. */
-export type MeasuredScreenTransform = {
-	sx: number;
-	sy: number;
-	tx: number;
-	ty: number;
-	width: number;
-	height: number;
-};
-
 export type FrameRect = {
 	pageX: number;
 	pageY: number;

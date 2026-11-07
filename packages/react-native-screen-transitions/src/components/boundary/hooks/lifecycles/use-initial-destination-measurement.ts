@@ -10,17 +10,15 @@ import { scheduleOnUI } from "react-native-worklets";
 import { useBuilderStore } from "../../../../providers/builder";
 import { useOptionalScreenHostStore } from "../../../../providers/host/screen-host.provider";
 import { useMotionStore } from "../../../../providers/motion";
+import type { BoundTag } from "../../../../stores/bounds";
 import {
 	createScreenPairKey,
-	getSourceScreenKeyFromPairKey,
-} from "../../../../stores/bounds/helpers/link-pairs.helpers";
-import {
 	getEntry,
+	getLink,
 	getMatchingSourceScreenKey,
-} from "../../../../stores/bounds/internals/entries";
-import { getLink } from "../../../../stores/bounds/internals/links";
-import { pairs } from "../../../../stores/bounds/internals/state";
-import type { BoundTag } from "../../../../stores/bounds/types";
+	getSourceScreenKeyFromPairKey,
+	pairs,
+} from "../../../../stores/bounds";
 import { logger } from "../../../../utils/logger";
 import type { MeasureBoundary } from "../../types";
 import { getInitialDestinationMeasurementSignal } from "../../utils/destination-signals";

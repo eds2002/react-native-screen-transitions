@@ -3,7 +3,7 @@ import { MotionProvider, getMotionStore } from "../../providers/motion";
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import type { BoundTag } from "../../stores/bounds/types";
-import { BoundStore } from "../../stores/bounds";
+import { BoundStore } from "./helpers/bound-store";
 import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
 
 (

@@ -3,7 +3,7 @@ import type { View } from "react-native";
 import type { AnimatedRef } from "react-native-reanimated";
 import { useBuilderStore } from "../../../providers/builder";
 import { useScrollChain } from "../../../providers/motion/gestures/scroll-coordination";
-import type { BoundTag } from "../../../stores/bounds/types";
+import type { BoundTag } from "../../../stores/bounds";
 import { prepareStyleForBounds } from "../../../utils/bounds/helpers/styles/styles";
 import { useBoundaryMeasureRegistration } from "../coordinator/measure-registry";
 import { useBoundaryPresence } from "../hooks/lifecycles/use-boundary-presence";
