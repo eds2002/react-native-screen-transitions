@@ -46,15 +46,25 @@ export function useComposedBoundaryStyle(
 	return useAnimatedStyle(() => {
 		const style = resolveStyle();
 		const applied = appliedStyleKeys.get()[styleKey];
-		const reset: StyleProps = {};
-		let hasReset = false;
+		let reset: StyleProps | undefined;
+		// Mid-transition a style sets the same keys every frame: then nothing resets and the record
+		// stays as it is.
+		let sameKeys = applied !== undefined;
+		let appliedCount = 0;
 		for (const key in applied) {
+			appliedCount++;
 			if (key in style) continue;
+			sameKeys = false;
 			const value =
 				(baseLayout as Record<string, unknown>)[key] ?? STYLE_RESET_VALUES[key];
 			if (value === undefined) continue;
+			if (!reset) reset = {};
 			reset[key] = value;
-			hasReset = true;
+		}
+		if (sameKeys) {
+			let styleCount = 0;
+			for (const _key in style) styleCount++;
+			if (styleCount === appliedCount) return style;
 		}
 		appliedStyleKeys.modify((byStyle) => {
 			"worklet";
@@ -67,7 +77,7 @@ export function useComposedBoundaryStyle(
 			for (const key in style) keys[key] = true;
 			return byStyle;
 		}, false);
-		return hasReset ? { ...reset, ...style } : style;
+		return reset ? { ...reset, ...style } : style;
 
 		function resolveStyle(): StyleProps {
 			const slot = id ? slots?.get()[id] : undefined;
