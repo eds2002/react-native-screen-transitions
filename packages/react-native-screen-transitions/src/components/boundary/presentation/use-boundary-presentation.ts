@@ -5,7 +5,7 @@ import {
 	useDerivedValue,
 	useSharedValue,
 } from "react-native-reanimated";
-import { NO_PROPS, NO_STYLES } from "../../../constants";
+import { NO_STYLES } from "../../../constants";
 import { useBuilderStore } from "../../../providers/builder";
 import {
 	screenTopology,
@@ -16,11 +16,8 @@ import {
 	useOptionalOrchestratorStore,
 	useOrchestratorStore,
 } from "../../../providers/orchestrator";
-import {
-	areResettableStatesBySlotEqual,
-	type ResettableStyleStatesBySlot,
-	resolveSlotStyles,
-} from "../../../providers/orchestrator/styles/helpers/resolve-slot-styles";
+import { resolveSingleSlotStyle } from "../../../providers/orchestrator/styles/helpers/resolve-slot-styles";
+import type { ResettableStyleState } from "../../../providers/orchestrator/styles/helpers/resolve-slot-styles/types";
 import { boundaryRegistry, pairs } from "../../../stores/bounds";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
 import {
@@ -50,6 +47,8 @@ export type BoundaryPresentationHandles = {
 	/** Set by the overlay once this boundary's host is placed (it only gets one once engaged). */
 	portalHostReady: SharedValue<boolean>;
 };
+
+const EMPTY_SLOT = {};
 
 // A boundary at rest has no overlay host: every one of them shares this (never set).
 const NO_PORTAL_HOST = makeMutable(false);
@@ -97,10 +96,6 @@ export function useBoundaryPresentation(
 	const localSlots = useOrchestratorStore((s) => s.slotsMap);
 	const frame = useOrchestratorStore((s) => s.screenInterpolatorProps);
 	const { parentScreenKey } = useScreenRelationships();
-	const ancestorSlots = useOptionalOrchestratorStore(
-		parentScreenKey,
-		(s) => s.slotsMap,
-	);
 	// The screens this one is nested in, nearest first. A card in a nested stack is covered by the
 	// next route of whichever ancestor has one (its own stack may have none).
 	const ancestorKeys = useMemo(() => {
@@ -116,7 +111,7 @@ export function useBoundaryPresentation(
 		ancestorKeys,
 		(s) => s.screenInterpolatorProps,
 	);
-	const previous = useSharedValue<ResettableStyleStatesBySlot>(NO_PROPS);
+	const previous = useSharedValue<ResettableStyleState | undefined>(undefined);
 
 	const presentation = useDerivedValue<BoundaryPresentationValue>(() => {
 		function followedRoute(): string | undefined {
@@ -161,24 +156,22 @@ export function useBoundaryPresentation(
 				]
 			: undefined;
 
+		// Everything that reads these slots reads this boundary's own (see resolveSingleSlotStyle).
 		const fallback = localSlots.get()[boundaryId];
-		const { resolvedStylesMap, nextPreviousStyleStatesBySlot } =
-			resolveSlotStyles({
-				localStylesMaps: [{ [boundaryId]: ownedSlot ?? fallback ?? {} }],
-				ancestorStylesMap: ownedSlot
-					? (ancestorSlots?.get() ?? NO_STYLES)
-					: NO_STYLES,
-				previousStyleStatesBySlot: previous.get(),
-			});
-		if (
-			!areResettableStatesBySlotEqual(
-				previous.get(),
-				nextPreviousStyleStatesBySlot,
-			)
-		) {
-			previous.set(nextPreviousStyleStatesBySlot);
+		const { resolvedSlot, nextState } = resolveSingleSlotStyle(
+			boundaryId,
+			ownedSlot ?? fallback ?? EMPTY_SLOT,
+			previous.get(),
+		);
+		if (nextState !== previous.get()) {
+			previous.set(nextState);
 		}
-		return { owner, receiver, receiverSize, slots: resolvedStylesMap };
+		return {
+			owner,
+			receiver,
+			receiverSize,
+			slots: resolvedSlot ? { [boundaryId]: resolvedSlot } : NO_STYLES,
+		};
 	});
 	const slotsMap = useDerivedValue(() => presentation.get().slots);
 	const portalHostReady = useSharedValue(false);

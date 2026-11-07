@@ -519,6 +519,39 @@ const appendPreviousSlots = (context: ResolveSlotStylesContext) => {
 	}
 };
 
+const NO_SLOT_STATES: ResettableStyleStatesBySlot = {};
+const NO_ANCESTOR_SLOTS: NormalizedTransitionInterpolatedStyle = {};
+
+/**
+ * Resolves one slot for a consumer that reads only that slot (a boundary's presentation): what
+ * resolveSlotStyles gives it as the only local slot, without resolving the ancestor's and the
+ * previous frame's other slots, which that consumer never reads.
+ */
+export const resolveSingleSlotStyle = (
+	slotId: string,
+	slot: NormalizedTransitionSlotStyle,
+	previousState: ResettableStyleState | undefined,
+): {
+	resolvedSlot: NormalizedTransitionSlotStyle | undefined;
+	nextState: ResettableStyleState | undefined;
+} => {
+	"worklet";
+	const context: ResolveSlotStylesContext = {
+		localStylesMaps: [{ [slotId]: slot }],
+		ancestorStylesMap: NO_ANCESTOR_SLOTS,
+		previousStyleStatesBySlot: previousState
+			? { [slotId]: previousState }
+			: NO_SLOT_STATES,
+		resolvedStylesMap: {},
+		nextPreviousStyleStatesBySlot: {},
+	};
+	appendResolvedSlot(context, slotId);
+	return {
+		resolvedSlot: context.resolvedStylesMap[slotId],
+		nextState: context.nextPreviousStyleStatesBySlot[slotId],
+	};
+};
+
 /**
  * Resolves slot styles for the current screen pass.
  *
