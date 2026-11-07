@@ -66,6 +66,8 @@ export type BoundsScreenFrame = {
 	end: FrameRect;
 	/** The pairs the element starts from instead of `start` (nearest first), when it is in flight. */
 	startChain: StartPair[];
+	/** A closing destination's copy within 2 px of the source's (see compute). */
+	landed: boolean;
 	/** The scroll positions `start`, `end` and the element's own box were measured at. */
 	startScroll: MeasuredScroll;
 	endScroll: MeasuredScroll;
@@ -106,6 +108,7 @@ export const attachBoundsScreenFrame = (
 		start: MeasuredDimensions;
 		end: MeasuredDimensions;
 		startChain: StartPair[];
+		landed?: boolean;
 	},
 ): StyleProps => {
 	"worklet";
@@ -135,6 +138,7 @@ export const attachBoundsScreenFrame = (
 			height: params.end.height,
 		},
 		startChain: params.startChain,
+		landed: !!params.landed,
 		startScroll: scrollOf(params.start),
 		endScroll: scrollOf(params.end),
 		ownScroll: scrollOf(layout),

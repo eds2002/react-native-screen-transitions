@@ -383,6 +383,31 @@ const resolveCorrection = (
 };
 
 /**
+ * Whether the closing destination screen still covers the source's copy of a landed pair (its
+ * window rect overlaps where the source draws the element). A screen whose size isn't known yet
+ * counts as covering.
+ */
+const coversSource = (
+	frame: BoundsScreenFrame,
+	read: (key: string) => ScreenTransform,
+): boolean => {
+	"worklet";
+	const screen = read(frame.destinationScreenKey);
+	if (!screen.width || !screen.height) return true;
+	const area = mapRect(
+		{ pageX: 0, pageY: 0, width: screen.width, height: screen.height },
+		toAffine(screen),
+	);
+	const source = mapRect(frame.start, toAffine(read(frame.sourceScreenKey)));
+	return (
+		area.pageX < source.pageX + source.width &&
+		source.pageX < area.pageX + area.width &&
+		area.pageY < source.pageY + source.height &&
+		source.pageY < area.pageY + area.height
+	);
+};
+
+/**
  * Places every bounds element this screen styles for where the screens it travels between are
  * drawn this frame (and where it is in flight, when transitions overlap), and removes the frame
  * data from their styles. `transforms` holds the screens whose transforms this one depends on (its
@@ -427,6 +452,7 @@ export const applyBoundsScreenFrames = (
 					: correction
 			) as StyleProps["transform"];
 		}
+		if (frame.landed && !coversSource(frame, read)) stripped.opacity = 0;
 		next[slotId] = { ...slot, style: stripped, boundsPlaced: true };
 	}
 	return (next as NormalizedTransitionInterpolatedStyle | null) ?? stylesMap;

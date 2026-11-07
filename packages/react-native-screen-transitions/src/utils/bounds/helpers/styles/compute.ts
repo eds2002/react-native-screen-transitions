@@ -17,6 +17,7 @@ import {
 	getDestinationScreenKeyFromPairKey,
 	getSourceScreenKeyFromPairKey,
 } from "../../../../stores/bounds/helpers/link-pairs.helpers";
+import { getEntry } from "../../../../stores/bounds/internals/entries";
 import {
 	getResolvedLink,
 	requestSourceMeasure,
@@ -457,18 +458,47 @@ export const computeBoundStyles = (
 			(!entering &&
 				currentScreenKey === sourceScreenKey &&
 				isMovedOnFrom(tag, destinationScreenKey)));
+	const t = Math.min(1, Math.max(0, progress - ranges[0]));
+	const startChain = resolveStartChain(
+		tag,
+		sourceScreenKey,
+		destinationScreenKey,
+	);
+	// A closing screen's copy has landed once it is within 2 px of the source's copy. It still
+	// draws on top of it while its spring settles, long after its screen has gone: once its screen no
+	// longer covers the source's copy (applyBoundsScreenFrames), the source's copy takes over, so the
+	// leaving copy's content (scaled, or styled for its own screen) doesn't linger.
+	const span = Math.max(
+		Math.abs(pathEnd.pageX - pathStart.pageX),
+		Math.abs(pathEnd.pageY - pathStart.pageY),
+		Math.abs(pathEnd.width - pathStart.width),
+		Math.abs(pathEnd.height - pathStart.height),
+	);
+	const landed =
+		!taken &&
+		entering &&
+		!!sourceScreenKey &&
+		!!destinationScreenKey &&
+		currentScreenKey === destinationScreenKey &&
+		startChain.length === 0 &&
+		isScreenClosing(destinationScreenKey) &&
+		t * span < 2 &&
+		!isMovedOnFrom(tag, destinationScreenKey) &&
+		// Handoff: the live content is in this slot until it lands home.
+		!getEntry(tag, destinationScreenKey)?.handoff;
 	return attachBoundsScreenFrame(
 		taken ? { ...withLocalTransform, opacity: 0 } : withLocalTransform,
 		{
 			tag,
-			t: Math.min(1, Math.max(0, progress - ranges[0])),
+			t,
 			sourceScreenKey,
 			destinationScreenKey,
 			screenKey: currentScreenKey,
 			layout: ownLayout,
 			start: pathStart,
 			end: pathEnd,
-			startChain: resolveStartChain(tag, sourceScreenKey, destinationScreenKey),
+			startChain,
+			landed,
 		},
 	);
 };
