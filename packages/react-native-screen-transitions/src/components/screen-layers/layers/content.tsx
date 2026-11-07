@@ -8,7 +8,7 @@ import {
 	useSlotProps,
 	useSlotStyles,
 } from "../../../providers/orchestrator/styles";
-import { PortalOverlay } from "../../boundary/portal/components/portal-overlay";
+import { PortalOverlay } from "../../boundary/portal";
 import { LayerComponent } from "../helpers/layer-component";
 import { useContentLayout } from "../hooks/use-content-layout";
 import { Clip } from "./clip";

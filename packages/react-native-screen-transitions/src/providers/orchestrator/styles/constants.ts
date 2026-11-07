@@ -1,4 +1,3 @@
-import { PORTAL_HOST_NAME_RESET_VALUE } from "../../../components/boundary/portal/utils/naming";
 import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
@@ -61,7 +60,8 @@ export const STYLE_RESET_VALUES: Record<string, unknown> = {
 };
 
 export const PROP_RESET_VALUES: Record<string, unknown> = {
-	hostName: PORTAL_HOST_NAME_RESET_VALUE,
+	// A teleport without a host name renders its content in place.
+	hostName: null,
 	pointerEvents: "auto",
 };
 

@@ -6,7 +6,7 @@ import {
 	ActivityView,
 	type ActivityViewMode,
 } from "../../../../components/activity/activity-view";
-import { handoffLenders } from "../../../../components/boundary/portal/stores/handoff-lenders.store";
+import { handoffLenders } from "../../../../components/boundary/portal";
 import { IS_WEB } from "../../../../constants";
 import { useSharedValueState } from "../../../../hooks/reanimated/use-shared-value-state";
 import { useOptionalMotionStore } from "../../../../providers/motion";
