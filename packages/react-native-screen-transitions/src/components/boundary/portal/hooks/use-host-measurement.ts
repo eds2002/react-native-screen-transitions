@@ -3,19 +3,12 @@ import {
 	cancelAnimation,
 	type MeasuredDimensions,
 	measure,
-	type SharedValue,
 	useAnimatedReaction,
 	useAnimatedRef,
 	useSharedValue,
 	withDelay,
 	withTiming,
 } from "react-native-reanimated";
-import type { ScrollChainLink } from "../../../../providers/motion/gestures/scroll-coordination";
-import {
-	type ScrollChainSnapshot,
-	snapshotScrollChain,
-} from "../../../../stores/scroll.store";
-import type { ScrollMetadataState } from "../../../../types/gesture.types";
 import { getVisibilityBlockOffset } from "../../../../utils/visibility-block-offset";
 import type { BoundaryLocalMeasurementValue } from "../../types";
 import { readLocalMeasurement } from "../../utils/local-measurements";
@@ -27,20 +20,13 @@ const MAX_HOST_MEASUREMENT_ATTEMPTS = 20;
 type UseHostMeasurementParams = {
 	enabled: boolean;
 	boundaryMeasurements: BoundaryLocalMeasurementValue[];
-	/** The screen's scroll metadata and the scroll views around the host (an explicit host can scroll). */
-	scrollMetadata: SharedValue<ScrollMetadataState | null>;
-	scrollChain: readonly ScrollChainLink[];
 };
 
-export type HostBounds = MeasuredDimensions & {
-	scrollChain?: ScrollChainSnapshot[];
-};
+export type HostBounds = MeasuredDimensions;
 
 export const useHostMeasurement = ({
 	enabled,
 	boundaryMeasurements,
-	scrollMetadata,
-	scrollChain,
 }: UseHostMeasurementParams) => {
 	const { width: viewportWidth, height: viewportHeight } =
 		useWindowDimensions();
@@ -65,13 +51,7 @@ export const useHostMeasurement = ({
 				viewportWidth,
 				viewportHeight,
 			});
-			// A host inside scroll views (an explicit Boundary.Host) scrolls too: record where.
-			const hostScroll = snapshotScrollChain(scrollMetadata.get(), scrollChain);
-			hostBounds.set(
-				hostScroll.length
-					? { ...corrected, scrollChain: hostScroll }
-					: corrected,
-			);
+			hostBounds.set(corrected);
 		} else if (count < MAX_HOST_MEASUREMENT_ATTEMPTS) {
 			retryToken.set(
 				withDelay(

@@ -10,7 +10,6 @@ import type { BoundaryPresentationValue } from "../../hooks/use-boundary-present
 import { useBoundaryRootStore } from "../../providers/boundary-root.provider";
 import type { BoundaryLocalMeasurementValue } from "../../types";
 import { setHandoffLending } from "../stores/handoff-lenders.store";
-import { useActiveHostKey } from "../stores/host-registry.store";
 import { isBoundaryEscaped } from "../utils/is-escaped";
 import {
 	createHandoffHostName,
@@ -34,9 +33,8 @@ export function usePortalDestination(boundaryId: string, mode: PortalMode) {
 	// Every boundary can escape, but only one taking part in a transition needs a host in the
 	// overlay: it registers the first time the boundary is measured for a pair (a source on press, a
 	// destination on mount), not on mount. A long list of boundaries costs the overlay nothing.
-	const escapeHostKey = useActiveHostKey(
-		mode === "escapeClipping" && escapeMeasured ? currentScreenKey : null,
-	);
+	const escapeHostKey =
+		mode === "escapeClipping" && escapeMeasured ? currentScreenKey : undefined;
 	const portalHostName = useActivePortalBoundaryHost({
 		boundaryId,
 		escapeHostKey,

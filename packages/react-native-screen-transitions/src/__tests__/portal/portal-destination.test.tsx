@@ -13,7 +13,6 @@ let hostReady = false;
 let registeredScope: string | undefined;
 const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
 await mockModule("../../components/boundary/providers/boundary-root.provider", () => ({useBoundaryRootStore:(select:any)=>select(root)}));
-await mockModule("../../components/boundary/portal/stores/host-registry.store", () => ({useActiveHostKey:(screen:string|null)=>screen ? "overlay" : undefined}));
 await mockModule("../../components/boundary/portal/hooks/use-active-portal-boundary-host", () => ({useActivePortalBoundaryHost:({escapeHostKey,portalHostReady}:any)=>{registeredScope=escapeHostKey;portalHostReady.set(hostReady);return escapeHostKey ? "overlay-photo" : null;}}));
 const {usePortalDestination} = await import("../../components/boundary/portal/hooks/use-portal-destination");
 beforeEach(()=>{hostReady=false;registeredScope=undefined;root.escapeMeasured=true;writeLocalMeasurement(localMeasurement, {pairKey:"a<>b"} as any);});
@@ -48,7 +47,7 @@ it("keeps an escaped frame inline until its host is ready and it is measured for
  function Probe(){destination=usePortalDestination("photo","escapeClipping");return destination.teleportDriver;}
  let renderer: ReturnType<typeof create>;
  act(()=>{renderer=create(<Probe/>);});
- expect(registeredScope).toBe("overlay");
+ expect(registeredScope).toBe("a");
  expect(destination!.teleportProps?.hostName).toBeNull();
  // The test stand-in computes animated props on render (the real ones follow their shared values on
  // the UI thread): remount to read them again.

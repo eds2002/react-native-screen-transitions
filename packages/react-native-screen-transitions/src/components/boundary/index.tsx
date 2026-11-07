@@ -1,15 +1,8 @@
-import {
-	type ComponentProps,
-	forwardRef,
-	memo,
-	type NamedExoticComponent,
-} from "react";
+import { forwardRef } from "react";
 import { View, type ViewProps } from "react-native";
 import { Pressable, type PressableProps } from "react-native-gesture-handler";
-import { logger } from "../../utils/logger";
 import { BoundaryTarget } from "./components/boundary-target";
 import { createBoundaryComponent } from "./create-boundary-component";
-import { PortalOverlay } from "./portal/components/portal-overlay";
 import type { BoundaryComponentProps } from "./types";
 
 export { createBoundaryComponent };
@@ -56,30 +49,10 @@ export interface BoundaryComponent extends BoundaryRootComponent {
 	 * Optional direct-child measurement override inside a boundary root.
 	 */
 	Target: typeof BoundaryTarget;
-	/**
-	 * @deprecated Escaped boundaries go to their screen's overlay on their own and follow their
-	 * scroll views while they are out: there is no host to place. Still renders; remove it.
-	 */
-	Host: NamedExoticComponent<
-		Omit<ComponentProps<typeof PortalOverlay>, "fallback">
-	>;
 }
 
 export type BoundaryProps = BoundaryComponentProps<BoundaryPrimitiveProps>;
 
-const DeprecatedBoundaryHost = memo(function BoundaryHost(
-	props: Omit<ComponentProps<typeof PortalOverlay>, "fallback">,
-) {
-	if (__DEV__) {
-		logger.warnOnce(
-			"boundary:host-deprecated",
-			"Transition.Boundary.Host is deprecated: escaped boundaries go to their screen's overlay on their own and follow their scroll views. Remove it.",
-		);
-	}
-	return <PortalOverlay {...props} />;
-});
-
 export const Boundary = Object.assign(BoundaryRoot, {
 	Target: BoundaryTarget,
-	Host: DeprecatedBoundaryHost,
 }) as BoundaryComponent;

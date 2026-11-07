@@ -1,11 +1,9 @@
-import { memo, useId, useLayoutEffect } from "react";
+import { memo } from "react";
 import {
 	I18nManager,
-	type StyleProp,
 	StyleSheet,
 	useWindowDimensions,
 	View,
-	type ViewStyle,
 } from "react-native";
 import Animated, {
 	type SharedValue,
@@ -14,7 +12,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { NO_STYLES } from "../../../../constants";
 import { useBuilderStore } from "../../../../providers/builder";
-import { useScrollChain } from "../../../../providers/motion/gestures/scroll-coordination";
 import {
 	getScrollChainAxisDelta,
 	ScrollStore,
@@ -26,7 +23,6 @@ import {
 	type HostBounds,
 	useHostMeasurement,
 } from "../hooks/use-host-measurement";
-import { registerHost, unregisterHost } from "../stores/host-registry.store";
 import {
 	type ActivePortalBoundaryHost,
 	useActivePortalBoundaryHosts,
@@ -34,44 +30,24 @@ import {
 import { PORTAL_POINTER_EVENTS } from "../teleport";
 import { PortalHost } from "./portal-host";
 
-type PortalOverlayProps = {
-	style?: StyleProp<ViewStyle>;
-	fallback?: boolean;
-};
-
 /**
- * A screen-sized overlay containing the receivers for escaped boundary frames.
- *
- * Registers this overlay as an available placement, measures its origin, and
- * renders one positioned PortalHost per boundary assigned to it. An overlay can
- * contain many hosts; each host receives one named portal.
- *
- * Boundary.Host uses this directly; screens render it with `fallback` for
- * their automatic overlay. Explicit overlays take priority over the fallback.
- * Handoff between screens uses receivers inside boundaries, so it does not
- * need this overlay unless escapeClipping is also enabled.
+ * A screen-sized overlay at the screen's content origin, containing the receivers for its escaped
+ * boundary frames: one positioned PortalHost per boundary measured for a transition, each receiving
+ * one named portal. Handoff between screens uses receivers inside boundaries instead.
  */
-export const PortalOverlay = memo(function PortalOverlay({
-	fallback = false,
-	style,
-}: PortalOverlayProps) {
+export const PortalOverlay = memo(function PortalOverlay() {
 	const screenKey = useBuilderStore((s) => s.derivations.currentScreenKey);
-	const id = useId();
-	const hostKey = fallback ? screenKey : `${screenKey}-host-${id}`;
-	const activeBoundaryHosts = useActivePortalBoundaryHosts(hostKey);
+	const activeBoundaryHosts = useActivePortalBoundaryHosts(screenKey);
 
 	const { height: viewportHeight, width: viewportWidth } =
 		useWindowDimensions();
 
 	const scrollMetadata = ScrollStore.getValue(screenKey, "metadata");
-	const scrollChain = useScrollChain();
 	const measurement = useHostMeasurement({
 		enabled: activeBoundaryHosts.length > 0,
 		boundaryMeasurements: activeBoundaryHosts.map(
 			(host) => host.localMeasurement,
 		),
-		scrollMetadata,
-		scrollChain,
 	});
 
 	const boundaryHosts = activeBoundaryHosts.map((host) => (
@@ -87,32 +63,15 @@ export const PortalOverlay = memo(function PortalOverlay({
 				host={host}
 				hostBounds={measurement.hostBounds}
 				scrollMetadata={scrollMetadata}
-				atContentOrigin={fallback}
 			/>
 		</View>
 	));
-
-	useLayoutEffect(() => {
-		registerHost({
-			fallback,
-			hostKey,
-			screenKey,
-		});
-
-		return () => {
-			unregisterHost(screenKey, hostKey);
-		};
-	}, [fallback, hostKey, screenKey]);
 
 	return (
 		<Animated.View
 			ref={measurement.hostRef}
 			pointerEvents={PORTAL_POINTER_EVENTS}
-			style={[
-				styles.host,
-				{ width: viewportWidth, height: viewportHeight },
-				style,
-			]}
+			style={[styles.host, { width: viewportWidth, height: viewportHeight }]}
 			collapsable={false}
 		>
 			{boundaryHosts}
@@ -129,11 +88,6 @@ type BoundaryPortalPlacementProps = {
 	host: ActivePortalBoundaryHost;
 	hostBounds: SharedValue<HostBounds | null>;
 	scrollMetadata: SharedValue<ScrollMetadataState | null>;
-	/**
-	 * The screen's own overlay sits at its content's origin: a boundary measured with its place in
-	 * that content goes there, however the screen was drawn when either was measured.
-	 */
-	atContentOrigin: boolean;
 };
 
 /** Positions one receiver using captured boundary and overlay measurements. */
@@ -141,7 +95,6 @@ const BoundaryPortalPlacement = memo(function BoundaryPortalPlacement({
 	host,
 	hostBounds,
 	scrollMetadata,
-	atContentOrigin,
 }: BoundaryPortalPlacementProps) {
 	useAnimatedReaction(
 		() => {
@@ -163,26 +116,20 @@ const BoundaryPortalPlacement = memo(function BoundaryPortalPlacement({
 			return NO_STYLES;
 		}
 
-		// The escaped frame left its scroll views: follow them by how far they (and any scroll
-		// view around the host) moved since measured, read from the scroll event's own write.
-		const host$ = hostBounds.get();
+		// The overlay sits at the screen's content origin: a boundary measured with its place in that
+		// content goes there, however the screen was drawn when either was measured. The escaped
+		// frame left its scroll views: follow them by how far they moved since it was measured, read
+		// from the scroll event's own write.
 		const live = scrollMetadata.get();
-		const boundaryChain = boundaryBounds.scrollChain ?? [];
-		const hostChain = host$?.scrollChain ?? [];
-		const inContent = atContentOrigin
-			? boundaryBounds.contentOffset
-			: undefined;
+		const chain = boundaryBounds.scrollChain ?? [];
+		const inContent = boundaryBounds.contentOffset;
 		return resolvePortalOffsetStyle({
 			bounds: inContent
 				? { ...boundaryBounds, pageX: inContent.x, pageY: inContent.y }
 				: boundaryBounds,
-			hostBounds: inContent ? null : host$,
-			scrollDeltaX:
-				getScrollChainAxisDelta(live, boundaryChain, "horizontal") -
-				getScrollChainAxisDelta(live, hostChain, "horizontal"),
-			scrollDeltaY:
-				getScrollChainAxisDelta(live, boundaryChain, "vertical") -
-				getScrollChainAxisDelta(live, hostChain, "vertical"),
+			hostBounds: inContent ? null : hostBounds.get(),
+			scrollDeltaX: getScrollChainAxisDelta(live, chain, "horizontal"),
+			scrollDeltaY: getScrollChainAxisDelta(live, chain, "vertical"),
 		});
 	});
 
@@ -193,11 +140,9 @@ const BoundaryPortalPlacement = memo(function BoundaryPortalPlacement({
 			return NO_STYLES;
 		}
 
-		// In the screen's own overlay the frame is laid out as in the screen (unscaled: the screen's
-		// transform scales the overlay with it); measured bounds include the transform it was measured with.
-		const inContent = atContentOrigin
-			? boundaryBounds.contentOffset
-			: undefined;
+		// The frame is laid out as in the screen (unscaled: the screen's transform scales the overlay
+		// with it); measured bounds include the transform it was measured with.
+		const inContent = boundaryBounds.contentOffset;
 		return {
 			height: inContent?.height ?? boundaryBounds.height,
 			width: inContent?.width ?? boundaryBounds.width,

@@ -67,7 +67,7 @@ export const ContentLayer = memo(
 						<SurfaceLayer pointerEvents={contentPointerEvents}>
 							{screenChildren}
 						</SurfaceLayer>
-						<PortalOverlay fallback />
+						<PortalOverlay />
 					</Clip>
 				</LayerComponent>
 			</GestureDetector>

@@ -39,7 +39,7 @@ const setSource = (capture: any) => sourceMap.set(capture ? { 1: capture } : {})
 const render = (enabled = true) => {
  cursor = 0;
  reactions = [];
- return useHostMeasurement({enabled, boundaryMeasurements: [source], scrollMetadata: mutable(null) as any, scrollChain: []});
+ return useHostMeasurement({enabled, boundaryMeasurements: [source]});
 };
 const tick = () => {
  for (const reaction of reactions) {
