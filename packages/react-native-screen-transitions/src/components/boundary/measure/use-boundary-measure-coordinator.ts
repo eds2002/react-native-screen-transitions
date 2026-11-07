@@ -54,8 +54,7 @@ type MeasureSignal = {
  * - source capture: a pair from this screen requested this boundary's source bounds;
  * - refresh: the transition this boundary takes part in is about to run (or settled with a new
  *   group member), so its bounds are measured again.
- * The signals are the same pure functions the per-boundary reactions used; a boundary measures
- * when its signal changes, as before.
+ * A boundary measures when its signal changes.
  */
 export function useBoundaryMeasureCoordinator(
 	enabled: boolean,

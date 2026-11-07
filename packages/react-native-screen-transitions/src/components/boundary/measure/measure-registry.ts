@@ -10,7 +10,7 @@ import type { BoundaryMeasureData } from "./use-measurer";
 /**
  * The boundaries each screen's coordinator can measure. Lives on the UI thread; JS only sends
  * changes. One coordinator per screen watches the pairs and asks these boundaries to measure, so a
- * boundary itself runs no reaction (each one used to run its own source and refresh reactions).
+ * boundary itself runs no reaction.
  */
 export type RegisteredBoundary = {
 	id: number;

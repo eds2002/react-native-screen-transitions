@@ -23,8 +23,8 @@ import { logger } from "../../../utils/logger";
 import type { MeasureBoundary } from "../types";
 import { getInitialDestinationMeasurementSignal } from "./destination-signals";
 
-// A missed layout should be retried on the next frame. The previous 100 ms
-// interval made each ordinary Android layout miss visibly delay navigation.
+// A missed layout is retried on the next frame: a longer interval visibly delays navigation on
+// each ordinary Android layout miss.
 const HANDSHAKE_RETRY_DELAY_MS = 16;
 /**
  * A destination whose initial handshake never completes must not hold the

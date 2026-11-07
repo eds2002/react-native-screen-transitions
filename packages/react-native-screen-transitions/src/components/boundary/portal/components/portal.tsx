@@ -50,9 +50,10 @@ type PortalProps = {
  * Sends its children to a named PortalHost chosen on the UI thread.
  *
  * `handoff` moves the boundary's content between screens and creates a local
- * receiver inside this boundary. `escapeClipping` moves the whole boundary
- * frame into a PortalOverlay, leaving a sized placeholder at its original spot.
- * When both are enabled, the handoff portal lives inside the escaped frame.
+ * receiver inside this boundary. `escapeClipping` (every boundary, with Teleport)
+ * moves the whole boundary frame into its screen's PortalOverlay while it takes
+ * part in a transition, leaving a sized placeholder at its original spot. A
+ * handoff portal lives inside the escaped frame.
  * Disabled portals, or apps without Teleport, render their children inline.
  */
 export const Portal = memo(function Portal(props: PortalProps) {
