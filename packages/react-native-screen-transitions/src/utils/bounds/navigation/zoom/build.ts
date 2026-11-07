@@ -1,8 +1,7 @@
 import { interpolate } from "react-native-reanimated";
 import { EPSILON } from "../../../../constants";
 import {
-	getScrollChainAxisDelta,
-	getVisualScrollAxisDelta,
+	getMeasuredScrollAxisDelta,
 	type ScrollChainSnapshot,
 } from "../../../../stores/scroll.store";
 import type { ScrollMetadataState } from "../../../../types/gesture.types";
@@ -161,32 +160,12 @@ export function buildZoomStyles({
 	};
 	const liveSourceScroll = props.inactive?.layouts.scroll;
 	const tracksSourceScroll = active.entering || active.closing;
-	const sourceScrollOffsetX = !tracksSourceScroll
-		? 0
-		: capturedSource.scrollChain
-			? getScrollChainAxisDelta(
-					liveSourceScroll,
-					capturedSource.scrollChain,
-					"horizontal",
-				)
-			: getVisualScrollAxisDelta(
-					liveSourceScroll,
-					capturedSource.scroll,
-					"horizontal",
-				);
-	const sourceScrollOffsetY = !tracksSourceScroll
-		? 0
-		: capturedSource.scrollChain
-			? getScrollChainAxisDelta(
-					liveSourceScroll,
-					capturedSource.scrollChain,
-					"vertical",
-				)
-			: getVisualScrollAxisDelta(
-					liveSourceScroll,
-					capturedSource.scroll,
-					"vertical",
-				);
+	const sourceScrollOffsetX = tracksSourceScroll
+		? getMeasuredScrollAxisDelta(liveSourceScroll, capturedSource, "horizontal")
+		: 0;
+	const sourceScrollOffsetY = tracksSourceScroll
+		? getMeasuredScrollAxisDelta(liveSourceScroll, capturedSource, "vertical")
+		: 0;
 	const sourceScrollProgress = Math.min(
 		Math.max(activeTransitionProgress, 0),
 		1,

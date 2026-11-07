@@ -4,10 +4,7 @@ import {
 	getScreenScroll,
 	getScreenTransform,
 } from "../../../../stores/bounds";
-import {
-	getScrollChainAxisDelta,
-	getVisualScrollAxisDelta,
-} from "../../../../stores/scroll.store";
+import { getMeasuredScrollAxisDelta } from "../../../../stores/scroll.store";
 import type {
 	NormalizedTransitionInterpolatedStyle,
 	NormalizedTransitionSlotStyle,
@@ -63,12 +60,9 @@ const scrollShift = (measured: MeasuredScroll, screenKey: string): Shift => {
 	if (!measured) return NO_SHIFT;
 	const live = getScreenScroll(screenKey);
 	if (!live) return NO_SHIFT;
-	const x = measured.chain
-		? getScrollChainAxisDelta(live, measured.chain, "horizontal")
-		: getVisualScrollAxisDelta(live, measured.scroll, "horizontal");
-	const y = measured.chain
-		? getScrollChainAxisDelta(live, measured.chain, "vertical")
-		: getVisualScrollAxisDelta(live, measured.scroll, "vertical");
+	const rect = { scrollChain: measured.chain, scroll: measured.scroll };
+	const x = getMeasuredScrollAxisDelta(live, rect, "horizontal");
+	const y = getMeasuredScrollAxisDelta(live, rect, "vertical");
 	return x === 0 && y === 0 ? NO_SHIFT : { x: -x, y: -y };
 };
 

@@ -6,18 +6,16 @@ import type {
 } from "../../../types/bounds.types";
 import type {
 	BoundsComputeOptions,
-	BoundsIdentity,
 	BoundsIdentityInput,
 	BoundsStyleResult,
 	BoundsValuesResult,
 } from "../types/options";
 import { createBoundTag, normalizeBoundIdentity } from "./create-bound-tag";
-import { createLinkAccessor } from "./create-link-accessor";
+import { getBoundsLink } from "./get-bounds-link";
 import { prepareBoundStyles, syncActiveGroupId } from "./prepare-bound-styles";
 
 type ExtendBoundsResultParams = {
 	target: BoundsScopedAccessor;
-	identity: BoundsIdentity;
 	props: BoundsInterpolationProps;
 	tag: string | undefined;
 };
@@ -27,17 +25,14 @@ type CreateBoundsAccessorCoreParams = {
 	extendResult?: (params: ExtendBoundsResultParams) => void;
 };
 
-const createBoundsAccessorParts = ({
+/** The `bounds` accessor interpolators receive: `bounds(id)` scopes it to one bound. */
+export const createBoundsAccessorCore = ({
 	getProps,
 	extendResult,
-}: CreateBoundsAccessorCoreParams) => {
+}: CreateBoundsAccessorCoreParams): BoundsAccessor => {
 	"worklet";
 
-	const { getLink } = createLinkAccessor(getProps);
-
-	const createScopedBounds = ((
-		identity: BoundsIdentityInput,
-	): BoundsScopedAccessor => {
+	return ((identity: BoundsIdentityInput): BoundsScopedAccessor => {
 		"worklet";
 		const props = getProps();
 		const normalizedIdentity = normalizeBoundIdentity(identity);
@@ -87,32 +82,12 @@ const createBoundsAccessorParts = ({
 					id == null
 						? normalizedIdentity
 						: normalizeBoundIdentity(id, normalizedIdentity.group);
-				const linkTag = createBoundTag(linkIdentity);
-				return getLink(linkTag ?? "");
+				return getBoundsLink(props, createBoundTag(linkIdentity) ?? "");
 			},
 		} as BoundsScopedAccessor;
 
-		extendResult?.({
-			target: scoped,
-			identity: normalizedIdentity,
-			props,
-			tag,
-		});
+		extendResult?.({ target: scoped, props, tag });
 
 		return scoped;
 	}) as BoundsAccessor;
-
-	return {
-		createScopedBounds,
-	};
-};
-
-export const createBoundsAccessorCore = (
-	params: CreateBoundsAccessorCoreParams,
-): BoundsAccessor => {
-	"worklet";
-
-	const { createScopedBounds } = createBoundsAccessorParts(params);
-
-	return createScopedBounds;
 };

@@ -211,6 +211,24 @@ export const getScrollChainAxisDelta = (
 };
 
 /**
+ * How far a measured view has scrolled along `axis` since it was measured: through every scrollable
+ * around it when the measurement recorded them (`scrollChain`), else by the screen's own scroll.
+ */
+export const getMeasuredScrollAxisDelta = (
+	current: ScrollMetadataState | null | undefined,
+	measured: {
+		scrollChain?: readonly ScrollChainSnapshot[];
+		scroll?: ScrollMetadataState | null;
+	},
+	axis: ScrollGestureAxis,
+): number => {
+	"worklet";
+	return measured.scrollChain
+		? getScrollChainAxisDelta(current, measured.scrollChain, axis)
+		: getVisualScrollAxisDelta(current, measured.scroll, axis);
+};
+
+/**
  * Route-keyed scroll geometry used by gesture activation and bounds measurement.
  * Coordination tracks gesture-owner scoped ScrollView offsets and dimensions;
  * metadata tracks screen-scoped scroll values exposed to animation consumers.
