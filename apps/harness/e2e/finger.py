@@ -10,6 +10,7 @@ so the finger moves smoothly (Argent's own Moves are only as frequent as you lis
   hold ms         keep the finger still for ms
   up              lift (16 ms after the last event)
   wait ms         nothing for ms (the next down waits that long)
+  pinch x,y d0,d1 ms   two fingers about x,y, d0 apart (fraction of the width), to d1 apart in ms
 """
 import json, sys
 
@@ -34,6 +35,14 @@ for step in [s.split() for s in sys.argv[1].split(";") if s.strip()]:
     elif op == "up":
         events.append({"type": "Up", "x": pos[0], "y": pos[1], "delayMs": FRAME + pending})
         pending = 0
+    elif op == "pinch":
+        (cx, cy), (d0, d1), ms = map(float, step[1].split(",")), map(float, step[2].split(",")), float(step[3])
+        n = max(1, round(ms / FRAME))
+        two = lambda d: {"x": round(cx - d / 2, 4), "y": cy, "x2": round(cx + d / 2, 4), "y2": cy}
+        events.append({"type": "Down", **two(d0), "delayMs": pending})
+        events += [{"type": "Move", **two(d0 + (d1 - d0) * k / n), "delayMs": FRAME} for k in range(1, n + 1)]
+        events.append({"type": "Up", **two(d1), "delayMs": FRAME})
+        pending, pos = 0, (cx, cy)
     elif op == "wait":
         pending += float(step[1])
 print(json.dumps(events))

@@ -75,6 +75,12 @@ const METHODS = ["transform", "size"];
 const MOTIONS = ["still", "slide", "diagonal", "swirl"];
 const TREES = ["flat", "below", "above", "sibling"];
 const DEPTHS = [1, 2, 3];
+/** The tracked element's color: nothing else in the lab is near it. */
+const MARKER = "#00ff66";
+/** Whether it is the tracked element: card 3's (not the cards further along its chain, which share a screen with it). */
+const isMarked = (config, id: string) =>
+	config.get().marker === 1 && id === "3";
+
 const CARDS = Array.from({ length: 12 }, (_, i) => `${i + 1}`);
 const CAROUSEL = Array.from({ length: 6 }, (_, i) => `c${i + 1}`);
 
@@ -91,6 +97,8 @@ function createConfig(kind: BoundaryLabKind, prefix: string) {
 		motion: "slide",
 		tree: "flat",
 		depth: 1,
+		// marker=1: card 3's element is MARKER on every screen, for the tracker (e2e/visual/marker.py).
+		marker: 0,
 	};
 	let cfg = initial;
 	const listeners = new Set<() => void>();
@@ -119,7 +127,9 @@ function createConfig(kind: BoundaryLabKind, prefix: string) {
 			const patch = {};
 			for (const key of Object.keys(initial)) {
 				const value = url.match(new RegExp(`[?&]${key}=([\\w-]+)`))?.[1];
-				if (value) patch[key] = key === "depth" ? Number(value) : value;
+				if (value)
+					patch[key] =
+						key === "depth" || key === "marker" ? Number(value) : value;
 			}
 			if (patch.recipe && !RECIPES[kind].includes(patch.recipe))
 				delete patch.recipe;
@@ -290,7 +300,7 @@ const detailOptions =
 
 // ---------------------------------------------------------------- the live view (shared elements)
 
-function Live({ id }) {
+function Live({ id, marked = false }) {
 	const [count, setCount] = useState(0);
 	const spin = useSharedValue(0);
 	useEffect(() => {
@@ -304,7 +314,12 @@ function Live({ id }) {
 		transform: [{ rotate: `${spin.get() * 360}deg` }],
 	}));
 	return (
-		<View style={[styles.live, { backgroundColor: colorFor(`live${id}`) }]}>
+		<View
+			style={[
+				styles.live,
+				{ backgroundColor: marked ? MARKER : colorFor(`live${id}`) },
+			]}
+		>
 			<Animated.View style={[styles.liveBar, bar]} />
 			<Text style={styles.liveCount}>{count}</Text>
 			<Text style={styles.liveLabel}>live {id}</Text>
@@ -363,7 +378,7 @@ function Card({ config, id, testID, onPress, width, height }) {
 				onPress={onPress}
 				style={{ width, height }}
 			>
-				<Live id={id} />
+				<Live id={id} marked={isMarked(config, id)} />
 			</Transition.Boundary>
 		);
 	}
@@ -375,7 +390,13 @@ function Card({ config, id, testID, onPress, width, height }) {
 			onPress={onPress}
 			style={[
 				styles.card,
-				{ width, height, backgroundColor: colorFor(`card${id}`) },
+				{
+					width,
+					height,
+					backgroundColor: isMarked(config, id)
+						? MARKER
+						: colorFor(`card${id}`),
+				},
 			]}
 		>
 			<Text style={styles.cardLabel}>{id}</Text>
@@ -559,7 +580,11 @@ function makeDetail(config: Config, rig) {
 					style={[
 						styles.card,
 						slot,
-						{ backgroundColor: colorFor(`slot${level}`) },
+						{
+							backgroundColor: isMarked(config, id)
+								? MARKER
+								: colorFor(`slot${level}`),
+						},
 					]}
 				>
 					<Text style={styles.cardLabel}>{id}</Text>
