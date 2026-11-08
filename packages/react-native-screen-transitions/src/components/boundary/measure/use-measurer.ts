@@ -180,8 +180,12 @@ const measureTurnedScreenAt = (
 	};
 };
 
-/** measureScreenAt's answer for a screen drawn too small to measure anything in. */
-const DRAWN_TOO_SMALL = "drawn-too-small" as const;
+/**
+ * measureScreenAt's answer when its screen's drawing can't be measured from: drawn too small, or
+ * drawn otherwise than its live transform says (the native frame and the transform are a frame or
+ * more apart). The boundary is measured again.
+ */
+const NOT_MEASURABLE = "not-measurable" as const;
 
 /**
  * Where the screen was drawn at this measurement, from its content's reference view measured the
@@ -196,7 +200,7 @@ const measureScreenAt = (
 	screen: ScreenMeasureContext,
 	boundary: MeasuredDimensions,
 	gateDeltaY: number,
-): ScreenAtMeasure | typeof DRAWN_TOO_SMALL | undefined => {
+): ScreenAtMeasure | typeof NOT_MEASURABLE | undefined => {
 	"worklet";
 	const { contentRef, currentScreenKey, viewportWidth, viewportHeight } =
 		screen;
@@ -209,7 +213,7 @@ const measureScreenAt = (
 		isScreenDrawnTooSmall(content.width, viewportWidth) ||
 		isScreenDrawnTooSmall(content.height, viewportHeight)
 	) {
-		return DRAWN_TOO_SMALL;
+		return NOT_MEASURABLE;
 	}
 	const now = getScreenTransform(currentScreenKey);
 	const width = now?.width || viewportWidth;
@@ -227,6 +231,14 @@ const measureScreenAt = (
 	}
 	const sx = content.width / width;
 	const sy = content.height / height;
+	// Drawn turned (or stretched) while its live transform says otherwise: a box of a turned screen,
+	// read as a straight one, is off by as much as the turn moves it. Measured again.
+	if (
+		now &&
+		Math.abs((sx / sy) * (now.sy / now.sx) - 1) > SCREEN_TURN_TOLERANCE
+	) {
+		return NOT_MEASURABLE;
+	}
 	const contentOffset = {
 		x: (boundary.pageX - content.pageX) / sx,
 		y: (boundary.pageY - content.pageY) / sy,
@@ -335,8 +347,8 @@ export const measureBoundaryWith = (
 		measured,
 		correctedMeasured.pageY - measured.pageY,
 	);
-	// Nothing to place a boundary with: it is measured again once its screen is drawn.
-	if (screenAt === DRAWN_TOO_SMALL) return;
+	// Nothing to place a boundary with: it is measured again.
+	if (screenAt === NOT_MEASURABLE) return;
 
 	const viewportAllowsDestinationWrite =
 		target.type !== "destination" ||
