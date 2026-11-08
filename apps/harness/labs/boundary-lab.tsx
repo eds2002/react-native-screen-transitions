@@ -8,7 +8,8 @@
  *            zoom       `bounds(id).navigation.zoom()`              (shared bounds only)
  *            zoom-bound `bounds(id).navigation.zoom({ target: "bound" })` (shared bounds only)
  *   method   transform | size                       (styles)
- *   motion   still | slide | diagonal (tilted, a corner per level)  (styles; zoom moves its screens)
+ *   motion   still | slide | diagonal (tilted, a corner per level) | swirl (grows and spins in, the
+ *            screen below flies past and fades)                      (styles; zoom moves its screens)
  *   tree     flat     List and Detail in one stack
  *            below    Detail nested `depth` stacks deep under the root (the pair crosses down)
  *            above    List nested `depth` stacks deep, Detail on the root (the pair crosses up)
@@ -71,7 +72,7 @@ const RECIPES = {
 	elements: ["styles"],
 };
 const METHODS = ["transform", "size"];
-const MOTIONS = ["still", "slide", "diagonal"];
+const MOTIONS = ["still", "slide", "diagonal", "swirl"];
 const TREES = ["flat", "below", "above", "sibling"];
 const DEPTHS = [1, 2, 3];
 const CARDS = Array.from({ length: 12 }, (_, i) => `${i + 1}`);
@@ -187,6 +188,24 @@ const motionStyle = (
 			],
 		};
 	}
+	if (motion === "swirl") {
+		// The arriving screen grows out of the center from a quarter size, spinning into place; the
+		// screen it covers scales up past the camera and fades (flying through it).
+		const enter = 1 - current.progress;
+		const cover = next ? next.progress : 0;
+		if (cover > 0) {
+			return {
+				opacity: interpolate(cover, [0, 0.8], [1, 0], "clamp"),
+				transform: [{ scale: interpolate(cover, [0, 1], [1, 1.35]) }],
+			};
+		}
+		return {
+			transform: [
+				{ rotate: `${enter * -32}deg` },
+				{ scale: interpolate(enter, [0, 1], [1, 0.25]) },
+			],
+		};
+	}
 	if (motion !== "diagonal") return null;
 	const arrive = cornerOf(current.route);
 	const covering = next ? cornerOf(next.route) : null;
@@ -223,15 +242,23 @@ const detailOptions =
 			gestureEnabled: true,
 			gestureDirection: zoom
 				? ["bidirectional", "pinch-in"]
-				: motion === "diagonal" && left
-					? "horizontal-inverted"
-					: "horizontal",
+				: motion === "swirl"
+					? ["vertical", "pinch-in"]
+					: motion === "diagonal" && left
+						? "horizontal-inverted"
+						: "horizontal",
 			transitionSpec: zoom
 				? Transition.Specs.Zoom
-				: {
-						open: Transition.Specs.DefaultSpec,
-						close: Transition.Specs.DefaultSpec,
-					},
+				: motion === "swirl"
+					? {
+							// Lands with a little overshoot; leaves on the default spring.
+							open: { stiffness: 170, damping: 18, mass: 1 },
+							close: Transition.Specs.DefaultSpec,
+						}
+					: {
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
+						},
 			screenStyleInterpolator: (props) => {
 				"worklet";
 				const params =
@@ -684,7 +711,8 @@ function makeLab(config: Config) {
 				style={{
 					flex: 1,
 					backgroundColor:
-						cfg.motion === "diagonal" && cfg.recipe === "styles"
+						(cfg.motion === "diagonal" || cfg.motion === "swirl") &&
+						cfg.recipe === "styles"
 							? "#05060f"
 							: undefined,
 				}}
