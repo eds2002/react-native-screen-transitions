@@ -1,4 +1,12 @@
-import { memo, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import {
+	memo,
+	useCallback,
+	useEffect,
+	useLayoutEffect,
+	useMemo,
+	useState,
+	useSyncExternalStore,
+} from "react";
 import {
 	type SharedValue,
 	useAnimatedProps,
@@ -83,15 +91,25 @@ function useHandoffLending(
 	presentation: SharedValue<BoundaryPresentationValue>,
 ) {
 	const lenderKey = useMemo(() => String(++nextLenderId), []);
+	// The screen's parent is registered after it mounts (and can change): follow it, or the screens it
+	// is nested in would not be marked, and the navigator above would hide them with the content.
+	const parentScreenKey = useSyncExternalStore(
+		useCallback(
+			(listener: () => void) =>
+				screenTopology.subscribe(currentScreenKey, listener),
+			[currentScreenKey],
+		),
+		() => screenTopology.getRelationships(currentScreenKey).parentScreenKey,
+	);
 	const screenKeys = useMemo(() => {
 		const out = [currentScreenKey];
-		let key = screenTopology.getRelationships(currentScreenKey).parentScreenKey;
+		let key = parentScreenKey;
 		while (key && !out.includes(key)) {
 			out.push(key);
 			key = screenTopology.getRelationships(key).parentScreenKey;
 		}
 		return out;
-	}, [currentScreenKey]);
+	}, [currentScreenKey, parentScreenKey]);
 	useAnimatedReaction(
 		() => {
 			"worklet";
