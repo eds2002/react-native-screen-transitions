@@ -23,6 +23,7 @@ import { BoundaryLifecycle } from "../measure/boundary-lifecycle";
 import { useFirstEscapeMeasureKey } from "../measure/first-escape-measure";
 import { createLocalMeasurementRef } from "../measure/local-measurements";
 import { queueForgetLocalMeasurement } from "../measure/measure-registry";
+import { hasPresentLink } from "../measure/use-boundary-presence";
 import { useBoundaryEscapeState } from "../portal/utils/is-escaped";
 import { resolveBoundaryPortal } from "../portal/utils/resolve-portal";
 import {
@@ -139,7 +140,22 @@ export const {
 		const shouldAttachAssociatedStyles = enabled;
 		const shouldEscapeBoundaryRootToScreenHost = portalRuntime.escapeClipping;
 
-		const [escapeMeasured, setEscapeMeasured] = useState(false);
+		// A boundary arriving as its pair's destination is measured as its screen mounts, and its
+		// escape (overlay host, teleport, pair presentation) would then be set up over the first frames
+		// of the transition: a burst of commits while the screen starts moving. Its partner is already
+		// on the screen below, so it starts set up instead, in its screen's own mount commit.
+		const arrivesLinked = useBuilderStore(
+			(s) =>
+				!s.derivations.nextScreenKey &&
+				!!s.derivations.previousScreenKey &&
+				hasPresentLink(
+					s.derivations.previousScreenKey,
+					requestedBoundTag.linkKey,
+				),
+		);
+		const [escapeMeasured, setEscapeMeasured] = useState(
+			() => enabled && portalRuntime.escapeClipping && arrivesLinked,
+		);
 		const onFirstEscapeMeasure = useCallback(() => setEscapeMeasured(true), []);
 		// The boundary's number: its first-measure notification and its measurement map entry.
 		const firstEscapeMeasureKey =
