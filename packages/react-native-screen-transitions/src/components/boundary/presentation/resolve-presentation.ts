@@ -39,6 +39,9 @@ export function resolveBoundaryPresentation(
 	"worklet";
 	const linkKey = getLinkKeyFromTag(boundaryId);
 	let result: BoundaryPairPresentation | undefined;
+	// Whether `result` is the pair this boundary's screen is moving on to: its source, transitioning
+	// to its destination.
+	let resultLeaving = false;
 	let other: BoundaryPairPresentation | undefined;
 	for (const value of state.presentations) {
 		const presentation = value?.get();
@@ -70,10 +73,19 @@ export function resolveBoundaryPresentation(
 			destinationKey === screenKey ||
 			!state.following ||
 			destinationKey === state.following;
-		// A preparing or completed pair cannot displace a live presentation.
+		// A preparing or completed pair cannot displace a live presentation. The pair the screen is
+		// moving on to outranks one that brought it here, whatever their order: within a stack the
+		// newer pair comes later anyway, but the first screen of a nested stack was brought here by
+		// its ancestor's pair, which is read after its own stack's.
 		if (followed) {
+			const leaving =
+				!!state.following &&
+				sourceKey === screenKey &&
+				destinationKey === state.following;
+			if (result && resultLeaving && !leaving) continue;
 			if (result && !presentation.ready) continue;
 			result = candidate;
+			resultLeaving = leaving;
 		} else {
 			if (other && !presentation.ready) continue;
 			other = candidate;

@@ -172,3 +172,22 @@ describe("handoff receiver size", () => {
   expect(resolveReceiverSize(undefined, undefined)).toBeNull();
  });
 });
+
+describe("a nested stack's first screen", () => {
+ // Root: List, Outer (a nested stack whose first screen is Inner). Inner's card is the destination
+ // of List<>Outer (the stack's screen above carries its opening) and the source of Inner<>Second.
+ const pair = (key: string, source: string, destination: string, id: string, scale: number) => {
+  setSource(key, id, source, bounds);
+  setDestination(key, id, destination, bounds);
+  return {get: () => ({pairKey: key, sourceKey: source, destinationKey: destination, ready: true, closing: false,
+   source: {[id]: {style: {transform: [{scale}]}}}, destination: {[id]: {style: {opacity: 1}}}})} as any;
+ };
+ it("follows the pair it moves on to, though its ancestor's pair is read after it", () => {
+  const moving = pair("inner<>second", "inner", "second", "card", 0.5);
+  const arrived = pair("list<>outer", "list", "inner", "card", 1);
+  const state = {presentations: [moving, arrived], pairs: pairs.get(), entries: boundaryRegistry.get(), following: "second"};
+  expect(presentation("inner", "card", state)?.pairKey).toBe("inner<>second");
+  // Nothing pushed from it: it is the destination of the pair that brought it.
+  expect(presentation("inner", "card", {...state, presentations: [arrived], following: undefined})?.pairKey).toBe("list<>outer");
+ });
+});
