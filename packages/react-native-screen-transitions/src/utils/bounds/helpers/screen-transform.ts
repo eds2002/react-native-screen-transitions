@@ -389,3 +389,34 @@ export const toLayoutSpace = <T extends FrameRect>(
 		: mapRect(rect, invert(affine));
 	return { ...rect, ...laid };
 };
+
+/**
+ * A screen drawn inside another (the first screen of a nested stack): its own transform, then its
+ * ancestor's, as one transform about its center. Where the nested screen is actually drawn.
+ */
+export const composeScreenTransforms = (
+	outer: ScreenTransform,
+	inner: ScreenTransform,
+): ScreenTransform => {
+	"worklet";
+	if (isIdentity(outer)) return inner;
+	const width = inner.width || outer.width;
+	const height = inner.height || outer.height;
+	const a = compose(
+		toAffine({
+			...outer,
+			width: outer.width || width,
+			height: outer.height || height,
+		}),
+		toAffine({ ...inner, width, height }),
+	);
+	const { rot, sx, sy } = decompose(a);
+	const cx = width / 2;
+	const cy = height / 2;
+	// p -> c + t + M (p - c): t = M c + b - c.
+	const tx = a.a * cx + a.c * cy + a.tx - cx;
+	const ty = a.b * cx + a.d * cy + a.ty - cy;
+	return Math.abs(rot) < 1e-9
+		? { sx, sy, tx, ty, width, height }
+		: { sx, sy, tx, ty, rot, width, height };
+};

@@ -10,6 +10,10 @@ import {
 	useSharedValue,
 } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
+import {
+	screenTopology,
+	useScreenRelationships,
+} from "../../../providers/builder/topology";
 import { useOptionalScreenHostStore } from "../../../providers/host/screen-host.provider";
 import type { ScreenAnimationPipeline } from "../../../providers/orchestrator/helpers/pipeline";
 import { useOptionalOrchestratorStore } from "../../../providers/orchestrator/orchestrator.provider";
@@ -28,6 +32,7 @@ import type { BoundsAccessor } from "../../../types/bounds.types";
 import { createBoundsAccessor } from "../../../utils/bounds";
 import {
 	areScreenTransformsEqual,
+	composeScreenTransforms,
 	IDENTITY_SCREEN_TRANSFORM,
 	readScreenTransform,
 	type ScreenTransform,
@@ -97,6 +102,22 @@ export function useScreenBounds({
 	const lastScreenTransform = useSharedValue<ScreenTransform>(
 		IDENTITY_SCREEN_TRANSFORM,
 	);
+	// The screens this one is drawn inside (a nested stack's screens are drawn in their stack's screen
+	// in the stack above), nearest first: their transforms move it too.
+	const { parentScreenKey } = useScreenRelationships(currentScreenKey);
+	const ancestorKeys = useMemo(() => {
+		const out: string[] = [];
+		let key: string | null | undefined = parentScreenKey;
+		while (key && !out.includes(key)) {
+			out.push(key);
+			key = screenTopology.getRelationships(key).parentScreenKey;
+		}
+		return out;
+	}, [parentScreenKey]);
+	const ancestorTransforms = useOptionalOrchestratorStore(
+		ancestorKeys,
+		(store) => store.screenTransform,
+	);
 	const screenTransform = useDerivedValue<ScreenTransform>(() => {
 		if (!hasAnyPair()) {
 			if (lastScreenTransform.get() !== IDENTITY_SCREEN_TRANSFORM)
@@ -110,7 +131,11 @@ export function useScreenBounds({
 			const style = layers[index]?.content?.style;
 			if (style?.transform !== undefined) contentStyle = style;
 		}
-		const next = readScreenTransform(contentStyle, screen.width, screen.height);
+		let next = readScreenTransform(contentStyle, screen.width, screen.height);
+		for (let index = 0; index < ancestorTransforms.length; index++) {
+			const outer = ancestorTransforms[index]?.get();
+			if (outer) next = composeScreenTransforms(outer, next);
+		}
 		const previous = lastScreenTransform.get();
 		if (areScreenTransformsEqual(previous, next)) return previous;
 		lastScreenTransform.set(next);

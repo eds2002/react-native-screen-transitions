@@ -9,7 +9,10 @@ import {
 import { scheduleOnUI } from "react-native-worklets";
 import { useBuilderStore } from "../../../providers/builder";
 import { useOptionalScreenHostStore } from "../../../providers/host/screen-host.provider";
-import { useMotionStore } from "../../../providers/motion";
+import {
+	useMotionStore,
+	useOptionalMotionStore,
+} from "../../../providers/motion";
 import type { BoundTag } from "../../../stores/bounds";
 import {
 	createScreenPairKey,
@@ -22,6 +25,7 @@ import {
 import { logger } from "../../../utils/logger";
 import type { MeasureBoundary } from "../types";
 import { getInitialDestinationMeasurementSignal } from "./destination-signals";
+import type { OpeningScreen } from "./use-opening-screen";
 
 // A missed layout is retried on the next frame: a longer interval visibly delays navigation on
 // each ordinary Android layout miss.
@@ -38,22 +42,26 @@ interface UseInitialDestinationMeasurementParams {
 	boundTag: BoundTag;
 	enabled: boolean;
 	measureBoundary: MeasureBoundary;
+	/** The transition that opens this screen (see useOpeningScreen). */
+	opening: OpeningScreen;
 }
 
 export const useInitialDestinationMeasurement = ({
 	boundTag,
 	enabled,
 	measureBoundary,
+	opening,
 }: UseInitialDestinationMeasurementParams) => {
 	const { tag, linkKey, group } = boundTag;
+	// The screen the boundary is on (what it is measured as), and the screen whose transition opens
+	// it (whose pair it is the destination of, and whose start it holds until it is measured): the
+	// same screen, or the ancestor that opens a nested stack this screen is the first of.
 	const currentScreenKey = useBuilderStore(
 		(s) => s.derivations.currentScreenKey,
 	);
-	const nextScreenKey = useBuilderStore((s) => s.derivations.nextScreenKey);
-	const destinationPairKey = useBuilderStore(
-		(s) => s.derivations.destinationPairKey,
-	);
-	const destinationEnabled = enabled && !nextScreenKey;
+	const openingScreenKey = opening.screenKey;
+	const destinationPairKey = opening.destinationPairKey;
+	const destinationEnabled = enabled && opening.receiving;
 	const canReceiveDestination = destinationEnabled && !!destinationPairKey;
 	const preferredSourceScreenKey = destinationPairKey
 		? getSourceScreenKeyFromPairKey(destinationPairKey)
@@ -70,11 +78,19 @@ export const useInitialDestinationMeasurement = ({
 				.map((scene) => scene.route.key),
 		[stackScenes],
 	);
-	const progress = useMotionStore((store) => store.state.transitionProgress);
-
-	const { blockLifecycleStart, unblockLifecycleStart } = useMotionStore(
+	const ownProgress = useMotionStore((store) => store.state.transitionProgress);
+	const ownActions = useMotionStore((store) => store.state.actions);
+	const openingProgress = useOptionalMotionStore(
+		openingScreenKey,
+		(store) => store.state.transitionProgress,
+	);
+	const openingActions = useOptionalMotionStore(
+		openingScreenKey,
 		(store) => store.state.actions,
 	);
+	const progress = openingProgress ?? ownProgress;
+	const { blockLifecycleStart, unblockLifecycleStart } =
+		openingActions ?? ownActions;
 
 	const isBlockingLifecycleStart = useSharedValue(0);
 	const retryToken = useSharedValue(0);
@@ -171,7 +187,7 @@ export const useInitialDestinationMeasurement = ({
 				closingSourceScreenKeys,
 			);
 			const pairKey = sourceScreenKey
-				? createScreenPairKey(sourceScreenKey, currentScreenKey)
+				? createScreenPairKey(sourceScreenKey, openingScreenKey)
 				: undefined;
 			const signal = getInitialDestinationMeasurementSignal({
 				enabled: destinationEnabled,

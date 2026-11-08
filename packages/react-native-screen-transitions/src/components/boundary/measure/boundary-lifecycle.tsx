@@ -13,6 +13,7 @@ import { useBoundaryMeasureRegistration } from "./measure-registry";
 import { useBoundaryPresence } from "./use-boundary-presence";
 import { useInitialDestinationMeasurement } from "./use-initial-destination-measurement";
 import { type BoundaryMeasureData, useMeasurer } from "./use-measurer";
+import { type OpeningScreen, useOpeningScreen } from "./use-opening-screen";
 
 interface BoundaryLifecycleProps {
 	boundTag: BoundTag;
@@ -41,13 +42,15 @@ export const BoundaryLifecycle = memo(function BoundaryLifecycle({
 	const hasConfiguredInterpolator = useBuilderStore(
 		(s) => s.derivations.hasConfiguredInterpolator,
 	);
+	// The transition that opens this screen: its own, or (the first screen of a nested stack) the one
+	// that opens its stack, up the tree.
+	const opening = useOpeningScreen();
 
-	const runtimeEnabled = enabled && hasConfiguredInterpolator;
-	// Only a screen pushed as a pair's destination (and not covered by another screen) can run the
+	const runtimeEnabled =
+		enabled && (hasConfiguredInterpolator || opening.hasConfiguredInterpolator);
+	// Only a screen opened as a pair's destination (and not covered by another screen) can run the
 	// destination handshake. Everywhere else, such as a list of sources, it is never mounted.
-	const isReceivingDestination = useBuilderStore(
-		(s) => !s.derivations.nextScreenKey && !!s.derivations.destinationPairKey,
-	);
+	const isReceivingDestination = opening.receiving;
 	const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
 
 	const scrollChain = useScrollChain();
@@ -99,6 +102,7 @@ export const BoundaryLifecycle = memo(function BoundaryLifecycle({
 			boundTag={boundTag}
 			currentScreenKey={currentScreenKey}
 			measureData={measureData}
+			opening={opening}
 		/>
 	) : null;
 });
@@ -113,16 +117,19 @@ const DestinationHandshake = memo(function DestinationHandshake({
 	boundTag,
 	currentScreenKey,
 	measureData,
+	opening,
 }: {
 	boundTag: BoundTag;
 	currentScreenKey: string;
 	measureData: BoundaryMeasureData;
+	opening: OpeningScreen;
 }) {
 	const measureBoundary = useMeasurer(measureData, currentScreenKey);
 	useInitialDestinationMeasurement({
 		boundTag,
 		enabled: true,
 		measureBoundary,
+		opening,
 	});
 	return null;
 });

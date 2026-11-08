@@ -3,6 +3,7 @@ import {
 	type Affine,
 	boundingBox,
 	compose,
+	composeScreenTransforms,
 	readScreenTransform,
 	type ScreenTransform,
 	toAffine,
@@ -111,5 +112,24 @@ describe("screen transforms with rotation", () => {
 			expect(dx).toBeCloseTo(x, 3);
 			expect(dy).toBeCloseTo(y, 3);
 		}
+	});
+
+	it("composes a nested screen's transform with the screen it is drawn in", () => {
+		const outer: ScreenTransform = { sx: 0.8, sy: 0.8, tx: 120, ty: -40, rot: rad(-6), width: W, height: H };
+		const inner: ScreenTransform = { sx: 0.9, sy: 0.9, tx: -20, ty: 30, width: W, height: H };
+		const composed = toAffine(composeScreenTransforms(outer, inner));
+		const expected = compose(toAffine(outer), toAffine(inner));
+		for (const [x, y] of [
+			[0, 0],
+			[W, 0],
+			[W / 3, H * 0.7],
+		]) {
+			const [cx, cy] = apply(composed, x, y);
+			const [ex, ey] = apply(expected, x, y);
+			expect(cx).toBeCloseTo(ex, 3);
+			expect(cy).toBeCloseTo(ey, 3);
+		}
+		// An unmoved outer screen leaves the inner one as it is.
+		expect(composeScreenTransforms({ sx: 1, sy: 1, tx: 0, ty: 0, width: W, height: H }, inner)).toBe(inner);
 	});
 });

@@ -82,6 +82,12 @@ describe("initial destination measurement lifecycle", () => {
 			useInitialDestinationMeasurement({
 				boundTag,
 				enabled: true,
+				opening: {
+					screenKey: "screen-b",
+					destinationPairKey: pairKey,
+					hasConfiguredInterpolator: true,
+					receiving: true,
+				},
 				measureBoundary: ({ pairKey: measuredPairKey }) => {
 					measurements.push(`${revision}:${measuredPairKey}`);
 					BoundStore.link.setDestination(measuredPairKey, "card", "screen-b", {
@@ -126,5 +132,56 @@ describe("initial destination measurement lifecycle", () => {
 			getMotionStore("screen-b").state.pendingLifecycleStartBlockCount.get(),
 		).toBe(0);
 		act(() => renderer.unmount());
+	});
+
+	it("measures the first screen of a nested stack as the destination of the transition that opens its stack", () => {
+		// screen-a pushes screen-b (a nested stack) on the root stack; the boundary is on detail, the
+		// first screen of screen-b's stack, which has no previous screen of its own.
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const saved = descriptorState.derivations;
+		descriptorState.derivations = {
+			currentScreenKey: "detail",
+			nextScreenKey: undefined,
+			destinationPairKey: undefined as unknown as typeof saved.destinationPairKey,
+		};
+		BoundStore.entry.set("card", "detail", {});
+		const measured: string[] = [];
+		function Measurement() {
+			useInitialDestinationMeasurement({
+				boundTag: { tag: "card", linkKey: "card" },
+				enabled: true,
+				opening: {
+					screenKey: "screen-b",
+					destinationPairKey: pairKey,
+					hasConfiguredInterpolator: true,
+					receiving: true,
+				},
+				measureBoundary: ({ pairKey: measuredPairKey }) => {
+					measured.push(measuredPairKey);
+					BoundStore.link.setDestination(measuredPairKey, "card", "detail", {
+						x: 30,
+						y: 40,
+						pageX: 30,
+						pageY: 40,
+						width: 200,
+						height: 200,
+					});
+				},
+			});
+			return null;
+		}
+		let renderer: ReactTestRenderer;
+		act(() => {
+			renderer = create(
+				<MotionProvider>
+					<Measurement />
+				</MotionProvider>,
+			);
+		});
+		expect(measured).toEqual([pairKey]);
+		// The link names the screen the boundary is on, under the pair of the screens that transition.
+		expect(BoundStore.link.getDestination(pairKey, "card")?.screenKey).toBe("detail");
+		act(() => renderer.unmount());
+		descriptorState.derivations = saved;
 	});
 });
