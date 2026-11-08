@@ -16,8 +16,8 @@ what it covers and a numbered Argent loop script.
 | `inactive` | inactiveBehavior keep/pause/hide/unmount, rapid pushes |
 | `slots` | styleId slots and style reset, content/surface/backdrop components |
 | `overlay` | overlay persisting across pushes, focused route, overlayShown |
-| `bounds` | zoom (swipe/pinch), zoom to a bound, styles() morph, reveal(), group retarget |
-| `scrollbounds` | shared bounds + scroll: zoom / zoom-to-bound / keepFocusedVisible from a scrolled list into a scrolling detail; debug view (slow, no fade); the list moving or scrolling under the close |
+| `shared-bounds` | a copy per screen matched by `bounds(id).styles()`, `zoom()` or zoom to a bound: chains, spam, scrolling on both screens, pairs crossing nested stacks N deep above / below / between siblings (options in `labs/boundary-lab.tsx`, also as deep-link query: `?recipe=zoom&tree=below&depth=2`) |
+| `shared-elements` | one live view handed between screens (`handoff`) and moved by `bounds(id).styles()`: the same cases as shared-bounds |
 | `native-stack` | withScreenTransitions on native-stack: slide and zoom, mixed with plain native screens |
 | `motion` | standalone units, no navigator: useMotion pager (snap points as pages), useMotion sheet (open/close/snapTo, drag and backdrop dismiss), Transition.Presence with an `"auto"` snap point |
 
