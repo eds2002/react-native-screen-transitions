@@ -32,7 +32,7 @@ import type { BoundsAccessor } from "../../../types/bounds.types";
 import { createBoundsAccessor } from "../../../utils/bounds";
 import {
 	areScreenTransformsEqual,
-	composeScreenTransforms,
+	composeWithNearestAncestor,
 	IDENTITY_SCREEN_TRANSFORM,
 	readScreenTransform,
 	type ScreenTransform,
@@ -131,11 +131,14 @@ export function useScreenBounds({
 			const style = layers[index]?.content?.style;
 			if (style?.transform !== undefined) contentStyle = style;
 		}
-		let next = readScreenTransform(contentStyle, screen.width, screen.height);
+		const ancestors: (ScreenTransform | undefined)[] = [];
 		for (let index = 0; index < ancestorTransforms.length; index++) {
-			const outer = ancestorTransforms[index]?.get();
-			if (outer) next = composeScreenTransforms(outer, next);
+			ancestors.push(ancestorTransforms[index]?.get());
 		}
+		const next = composeWithNearestAncestor(
+			readScreenTransform(contentStyle, screen.width, screen.height),
+			ancestors,
+		);
 		const previous = lastScreenTransform.get();
 		if (areScreenTransformsEqual(previous, next)) return previous;
 		lastScreenTransform.set(next);

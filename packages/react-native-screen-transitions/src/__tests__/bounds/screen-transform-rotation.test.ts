@@ -4,6 +4,7 @@ import {
 	boundingBox,
 	compose,
 	composeScreenTransforms,
+	composeWithNearestAncestor,
 	readScreenTransform,
 	type ScreenTransform,
 	toAffine,
@@ -131,5 +132,25 @@ describe("screen transforms with rotation", () => {
 		}
 		// An unmoved outer screen leaves the inner one as it is.
 		expect(composeScreenTransforms({ sx: 1, sy: 1, tx: 0, ty: 0, width: W, height: H }, inner)).toBe(inner);
+	});
+
+	it("composes a screen nested two deep with its parent's transform only", () => {
+		// N1 moves; N2 (first screen of N1's stack) is unmoved, so its transform is N1's already.
+		const n1: ScreenTransform = { sx: 0.8, sy: 0.8, tx: 120, ty: -40, rot: rad(-6), width: W, height: H };
+		const identity: ScreenTransform = { sx: 1, sy: 1, tx: 0, ty: 0, width: W, height: H };
+		const n2 = composeWithNearestAncestor(identity, [n1]);
+		const detail = toAffine(composeWithNearestAncestor(identity, [n2, n1]));
+		const expected = toAffine(n1);
+		for (const [x, y] of [
+			[0, 0],
+			[W, H],
+		]) {
+			const [dx, dy] = apply(detail, x, y);
+			const [ex, ey] = apply(expected, x, y);
+			expect(dx).toBeCloseTo(ex, 3);
+			expect(dy).toBeCloseTo(ey, 3);
+		}
+		// No ancestor transform: its own.
+		expect(composeWithNearestAncestor(n1, [undefined])).toBe(n1);
 	});
 });

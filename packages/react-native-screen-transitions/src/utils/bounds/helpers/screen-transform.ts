@@ -420,3 +420,20 @@ export const composeScreenTransforms = (
 		? { sx, sy, tx, ty, width, height }
 		: { sx, sy, tx, ty, rot, width, height };
 };
+
+/**
+ * Where a screen is drawn: its own transform inside its nearest ancestor's (nearest first; screens
+ * without a transform are skipped). Each screen's transform is composed this way, so the nearest
+ * one already holds those above it: composing with every ancestor would count them again.
+ */
+export const composeWithNearestAncestor = (
+	own: ScreenTransform,
+	ancestors: readonly (ScreenTransform | undefined)[],
+): ScreenTransform => {
+	"worklet";
+	for (let index = 0; index < ancestors.length; index++) {
+		const outer = ancestors[index];
+		if (outer) return composeScreenTransforms(outer, own);
+	}
+	return own;
+};
