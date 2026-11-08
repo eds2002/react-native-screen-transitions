@@ -124,19 +124,21 @@ export function useBoundaryPresentation(
 			}
 			return undefined;
 		}
-		const nextByScreen: Record<string, string | undefined> = {};
-		for (let i = 0; i < keys.length; i++) {
-			nextByScreen[keys[i]] = keyFrames[i]?.get().next?.route.key;
+		function nextRouteOf(key: string): string | undefined {
+			const index = keys.indexOf(key);
+			return index < 0 ? undefined : keyFrames[index]?.get().next?.route.key;
 		}
 		const state: BoundaryPresentationState = {
 			presentations: pairPresentations,
 			pairs: pairs.get(),
 			entries: boundaryRegistry.get(),
 			following: followedRoute(),
-			nextByScreen,
+			nextRouteOf,
 		};
 		const owner = resolveBoundaryPresentation(screenKey, boundaryId, state);
-		const target = resolveBoundaryHandoffTarget(screenKey, boundaryId, state);
+		const target = resolveBoundaryHandoffTarget(screenKey, boundaryId, state, {
+			presentation: owner,
+		});
 		const receiver = target.receiver;
 		let receiverSize: BoundaryPresentationValue["receiverSize"] = null;
 		if (receiver !== screenKey) {

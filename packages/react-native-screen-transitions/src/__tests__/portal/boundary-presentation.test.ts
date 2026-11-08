@@ -1,4 +1,4 @@
-import { resolveBoundaryHandoff as handoff, resolveReceiverSize } from "../../components/boundary/presentation/resolve-presentation";
+import { resolveBoundaryHandoff as handoff, resolveBoundaryHandoffTarget, resolveReceiverSize } from "../../components/boundary/presentation/resolve-presentation";
 import { boundaryRegistry, pairs } from "../../stores/bounds/internals/state";
 import { boundarySourceFrame, runBoundaryInterpolator } from "../../components/boundary/presentation/use-pair-presentation";
 import type { ScreenInterpolatorFrame } from "../../providers/orchestrator/helpers/pipeline";
@@ -139,7 +139,13 @@ it("honors early source handback without walking back into the destination", () 
 });
 
 function snapshot() { return {presentations: Object.values(presentations).map(p => ({get:()=>p}) as any), pairs: pairs.get(), entries: boundaryRegistry.get()}; }
-function resolveBoundaryHandoff(key: string, id: string) {return handoff(key,id,snapshot());}
+function resolveBoundaryHandoff(key: string, id: string) {
+ const state = snapshot();
+ const receiver = handoff(key,id,state);
+ // The presentation hook passes the boundary's own presentation in: the chain must not change.
+ expect(resolveBoundaryHandoffTarget(key,id,state,{presentation: presentation(key,id,state)}).receiver).toBe(receiver);
+ return receiver;
+}
 function resolveBoundaryPresentation(key: string, id: string) {return presentation(key,id,snapshot());}
 
 it("hands off container-only navigation zoom without requiring a boundary style slot", () => {

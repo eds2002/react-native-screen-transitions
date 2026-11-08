@@ -27,8 +27,8 @@ export type BoundaryPresentationState = {
 	 * moves on, instead of jumping to the new pair's start.
 	 */
 	following?: string;
-	/** Each screen's own next route, for receivers further along a handoff chain. */
-	nextByScreen?: Record<string, string | undefined>;
+	/** A screen's own next route, for receivers further along a handoff chain (read only there). */
+	nextRouteOf?: (screenKey: string) => string | undefined;
 };
 
 export function resolveBoundaryPresentation(
@@ -60,7 +60,12 @@ export function resolveBoundaryPresentation(
 		const destinationKey =
 			link.destination?.screenKey ?? presentation.destinationKey;
 		if (sourceKey !== screenKey && destinationKey !== screenKey) continue;
-		const candidate = { ...presentation, sourceKey, destinationKey };
+		// Most links name their pair's own screens: the presentation is the candidate as it is.
+		const candidate =
+			sourceKey === presentation.sourceKey &&
+			destinationKey === presentation.destinationKey
+				? presentation
+				: { ...presentation, sourceKey, destinationKey };
 		const followed =
 			destinationKey === screenKey ||
 			!state.following ||
@@ -124,12 +129,14 @@ function preferOpenPair(
 
 /**
  * Where a handoff boundary's content is presented: the screen whose receiver it is in, and that
- * receiver's slot (its style says how big the receiver is this frame).
+ * receiver's slot (its style says how big the receiver is this frame). `own` is the boundary's own
+ * presentation (resolveBoundaryPresentation on its screen) when the caller already has it.
  */
 export function resolveBoundaryHandoffTarget(
 	screenKey: string,
 	boundaryId: string,
 	state: BoundaryPresentationState,
+	own?: { presentation: BoundaryPairPresentation | undefined },
 ) {
 	"worklet";
 	let receiver = screenKey;
@@ -143,13 +150,15 @@ export function resolveBoundaryHandoffTarget(
 			receiver,
 			boundaryId,
 			state,
-			resolveBoundaryPresentation(
-				receiver,
-				boundaryId,
-				receiver === screenKey
-					? state
-					: { ...state, following: state.nextByScreen?.[receiver] },
-			),
+			receiver === screenKey && own
+				? own.presentation
+				: resolveBoundaryPresentation(
+						receiver,
+						boundaryId,
+						receiver === screenKey
+							? state
+							: { ...state, following: state.nextRouteOf?.(receiver) },
+					),
 		);
 		if (!p) break;
 		const slot = (p.sourceKey === receiver ? p.source : p.destination)[
