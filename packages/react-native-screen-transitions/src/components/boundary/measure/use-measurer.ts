@@ -43,6 +43,7 @@ import {
 	attachScrollSnapshotToMeasuredBounds,
 	correctMeasuredBoundsForVisibilityGate,
 	isMeasurementInViewport,
+	isScreenDrawnTooSmall,
 	measureWithOverscrollAwareness,
 } from "./measured-bounds";
 
@@ -179,6 +180,9 @@ const measureTurnedScreenAt = (
 	};
 };
 
+/** measureScreenAt's answer for a screen drawn too small to measure anything in. */
+const DRAWN_TOO_SMALL = "drawn-too-small" as const;
+
 /**
  * Where the screen was drawn at this measurement, from its content's reference view measured the
  * same moment (so it matches what the boundary measurement includes, frame for frame).
@@ -192,14 +196,20 @@ const measureScreenAt = (
 	screen: ScreenMeasureContext,
 	boundary: MeasuredDimensions,
 	gateDeltaY: number,
-): ScreenAtMeasure | undefined => {
+): ScreenAtMeasure | typeof DRAWN_TOO_SMALL | undefined => {
 	"worklet";
 	const { contentRef, currentScreenKey, viewportWidth, viewportHeight } =
 		screen;
 	if (!contentRef) return undefined;
 	const content = measure(contentRef);
-	if (!content || content.width <= 0 || content.height <= 0) {
-		return undefined;
+	if (!content) return undefined;
+	// A screen drawn (nearly) to nothing, or nested in one (a transition growing it from scale 0):
+	// its boxes are that small too (see MIN_MEASURABLE_SCREEN_SCALE).
+	if (
+		isScreenDrawnTooSmall(content.width, viewportWidth) ||
+		isScreenDrawnTooSmall(content.height, viewportHeight)
+	) {
+		return DRAWN_TOO_SMALL;
 	}
 	const now = getScreenTransform(currentScreenKey);
 	const width = now?.width || viewportWidth;
@@ -325,6 +335,8 @@ export const measureBoundaryWith = (
 		measured,
 		correctedMeasured.pageY - measured.pageY,
 	);
+	// Nothing to place a boundary with: it is measured again once its screen is drawn.
+	if (screenAt === DRAWN_TOO_SMALL) return;
 
 	const viewportAllowsDestinationWrite =
 		target.type !== "destination" ||

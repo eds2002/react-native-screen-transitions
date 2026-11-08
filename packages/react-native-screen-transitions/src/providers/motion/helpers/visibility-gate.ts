@@ -22,6 +22,14 @@ type InitialDestinationStyleGateState = {
 	shouldPrepareStyles: boolean;
 	isScreenReady: boolean;
 	stylesReady: boolean;
+	/**
+	 * Its start is blocked on measurements (its own boundaries, or a nested stack's first screen's).
+	 * The styles stay withheld meanwhile, so they are measured as laid out: a transition starting
+	 * from scale 0 would leave nothing to measure, and a nested stack's boundaries are measured
+	 * after the first frame. The visibility gate keeps the screen hidden until its progress moves,
+	 * a frame at least after the block clears, so the styles are in place when it shows.
+	 */
+	startBlocked?: boolean;
 };
 
 type InitialDestinationStyleGateDecision = {
@@ -33,13 +41,14 @@ export const resolveInitialDestinationStyleGate = ({
 	shouldPrepareStyles,
 	isScreenReady,
 	stylesReady,
+	startBlocked = false,
 }: InitialDestinationStyleGateState): InitialDestinationStyleGateDecision => {
 	"worklet";
 
 	return {
 		shouldMarkStylesReady:
 			shouldPrepareStyles && !isScreenReady && !stylesReady,
-		shouldWithholdStyles: shouldPrepareStyles && !stylesReady,
+		shouldWithholdStyles: shouldPrepareStyles && (!stylesReady || startBlocked),
 	};
 };
 

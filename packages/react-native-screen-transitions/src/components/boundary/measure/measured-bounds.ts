@@ -65,6 +65,22 @@ export const adjustedMeasuredBoundsForOverscrollDeltas = (
 	};
 };
 
+/**
+ * A screen drawn smaller than this (a transition that grows it from nothing, at its first frames)
+ * gives boxes that small: they cannot be scaled back to its layout, so they are not recorded and
+ * the screen is measured again once it is drawn.
+ */
+export const MIN_MEASURABLE_SCREEN_SCALE = 0.05;
+
+/** Whether a view as wide as the screen measured `measuredWidth` wide: its screen is drawn too small. */
+export const isScreenDrawnTooSmall = (
+	measuredWidth: number,
+	viewportWidth: number,
+) => {
+	"worklet";
+	return measuredWidth < viewportWidth * MIN_MEASURABLE_SCREEN_SCALE;
+};
+
 export const isMeasurementInViewport = (
 	measured: MeasuredDimensions,
 	viewportWidth: number,

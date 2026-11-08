@@ -279,6 +279,7 @@ export const useInterpolatedStylesMap = ({
 			shouldPrepareStyles: shouldPrepareInitialDestinationStyles,
 			isScreenReady: isScreenReady.get(),
 			stylesReady: !!initialDestinationStylesReady.get(),
+			startBlocked: activePendingLifecycleStartBlockCount.get() > 0,
 		});
 		const runs: InterpolatorRuns = {
 			screenKey: current.route.key,

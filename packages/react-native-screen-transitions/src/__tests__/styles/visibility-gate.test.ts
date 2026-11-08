@@ -109,6 +109,39 @@ describe("resolveInitialDestinationStyleGate", () => {
 	});
 });
 
+describe("resolveInitialDestinationStyleGate while its start is blocked", () => {
+	it("keeps the styles withheld until the measurements it waits on land", () => {
+		// Hidden and prepared, but a nested stack's first screen is still measuring its boundaries:
+		// a transition from scale 0 applied now would leave it nothing to measure.
+		const measuring = resolveInitialDestinationStyleGate({
+			shouldPrepareStyles: true,
+			isScreenReady: false,
+			stylesReady: true,
+			startBlocked: true,
+		});
+		expect(measuring.shouldWithholdStyles).toBe(true);
+		expect(measuring.shouldMarkStylesReady).toBe(false);
+
+		const measured = resolveInitialDestinationStyleGate({
+			shouldPrepareStyles: true,
+			isScreenReady: false,
+			stylesReady: true,
+			startBlocked: false,
+		});
+		expect(measured.shouldWithholdStyles).toBe(false);
+
+		// A screen that prepares no styles is never withheld.
+		expect(
+			resolveInitialDestinationStyleGate({
+				shouldPrepareStyles: false,
+				isScreenReady: false,
+				stylesReady: false,
+				startBlocked: true,
+			}).shouldWithholdStyles,
+		).toBe(false);
+	});
+});
+
 // From #161 (Vlad Petrenko).
 describe("resolveInitialVisibilityBlocked", () => {
 	const screen = (key: string, options = {}) =>

@@ -11,7 +11,10 @@ import {
 } from "react-native-reanimated";
 import { getVisibilityBlockOffset } from "../../../../utils/visibility-block-offset";
 import { readLocalMeasurement } from "../../measure/local-measurements";
-import { correctMeasuredBoundsForVisibilityGate } from "../../measure/measured-bounds";
+import {
+	correctMeasuredBoundsForVisibilityGate,
+	isScreenDrawnTooSmall,
+} from "../../measure/measured-bounds";
 import type { BoundaryLocalMeasurementValue } from "../../types";
 
 const HOST_MEASUREMENT_RETRY_DELAY_MS = 16;
@@ -40,7 +43,13 @@ export const useHostMeasurement = ({
 		const count = attempts.get() + 1;
 		attempts.set(count);
 		const measured = measure(hostRef);
-		if (measured && measured.width > 0 && measured.height > 0) {
+		// The host is as large as the screen: smaller than that, its screen is drawn (nearly) to
+		// nothing, and the host is measured again (see MIN_MEASURABLE_SCREEN_SCALE).
+		if (
+			measured &&
+			measured.height > 0 &&
+			!isScreenDrawnTooSmall(measured.width, viewportWidth)
+		) {
 			// The host can still carry the preparation translation for one native
 			// frame, even after JS readiness flips. Normalize the known gate offset
 			// just like the boundary capture before subtracting page coordinates.
