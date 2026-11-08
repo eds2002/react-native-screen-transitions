@@ -23,7 +23,9 @@ import {
 import { ScrollStore } from "../../../stores/scroll.store";
 import {
 	type ScreenTransform,
+	toAffine,
 	toLayoutSpace,
+	unboundingBox,
 } from "../../../utils/bounds/helpers/screen-transform";
 import { getVisibilityBlockOffset } from "../../../utils/visibility-block-offset";
 import { isTeleportAvailable } from "../portal/teleport";
@@ -117,6 +119,55 @@ type ScreenAtMeasure = {
 };
 
 /**
+ * measureScreenAt for a screen drawn turned. Measurements report the bounds of turned boxes, so the
+ * screen's turn comes from its live transform; its scales solve the content's bounds, its offset is
+ * the content's center, and the boundary's box is what laid out to its bounds (see unboundingBox).
+ */
+const measureTurnedScreenAt = (
+	boundary: MeasuredDimensions,
+	content: MeasuredDimensions,
+	width: number,
+	height: number,
+	rot: number,
+	gateDeltaY: number,
+): ScreenAtMeasure => {
+	"worklet";
+	const cos = Math.abs(Math.cos(rot));
+	const sin = Math.abs(Math.sin(rot));
+	// content bounds = [W·cos H·sin; W·sin H·cos] · (sx, sy)
+	const det = width * height * (cos * cos - sin * sin);
+	let sx: number;
+	let sy: number;
+	if (Math.abs(det) > 0.2 * width * height) {
+		sx = (height * cos * content.width - height * sin * content.height) / det;
+		sy = (width * cos * content.height - width * sin * content.width) / det;
+	} else {
+		sx = sy = content.width / (width * cos + height * sin);
+	}
+	const tx = content.pageX + content.width / 2 - width / 2;
+	const ty = content.pageY + content.height / 2 - height / 2;
+	const raw: ScreenTransform = { sx, sy, tx, ty, rot, width, height };
+	const box = unboundingBox(
+		{
+			pageX: boundary.pageX,
+			pageY: boundary.pageY,
+			width: boundary.width,
+			height: boundary.height,
+		},
+		toAffine(raw),
+	);
+	return {
+		transform: { ...raw, ty: ty + gateDeltaY },
+		contentOffset: {
+			x: box.pageX,
+			y: box.pageY,
+			width: box.width,
+			height: box.height,
+		},
+	};
+};
+
+/**
  * Where the screen was drawn at this measurement, from its content's reference view measured the
  * same moment (so it matches what the boundary measurement includes, frame for frame).
  * Measurements are in window space: recording the screen's transform lets bounds elements correct
@@ -141,6 +192,17 @@ const measureScreenAt = (
 	const now = getScreenTransform(currentScreenKey);
 	const width = now?.width || viewportWidth;
 	const height = now?.height || viewportHeight;
+	const rot = now?.rot ?? 0;
+	if (Math.abs(rot) > 1e-4) {
+		return measureTurnedScreenAt(
+			boundary,
+			content,
+			width,
+			height,
+			rot,
+			gateDeltaY,
+		);
+	}
 	const sx = content.width / width;
 	const sy = content.height / height;
 	const contentOffset = {

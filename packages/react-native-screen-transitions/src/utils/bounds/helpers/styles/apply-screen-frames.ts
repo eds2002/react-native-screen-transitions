@@ -11,9 +11,12 @@ import type {
 } from "../../../../types/animation.types";
 import {
 	blend,
+	boundingBox,
 	compose,
+	decompose,
 	IDENTITY_SCREEN_TRANSFORM,
 	invert,
+	isAxisAligned,
 	isIdentity,
 	lerpRect,
 	mapRect,
@@ -172,28 +175,39 @@ const resolveCorrection = (
 			path,
 		),
 	);
-	// The element scales about its own center (its box: the size method resizes it).
+	// The element turns and scales about its own center (its box: the size method resizes it):
+	// `p -> A p + t` is a move by `A L + t - L` and then A about L.
 	const width = typeof style.width === "number" ? style.width : frame.width;
 	const height = typeof style.height === "number" ? style.height : frame.height;
 	const lx = frame.x + ownShift.x + width / 2;
 	const ly = frame.y + ownShift.y + height / 2;
-	const vx = placement.tx - (1 - placement.sx) * lx;
-	const vy = placement.ty - (1 - placement.sy) * ly;
-	const scaled =
-		Math.abs(placement.sx - 1) > EPSILON ||
-		Math.abs(placement.sy - 1) > EPSILON;
-	if (!scaled && Math.abs(vx) < EPSILON && Math.abs(vy) < EPSILON) return null;
-	return (scaled
-		? [
-				{ translateX: vx },
-				{ translateY: vy },
-				{ scaleX: placement.sx },
-				{ scaleY: placement.sy },
-			]
-		: [
-				{ translateX: vx },
-				{ translateY: vy },
-			]) as unknown as TransformArrayItem[];
+	const vx = placement.a * lx + placement.c * ly + placement.tx - lx;
+	const vy = placement.b * lx + placement.d * ly + placement.ty - ly;
+	const move = [{ translateX: vx }, { translateY: vy }];
+	if (isAxisAligned(placement)) {
+		const scaled =
+			Math.abs(placement.a - 1) > EPSILON ||
+			Math.abs(placement.d - 1) > EPSILON;
+		if (!scaled && Math.abs(vx) < EPSILON && Math.abs(vy) < EPSILON)
+			return null;
+		return (scaled
+			? [...move, { scaleX: placement.a }, { scaleY: placement.d }]
+			: move) as unknown as TransformArrayItem[];
+	}
+	// A screen that turns: the element turns back by as much (blending two screens' scales can leave
+	// a little shear, kept as a skew).
+	const { rot, sx, sy, k } = decompose(placement);
+	const skew =
+		Math.abs(k) > EPSILON && sy !== 0
+			? [{ skewX: `${Math.atan(k / sy)}rad` }]
+			: [];
+	return [
+		...move,
+		{ rotate: `${rot}rad` },
+		...skew,
+		{ scaleX: sx },
+		{ scaleY: sy },
+	] as unknown as TransformArrayItem[];
 };
 
 /**
@@ -208,11 +222,11 @@ const coversSource = (
 	"worklet";
 	const screen = read(frame.destinationScreenKey);
 	if (!screen.width || !screen.height) return true;
-	const area = mapRect(
+	const area = boundingBox(
 		{ pageX: 0, pageY: 0, width: screen.width, height: screen.height },
 		toAffine(screen),
 	);
-	const source = mapRect(
+	const source = boundingBox(
 		resolveStart(frame, read),
 		toAffine(read(frame.sourceScreenKey)),
 	);
