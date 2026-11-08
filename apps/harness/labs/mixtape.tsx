@@ -45,10 +45,10 @@ const CREAM = "#FFF6E0";
 /** Where each screen comes from (fractions of the screen) and the tilt it arrives with. */
 const ARRIVE = {
 	Shelf: { x: 0, y: 0, r: 0 },
-	Album: { x: 0.7, y: 0.26, r: -8 },
-	Playing: { x: -0.7, y: -0.26, r: 8 },
-	Lyrics: { x: -0.7, y: 0.26, r: 8 },
-	Queue: { x: 0.7, y: -0.26, r: -8 },
+	Album: { x: 1.05, y: 0.34, r: -8 },
+	Playing: { x: -1.05, y: -0.34, r: 8 },
+	Lyrics: { x: -1.05, y: 0.34, r: 8 },
+	Queue: { x: 1.05, y: -0.34, r: -8 },
 };
 const ORDER = ["Shelf", "Album", "Playing", "Lyrics", "Queue"];
 /** Arrivals land with a little bounce. */
