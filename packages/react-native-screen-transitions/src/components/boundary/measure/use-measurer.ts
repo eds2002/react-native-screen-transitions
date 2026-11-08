@@ -110,6 +110,8 @@ export const useScreenMeasureContext = (
 };
 
 const SCREEN_TRANSFORM_EPSILON = 0.01;
+/** How far a turned screen's measured scales may stray from its live scales' proportions. */
+const SCREEN_TURN_TOLERANCE = 0.03;
 
 type ScreenAtMeasure = {
 	/** Where the screen was drawn (absent when it was not moved). */
@@ -128,10 +130,11 @@ const measureTurnedScreenAt = (
 	content: MeasuredDimensions,
 	width: number,
 	height: number,
-	rot: number,
+	live: ScreenTransform,
 	gateDeltaY: number,
-): ScreenAtMeasure => {
+): ScreenAtMeasure | undefined => {
 	"worklet";
+	const rot = live.rot ?? 0;
 	const cos = Math.abs(Math.cos(rot));
 	const sin = Math.abs(Math.sin(rot));
 	// content bounds = [W·cos H·sin; W·sin H·cos] · (sx, sy)
@@ -143,6 +146,15 @@ const measureTurnedScreenAt = (
 		sy = (width * cos * content.height - width * sin * content.width) / det;
 	} else {
 		sx = sy = content.width / (width * cos + height * sin);
+	}
+	// The native frame measured can predate the live transform (a screen measured as it mounts, before
+	// its interpolator's transform reached it: unturned and unscaled). Its scales then disagree with
+	// the live ones' proportions: it is measured as a screen that is not turned.
+	if (
+		!(sx > 0 && sy > 0) ||
+		Math.abs((sx / sy) * (live.sy / live.sx) - 1) > SCREEN_TURN_TOLERANCE
+	) {
+		return undefined;
 	}
 	const tx = content.pageX + content.width / 2 - width / 2;
 	const ty = content.pageY + content.height / 2 - height / 2;
@@ -192,16 +204,16 @@ const measureScreenAt = (
 	const now = getScreenTransform(currentScreenKey);
 	const width = now?.width || viewportWidth;
 	const height = now?.height || viewportHeight;
-	const rot = now?.rot ?? 0;
-	if (Math.abs(rot) > 1e-4) {
-		return measureTurnedScreenAt(
+	if (now && Math.abs(now.rot ?? 0) > 1e-4) {
+		const turned = measureTurnedScreenAt(
 			boundary,
 			content,
 			width,
 			height,
-			rot,
+			now,
 			gateDeltaY,
 		);
+		if (turned) return turned;
 	}
 	const sx = content.width / width;
 	const sy = content.height / height;
