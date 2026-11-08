@@ -139,6 +139,10 @@ export const bridge = {
 		state.screens.set(key, prev ? { ...prev, mounted: prev.mounted + 1 } : { key, name, progress: 1, animating: false, closing: false, settled: true, dragging: false, mounted: 1 });
 		changed();
 	},
+	/** Whether a reported screen is closing (still in the navigation state until its close ends). */
+	isClosing(key: string) {
+		return !!state.screens.get(key)?.closing;
+	},
 	unmount(key: string) {
 		state.screens.delete(key);
 		changed();

@@ -30,7 +30,7 @@
  * Testids: <p>-card-<id> (list), <p>-carousel-<id>, <p>-slot-<level>, <p>-next, <p>-back, <p>-config
  * (probe "kind recipe method motion tree depth"), <p>-at (probe "at:<id> level:<n>"), bar <p>-bar-*.
  */
-import { StackActions, useFocusEffect } from "@react-navigation/native";
+import { StackActions } from "@react-navigation/native";
 import {
 	useCallback,
 	useEffect,
@@ -53,7 +53,7 @@ import Animated, {
 	withRepeat,
 	withTiming,
 } from "react-native-reanimated";
-import { ScreenReporter } from "./bridge";
+import { bridge, ScreenReporter } from "./bridge";
 import {
 	Button,
 	colorFor,
@@ -329,17 +329,30 @@ function Live({ id, marked = false }) {
 
 // ---------------------------------------------------------------- per-level registries (the bar)
 
-/** What the focused screen does for the bar, and each level's scroller (the screen under can be scrolled). */
-const createRig = () => ({ focused: { level: 0 }, next: {}, scroll: {} });
+/** What each level's screen does for the bar, and its scroller (the screen under can be scrolled). */
+const createRig = () => ({ next: {}, scroll: {} });
+
+/**
+ * The level of the screen in front, from the navigation state, passing over closing screens: a
+ * dismissed screen stays in the state until its close ends (and a focus effect lags further), so
+ * the bar's next would push from the screen that just left.
+ */
+const focusedLevel = (ref): number => {
+	if (!ref.isReady()) return 0;
+	let state = ref.getRootState();
+	let route: { name: string; params?: { level?: number }; state? } | undefined;
+	while (state?.routes?.length) {
+		let index = state.index ?? state.routes.length - 1;
+		while (index > 0 && bridge.isClosing(state.routes[index].key)) index--;
+		route = state.routes[index];
+		state = route?.state;
+	}
+	return route?.name === "Detail" ? (route.params?.level ?? 0) : 0;
+};
 
 function useRig(rig, level: number, next: () => void, scroll: () => void) {
 	const nextRef = useRef(next);
 	nextRef.current = next;
-	useFocusEffect(
-		useCallback(() => {
-			rig.focused.level = level;
-		}, [rig, level]),
-	);
 	useEffect(() => {
 		const go = () => nextRef.current();
 		rig.next[level] = go;
@@ -662,18 +675,22 @@ function makeLab(config: Config) {
 		const key = `${prefix}${i}/${depth}`;
 		if (nests[key]) return nests[key];
 		const Nav = navFor(`${config.prefix}${key}`);
-		nests[key] = function Nest() {
+		nests[key] = function Nest({ route }) {
 			return (
-				<Nav.Navigator>
-					{i < depth ? (
-						<Nav.Screen
-							name={`${prefix}${i + 1}`}
-							component={nestFor(prefix, i + 1, depth, leaves)}
-						/>
-					) : (
-						leaves(Nav)
-					)}
-				</Nav.Navigator>
+				<>
+					{/* Its screen opens and closes the stack: the bar reads whether it is closing. */}
+					<ScreenReporter routeKey={route.key} name={route.name} />
+					<Nav.Navigator>
+						{i < depth ? (
+							<Nav.Screen
+								name={`${prefix}${i + 1}`}
+								component={nestFor(prefix, i + 1, depth, leaves)}
+							/>
+						) : (
+							leaves(Nav)
+						)}
+					</Nav.Navigator>
+				</>
 			);
 		};
 		return nests[key];
@@ -750,7 +767,7 @@ function makeLab(config: Config) {
 								{
 									id: `${p}-bar-next`,
 									label: "next",
-									onPress: () => rig.next[rig.focused.level]?.(),
+									onPress: () => rig.next[focusedLevel(ref)]?.(),
 								},
 								{
 									id: `${p}-bar-back`,
@@ -760,18 +777,18 @@ function makeLab(config: Config) {
 								{
 									id: `${p}-bar-scroll`,
 									label: "scroll",
-									onPress: () => rig.scroll[rig.focused.level]?.(),
+									onPress: () => rig.scroll[focusedLevel(ref)]?.(),
 								},
 								{
 									id: `${p}-bar-under`,
 									label: "under",
-									onPress: () => rig.scroll[rig.focused.level - 1]?.(),
+									onPress: () => rig.scroll[focusedLevel(ref) - 1]?.(),
 								},
 								{
 									id: `${p}-bar-back-scroll`,
 									label: "back+scroll",
 									onPress: () => {
-										const level = rig.focused.level;
+										const level = focusedLevel(ref);
 										if (!ref.canGoBack()) return;
 										ref.goBack();
 										setTimeout(() => rig.scroll[level - 1]?.(), 60);
