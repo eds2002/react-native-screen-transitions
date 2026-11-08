@@ -189,7 +189,7 @@ const motionStyle = (
 		};
 	}
 	if (motion === "swirl") {
-		// The arriving screen grows out of the center from a quarter size, spinning into place; the
+		// The arriving screen grows out of the center from nothing, spinning into place (and shrinks away to nothing); the
 		// screen it covers scales up past the camera and fades (flying through it).
 		const enter = 1 - current.progress;
 		const cover = next ? next.progress : 0;
@@ -202,7 +202,7 @@ const motionStyle = (
 		return {
 			transform: [
 				{ rotate: `${enter * -32}deg` },
-				{ scale: interpolate(enter, [0, 1], [1, 0.25]) },
+				{ scale: interpolate(enter, [0, 1], [1, 0], "clamp") },
 			],
 		};
 	}
