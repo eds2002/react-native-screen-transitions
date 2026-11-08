@@ -35,6 +35,7 @@ import type {
 } from "../../../types/animation.types";
 import type { ScreenTransform } from "../../../utils/bounds/helpers/screen-transform";
 import { applyBoundsScreenFrames } from "../../../utils/bounds/helpers/styles/apply-screen-frames";
+import { isHandoffLanded } from "../../../utils/bounds/helpers/styles/overlap";
 import { isTeleportAvailable } from "../portal/teleport";
 
 export type BoundaryPairPresentation = {
@@ -44,6 +45,8 @@ export type BoundaryPairPresentation = {
 	ready: boolean;
 	/** The destination is closing: a newer screen pushed over its source is on top of it. */
 	closing: boolean;
+	/** Closing, and its handoff content has landed in its source slot (see isHandoffLanded). */
+	landed: boolean;
 	source: NormalizedTransitionInterpolatedStyle;
 	destination: NormalizedTransitionInterpolatedStyle;
 };
@@ -221,6 +224,9 @@ export function usePairPresentation(
 			destinationKey,
 			ready: ready.get(),
 			closing: !!frame.current.closing,
+			landed:
+				!!frame.current.closing &&
+				isHandoffLanded(links, frame.current.progress),
 			// Both sides as their screens draw them this frame (see applyBoundsScreenFrames).
 			source: applyBoundsScreenFrames(
 				source,

@@ -78,6 +78,40 @@ const spanOf = (
 /** Within this many px of its source slot, a closing pair's element has landed. */
 const LANDED_PX = 2;
 
+type LandingLinks = Record<
+	string,
+	| {
+			source?: { bounds?: MeasuredDimensions | null } | null;
+			destination?: {
+				bounds?: MeasuredDimensions | null;
+				handoff?: boolean;
+			} | null;
+	  }
+	| undefined
+>;
+
+/**
+ * Whether a closing pair's handoff content has landed home: every handoff element is within
+ * LANDED_PX of its source slot at `t` (the destination's progress, its spring's tail). The content
+ * goes back to its source's receiver then (resolveBoundaryReceiver), not when the spring settles
+ * long after: its screen is all but gone, and the content still in it would take touches meant for
+ * the screen it lands in (a swipe starting on it grabbed the leaving screen) and keep that screen's
+ * drawing of it until the end.
+ */
+export const isHandoffLanded = (links: LandingLinks, t: number): boolean => {
+	"worklet";
+	let found = false;
+	for (const key in links) {
+		const link = links[key];
+		if (!link?.destination?.handoff) continue;
+		const from = link.source?.bounds;
+		const to = link.destination.bounds;
+		if (!from || !to || t * spanOf(from, to) >= LANDED_PX) return false;
+		found = true;
+	}
+	return found;
+};
+
 /**
  * Whether a closing pair's element has landed: its destination is closing and the element is
  * within LANDED_PX of its source slot (its spring's tail, the screen all but gone). A landed pair

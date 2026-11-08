@@ -101,6 +101,8 @@ export function resolveBoundaryReceiver(
 ) {
 	"worklet";
 	if (!presentation) return screenKey;
+	// Its content has landed home while its destination closes: back in the source's receiver.
+	if (presentation.landed) return presentation.sourceKey;
 	return presentation.ready && target !== "source"
 		? presentation.destinationKey
 		: presentation.sourceKey;

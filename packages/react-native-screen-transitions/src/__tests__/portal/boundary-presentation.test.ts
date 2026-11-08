@@ -1,4 +1,5 @@
 import { resolveBoundaryHandoff as handoff, resolveBoundaryHandoffTarget, resolveReceiverSize } from "../../components/boundary/presentation/resolve-presentation";
+import { isHandoffLanded } from "../../utils/bounds/helpers/styles/overlap";
 import { boundaryRegistry, pairs } from "../../stores/bounds/internals/state";
 import { boundarySourceFrame, runBoundaryInterpolator } from "../../components/boundary/presentation/use-pair-presentation";
 import type { ScreenInterpolatorFrame } from "../../providers/orchestrator/helpers/pipeline";
@@ -189,5 +190,21 @@ describe("a nested stack's first screen", () => {
   expect(presentation("inner", "card", state)?.pairKey).toBe("inner<>second");
   // Nothing pushed from it: it is the destination of the pair that brought it.
   expect(presentation("inner", "card", {...state, presentations: [arrived], following: undefined})?.pairKey).toBe("list<>outer");
+ });
+});
+
+describe("handoff content landing home", () => {
+ it("goes back to its source's receiver once landed, while its destination still closes", () => {
+  const p = publish("media-1", "photo", 0.4, {closing: true} as any);
+  expect(resolveBoundaryReceiver(p, "destination", "home")).toBe("media-1");
+  expect(resolveBoundaryReceiver({...p, landed: true} as any, "destination", "home")).toBe("home");
+ });
+ it("has landed when every handoff element is within a couple of points of its source slot", () => {
+  const box = (x: number) => ({x, y: 0, pageX: x, pageY: 0, width: 100, height: 120});
+  const links = {card: {source: {bounds: box(0)}, destination: {bounds: box(200), handoff: true}}};
+  expect(isHandoffLanded(links, 0.5)).toBe(false);
+  expect(isHandoffLanded(links, 0.005)).toBe(true);
+  // Copies (no handoff) never land this way.
+  expect(isHandoffLanded({card: {source: {bounds: box(0)}, destination: {bounds: box(200)}}}, 0)).toBe(false);
  });
 });
