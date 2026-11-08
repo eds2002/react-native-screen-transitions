@@ -8,12 +8,12 @@ import { lab as handoff } from "./handoff";
 import { lab as heavy } from "./heavy";
 import { lab as inactive } from "./inactive";
 import { lab as manybounds } from "./manybounds";
+import { lab as mixtape } from "./mixtape";
 import { lab as motion } from "./motion";
 import { lab as nativeStack } from "./native-stack";
 import { lab as overlay } from "./overlay";
 import { lab as ownership } from "./ownership";
 import { lab as perf } from "./perf";
-import { lab as realms } from "./realms";
 import { lab as screencycles } from "./screencycles";
 import { lab as scroll } from "./scroll";
 import { lab as scrollbounds } from "./scrollbounds";
@@ -39,7 +39,7 @@ export const LABS: Lab[] = [
 	chain,
 	global,
 	handoff,
-	realms,
+	mixtape,
 	scrollbounds,
 	nativeStack,
 	motion,
