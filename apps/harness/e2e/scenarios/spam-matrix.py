@@ -120,9 +120,10 @@ def scripts(cfg):
     out["tap-alt60"] = s
     out["tap-chain"] = S().next().wait(450).next().wait(450).next().wait(450).back().wait(250).back().wait(250).back()
     out["tap-burst"] = S().next().wait(90).next().wait(90).next().wait(90).back().wait(90).back().wait(90).back()
+    # 300 ms after the tap: the open starts ~120 ms after it, and the screen must be under the finger.
     s = S()
     for _ in range(3):
-        s.next().wait(180).swipe(120, mid=True).wait(300)
+        s.next().wait(300).swipe(120, mid=True).wait(300)
     out["g-swipe-mid-push"] = s
     s = S().next().wait(900)
     for _ in range(2):
@@ -133,7 +134,8 @@ def scripts(cfg):
     for _ in range(2):
         s.swipe().wait(80).next().wait(900)
     out["g-swipe-then-next"] = s.back()
-    out["g-deep-swipes"] = S().next().wait(800).next().wait(800).next().wait(800).swipe().wait(150).swipe().wait(150).swipe()
+    # 350 ms apart: sooner, a swipe lands on the screen still closing (a re-grab: g-regrab's case).
+    out["g-deep-swipes"] = S().next().wait(800).next().wait(800).next().wait(800).swipe().wait(350).swipe().wait(350).swipe()
     if cfg["recipe"] != "styles":
         s = S()
         for _ in range(3):
