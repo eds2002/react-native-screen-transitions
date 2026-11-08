@@ -51,10 +51,12 @@ const ORDER = ["Home", "Meadow", "Lagoon", "Ember", "Summit"];
 /** A soft spring with a little overshoot: realms land with a bounce. */
 const SPRING = { stiffness: 170, damping: 19, mass: 1 };
 /**
- * Leaving is quicker and never overshoots: a close that dipped past its start would carry the
- * shared card past its slot and keep the pair alive until the wobble settled.
+ * Leaving is quicker and never overshoots (critically damped): a close that dipped past its start
+ * would carry the shared card past its slot and keep the pair alive until the wobble settled.
+ * Damping, not overshootClamping: a clamped spring released from a drag starts its close from the
+ * open position for a frame.
  */
-const CLOSE = { stiffness: 260, damping: 30, mass: 1, overshootClamping: true };
+const CLOSE = { stiffness: 260, damping: 34, mass: 1 };
 /** How far the screen below drifts away from an arriving realm. */
 const DRIFT = 0.2;
 
@@ -586,6 +588,9 @@ function Scenery({ name }) {
 
 // ---------------------------------------------------------------- realms
 
+/** Realms whose line reads above Wisp (Ember's would sit on the sun below the banner). */
+const TEXT_FIRST = { Lagoon: true, Ember: true };
+
 const THEME = {
 	Home: {
 		bg: "#0b1026",
@@ -649,7 +654,7 @@ const useSlot = (name) => {
 			marginTop: 4,
 		};
 	if (name === "Ember")
-		return { width: W - 40, height: W * 0.34, marginTop: 120 };
+		return { width: W - 40, height: W * 0.34, marginTop: 60 };
 	return {
 		width: W * 0.74,
 		height: W * 0.74,
@@ -688,7 +693,7 @@ function Realm({ navigation, route }) {
 					{name === "Home" ? "A tiny light" : `Realm ${index} of 4`}
 				</Text>
 				<Text style={[ui.title, { color: theme.ink }]}>{theme.title}</Text>
-				{name === "Lagoon" ? (
+				{TEXT_FIRST[name] ? (
 					<Text style={[ui.line, { color: theme.ink }]}>{theme.line}</Text>
 				) : null}
 				<Transition.Boundary
@@ -703,7 +708,7 @@ function Realm({ navigation, route }) {
 				>
 					{name === "Home" ? <Wisp /> : null}
 				</Transition.Boundary>
-				{name === "Lagoon" ? null : (
+				{TEXT_FIRST[name] ? null : (
 					<Text style={[ui.line, { color: theme.ink }]}>{theme.line}</Text>
 				)}
 				<View style={ui.spacer} />
@@ -743,6 +748,7 @@ function Realm({ navigation, route }) {
 
 const ui = StyleSheet.create({
 	screen: { flex: 1, overflow: "hidden" },
+	sky: { flex: 1, backgroundColor: "#05060f" },
 	body: {
 		flex: 1,
 		paddingTop: 104,
@@ -772,18 +778,21 @@ const ui = StyleSheet.create({
 
 function Component() {
 	return (
-		<LabContainer>
-			<Stack.Navigator>
-				{ORDER.map((name) => (
-					<Stack.Screen
-						key={name}
-						name={name}
-						component={Realm}
-						options={() => realmOptions(name)}
-					/>
-				))}
-			</Stack.Navigator>
-		</LabContainer>
+		// Night sky where a shrinking, drifting screen no longer covers.
+		<View style={ui.sky}>
+			<LabContainer>
+				<Stack.Navigator>
+					{ORDER.map((name) => (
+						<Stack.Screen
+							key={name}
+							name={name}
+							component={Realm}
+							options={() => realmOptions(name)}
+						/>
+					))}
+				</Stack.Navigator>
+			</LabContainer>
+		</View>
 	);
 }
 
