@@ -34,6 +34,7 @@ import {
 	interpolate,
 	type Lab,
 	LabContainer,
+	SPEC,
 	Transition,
 } from "./ui";
 
@@ -51,12 +52,11 @@ const ORDER = ["Home", "Meadow", "Lagoon", "Ember", "Summit"];
 /** A soft spring with a little overshoot: realms land with a bounce. */
 const SPRING = { stiffness: 170, damping: 19, mass: 1 };
 /**
- * Leaving is quicker and never overshoots (critically damped): a close that dipped past its start
- * would carry the shared card past its slot and keep the pair alive until the wobble settled.
- * Damping, not overshootClamping: a clamped spring released from a drag starts its close from the
- * open position for a frame.
+ * Leaving uses the library's default spring: heavily damped and resting early, so the screen and the
+ * shared card arrive together (no overshoot carrying the card past its slot, no long tail leaving it
+ * travelling after the screen has gone).
  */
-const CLOSE = { stiffness: 260, damping: 34, mass: 1 };
+const CLOSE = SPEC;
 /** How far the screen below drifts away from an arriving realm. */
 const DRIFT = 0.2;
 
