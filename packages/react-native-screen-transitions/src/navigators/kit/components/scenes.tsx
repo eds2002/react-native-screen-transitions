@@ -1,14 +1,34 @@
-import { memo, type ReactNode, useMemo } from "react";
+import { memo, type ReactNode, useEffect, useMemo, useRef } from "react";
 import { PortalProvider } from "../../../components/boundary/portal";
 import { Overlay } from "../../../components/overlay";
 import { ScreenLayers } from "../../../components/screen-layers";
 import { BuilderProvider } from "../../../providers/builder";
 import { MotionProvider } from "../../../providers/motion";
+import { resetStoresForScreen } from "../../../providers/motion/lifecycle/reset-stores-for-screen";
 import { OrchestratorProvider } from "../../../providers/orchestrator";
 import { useNavigationHelpers } from "../hooks/use-navigation-helpers";
 import { useNavigatorStore } from "../state/navigator-store";
 import { ActivityContainer, ActivityScreen } from "./activity";
 import { SceneLifecycle } from "./lifecycle/scene-lifecycle";
+
+/**
+ * Clears what a route leaves in the shared stores once it is gone from the navigator. A closing
+ * route clears as its close completes; a route removed without closing (the screens between two
+ * others, dropped at once by popToTop) never does, and its bounds would stay paired with the screen
+ * below, styling it from a pair that no longer moves. A route still listed (an inactive screen
+ * unmounted to save memory) keeps its state. Clearing twice is harmless.
+ */
+function useResetRemovedRoutes(routeKeys: readonly string[]) {
+	const previous = useRef(routeKeys);
+	useEffect(() => {
+		const before = previous.current;
+		previous.current = routeKeys;
+		if (before === routeKeys) return;
+		for (const key of before) {
+			if (!routeKeys.includes(key)) resetStoresForScreen(key);
+		}
+	}, [routeKeys]);
+}
 
 const SceneMotion = memo(function SceneMotion({
 	children,
@@ -68,6 +88,7 @@ const SceneRow = memo(function SceneRow({ routeKey }: RouteKeyProps) {
  */
 export const TransitionScenes = memo(function TransitionScenes() {
 	const routeKeys = useNavigatorStore((store) => store?.routeKeys);
+	useResetRemovedRoutes(routeKeys);
 	return (
 		<PortalProvider>
 			<Overlay />

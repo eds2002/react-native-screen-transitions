@@ -261,4 +261,28 @@ export const useInitialDestinationMeasurement = ({
 			);
 		},
 	);
+
+	// A screen whose previous screen changed under it while open (the screens between them removed
+	// at once, as popToTop does) has no link with its new previous screen. It records its side of
+	// that pair, and the boundary below measures its own (a pair awaiting its source asks for it), so
+	// the element travels home as the screen closes instead of riding out with it.
+	useAnimatedReaction(
+		() => {
+			"worklet";
+			// Grouped boundaries (a pager) pick their active member in the handshake above.
+			if (!canReceiveDestination || !destinationPairKey || group) return null;
+			if (progress.get() <= 0) return null;
+			const sourceScreenKey = getSourceScreenKeyFromPairKey(destinationPairKey);
+			if (!sourceScreenKey || getEntry(tag, sourceScreenKey) === null)
+				return null;
+			if (getEntry(tag, currentScreenKey) === null) return null;
+			const link = pairs.get()[destinationPairKey]?.links?.[linkKey];
+			return link?.destination ? null : destinationPairKey;
+		},
+		(pairKey, previous) => {
+			"worklet";
+			if (!pairKey || pairKey === previous) return;
+			measureBoundary({ type: "destination", pairKey });
+		},
+	);
 };
