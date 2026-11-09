@@ -1,10 +1,11 @@
-import { useLayoutEffect, useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { LayoutChangeEvent } from "react-native";
 import { Gesture, type GestureType } from "react-native-gesture-handler";
 import {
 	type SharedValue,
 	useAnimatedScrollHandler,
 	useDerivedValue,
+	useSharedValue,
 } from "react-native-reanimated";
 import { useSharedValueState } from "../../../../hooks/reanimated/use-shared-value-state";
 import useStableCallback from "../../../../hooks/use-stable-callback";
@@ -180,6 +181,38 @@ export const useScrollGestureCoordination = (
 		metadataWriterId,
 	]);
 
+	// What this scrollable last reported. Its screen's Activity pausing (deep in a stack) runs the
+	// cleanups above, which clear what it recorded, and when it shows again nothing reports its sizes
+	// (its layout and content didn't change): a measurement then clamped its offset to an empty
+	// range, and bounds elements in it started that far off. Restored once it is recorded again.
+	const lastOffset = useSharedValue(0);
+	const lastSizes = useRef<{ contentSize?: number; layoutSize?: number }>({});
+	useLayoutEffect(() => {
+		const { contentSize, layoutSize } = lastSizes.current;
+		if (contentSize === undefined && layoutSize === undefined) return;
+		const patch = { offset: lastOffset.get(), contentSize, layoutSize };
+		for (const scrollState of scrollStates) {
+			modifyScrollGestureAxisState(scrollState, scrollDirection, patch);
+		}
+		if (!metadataState) return;
+		if (writesMetadata) {
+			modifyScrollMetadataAxisState(metadataState, scrollDirection, patch);
+		}
+		modifyScrollViewState(
+			metadataState,
+			metadataWriterId,
+			scrollDirection,
+			patch,
+		);
+	}, [
+		scrollStates,
+		scrollDirection,
+		metadataState,
+		writesMetadata,
+		metadataWriterId,
+		lastOffset,
+	]);
+
 	const ownerMotions = useMotionStore(ownerRouteKeys);
 	const ownerClosingValues = useMemo(
 		() =>
@@ -276,6 +309,7 @@ export const useScrollGestureCoordination = (
 					? event.contentOffset.x
 					: event.contentOffset.y;
 
+			lastOffset.set(offset);
 			for (const scrollState of scrollStates) {
 				modifyScrollGestureAxisState(scrollState, scrollDirection, {
 					offset,
@@ -308,6 +342,7 @@ export const useScrollGestureCoordination = (
 			props.onContentSizeChange?.(width, height);
 
 			const contentSize = scrollDirection === "horizontal" ? width : height;
+			lastSizes.current.contentSize = contentSize;
 
 			for (const scrollState of scrollStates) {
 				modifyScrollGestureAxisState(scrollState, scrollDirection, {
@@ -339,6 +374,7 @@ export const useScrollGestureCoordination = (
 
 		const { width, height } = event.nativeEvent.layout;
 		const layoutSize = scrollDirection === "horizontal" ? width : height;
+		lastSizes.current.layoutSize = layoutSize;
 
 		for (const scrollState of scrollStates) {
 			modifyScrollGestureAxisState(scrollState, scrollDirection, {
