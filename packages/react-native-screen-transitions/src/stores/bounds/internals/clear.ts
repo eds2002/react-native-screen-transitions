@@ -1,4 +1,4 @@
-import { hasAnyKeys } from "../helpers/keys";
+import { hasAnyKeys } from "../../../utils/has-any-keys";
 import { isScreenPairKeyForScreen } from "../helpers/link-pairs.helpers";
 import type { LinkPairsState, ScreenKey } from "../types";
 import { type BoundaryEntriesState, boundaryRegistry, pairs } from "./state";

@@ -6,7 +6,7 @@ import { queueEntryOp } from "./measure-registry";
 /**
  * The link keys of the boundaries mounted on each screen, on the JS side: a boundary arriving as a
  * pair's destination reads whether the screen below has its partner while it renders, before the
- * UI-thread registry hears of it (see useArrivesLinked).
+ * UI-thread registry hears of it (see hasPresentLink in boundary-root.provider).
  */
 const presentLinks = new Map<string, Map<string, number>>();
 

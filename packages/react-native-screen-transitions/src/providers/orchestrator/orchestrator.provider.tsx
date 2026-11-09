@@ -39,7 +39,7 @@ const ComposedOrchestrator = ({ children }: { children: ReactNode }) => {
 	return (
 		<OrchestratorStoreProvider
 			storeKey={currentScreenKey}
-			value={{ ...pipeline, ...bounds }}
+			value={{ ...pipeline, ...bounds, interpolatorRuns }}
 		>
 			{children}
 		</OrchestratorStoreProvider>

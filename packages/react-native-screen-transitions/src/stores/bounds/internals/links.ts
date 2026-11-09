@@ -210,14 +210,13 @@ const writeGroup = (
 	pairKey: ScreenPairKey,
 	group: GroupKey,
 	activeId: LinkKey,
-	initialId?: LinkKey,
 ) => {
 	"worklet";
 	const previousInitialId = state[pairKey]?.groups?.[group]?.initialId;
 
 	ensurePairGroups(state, pairKey)[group] = {
 		activeId,
-		initialId: previousInitialId ?? initialId ?? activeId,
+		initialId: previousInitialId ?? activeId,
 	};
 };
 

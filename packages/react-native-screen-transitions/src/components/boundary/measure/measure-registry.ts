@@ -4,6 +4,7 @@ import { scheduleOnUI } from "react-native-worklets";
 import type { BoundTag, ScreenKey } from "../../../stores/bounds";
 import { applyEntryOps, type EntryOp } from "../../../stores/bounds";
 import type { TagID } from "../../../types/bounds.types";
+import { hasAnyKeys } from "../../../utils/has-any-keys";
 import { forgetAppliedStyleKeys } from "../presentation/applied-style-keys";
 import { forgetLocalMeasurements } from "./local-measurements";
 import type { BoundaryMeasureData } from "./use-measurer";
@@ -51,12 +52,7 @@ const applyRegistryOps = (ops: RegistryOp[]) => {
 				// Only the registration that is leaving: a remount with the same tag may already be in.
 				if (screen?.[op.tag]?.id !== op.removeId) continue;
 				delete screen[op.tag];
-				let empty = true;
-				for (const _ in screen) {
-					empty = false;
-					break;
-				}
-				if (empty) delete state[op.screenKey];
+				if (!hasAnyKeys(screen)) delete state[op.screenKey];
 			}
 			return state;
 		},

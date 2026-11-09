@@ -44,9 +44,11 @@ export const callInterpolator = (
 	try {
 		const raw = interpolator(createInterpolatorScope({ frame, selectedFrame }));
 		return typeof raw === "object" && raw != null ? raw : undefined;
-	} catch (_) {
+	} catch (error) {
 		if (__DEV__) {
-			logger.warn("screenStyleInterpolator must be a worklet");
+			logger.warn(
+				`screenStyleInterpolator threw (is it a worklet?): ${String(error)}`,
+			);
 		}
 		return false;
 	}

@@ -1,4 +1,5 @@
 import { makeMutable } from "react-native-reanimated";
+import { hasAnyKeys } from "../../../../utils/has-any-keys";
 
 /**
  * Screens whose handoff content is presented in another screen right now (and the screens they are
@@ -36,12 +37,7 @@ export const setHandoffLending = (
 			const boundaries = state[key];
 			if (!boundaries) continue;
 			delete boundaries[boundaryKey];
-			let empty = true;
-			for (const _ in boundaries) {
-				empty = false;
-				break;
-			}
-			if (empty) delete state[key];
+			if (!hasAnyKeys(boundaries)) delete state[key];
 		}
 		return state;
 	});

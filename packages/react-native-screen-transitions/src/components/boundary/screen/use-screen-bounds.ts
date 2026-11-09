@@ -61,8 +61,6 @@ export type ScreenBounds = {
 	contentMeasureRef: AnimatedRef<View>;
 	/** What boundaries outside any transition present: no pair, this screen's slots. */
 	idleBoundaryPresentation: SharedValue<BoundaryPresentationValue>;
-	/** This screen's interpolator runs, for the pair presentation of the screen it opens. */
-	interpolatorRuns: DerivedValue<InterpolatorRuns>;
 };
 
 /**
@@ -193,6 +191,5 @@ export function useScreenBounds({
 		screenTransform,
 		contentMeasureRef,
 		idleBoundaryPresentation,
-		interpolatorRuns,
 	};
 }

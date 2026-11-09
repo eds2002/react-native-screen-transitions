@@ -22,8 +22,8 @@ import { appliedStyleKeys, nextAppliedStyleKey } from "./applied-style-keys";
 export function useComposedBoundaryStyle(
 	slots: SharedValue<NormalizedTransitionInterpolatedStyle> | undefined,
 	id: string | undefined,
-	style?: unknown,
-	kind: "full" | "stacking" | "layout" = "full",
+	style: unknown,
+	kind: "full" | "stacking",
 	/** A boundary that can escape: while its frame is in the overlay host, keep only layout here (the host applies the rest). */
 	escapeState?: BoundaryEscapeState,
 ) {

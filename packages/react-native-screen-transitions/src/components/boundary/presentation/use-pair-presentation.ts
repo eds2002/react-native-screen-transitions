@@ -197,9 +197,9 @@ const coversHandoffHomes = (
 export function usePairPresentation(
 	{ screenInterpolatorProps, currentInterpolator }: ScreenAnimationPipeline,
 	/** This screen's interpolator runs. */
-	interpolatorRuns?: SharedValue<InterpolatorRuns>,
+	interpolatorRuns: SharedValue<InterpolatorRuns>,
 	/** The stack's screen transforms by key (others are read by key; see applyBoundsScreenFrames). */
-	screenTransforms?: SharedValue<Record<string, ScreenTransform | undefined>>,
+	screenTransforms: SharedValue<Record<string, ScreenTransform | undefined>>,
 ): DerivedValue<BoundaryPairPresentation | undefined> {
 	const stackPairKey = useBuilderStore((s) => s.derivations.destinationPairKey);
 	const currentScreenKey = useBuilderStore(

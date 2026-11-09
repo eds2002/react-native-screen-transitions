@@ -116,7 +116,7 @@ export const computeBoundStyles = (
 		dimensions,
 		interpolationProps,
 	}: BoundsComputeParams,
-	computeOptions: BoundsInternalOptions = { id: "bound-id" },
+	computeOptions: BoundsInternalOptions,
 ) => {
 	"worklet";
 

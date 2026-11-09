@@ -1,5 +1,5 @@
 import type { Entry, EntryPatch, TagID } from "../../../types/bounds.types";
-import { hasAnyKeys } from "../helpers/keys";
+import { hasAnyKeys } from "../../../utils/has-any-keys";
 import type { ScreenKey } from "../types";
 import { type BoundaryEntriesState, boundaryRegistry } from "./state";
 
