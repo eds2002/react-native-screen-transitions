@@ -136,6 +136,17 @@ def scripts(cfg):
     out["g-swipe-then-next"] = s.back()
     # 350 ms apart: sooner, a swipe lands on the screen still closing (a re-grab: g-regrab's case).
     out["g-deep-swipes"] = S().next().wait(800).next().wait(800).next().wait(800).swipe().wait(350).swipe().wait(350).swipe()
+    # Ten deep and back (screens far down the stack are paused), then scroll the list and open card 3
+    # with the bar (it starts wherever the card is): its flight must start on the card.
+    s = S()
+    for _ in range(10):
+        s.next().wait(70)
+    s.wait(300)
+    for _ in range(10):
+        s.back().wait(70)
+    s.parts.append("wait 2500; down 0.5,0.85; move 0.5,0.7 400; hold 300; up; wait 5000")
+    out["t-deep-scroll-open"] = s.tap(NEXT)
+    s.level = 1
     if cfg["recipe"] != "styles":
         s = S()
         for _ in range(3):
