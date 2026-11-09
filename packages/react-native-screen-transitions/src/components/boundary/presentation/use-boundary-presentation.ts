@@ -7,10 +7,7 @@ import {
 } from "react-native-reanimated";
 import { NO_STYLES } from "../../../constants";
 import { useBuilderStore } from "../../../providers/builder";
-import {
-	screenTopology,
-	useScreenRelationships,
-} from "../../../providers/builder/topology";
+import { useAncestorScreenKeys } from "../../../providers/builder/topology";
 import { useOptionalScreenHostStore } from "../../../providers/host/screen-host.provider";
 import {
 	useOptionalOrchestratorStore,
@@ -95,18 +92,9 @@ export function useBoundaryPresentation(
 	);
 	const localSlots = useOrchestratorStore((s) => s.slotsMap);
 	const frame = useOrchestratorStore((s) => s.screenInterpolatorProps);
-	const { parentScreenKey } = useScreenRelationships();
 	// The screens this one is nested in, nearest first. A card in a nested stack is covered by the
 	// next route of whichever ancestor has one (its own stack may have none).
-	const ancestorKeys = useMemo(() => {
-		const out: string[] = [];
-		let key: string | null | undefined = parentScreenKey;
-		while (key && !out.includes(key)) {
-			out.push(key);
-			key = screenTopology.getRelationships(key).parentScreenKey;
-		}
-		return out;
-	}, [parentScreenKey]);
+	const ancestorKeys = useAncestorScreenKeys(screenKey);
 	const ancestorFrames = useOptionalOrchestratorStore(
 		ancestorKeys,
 		(s) => s.screenInterpolatorProps,

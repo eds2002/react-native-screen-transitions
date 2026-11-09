@@ -1,19 +1,11 @@
-import {
-	memo,
-	useCallback,
-	useEffect,
-	useLayoutEffect,
-	useMemo,
-	useState,
-	useSyncExternalStore,
-} from "react";
+import { memo, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import {
 	type SharedValue,
 	useAnimatedProps,
 	useAnimatedReaction,
 } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
-import { screenTopology } from "../../../../providers/builder/topology";
+import { useAncestorScreenKeys } from "../../../../providers/builder/topology";
 import type { BoundaryPresentationValue } from "../../presentation/use-boundary-presentation";
 import { useBoundaryRootStore } from "../../root/boundary-root.provider";
 import type { BoundaryLocalMeasurementValue } from "../../types";
@@ -93,23 +85,11 @@ function useHandoffLending(
 	const lenderKey = useMemo(() => String(++nextLenderId), []);
 	// The screen's parent is registered after it mounts (and can change): follow it, or the screens it
 	// is nested in would not be marked, and the navigator above would hide them with the content.
-	const parentScreenKey = useSyncExternalStore(
-		useCallback(
-			(listener: () => void) =>
-				screenTopology.subscribe(currentScreenKey, listener),
-			[currentScreenKey],
-		),
-		() => screenTopology.getRelationships(currentScreenKey).parentScreenKey,
+	const ancestorKeys = useAncestorScreenKeys(currentScreenKey);
+	const screenKeys = useMemo(
+		() => [currentScreenKey, ...ancestorKeys],
+		[currentScreenKey, ancestorKeys],
 	);
-	const screenKeys = useMemo(() => {
-		const out = [currentScreenKey];
-		let key = parentScreenKey;
-		while (key && !out.includes(key)) {
-			out.push(key);
-			key = screenTopology.getRelationships(key).parentScreenKey;
-		}
-		return out;
-	}, [currentScreenKey, parentScreenKey]);
 	useAnimatedReaction(
 		() => {
 			"worklet";

@@ -3,10 +3,7 @@ import {
 	useBuilderStore,
 	useOptionalBuilderStore,
 } from "../../../providers/builder";
-import {
-	screenTopology,
-	useScreenRelationships,
-} from "../../../providers/builder/topology";
+import { useAncestorScreenKeys } from "../../../providers/builder/topology";
 import type { ScreenPairKey } from "../../../stores/bounds";
 
 export type OpeningScreen = {
@@ -29,16 +26,7 @@ export type OpeningScreen = {
  */
 export function useOpeningScreen(): OpeningScreen {
 	const own = useBuilderStore((s) => s.derivations);
-	const { parentScreenKey } = useScreenRelationships();
-	const ancestorKeys = useMemo(() => {
-		const out: string[] = [];
-		let key: string | null | undefined = parentScreenKey;
-		while (key && !out.includes(key)) {
-			out.push(key);
-			key = screenTopology.getRelationships(key).parentScreenKey;
-		}
-		return out;
-	}, [parentScreenKey]);
+	const ancestorKeys = useAncestorScreenKeys(own.currentScreenKey);
 	// Only read while the chain is made of first screens (no previous of their own).
 	const ancestors = useOptionalBuilderStore(
 		own.previousScreenKey ? EMPTY : ancestorKeys,

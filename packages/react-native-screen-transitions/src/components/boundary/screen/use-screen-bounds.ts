@@ -10,10 +10,7 @@ import {
 	useSharedValue,
 } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
-import {
-	screenTopology,
-	useScreenRelationships,
-} from "../../../providers/builder/topology";
+import { useAncestorScreenKeys } from "../../../providers/builder/topology";
 import { useOptionalScreenHostStore } from "../../../providers/host/screen-host.provider";
 import type { ScreenAnimationPipeline } from "../../../providers/orchestrator/helpers/pipeline";
 import { useOptionalOrchestratorStore } from "../../../providers/orchestrator/orchestrator.store";
@@ -101,16 +98,7 @@ export function useScreenBounds({
 	);
 	// The screens this one is drawn inside (a nested stack's screens are drawn in their stack's screen
 	// in the stack above), nearest first: their transforms move it too.
-	const { parentScreenKey } = useScreenRelationships(currentScreenKey);
-	const ancestorKeys = useMemo(() => {
-		const out: string[] = [];
-		let key: string | null | undefined = parentScreenKey;
-		while (key && !out.includes(key)) {
-			out.push(key);
-			key = screenTopology.getRelationships(key).parentScreenKey;
-		}
-		return out;
-	}, [parentScreenKey]);
+	const ancestorKeys = useAncestorScreenKeys(currentScreenKey);
 	const ancestorTransforms = useOptionalOrchestratorStore(
 		ancestorKeys,
 		(store) => store.screenTransform,
