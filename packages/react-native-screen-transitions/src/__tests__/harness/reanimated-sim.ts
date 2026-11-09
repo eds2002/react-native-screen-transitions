@@ -433,6 +433,7 @@ export const createReanimatedSim = ({ frameMs = 1000 / 60 }: { frameMs?: number 
 			return ref;
 		},
 		useAnimatedScrollHandler: <T>(handlers: T) => handlers,
+		useEvent: <T>(handler: T) => handler,
 		useComposedEventHandler: (handlers: unknown[]) => handlers.filter(Boolean),
 		createAnimatedComponent: <T>(component: T) => component,
 		default: {

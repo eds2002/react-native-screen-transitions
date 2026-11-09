@@ -60,6 +60,8 @@
 	"files": [
 		"lib",
 		"src",
+		"ios",
+		"*.podspec",
 		"!src/**/__tests__",
 		"!src/**/typecheck/**",
 		"!lib/**/__tests__",
@@ -110,5 +112,15 @@
 			]
 		]
 	},
-	"gitHead": "888d4df9936ec0e3b8221bea7cd81115e6301693"
+	"gitHead": "888d4df9936ec0e3b8221bea7cd81115e6301693",
+	"codegenConfig": {
+		"name": "RNScreenTransitionsSpec",
+		"type": "components",
+		"jsSrcsDir": "src/native",
+		"ios": {
+			"componentProvider": {
+				"RNSTScrollObserver": "RNSTScrollObserver"
+			}
+		}
+	}
 }

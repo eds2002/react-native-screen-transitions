@@ -480,4 +480,18 @@ export type ScreenTransitionConfig = {
 	 * @default undefined
 	 */
 	surfaceComponent?: ScreenSurfaceComponent;
+
+	/**
+	 * Lets plain scroll views (React Native's ScrollView, FlatList and lists built on them) hand
+	 * gestures to the screen the way `Transition.ScrollView` does: at the top of the list a swipe down
+	 * dismisses, a sheet expands and collapses from its list. `Transition.ScrollView` keeps working
+	 * as it does, with or without this.
+	 *
+	 * iOS only for now, and only when the app is built with the library's native code (not Expo Go);
+	 * elsewhere it does nothing.
+	 *
+	 * @experimental
+	 * @default false
+	 */
+	experimental_plainScrollViews?: boolean;
 };
