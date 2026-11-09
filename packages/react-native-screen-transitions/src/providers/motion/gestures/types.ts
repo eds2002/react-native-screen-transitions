@@ -27,7 +27,14 @@ import type {
 import type { ScreenTransitionConfig } from "../../../types/screen.types";
 import type { MotionTransitionValues } from "../hooks/use-transition-values";
 import type { MotionAnimationValues, MotionGestureValues } from "../types";
-import type { EffectiveSnapPointsResult } from "./shared/snap-points";
+
+export interface EffectiveSnapPointsResult {
+	hasSnapPoints: boolean;
+	hasAutoSnapPoint: boolean;
+	snapPoints: number[];
+	minSnapPoint: number;
+	maxSnapPoint: number;
+}
 
 export type PanGesture = ReturnType<typeof Gesture.Pan>;
 export type PinchGesture = ReturnType<typeof Gesture.Pinch>;

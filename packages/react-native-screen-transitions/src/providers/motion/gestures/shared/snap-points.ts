@@ -1,5 +1,9 @@
 import type { SnapPoint } from "../../../../types/screen.types";
-import type { GesturePolicy, GestureRuntime } from "../types";
+import type {
+	EffectiveSnapPointsResult,
+	GesturePolicy,
+	GestureRuntime,
+} from "../types";
 
 const createEmptySnapPoints = (): EffectiveSnapPointsResult => ({
 	hasSnapPoints: false,
@@ -40,14 +44,6 @@ export function sanitizeSnapPoints(
 	}
 
 	return normalized;
-}
-
-export interface EffectiveSnapPointsResult {
-	hasSnapPoints: boolean;
-	hasAutoSnapPoint: boolean;
-	snapPoints: number[];
-	minSnapPoint: number;
-	maxSnapPoint: number;
 }
 
 interface ResolveRuntimeSnapPointsProps {

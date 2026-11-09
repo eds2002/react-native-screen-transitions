@@ -1,6 +1,5 @@
 import { useLayoutEffect } from "react";
 import { useOptionalScreenHostStore } from "../../host/screen-host.provider";
-import { useOptionalBuilderStore } from "../builder.provider";
 import { screenTopology } from "../topology/helpers/create-screen-topology";
 
 /**
@@ -11,11 +10,9 @@ import { screenTopology } from "../topology/helpers/create-screen-topology";
 export function useScreenTopology(
 	screenKey: string,
 	ownTransitionKey: string | undefined,
+	/** The screen this one is rendered inside, if any (its builder's parent). */
+	parentScreenKey: string | undefined,
 ) {
-	const parentScreenKey = useOptionalBuilderStore(
-		(store) => store?.derivations.currentScreenKey,
-	);
-
 	const hostTransitionKey = useOptionalScreenHostStore(
 		(store) => store?.scenesByKey[screenKey]?.descriptor.options.transitionKey,
 	);

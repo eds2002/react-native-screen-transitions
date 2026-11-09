@@ -85,7 +85,10 @@ const {
 			startsSettled,
 		]);
 
-		useScreenTopology(routeKey, options.transitionKey);
+		const parentScreenKey = useOptionalBuilderStore(
+			(store) => store?.derivations.currentScreenKey,
+		);
+		useScreenTopology(routeKey, options.transitionKey, parentScreenKey);
 
 		const value = useMemo(
 			() => ({ descriptors, derivations, options }),
