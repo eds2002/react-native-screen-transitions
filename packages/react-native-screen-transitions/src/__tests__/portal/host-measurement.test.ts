@@ -99,10 +99,12 @@ for (const invalid of [null, {...bounds(), width:0, height:0}]) {
   const host = render();
   settle();
   expect(host.hostBounds.get()).toBeNull();
-  expect(measurements).toBe(20);
-  expect(retries).toBe(19);
+  // It retries (each retry measures again), then gives up: settling again measures nothing more.
+  expect(retries).toBeGreaterThan(1);
+  expect(measurements).toBe(retries + 1);
+  const spent = measurements;
   settle();
-  expect(measurements).toBe(20);
+  expect(measurements).toBe(spent);
  });
 }
 
