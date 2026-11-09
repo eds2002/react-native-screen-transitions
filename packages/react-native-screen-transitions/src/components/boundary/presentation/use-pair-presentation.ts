@@ -6,6 +6,7 @@ import {
 } from "react";
 import {
 	type DerivedValue,
+	type MeasuredDimensions,
 	type SharedValue,
 	useDerivedValue,
 } from "react-native-reanimated";
@@ -26,6 +27,7 @@ import type { InterpolatorRuns } from "../../../providers/orchestrator/styles/ho
 import type { ScreenPairKey } from "../../../stores/bounds";
 import {
 	getDestinationScreenKeyFromPairKey,
+	getScreenTransform,
 	getSourceScreenKeyFromPairKey,
 	pairs,
 } from "../../../stores/bounds";
@@ -34,7 +36,16 @@ import type {
 	ScreenStyleInterpolator,
 } from "../../../types/animation.types";
 import type { ScreenTransform } from "../../../utils/bounds/helpers/screen-transform";
-import { applyBoundsScreenFrames } from "../../../utils/bounds/helpers/styles/apply-screen-frames";
+import {
+	boundingBox,
+	IDENTITY_SCREEN_TRANSFORM,
+	toAffine,
+	toLayoutSpace,
+} from "../../../utils/bounds/helpers/screen-transform";
+import {
+	applyBoundsScreenFrames,
+	screenCoverage,
+} from "../../../utils/bounds/helpers/styles/apply-screen-frames";
 import { isHandoffLanded } from "../../../utils/bounds/helpers/styles/overlap";
 import { isTeleportAvailable } from "../portal/teleport";
 
@@ -146,6 +157,39 @@ export const usePairDestinationKeys = (known: readonly string[]) => {
 
 const NO_TRANSFORMS: Record<string, ScreenTransform | undefined> = {};
 
+/** More of a handoff element's home than this covered by its closing destination: it hides it. */
+const HOME_COVERED = 0.25;
+
+/**
+ * Whether the closing destination still hides a handoff element's home (its source slot, where its
+ * source screen draws it). Its content goes home only once it doesn't: a closing screen that stays
+ * where it is until it is gone (no motion of its own) would hide it there. One shrunk to a speck
+ * over it, or moved off it, doesn't.
+ */
+const coversHandoffHomes = (
+	links: PairLinks,
+	destinationKey: string,
+	transforms: Record<string, ScreenTransform | undefined>,
+) => {
+	"worklet";
+	const read = (key: string) =>
+		transforms[key] ?? getScreenTransform(key) ?? IDENTITY_SCREEN_TRANSFORM;
+	const screen = read(destinationKey);
+	for (const key in links) {
+		const link = links[key];
+		if (!link?.destination?.handoff || !link.source) continue;
+		const from = link.source.bounds as MeasuredDimensions & {
+			screenTransform?: ScreenTransform;
+		};
+		const home = boundingBox(
+			toLayoutSpace(from, from.screenTransform),
+			toAffine(read(link.source.screenKey)),
+		);
+		if (screenCoverage(screen, home) > HOME_COVERED) return true;
+	}
+	return false;
+};
+
 // Each destination owns the output of its incoming pair, even when its source
 // has moved on to another route. All boundaries read this same UI value.
 //
@@ -226,7 +270,12 @@ export function usePairPresentation(
 			closing: !!frame.current.closing,
 			landed:
 				!!frame.current.closing &&
-				isHandoffLanded(links, frame.current.progress),
+				isHandoffLanded(links, frame.current.progress) &&
+				!coversHandoffHomes(
+					links,
+					destinationKey,
+					screenTransforms?.get() ?? NO_TRANSFORMS,
+				),
 			// Both sides as their screens draw them this frame (see applyBoundsScreenFrames).
 			source: applyBoundsScreenFrames(
 				source,

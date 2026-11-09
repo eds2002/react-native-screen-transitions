@@ -220,22 +220,41 @@ const coversSource = (
 	read: (key: string) => ScreenTransform,
 ): boolean => {
 	"worklet";
-	const screen = read(frame.destinationScreenKey);
-	if (!screen.width || !screen.height) return true;
+	return screenCovers(
+		read(frame.destinationScreenKey),
+		boundingBox(
+			resolveStart(frame, read),
+			toAffine(read(frame.sourceScreenKey)),
+		),
+	);
+};
+
+/**
+ * How much of a window rect a screen, drawn as `screen` says, covers (0 to 1, by its bounding box).
+ * A screen whose size isn't known yet covers it all.
+ */
+export const screenCoverage = (screen: ScreenTransform, rect: FrameRect) => {
+	"worklet";
+	if (!screen.width || !screen.height) return 1;
 	const area = boundingBox(
 		{ pageX: 0, pageY: 0, width: screen.width, height: screen.height },
 		toAffine(screen),
 	);
-	const source = boundingBox(
-		resolveStart(frame, read),
-		toAffine(read(frame.sourceScreenKey)),
-	);
-	return (
-		area.pageX < source.pageX + source.width &&
-		source.pageX < area.pageX + area.width &&
-		area.pageY < source.pageY + source.height &&
-		source.pageY < area.pageY + area.height
-	);
+	const w =
+		Math.min(area.pageX + area.width, rect.pageX + rect.width) -
+		Math.max(area.pageX, rect.pageX);
+	const h =
+		Math.min(area.pageY + area.height, rect.pageY + rect.height) -
+		Math.max(area.pageY, rect.pageY);
+	if (w <= 0 || h <= 0) return 0;
+	const size = rect.width * rect.height;
+	return size > 0 ? (w * h) / size : 1;
+};
+
+/** Whether a screen overlaps a window rect at all (see screenCoverage). */
+export const screenCovers = (screen: ScreenTransform, rect: FrameRect) => {
+	"worklet";
+	return screenCoverage(screen, rect) > 0;
 };
 
 /**
