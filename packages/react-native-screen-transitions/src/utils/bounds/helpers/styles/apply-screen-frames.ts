@@ -211,25 +211,6 @@ const resolveCorrection = (
 };
 
 /**
- * Whether the closing destination screen still covers the source's copy of a landed pair (its
- * window rect overlaps where the source draws the element: its slot, or wherever the element is in
- * flight when the source screen closes too). A screen whose size isn't known yet counts as covering.
- */
-const coversSource = (
-	frame: BoundsScreenFrame,
-	read: (key: string) => ScreenTransform,
-): boolean => {
-	"worklet";
-	return screenCovers(
-		read(frame.destinationScreenKey),
-		boundingBox(
-			resolveStart(frame, read),
-			toAffine(read(frame.sourceScreenKey)),
-		),
-	);
-};
-
-/**
  * How much of a window rect a screen, drawn as `screen` says, covers (0 to 1, by its bounding box).
  * A screen whose size isn't known yet covers it all.
  */
@@ -255,6 +236,25 @@ export const screenCoverage = (screen: ScreenTransform, rect: FrameRect) => {
 export const screenCovers = (screen: ScreenTransform, rect: FrameRect) => {
 	"worklet";
 	return screenCoverage(screen, rect) > 0;
+};
+
+/**
+ * Whether the closing destination screen still covers the source's copy of a landed pair (its
+ * window rect overlaps where the source draws the element: its slot, or wherever the element is in
+ * flight when the source screen closes too). A screen whose size isn't known yet counts as covering.
+ */
+const coversSource = (
+	frame: BoundsScreenFrame,
+	read: (key: string) => ScreenTransform,
+): boolean => {
+	"worklet";
+	return screenCovers(
+		read(frame.destinationScreenKey),
+		boundingBox(
+			resolveStart(frame, read),
+			toAffine(read(frame.sourceScreenKey)),
+		),
+	);
 };
 
 /**

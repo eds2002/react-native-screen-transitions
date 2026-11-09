@@ -54,6 +54,25 @@ const snapshotSharedValue = (value: SharedValueLike): unknown => {
 	return value.value;
 };
 
+/**
+ * A transform value that isn't a list (a number, a string, a shared value read now). Functions and
+ * objects aren't measurement data.
+ */
+const snapshotTransformScalar = (value: unknown): unknown => {
+	"worklet";
+	if (isSharedValueLike(value)) {
+		return snapshotSharedValue(value);
+	}
+
+	if (typeof value === "function") {
+		return undefined;
+	}
+
+	return value === null || typeof value !== "object" ? value : undefined;
+};
+
+// Worklets capture the module bindings they use when they are created, so each helper is declared
+// before the worklets that call it, and none is recursive (a list's items are scalars: a matrix).
 const snapshotTransformArrayValue = (
 	value: unknown[],
 ): unknown[] | undefined => {
@@ -61,7 +80,7 @@ const snapshotTransformArrayValue = (
 	const snapshot: unknown[] = [];
 
 	for (let index = 0; index < value.length; index++) {
-		const snapshotValue = snapshotTransformEntryValue(value[index]);
+		const snapshotValue = snapshotTransformScalar(value[index]);
 		if (snapshotValue !== undefined) {
 			snapshot.push(snapshotValue);
 		}
@@ -72,19 +91,11 @@ const snapshotTransformArrayValue = (
 
 const snapshotTransformEntryValue = (value: unknown): unknown => {
 	"worklet";
-	if (isSharedValueLike(value)) {
-		return snapshotSharedValue(value);
-	}
-
 	if (Array.isArray(value)) {
 		return snapshotTransformArrayValue(value);
 	}
 
-	if (typeof value === "function") {
-		return undefined;
-	}
-
-	return value === null || typeof value !== "object" ? value : undefined;
+	return snapshotTransformScalar(value);
 };
 
 const snapshotTransformItem = (value: unknown): unknown => {
