@@ -269,6 +269,45 @@ describe("hydrateTransitionState snap indices", () => {
 		expect(hydrated.snapIndex).toBe(1);
 	});
 
+	it("leaves an auto snap point out of the snap indices until it is measured", () => {
+		const state = createScreenTransitionState({
+			key: "route-a",
+			name: "RouteA",
+		});
+		const hydrate = (hasAutoSnapPoint: boolean) =>
+			hydrateTransitionState(
+				{
+					transitionProgress: shared(0.8),
+					visualProgress: shared(0.8),
+					stackProgress: shared(0.8),
+					willAnimate: shared(0),
+					closing: shared(0),
+					progressAnimating: shared(0),
+					entering: shared(0),
+					gesture: createGestureStore(),
+					route: state.route,
+					options: DEFAULT_SCREEN_TRANSITION_OPTIONS,
+					optionsSlot: {},
+					targetProgress: shared(0.8),
+					progressSettled: shared(1),
+					// Not measured yet.
+					resolvedAutoSnapPoint: shared(-1),
+					measuredContentLayout: shared(null),
+					scrollMetadata: shared(null),
+					contentLayoutSlot: { width: 0, height: 0 },
+					hasAutoSnapPoint,
+					sortedNumericSnapPoints: [0.2, 0.8],
+					unwrapped: state,
+				},
+				{ width: 390, height: 844 },
+			);
+
+		const withAuto = hydrate(true);
+		const withoutAuto = hydrate(false);
+		expect(withAuto.snapIndex).toBe(withoutAuto.snapIndex);
+		expect(withAuto.animatedSnapIndex).toBe(withoutAuto.animatedSnapIndex);
+	});
+
 	it("reuses the measured content layout slot across hydration frames", () => {
 		const state = createScreenTransitionState({
 			key: "route-a",

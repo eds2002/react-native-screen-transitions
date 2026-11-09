@@ -3,6 +3,7 @@ import { Pressable, StyleSheet } from "react-native";
 import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
 import { useBuilderStore } from "../../../providers/builder";
 import { animateToProgress } from "../../../providers/motion/animation/animate-to-progress";
+import { resolveAutoSnapPoint } from "../../../providers/motion/gestures/shared/snap-points";
 import { useMotionStore } from "../../../providers/motion/motion.store";
 import {
 	useSlotProps,
@@ -61,8 +62,11 @@ export const BackdropLayer = memo(function BackdropLayer({
 
 				for (let i = 0; i < rawSnapPoints.length; i++) {
 					const point = rawSnapPoints[i];
+					// Unmeasured, 'auto' isn't a snap point yet (it reads -1).
 					const resolvedPoint =
-						typeof point === "string" ? resolvedAutoSnapPoint.get() : point;
+						typeof point === "string"
+							? resolveAutoSnapPoint(true, resolvedAutoSnapPoint.get())
+							: point;
 
 					if (typeof resolvedPoint === "number") {
 						resolvedSnaps.push(resolvedPoint);

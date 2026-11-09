@@ -3,6 +3,7 @@ import type {
 	TransitionInterpolatorOptions,
 } from "../../../../../types/animation.types";
 import type { Layout } from "../../../../../types/screen.types";
+import { resolveAutoSnapPoint } from "../../../gestures/shared/snap-points";
 import { resolveGestureAffectedProgress } from "./gesture-progress";
 import {
 	computeAnimatedSnapIndex,
@@ -58,11 +59,13 @@ export const hydrateTransitionState = (
 	);
 	const canDismiss = options.gestureEnabled !== false;
 	const resolvedSnapPoints = [...s.sortedNumericSnapPoints];
-	const resolvedAutoSnapPoint = s.hasAutoSnapPoint
-		? s.resolvedAutoSnapPoint.get()
-		: null;
-	if (resolvedAutoSnapPoint !== null) {
-		resolvedSnapPoints.push(resolvedAutoSnapPoint);
+	// Unmeasured, 'auto' isn't a snap point yet (it reads -1).
+	const resolvedAutoSnap = resolveAutoSnapPoint(
+		s.hasAutoSnapPoint,
+		s.resolvedAutoSnapPoint.get(),
+	);
+	if (resolvedAutoSnap !== null) {
+		resolvedSnapPoints.push(resolvedAutoSnap);
 	}
 	if (canDismiss) {
 		resolvedSnapPoints.push(0);
@@ -173,7 +176,7 @@ export const hydrateTransitionState = (
 		options.gestureDirection,
 		getResolvedSnapBounds(
 			s.sortedNumericSnapPoints,
-			s.hasAutoSnapPoint ? s.resolvedAutoSnapPoint.get() : null,
+			resolvedAutoSnap,
 			canDismiss,
 		),
 		resolvedSnapPoints,
@@ -207,10 +210,6 @@ export const hydrateTransitionState = (
 	}
 
 	out.layouts.scroll = s.scrollMetadata.get() ?? undefined;
-
-	const autoSnapPoint = s.resolvedAutoSnapPoint.get();
-	const resolvedAutoSnap =
-		s.hasAutoSnapPoint && autoSnapPoint > 0 ? autoSnapPoint : null;
 
 	out.animatedSnapIndex = computeAnimatedSnapIndex(
 		out.progress,

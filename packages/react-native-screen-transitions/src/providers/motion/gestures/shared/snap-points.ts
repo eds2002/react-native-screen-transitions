@@ -85,7 +85,8 @@ const getMaxSnapPoint = (snapPoints: number[]) => {
 	return snapPoints[snapPoints.length - 1] ?? -1;
 };
 
-const resolveAutoSnapPoint = (
+/** A screen's 'auto' snap point once measured (it reads -1 before); null when it has none. */
+export const resolveAutoSnapPoint = (
 	hasAutoSnapPoint: boolean,
 	resolvedAutoSnapPoint: number,
 ) => {
