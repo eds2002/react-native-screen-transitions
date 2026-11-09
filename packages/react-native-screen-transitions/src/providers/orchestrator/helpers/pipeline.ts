@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useWindowDimensions } from "react-native";
 import {
 	type DerivedValue,
@@ -7,24 +6,15 @@ import {
 	useSharedValue,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-	createScreenTransitionState,
-	DEFAULT_SCREEN_TRANSITION_STATE,
-} from "../../../constants";
+import { DEFAULT_SCREEN_TRANSITION_STATE } from "../../../constants";
 import type {
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
-	ScreenTransitionState,
 } from "../../../types/animation.types";
-import { type BaseDescriptor, useBuilderStore } from "../../builder";
+import { useBuilderStore } from "../../builder";
 import { useMotionStore, useOptionalMotionStore } from "../../motion";
-import { buildScreenTransitionOptions } from "../../motion/animation/helpers/build-screen-transition-options";
 import { hydrateTransitionState } from "../../motion/animation/helpers/hydrate-transition-state";
 import type { BuiltState } from "../../motion/animation/helpers/hydrate-transition-state/types";
-import {
-	toPlainRoute,
-	toPlainValue,
-} from "../../motion/animation/helpers/worklet";
 import { updateDerivations } from "./derivations";
 import type { SelectedInterpolatorOptions } from "./selected-interpolator-options";
 import { readStackProgress, type StackProgressEntry } from "./stack-progress";
@@ -43,163 +33,7 @@ export interface ScreenAnimationPipeline {
 	currentInterpolator: ScreenStyleInterpolator | undefined;
 }
 
-const getInitialSettledProgress = (descriptor: BaseDescriptor) => {
-	const { snapPoints, initialSnapIndex = 0 } = descriptor.options;
-
-	if (!snapPoints?.length) {
-		return 1;
-	}
-
-	const clampedIndex = Math.min(
-		Math.max(0, initialSnapIndex),
-		snapPoints.length - 1,
-	);
-	const snapPoint = snapPoints[clampedIndex];
-
-	return typeof snapPoint === "number" ? snapPoint : 0;
-};
-
-const applyInitialProgress = ({
-	state,
-	dimensions,
-	progress,
-	entering = 0,
-	closing = 0,
-	animating = 0,
-	willAnimate = 0,
-	settled = entering || closing || animating ? 0 : 1,
-}: {
-	state: ScreenTransitionState;
-	dimensions: ScreenInterpolatorFrame["layouts"]["screen"];
-	progress: number;
-	entering?: number;
-	closing?: number;
-	animating?: number;
-	willAnimate?: number;
-	settled?: number;
-}) => {
-	state.progress = progress;
-	state.transitionProgress = progress;
-	state.entering = entering;
-	state.closing = closing;
-	state.animating = animating;
-	state.willAnimate = willAnimate;
-	state.settled = settled;
-	state.layouts.screen = dimensions;
-
-	return state;
-};
-
-const createInitialTransitionState = ({
-	descriptor,
-	dimensions,
-	progress,
-	entering,
-	animating,
-	willAnimate,
-	settled,
-}: {
-	descriptor: BaseDescriptor;
-	dimensions: ScreenInterpolatorFrame["layouts"]["screen"];
-	progress: number;
-	entering?: number;
-	animating?: number;
-	willAnimate?: number;
-	settled?: number;
-}) => {
-	const meta = descriptor.options.meta
-		? (toPlainValue(descriptor.options.meta) as Record<string, unknown>)
-		: undefined;
-	const state = createScreenTransitionState(
-		toPlainRoute(descriptor.route),
-		meta,
-		buildScreenTransitionOptions(descriptor.options),
-	);
-
-	return applyInitialProgress({
-		state,
-		dimensions,
-		progress,
-		entering,
-		animating,
-		willAnimate,
-		settled,
-	});
-};
-
-const createInitialInterpolatorProps = ({
-	dimensions,
-	insets,
-	currentDescriptor,
-	nextDescriptor,
-	prevDescriptor,
-}: {
-	dimensions: ScreenInterpolatorFrame["layouts"]["screen"];
-	insets: ScreenInterpolatorFrame["insets"];
-	currentDescriptor: BaseDescriptor;
-	nextDescriptor?: BaseDescriptor;
-	prevDescriptor?: BaseDescriptor;
-}): ScreenInterpolatorFrame => {
-	const hasIncomingNext = !!nextDescriptor;
-	const isFocusedEntering = !!prevDescriptor && !nextDescriptor;
-	const shouldAnimateInitialMount =
-		!prevDescriptor &&
-		!nextDescriptor &&
-		!!currentDescriptor.options.experimental_animateOnInitialMount;
-	const currentProgress =
-		hasIncomingNext || (!isFocusedEntering && !shouldAnimateInitialMount)
-			? getInitialSettledProgress(currentDescriptor)
-			: 0;
-	const currentEntering =
-		isFocusedEntering || shouldAnimateInitialMount ? 1 : 0;
-	const current = createInitialTransitionState({
-		descriptor: currentDescriptor,
-		dimensions,
-		progress: currentProgress,
-		entering: currentEntering,
-		animating: currentEntering,
-		willAnimate: 0,
-	});
-	const previous = prevDescriptor
-		? createInitialTransitionState({
-				descriptor: prevDescriptor,
-				dimensions,
-				progress: getInitialSettledProgress(prevDescriptor),
-			})
-		: undefined;
-	const next = nextDescriptor
-		? createInitialTransitionState({
-				descriptor: nextDescriptor,
-				dimensions,
-				progress: 0,
-				entering: 1,
-				animating: 1,
-				willAnimate: 0,
-				settled: 0,
-			})
-		: undefined;
-	const frame: ScreenInterpolatorFrame = {
-		layouts: current.layouts,
-		insets,
-		previous,
-		current,
-		next,
-		progress: 0,
-		transitionProgress: 0,
-		stackProgress: 0,
-		focused: true,
-		active: current,
-		inactive: undefined,
-	};
-
-	updateDerivations(frame);
-	frame.stackProgress = frame.progress;
-
-	return frame;
-};
-
-const hydrateInterpolatorFrame = <TFrame extends ScreenInterpolatorFrame>({
-	frame,
+const hydrateInterpolatorFrame = ({
 	dimensions,
 	insets,
 	currentAnimation,
@@ -210,7 +44,6 @@ const hydrateInterpolatorFrame = <TFrame extends ScreenInterpolatorFrame>({
 	stackProgressEntries,
 	currentRouteKey,
 }: {
-	frame: TFrame;
 	dimensions: ScreenInterpolatorFrame["layouts"]["screen"];
 	insets: ScreenInterpolatorFrame["insets"];
 	currentAnimation: BuiltState | undefined;
@@ -220,7 +53,7 @@ const hydrateInterpolatorFrame = <TFrame extends ScreenInterpolatorFrame>({
 	interpolatorOptions: SelectedInterpolatorOptions;
 	stackProgressEntries: readonly StackProgressEntry[];
 	currentRouteKey: string;
-}): TFrame => {
+}): ScreenInterpolatorFrame => {
 	"worklet";
 	// With a screen still closing between this one and its next (a push landed during a close), follow
 	// whichever covers this screen more. The closing one's progress falls while the new one's rises, so
@@ -237,28 +70,34 @@ const hydrateInterpolatorFrame = <TFrame extends ScreenInterpolatorFrame>({
 	const shouldApplyOptionsToNext =
 		interpolatorOptions.owner === "next" && !!nextAnimation;
 
-	frame.previous = prevAnimation
-		? hydrateTransitionState(prevAnimation, dimensions)
-		: undefined;
-
-	frame.current = currentAnimation
+	const current = currentAnimation
 		? hydrateTransitionState(
 				currentAnimation,
 				dimensions,
 				shouldApplyOptionsToCurrent ? interpolatorOptions.options : undefined,
 			)
 		: DEFAULT_SCREEN_TRANSITION_STATE;
-
-	frame.next = nextAnimation
-		? hydrateTransitionState(
-				nextAnimation,
-				dimensions,
-				shouldApplyOptionsToNext ? interpolatorOptions.options : undefined,
-			)
-		: undefined;
-
-	frame.layouts = frame.current.layouts;
-	frame.insets = insets;
+	const frame: ScreenInterpolatorFrame = {
+		layouts: current.layouts,
+		insets,
+		previous: prevAnimation
+			? hydrateTransitionState(prevAnimation, dimensions)
+			: undefined,
+		current,
+		next: nextAnimation
+			? hydrateTransitionState(
+					nextAnimation,
+					dimensions,
+					shouldApplyOptionsToNext ? interpolatorOptions.options : undefined,
+				)
+			: undefined,
+		progress: 0,
+		transitionProgress: 0,
+		stackProgress: 0,
+		focused: true,
+		active: current,
+		inactive: undefined,
+	};
 
 	updateDerivations(frame);
 
@@ -305,16 +144,6 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 	const closingNextAnimation = useInterpolatorState(closingNextMotion);
 	const prevAnimation = useInterpolatorState(previousMotion);
 
-	const [initialInterpolatorProps] = useState(() =>
-		createInitialInterpolatorProps({
-			dimensions,
-			insets,
-			currentDescriptor: currDescriptor,
-			nextDescriptor,
-			prevDescriptor,
-		}),
-	);
-
 	const selectedInterpolatorOptions =
 		useSharedValue<SelectedInterpolatorOptions>({
 			owner: "current",
@@ -325,7 +154,6 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 			stackProgressRevision.get();
 			const interpolatorOptions = selectedInterpolatorOptions.get();
 			return hydrateInterpolatorFrame({
-				frame: { ...initialInterpolatorProps },
 				dimensions,
 				insets,
 				currentAnimation,

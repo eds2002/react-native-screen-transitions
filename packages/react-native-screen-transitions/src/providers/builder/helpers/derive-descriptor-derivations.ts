@@ -6,7 +6,6 @@ export interface DescriptorDerivations {
 	previousScreenKey?: string;
 	currentScreenKey: string;
 	nextScreenKey?: string;
-	sourcePairKey?: ScreenPairKey;
 	destinationPairKey?: ScreenPairKey;
 	/** The host's first route. Gestures can't dismiss it. */
 	isFirstKey: boolean;
@@ -15,7 +14,6 @@ export interface DescriptorDerivations {
 	 * visible. A stack's first route does unless `experimental_animateOnInitialMount` is set.
 	 */
 	startsSettled: boolean;
-	isTopMostScreen: boolean;
 	hasConfiguredInterpolator: boolean;
 }
 
@@ -39,16 +37,12 @@ export function deriveDescriptorDerivations({
 	const previousScreenKey = previous?.route.key;
 	const currentScreenKey = current.route.key;
 	const nextScreenKey = next?.route.key;
-	const sourcePairKey = nextScreenKey
-		? createScreenPairKey(currentScreenKey, nextScreenKey)
-		: undefined;
 	const destinationPairKey = previousScreenKey
 		? createScreenPairKey(previousScreenKey, currentScreenKey)
 		: undefined;
 
 	const isFirstKey =
 		firstRouteKey !== undefined && current.route.key === firstRouteKey;
-	const isTopMostScreen = !next;
 	const hasConfiguredInterpolator =
 		!!current.options.screenStyleInterpolator ||
 		!!next?.options?.screenStyleInterpolator;
@@ -57,13 +51,11 @@ export function deriveDescriptorDerivations({
 		previousScreenKey,
 		currentScreenKey,
 		nextScreenKey,
-		sourcePairKey,
 		destinationPairKey,
 		isFirstKey,
 		startsSettled:
 			startsSettled ??
 			(isFirstKey && !current.options.experimental_animateOnInitialMount),
-		isTopMostScreen,
 		hasConfiguredInterpolator,
 	};
 }

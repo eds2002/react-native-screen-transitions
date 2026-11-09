@@ -17,11 +17,9 @@ export interface DescriptorsContextValue {
 	closingNext?: BaseDescriptor;
 }
 
-export type DescriptorDerivationsContextValue = DescriptorDerivations;
-
 interface BuilderStoreValue {
 	descriptors: DescriptorsContextValue;
-	derivations: DescriptorDerivationsContextValue;
+	derivations: DescriptorDerivations;
 	options: BaseDescriptor["options"];
 }
 
@@ -41,7 +39,6 @@ const createBuilderProvider = createProvider("Builder", {
 })<BuilderProviderProps, BuilderStoreValue>;
 
 const {
-	StoreProvider: BuilderStoreProvider,
 	getBuilderStore,
 	BuilderProvider,
 	useBuilderStore,
@@ -105,7 +102,7 @@ const {
 
 export {
 	BuilderProvider,
-	BuilderStoreProvider,
+	/** A registered screen's builder state (its release on unmount is tested). */
 	getBuilderStore,
 	useBuilderStore,
 	useOptionalBuilderStore,

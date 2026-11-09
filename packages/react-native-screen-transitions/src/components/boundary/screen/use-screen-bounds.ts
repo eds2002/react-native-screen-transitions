@@ -72,19 +72,16 @@ export type ScreenBounds = {
  * Everything a screen does for its bounds elements: where it draws its content (for the elements of
  * the screens it shares them with), its slots with those elements placed, the presentations of the
  * pair it is the destination of, the interpolators' bounds accessor and the measuring of its
- * boundaries. `owner` is false for an instance reusing another screen's orchestration (the
- * overlay): it reads, but registers and measures nothing.
+ * boundaries.
  */
 export function useScreenBounds({
 	currentScreenKey,
-	owner,
 	pipeline,
 	localStylesMaps,
 	interpolatorRuns,
 	resolvedSlotsMap,
 }: {
 	currentScreenKey: string;
-	owner: boolean;
 	pipeline: ScreenAnimationPipeline;
 	localStylesMaps: DerivedValue<LocalStyleLayers>;
 	interpolatorRuns: DerivedValue<InterpolatorRuns>;
@@ -146,7 +143,6 @@ export function useScreenBounds({
 	});
 	const scroll = ScrollStore.getValue(currentScreenKey, "metadata");
 	useLayoutEffect(() => {
-		if (!owner) return;
 		scheduleOnUI(registerScreenTransform, currentScreenKey, screenTransform);
 		scheduleOnUI(registerScreenScroll, currentScreenKey, scroll);
 		return () => {
@@ -157,7 +153,7 @@ export function useScreenBounds({
 			);
 			scheduleOnUI(unregisterScreenScroll, currentScreenKey, scroll);
 		};
-	}, [owner, currentScreenKey, screenTransform, scroll]);
+	}, [currentScreenKey, screenTransform, scroll]);
 
 	// The screens this one may share bound elements with: its stack's (closing ones included), read
 	// the same frame (a declared dependency: computed before this screen's styles).
@@ -204,7 +200,7 @@ export function useScreenBounds({
 	);
 
 	// One coordinator per screen measures its boundaries.
-	useBoundaryMeasureCoordinator(owner, contentMeasureRef, slotsMap);
+	useBoundaryMeasureCoordinator(contentMeasureRef, slotsMap);
 
 	return {
 		boundsAccessor,

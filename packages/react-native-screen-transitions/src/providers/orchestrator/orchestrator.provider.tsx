@@ -13,8 +13,6 @@ import { useResolvedStylesMap } from "./styles/hooks/use-resolved-slot-style-map
 
 export type OrchestratorProviderProps = {
 	children: ReactNode;
-	/** Reuse an existing screen’s orchestration without rebuilding it. */
-	screenKey?: string;
 };
 
 export type OrchestratorState = ReturnType<typeof useScreenAnimationPipeline> &
@@ -26,7 +24,7 @@ export const {
 	useOrchestratorStore,
 } = createProvider("Orchestrator", {
 	global: true,
-})<OrchestratorProviderProps, OrchestratorState>(({ screenKey }) => {
+})<OrchestratorProviderProps, OrchestratorState>(() => {
 	const currentScreenKey = useBuilderStore(
 		(store) => store.derivations.currentScreenKey,
 	);
@@ -39,7 +37,6 @@ export const {
 	const resolvedSlotsMap = useResolvedStylesMap({ localStylesMaps });
 	const bounds = useScreenBounds({
 		currentScreenKey,
-		owner: !screenKey,
 		pipeline,
 		localStylesMaps,
 		interpolatorRuns,

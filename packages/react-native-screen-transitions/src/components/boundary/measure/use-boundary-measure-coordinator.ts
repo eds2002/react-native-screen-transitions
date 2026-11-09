@@ -57,7 +57,6 @@ type MeasureSignal = {
  * A boundary measures when its signal changes.
  */
 export function useBoundaryMeasureCoordinator(
-	enabled: boolean,
 	contentRef: AnimatedRef<View> | null,
 	/** This screen's resolved styles: whether a boundary is being moved by its bounds style now. */
 	slotsMap: SharedValue<NormalizedTransitionInterpolatedStyle>,
@@ -95,9 +94,7 @@ export function useBoundaryMeasureCoordinator(
 	useAnimatedReaction(
 		() => {
 			"worklet";
-			const boundaries = enabled
-				? boundaryMeasureRegistry.get()[currentScreenKey]
-				: undefined;
+			const boundaries = boundaryMeasureRegistry.get()[currentScreenKey];
 			const linkState = pairs.get();
 			if (!boundaries) return null;
 
