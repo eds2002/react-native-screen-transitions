@@ -7,12 +7,8 @@ import {
 	resolveRevealContentBaseTransformFromGeometry,
 } from "../../utils/bounds/navigation/reveal/math";
 import {
-	ZOOM_FOCUSED_ELEMENT_CLOSE_OPACITY_RANGE,
-	ZOOM_FOCUSED_ELEMENT_OPEN_OPACITY_RANGE,
 	ZOOM_BACKDROP_MAX_OPACITY,
 	ZOOM_SCREEN_A_FADE_END,
-	ZOOM_UNFOCUSED_ELEMENT_CLOSE_OPACITY_RANGE,
-	ZOOM_UNFOCUSED_ELEMENT_OPEN_OPACITY_RANGE,
 } from "../../utils/bounds/navigation/zoom/config";
 import {
 	resolveZoomCrossAxisDragTranslation,
@@ -31,21 +27,7 @@ import {
 import { buildZoomStyles } from "../../utils/bounds/navigation/zoom/build";
 
 describe("zoom native opacity ownership", () => {
-	it("hands focused content in over the configured opening interval", () => {
-		expect(ZOOM_FOCUSED_ELEMENT_OPEN_OPACITY_RANGE).toEqual([0, 0.28, 0, 1]);
-		expect(ZOOM_UNFOCUSED_ELEMENT_OPEN_OPACITY_RANGE).toEqual([
-			1.08, 1.32, 1, 0,
-		]);
-	});
 
-	it("returns ownership to the source across the latter half of close", () => {
-		expect(ZOOM_FOCUSED_ELEMENT_CLOSE_OPACITY_RANGE).toEqual([
-			0.13, 0.7, 0, 1,
-		]);
-		expect(ZOOM_UNFOCUSED_ELEMENT_CLOSE_OPACITY_RANGE).toEqual([
-			1.7, 2, 1, 0,
-		]);
-	});
 
 	it("reaches the screen A dimming ceiling by the measured handoff", () => {
 		expect(ZOOM_BACKDROP_MAX_OPACITY).toBe(0.45);

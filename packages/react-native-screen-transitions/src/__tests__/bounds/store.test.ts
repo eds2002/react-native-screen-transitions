@@ -442,10 +442,9 @@ describe("BoundStore.link pair writes", () => {
 			createBounds(20, 20),
 		);
 
-		expect(Object.keys(pairs.get()[pairKey].links).sort()).toEqual([
-			"card",
-			"title",
-		]);
+		expect(BoundStore.link.getLink(pairKey, "card")?.source?.bounds.pageX).toBe(0);
+		expect(BoundStore.link.getLink(pairKey, "title")?.source?.bounds.pageX).toBe(10);
+		expect(BoundStore.link.getLink(pairKey, "title")?.destination?.bounds.pageX).toBe(20);
 	});
 
 	it("stores optional group state inside the screen pair without replacing ids", () => {
@@ -470,8 +469,7 @@ describe("BoundStore.link pair writes", () => {
 		BoundStore.link.setActiveGroupId(pairKey, "colors", "3");
 
 		expect(Object.keys(pairs.get()[pairKey].links)).toEqual(["1"]);
-		expect(pairs.get()[pairKey].links["1"].group).toBe("colors");
-		expect(pairs.get()[pairKey].groups.colors.activeId).toBe("3");
+		expect(BoundStore.link.getLink(pairKey, "1")?.group).toBe("colors");
 		expect(pairs.get()[pairKey].groups.colors.initialId).toBe("1");
 		expect(BoundStore.link.getActiveGroupId(pairKey, "colors")).toBe("3");
 	});
@@ -934,6 +932,7 @@ describe("BoundStore.cleanup.byScreen", () => {
 
 		BoundStore.cleanup.byScreen("screen-b");
 
-		expect(pairs.get()[pairKey]).toBeUndefined();
+		expect(BoundStore.link.getLink(pairKey, "card")).toBeNull();
+		expect(BoundStore.link.getLink(pairKey, "title")).toBeNull();
 	});
 });

@@ -198,16 +198,17 @@ const hydrate = (
 
 describe("transition state rules", () => {
 	it("keeps entering and closing as source lifecycle flags", () => {
-		const state = createBuiltState({
-			targetProgress: 0,
-			closing: 0,
-			entering: 0,
-		});
+		const closing = hydrate(
+			createBuiltState({ targetProgress: 0, closing: 1, entering: 0 }),
+		);
+		expect(closing.closing).toBe(1);
+		expect(closing.entering).toBe(0);
 
-		const hydrated = hydrate(state);
-
-		expect(hydrated.closing).toBe(0);
-		expect(hydrated.entering).toBe(0);
+		const entering = hydrate(
+			createBuiltState({ targetProgress: 1, closing: 0, entering: 1 }),
+		);
+		expect(entering.closing).toBe(0);
+		expect(entering.entering).toBe(1);
 	});
 
 	it("derives public animating from progress animation", () => {

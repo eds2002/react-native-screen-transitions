@@ -17,10 +17,11 @@ export type KnownIssue = {
 const sequenceOf = (scenario: string) => scenario.split(" / ")[2];
 const transitionOf = (scenario: string) => scenario.split(" / ")[0];
 
-
 export const KNOWN_ISSUES: KnownIssue[] = [
 	{
 		id: "moving-bounds-overlap",
+		// Not with Teleport (the teleport catalog no longer shows it).
+		environments: ["ios", "android", "120hz", "compact", "custom-navigator"],
 		summary:
 			"styles() on screens that move, when transitions overlap (spam, a chain pushed or popped quickly). " +
 			"Left after placing in-flight starts with this frame's transforms and measuring moving roots from their " +
@@ -36,17 +37,6 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 			["spam", "chain-fast", "push-pop-push", "swipe-chain-quickly", "chain"].includes(sequenceOf(scenario)) &&
 			["bound-split", "bound-vanish", "element-spike", "element-teleport", "element-flash", "spike"].includes(v.rule),
 	},
-	{
-		id: "moving-bounds-handoff",
-		environments: ["teleport"],
-		summary:
-			"Handoff on screens that move is clean (teleport run; without Teleport handoff renders inline by design). " +
-			"What is left is not the payload: as the second pop of a fast chain starts, the middle screen itself steps " +
-			"one frame (35 px), the same step as moving-bounds-overlap (3) without handoff.",
-		matches: (scenario, v) =>
-			/^bounds-moving-[a-z-]+-handoff \//.test(scenario) && sequenceOf(scenario) === "chain-fast" && v.rule === "spike",
-	},
-
 
 	{
 		id: "deep-translucent-stack",
@@ -94,6 +84,8 @@ export const KNOWN_ISSUES: KnownIssue[] = [
 	},
 	{
 		id: "deep-chain-overlap",
+		// The catalogs that still show it (not teleport, compact or the custom navigator).
+		environments: ["ios", "android", "120hz", "teleport-deep"],
 		summary:
 			"Found by the deep-chain stress family (five screens, many screen motions): transitions overlapping in a deep " +
 			"chain (pushes or pops 2-6 frames apart, pop to the root at once, churn, spam). Open: a screen pushed and popped " +

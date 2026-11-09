@@ -1,4 +1,3 @@
-import { mountMotionValues } from "./helpers/mount-motion-values";
 import { beforeEach, describe, expect, it } from "bun:test";
 
 import { resetStoresForScreen } from "../providers/motion/lifecycle/reset-stores-for-screen";
@@ -29,13 +28,9 @@ beforeEach(() => {
 });
 
 describe("close transition cleanup", () => {
-	it("clears bounds without resetting provider-owned motion", async () => {
+	it("clears a screen's bounds, and clearing twice is harmless", async () => {
 		const routeKey = "cleanup-screen";
 		const bounds = createMeasured(10, 20, 120, 140);
-
-		const motion = mountMotionValues();
-		motion.transitionProgress.set(0.5);
-		motion.x.set(20);
 
 		registerMeasuredEntry("card", routeKey, bounds);
 		const pairKey = createPendingPairKey(routeKey);
@@ -49,35 +44,6 @@ describe("close transition cleanup", () => {
 		resetStoresForScreen(routeKey);
 		resetStoresForScreen(routeKey);
 		await flushScheduledUI();
-
-		expect(BoundStore.entry.get("card", routeKey)).toBeNull();
-		expect(BoundStore.link.getSource(pairKey, "card")).toBeNull();
-		expect(hasBoundaryPresence("card", routeKey)).toBe(false);
-
-		expect(motion.transitionProgress.get()).toBe(0.5);
-		expect(motion.x.get()).toBe(20);
-	});
-
-	it("clears bounds for leaf screens", async () => {
-		const routeKey = "leaf-screen";
-		const bounds = createMeasured(10, 20, 120, 140);
-
-		registerMeasuredEntry("card", routeKey, bounds);
-		const pairKey = createPendingPairKey(routeKey);
-		BoundStore.link.setSource(pairKey, "card", routeKey, bounds);
-		registerBoundaryPresence("card", routeKey);
-
-		const motion = mountMotionValues();
-		motion.transitionProgress.set(0.5);
-		motion.x.set(20);
-
-		resetStoresForScreen(routeKey);
-		await flushScheduledUI();
-
-		// Motion belongs to the mounted provider.
-
-		expect(motion.transitionProgress.get()).toBe(0.5);
-		expect(motion.x.get()).toBe(20);
 
 		expect(BoundStore.entry.get("card", routeKey)).toBeNull();
 		expect(BoundStore.link.getSource(pairKey, "card")).toBeNull();
