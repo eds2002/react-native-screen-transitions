@@ -172,6 +172,12 @@ const resolvePinchDirections = (
 	};
 };
 
+/** Swipe-to-dismiss is opt-in: only `gestureEnabled: true` allows it (the first screen never). */
+export const isSwipeDismissEnabled = (gestureEnabled: boolean | undefined) => {
+	"worklet";
+	return gestureEnabled === true;
+};
+
 const resolveGestureCanDismiss = ({
 	isFirstKey,
 	gestureEnabled,
@@ -180,7 +186,7 @@ const resolveGestureCanDismiss = ({
 	gestureEnabled?: boolean;
 }) => {
 	"worklet";
-	return Boolean(isFirstKey ? false : gestureEnabled);
+	return !isFirstKey && isSwipeDismissEnabled(gestureEnabled);
 };
 
 export const resolveGestureCanTrack = ({

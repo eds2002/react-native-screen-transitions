@@ -518,6 +518,25 @@ describe("transition state rules", () => {
 		});
 	});
 
+	it.each([
+		{ gestureEnabled: undefined, progress: 0.5 },
+		{ gestureEnabled: false, progress: 0.5 },
+		{ gestureEnabled: true, progress: 0.2 },
+	])("drags a sheet below its lowest snap point only when it can be swiped away (gestureEnabled $gestureEnabled)", ({ gestureEnabled, progress }) => {
+		const state = createBuiltState({
+			progress: 0.5,
+			gesture: createGestureStore({
+				active: "vertical",
+				normY: 0.3,
+				progressDeltaY: 0.3,
+			}),
+			options: { gestureEnabled, gestureDirection: "vertical" },
+			sortedNumericSnapPoints: [0.5, 1],
+		});
+
+		expect(hydrate(state).progress).toBeCloseTo(progress, 5);
+	});
+
 	it("normalizes live step progress across the adjacent snap interval", () => {
 		const state = createBuiltState({
 			progress: 0.9,

@@ -396,7 +396,7 @@ export type ScreenTransitionConfig = {
 	 * Locks gesture-based snap movement to the current snap point.
 	 *
 	 * When enabled, users cannot gesture between snap points. If dismiss gestures
-	 * are allowed (`gestureEnabled !== false`), swipe-to-dismiss still works.
+	 * are allowed (`gestureEnabled: true`), swipe-to-dismiss still works.
 	 * Programmatic `snapTo()` calls are not affected.
 	 *
 	 * @default false

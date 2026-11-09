@@ -1,5 +1,6 @@
 import type { TransitionInterpolatorOptions } from "../../../../../types/animation.types";
 import type { Layout } from "../../../../../types/screen.types";
+import { isSwipeDismissEnabled } from "../../../gestures/shared/policy";
 import { resolveAutoSnapPoint } from "../../../gestures/shared/snap-points";
 import { mergeInterpolatorOptions } from "../../../options/helpers";
 import { resolveGestureAffectedProgress } from "./gesture-progress";
@@ -23,7 +24,7 @@ export const hydrateTransitionState = (
 		effectiveOptions,
 		s.optionsSlot,
 	);
-	const canDismiss = options.gestureEnabled !== false;
+	const canDismiss = isSwipeDismissEnabled(options.gestureEnabled);
 	const resolvedSnapPoints = [...s.sortedNumericSnapPoints];
 	// Unmeasured, 'auto' isn't a snap point yet (it reads -1).
 	const resolvedAutoSnap = resolveAutoSnapPoint(
