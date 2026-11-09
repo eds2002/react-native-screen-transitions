@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef } from "react";
 import { useAnimatedReaction } from "react-native-reanimated";
 import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
-import { AnimationProgress } from "../../../constants";
+import { AnimationProgress, EPSILON } from "../../../constants";
 import useStableCallback from "../../../hooks/use-stable-callback";
 import type { SnapPoint } from "../../../types/screen.types";
 import { type BaseDescriptor, useBuilderStore } from "../../builder";
@@ -56,19 +56,23 @@ export function useOpenTransitionIntent(
 	const completeOpen = useStableCallback(() => {
 		onComplete?.();
 	});
-	const { animationProgress } = system;
-	const { closing } = animations;
+	const { closing, entering, progressSettled, transitionProgress } = animations;
 
+	// An open has finished once it settles above zero, at whatever snap point it opened to.
+	// Already open at mount (a screen that starts settled) isn't an open finishing.
 	useAnimatedReaction(
 		() => {
 			"worklet";
 			return (
-				!closing.get() && animationProgress.get() === AnimationProgress.Visible
+				!closing.get() &&
+				!entering.get() &&
+				!!progressSettled.get() &&
+				transitionProgress.get() > EPSILON
 			);
 		},
-		(complete, previouslyComplete) => {
+		(open, wasOpen) => {
 			"worklet";
-			if (complete && !previouslyComplete) {
+			if (open && wasOpen === false) {
 				scheduleOnRN(completeOpen);
 			}
 		},

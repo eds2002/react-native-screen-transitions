@@ -5,9 +5,10 @@ import { makeMutable } from "react-native-reanimated";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 
 const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+let startsSettled = false;
 await mockModule("../providers/builder", () => ({
 	useBuilderStore: (selector: (store: any) => unknown) =>
-		selector({ derivations: { isFirstKey: false } }),
+		selector({ derivations: { isFirstKey: false, startsSettled } }),
 }));
 const { useOpenTransitionIntent } = await import(
 	"../providers/motion/lifecycle/use-open-transition-intent"
@@ -18,6 +19,7 @@ let renderer: ReactTestRenderer | undefined;
 afterEach(() => {
 	act(() => renderer?.unmount());
 	renderer = undefined;
+	startsSettled = false;
 });
 
 it("preserves retained motion on Activity resume and initializes a genuine remount", () => {
@@ -27,7 +29,12 @@ it("preserves retained motion on Activity resume and initializes a genuine remou
 	const closing = makeMutable(0);
 	let effectSetups = 0;
 	const current = { options: {} } as any;
-	const animations = { entering, closing, transitionProgress: progress } as any;
+	const animations = {
+		entering,
+		closing,
+		progressSettled: makeMutable(1),
+		transitionProgress: progress,
+	} as any;
 	const system = {
 		animationProgress: progress,
 		actions: { requestLifecycleTransition: request },
@@ -150,4 +157,69 @@ it.each([
 	expect(targetProgress.get()).toBe(0.8);
 	expect(pendingLifecycleStartBlockCount.get()).toBe(1);
 	expect(pendingLifecycleRequestKind.get()).toBe(state.pending);
+});
+
+it("reports an open once it settles above zero, at any snap point, and again after a reopen", () => {
+	const onOpen = mock(() => {});
+	const values = {
+		entering: makeMutable(0),
+		closing: makeMutable(0),
+		progressSettled: makeMutable(1),
+		transitionProgress: makeMutable(0),
+	};
+	const system = {
+		targetProgress: makeMutable(0),
+		actions: { requestLifecycleTransition: mock(() => {}) },
+	} as any;
+	function Screen() {
+		useOpenTransitionIntent({ options: {} } as any, values as any, system, onOpen);
+		return null;
+	}
+	const settle = (progress: number, closing = 0) => {
+		values.closing.set(closing);
+		values.entering.set(0);
+		values.progressSettled.set(1);
+		values.transitionProgress.set(progress);
+		act(() => renderer!.update(<Screen />));
+	};
+	act(() => {
+		renderer = create(<Screen />);
+	});
+	values.progressSettled.set(0);
+	act(() => renderer!.update(<Screen />));
+	expect(onOpen).not.toHaveBeenCalled();
+	settle(0.5);
+	expect(onOpen).toHaveBeenCalledTimes(1);
+	settle(1);
+	expect(onOpen).toHaveBeenCalledTimes(1);
+	settle(0, 1);
+	settle(0.5);
+	expect(onOpen).toHaveBeenCalledTimes(2);
+});
+
+it("doesn't report an open for a screen that starts settled", () => {
+	startsSettled = true;
+	const onOpen = mock(() => {});
+	const values = {
+		entering: makeMutable(0),
+		closing: makeMutable(0),
+		progressAnimating: makeMutable(0),
+		progressSettled: makeMutable(1),
+		transitionProgress: makeMutable(0),
+	};
+	function Screen() {
+		useOpenTransitionIntent(
+			{ options: {} } as any,
+			values as any,
+			{ targetProgress: makeMutable(1), actions: { requestLifecycleTransition: () => {} } } as any,
+			onOpen,
+		);
+		return null;
+	}
+	act(() => {
+		renderer = create(<Screen />);
+	});
+	act(() => renderer!.update(<Screen />));
+	expect(values.transitionProgress.get()).toBe(1);
+	expect(onOpen).not.toHaveBeenCalled();
 });

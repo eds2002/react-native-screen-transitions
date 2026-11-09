@@ -3,7 +3,6 @@ import { StyleSheet, View } from "react-native";
 import { useAnimatedReaction } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { ScreenLayers } from "../components/screen-layers";
-import { EPSILON } from "../constants";
 import useStableCallback from "../hooks/use-stable-callback";
 import { BuilderProvider, useBuilderStore } from "../providers/builder";
 import { MotionProvider } from "../providers/motion";
@@ -39,7 +38,7 @@ const MotionLifecycle = memo(function MotionLifecycle({
 		current,
 		state,
 		state,
-		undefined,
+		handleOpen,
 		initial === "closed" ? "closed" : "mount",
 	);
 	useTransitionStartController({ current, animations: state, system: state });
@@ -48,20 +47,6 @@ const MotionLifecycle = memo(function MotionLifecycle({
 		animationProgress: state.animationProgress,
 		onComplete: handleClose,
 	});
-
-	// An open has finished once it settles above zero, at whatever snap point it opened to.
-	// (The navigator's open completion waits for progress 1, which a detent below 1 never reaches.)
-	const { closing, entering, progressSettled, transitionProgress } = state;
-	useAnimatedReaction(
-		() =>
-			!closing.get() &&
-			!entering.get() &&
-			!!progressSettled.get() &&
-			transitionProgress.get() > EPSILON,
-		(open, wasOpen) => {
-			if (open && wasOpen === false) scheduleOnRN(handleOpen);
-		},
-	);
 
 	return null;
 });
