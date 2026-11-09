@@ -9,7 +9,8 @@
  *            zoom-bound `bounds(id).navigation.zoom({ target: "bound" })` (shared bounds only)
  *   method   transform | size                       (styles)
  *   motion   still | slide | diagonal (tilted, a corner per level) | swirl (grows and spins in, the
- *            screen below flies past and fades)                      (styles; zoom moves its screens)
+ *            screen below flies past and fades) | shuffle (slides in from a random side, growing;
+ *            swiped back the way it came)                            (styles; zoom moves its screens)
  *   tree     flat     List and Detail in one stack
  *            below    Detail nested `depth` stacks deep under the root (the pair crosses down)
  *            above    List nested `depth` stacks deep, Detail on the root (the pair crosses up)
@@ -72,7 +73,7 @@ const RECIPES = {
 	elements: ["styles"],
 };
 const METHODS = ["transform", "size"];
-const MOTIONS = ["still", "slide", "diagonal", "swirl"];
+const MOTIONS = ["still", "slide", "diagonal", "swirl", "shuffle"];
 const TREES = ["flat", "below", "above", "sibling"];
 const DEPTHS = [1, 2, 3];
 /** The tracked element's color: nothing else in the lab is near it. */
@@ -180,6 +181,28 @@ const cornerOf = (route) => {
 	return CORNERS[level % 4];
 };
 
+/**
+ * shuffle: the side each screen comes in from (x/y: which edge, as a fraction of the screen), and
+ * the swipe that sends it back there.
+ */
+const SIDES = [
+	{ x: 1, y: 0, gesture: "horizontal" }, // from the right
+	{ x: -1, y: 0, gesture: "horizontal-inverted" }, // from the left
+	{ x: 0, y: 1, gesture: "vertical" }, // from the bottom
+	{ x: 0, y: -1, gesture: "vertical-inverted" }, // from the top
+] as const;
+
+/** A side picked at random per screen: from its route key, so it leaves the way it came. */
+const sideOf = (route) => {
+	"worklet";
+	const key: string = route?.key ?? "";
+	let hash = 0;
+	for (let i = 0; i < key.length; i++) {
+		hash = (hash * 31 + key.charCodeAt(i)) | 0;
+	}
+	return SIDES[Math.abs(hash) % SIDES.length];
+};
+
 const motionStyle = (
 	motion,
 	{ progress, current, next, layouts: { screen } },
@@ -214,6 +237,26 @@ const motionStyle = (
 				{ rotate: `${enter * -32}deg` },
 				{ scale: interpolate(enter, [0, 1], [1, 0], "clamp") },
 			],
+		};
+	}
+	if (motion === "shuffle") {
+		// Slides in from its side, growing into place; the screen it covers shrinks back and gives
+		// way, away from the side the new one comes from.
+		const side = sideOf(current.route);
+		const covering = next ? sideOf(next.route) : null;
+		const enter = 1 - current.progress;
+		const cover = next ? next.progress : 0;
+		const x =
+			enter * side.x * screen.width -
+			(covering ? covering.x * cover * screen.width * 0.25 : 0);
+		const y =
+			enter * side.y * screen.height -
+			(covering ? covering.y * cover * screen.height * 0.25 : 0);
+		const scale =
+			interpolate(enter, [0, 1], [1, 0.8], "clamp") *
+			interpolate(cover, [0, 1], [1, 0.88], "clamp");
+		return {
+			transform: [{ translateX: x }, { translateY: y }, { scale }],
 		};
 	}
 	if (motion !== "diagonal") return null;
@@ -254,7 +297,9 @@ const detailOptions =
 				? ["bidirectional", "pinch-in"]
 				: motion === "swirl"
 					? ["vertical", "pinch-in"]
-					: motion === "diagonal" && left
+					: motion === "shuffle"
+						? sideOf(route).gesture
+						: motion === "diagonal" && left
 						? "horizontal-inverted"
 						: "horizontal",
 			transitionSpec: zoom
@@ -753,7 +798,9 @@ function makeLab(config: Config) {
 				style={{
 					flex: 1,
 					backgroundColor:
-						(cfg.motion === "diagonal" || cfg.motion === "swirl") &&
+						(cfg.motion === "diagonal" ||
+							cfg.motion === "swirl" ||
+							cfg.motion === "shuffle") &&
 						cfg.recipe === "styles"
 							? "#05060f"
 							: undefined,
