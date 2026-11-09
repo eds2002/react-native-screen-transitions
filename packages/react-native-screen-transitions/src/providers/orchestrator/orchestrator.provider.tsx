@@ -53,7 +53,7 @@ const ComposedOrchestrator = ({ children }: { children: ReactNode }) => {
 export const OrchestratorProvider = (
 	props: { children: ReactNode } | { screenKey: string; children: ReactNode },
 ) =>
-	"screenKey" in props ? (
+	"screenKey" in props && typeof props.screenKey === "string" ? (
 		<ReusedOrchestratorProvider screenKey={props.screenKey}>
 			{props.children}
 		</ReusedOrchestratorProvider>

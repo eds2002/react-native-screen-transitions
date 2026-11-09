@@ -934,5 +934,8 @@ describe("BoundStore.cleanup.byScreen", () => {
 
 		expect(BoundStore.link.getLink(pairKey, "card")).toBeNull();
 		expect(BoundStore.link.getLink(pairKey, "title")).toBeNull();
+		// The pair's record goes too (groups, source requests): nothing public reads it, and a record
+		// left per pair would grow without bound under spam.
+		expect(pairs.get()[pairKey]).toBeUndefined();
 	});
 });

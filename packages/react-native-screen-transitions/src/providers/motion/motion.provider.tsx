@@ -72,7 +72,7 @@ const ComposedMotion = ({
 export const MotionProvider = (
 	props: MotionProviderProps | { screenKey: string; children: ReactNode },
 ) =>
-	"screenKey" in props ? (
+	"screenKey" in props && typeof props.screenKey === "string" ? (
 		<ReusedMotionProvider screenKey={props.screenKey}>
 			{props.children}
 		</ReusedMotionProvider>
