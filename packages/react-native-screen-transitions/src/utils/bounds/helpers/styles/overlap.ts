@@ -113,6 +113,31 @@ export const isHandoffLanded = (links: LandingLinks, t: number): boolean => {
 };
 
 /**
+ * Whether the source screen of a closing pair draws its handoff elements' copies now: it isn't
+ * closing itself, and no newer screen holds the elements (taken from the destination, or carried on
+ * from it while a newer pair is mounted). Only then can landed content go home before the pair's
+ * close ends (see isHandoffLanded): sent home earlier, it is drawn by a copy that is hidden.
+ */
+export const isHandoffHomeDrawn = (
+	pairKey: string,
+	links: LandingLinks,
+): boolean => {
+	"worklet";
+	const source = getSourceScreenKeyFromPairKey(pairKey);
+	const destination = getDestinationScreenKeyFromPairKey(pairKey);
+	if (!source || !destination || isScreenClosing(source)) return false;
+	for (const key in links) {
+		if (!links[key]?.destination?.handoff) continue;
+		if (
+			isTakenByNewerScreen(key, destination) ||
+			isMovedOnFrom(key, destination)
+		)
+			return false;
+	}
+	return true;
+};
+
+/**
  * Whether a closing pair's element has landed: its destination is closing and the element is
  * within LANDED_PX of its source slot (its spring's tail, the screen all but gone). A landed pair
  * no longer holds the element: popping the screen below then is carried by that screen's own pair.

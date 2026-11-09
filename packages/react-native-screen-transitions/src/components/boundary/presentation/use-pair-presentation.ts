@@ -13,7 +13,6 @@ import {
 import { NO_STYLES } from "../../../constants";
 import { useBuilderStore } from "../../../providers/builder";
 import { useMotionStore } from "../../../providers/motion";
-import { isScreenClosing } from "../../../providers/motion/helpers/progress-registry";
 import { updateDerivations } from "../../../providers/orchestrator/helpers/derivations";
 import type {
 	ScreenAnimationPipeline,
@@ -47,7 +46,10 @@ import {
 	applyBoundsScreenFrames,
 	screenCoverage,
 } from "../../../utils/bounds/helpers/styles/apply-screen-frames";
-import { isHandoffLanded } from "../../../utils/bounds/helpers/styles/overlap";
+import {
+	isHandoffHomeDrawn,
+	isHandoffLanded,
+} from "../../../utils/bounds/helpers/styles/overlap";
 import { isTeleportAvailable } from "../portal/teleport";
 
 export type BoundaryPairPresentation = {
@@ -269,12 +271,9 @@ export function usePairPresentation(
 			destinationKey,
 			ready: ready.get(),
 			closing: !!frame.current.closing,
-			// Home is the screen it lands in: one closing too (two pops in a row) isn't. Its copy there
-			// gives way to this one while this one is mounted (see isTakenByNewerScreen), so the
-			// content stays here until it is gone.
 			landed:
 				!!frame.current.closing &&
-				!isScreenClosing(getSourceScreenKeyFromPairKey(pairKey)) &&
+				isHandoffHomeDrawn(pairKey, links) &&
 				isHandoffLanded(links, frame.current.progress) &&
 				!coversHandoffHomes(
 					links,
