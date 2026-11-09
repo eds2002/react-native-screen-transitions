@@ -71,15 +71,12 @@ const createSnapRuntime = ({
 			},
 			transitionSpec: undefined,
 		},
-		stores: {
-			animations: {
+		values: { ...{
 				transitionProgress: shared(progress),
-			},
-			system: {
+			}, ...{
 				resolvedAutoSnapPoint: shared(0),
 				targetProgress: shared(1),
-			},
-			gestures: {
+			}, ...{
 				internal: {
 					progressBaseline: shared(baseline),
 					progressDeltaX: shared(0),
@@ -88,8 +85,7 @@ const createSnapRuntime = ({
 					lockedSnapPoint: shared<number | null>(lockedSnapPoint),
 					snapshot: createGestureSnapshotStore(),
 				},
-			},
-		},
+			} },
 	}) as unknown as PinchGestureRuntime;
 
 describe("snap pinch release", () => {

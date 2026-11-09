@@ -1,14 +1,13 @@
-import { type SharedValue, useAnimatedReaction } from "react-native-reanimated";
+import { useAnimatedReaction } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { AnimationProgress } from "../../../constants";
+import type { MotionValues } from "../types";
 
 export const useCloseCompletion = ({
-	closing,
-	animationProgress,
+	values: { closing, animationProgress },
 	onComplete,
 }: {
-	closing: SharedValue<number>;
-	animationProgress: SharedValue<number>;
+	values: Pick<MotionValues, "closing" | "animationProgress">;
 	onComplete: () => void;
 }) => {
 	useAnimatedReaction(

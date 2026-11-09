@@ -5,11 +5,8 @@ import { AnimationProgress, EPSILON } from "../../../constants";
 import useStableCallback from "../../../hooks/use-stable-callback";
 import type { SnapPoint } from "../../../types/screen.types";
 import { type BaseDescriptor, useBuilderStore } from "../../builder";
-import {
-	LifecycleTransitionRequestKind,
-	type MotionTransitionValues,
-} from "../hooks/use-transition-values";
-import type { MotionAnimationValues } from "../types";
+import { LifecycleTransitionRequestKind } from "../hooks/use-transition-values";
+import type { MotionValues } from "../types";
 
 /**
  * Calculates the initial progress value based on snap points configuration.
@@ -43,8 +40,7 @@ export function getInitialProgress({
  */
 export function useOpenTransitionIntent(
 	current: BaseDescriptor,
-	animations: MotionAnimationValues,
-	system: MotionTransitionValues,
+	values: MotionValues,
 	onComplete?: () => void,
 	mode: "mount" | "closed" = "mount",
 ) {
@@ -52,11 +48,11 @@ export function useOpenTransitionIntent(
 	const startsSettled = useBuilderStore(
 		(store) => store.derivations.startsSettled,
 	);
-	const { requestLifecycleTransition } = system.actions;
+	const { requestLifecycleTransition } = values.actions;
 	const completeOpen = useStableCallback(() => {
 		onComplete?.();
 	});
-	const { closing, entering, progressSettled, transitionProgress } = animations;
+	const { closing, entering, progressSettled, transitionProgress } = values;
 
 	// An open has finished once it settles above zero, at whatever snap point it opened to.
 	// Already open at mount (a screen that starts settled) isn't an open finishing.
@@ -87,15 +83,15 @@ export function useOpenTransitionIntent(
 			scheduleOnUI(() => {
 				"worklet";
 				if (
-					animations.entering.get() &&
-					!animations.closing.get() &&
-					!animations.progressSettled.get() &&
-					system.pendingLifecycleRequestKind.get() ===
+					values.entering.get() &&
+					!values.closing.get() &&
+					!values.progressSettled.get() &&
+					values.pendingLifecycleRequestKind.get() ===
 						LifecycleTransitionRequestKind.None
 				) {
 					requestLifecycleTransition(
 						LifecycleTransitionRequestKind.Open,
-						system.targetProgress.get(),
+						values.targetProgress.get(),
 					);
 				}
 			});
@@ -104,7 +100,7 @@ export function useOpenTransitionIntent(
 		initialized.current = true;
 
 		if (mode === "closed") {
-			system.autoOpenArmed.set(0);
+			values.autoOpenArmed.set(0);
 			return;
 		}
 
@@ -117,16 +113,16 @@ export function useOpenTransitionIntent(
 
 		if (startsSettled) {
 			if (typeof initialProgress === "string") {
-				system.targetProgress.set(0);
-				animations.transitionProgress.set(0);
+				values.targetProgress.set(0);
+				values.transitionProgress.set(0);
 			} else {
 				const target = initialProgress ?? AnimationProgress.Visible;
-				system.targetProgress.set(target);
-				animations.transitionProgress.set(target);
+				values.targetProgress.set(target);
+				values.transitionProgress.set(target);
 			}
-			animations.progressAnimating.set(0);
-			animations.closing.set(0);
-			animations.entering.set(0);
+			values.progressAnimating.set(0);
+			values.closing.set(0);
+			values.entering.set(0);
 			return;
 		}
 
@@ -136,7 +132,7 @@ export function useOpenTransitionIntent(
 			return;
 		}
 
-		animations.entering.set(1);
+		values.entering.set(1);
 		requestLifecycleTransition(
 			LifecycleTransitionRequestKind.Open,
 			initialProgress ?? AnimationProgress.Visible,

@@ -3,7 +3,7 @@ import { memo, type ReactNode, useMemo } from "react";
 import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Overlay } from "../../components/overlay";
-import { ScreenLayers } from "../../components/screen-layers";
+import { ScreenMotion } from "../../components/screen-motion";
 import { useNavigationHelpers } from "../../navigators/kit/hooks/use-navigation-helpers";
 import { NavigatorStoreProvider } from "../../navigators/kit/state/navigator-store";
 import { BuilderProvider } from "../../providers/builder";
@@ -11,8 +11,6 @@ import {
 	ScreenHostStoreProvider,
 	type ScreenHostValue,
 } from "../../providers/host/screen-host.provider";
-import { MotionProvider } from "../../providers/motion";
-import { OrchestratorProvider } from "../../providers/orchestrator";
 import type { BaseStackDescriptor, BaseStackRoute } from "../../types";
 import {
 	ScreenTransitionsAdapterProvider,
@@ -205,14 +203,12 @@ const NativeSceneMotion = memo(function NativeSceneMotion({
 }) {
 	const { requestDismiss } = useNavigationHelpers();
 	return (
-		<MotionProvider onDismissRequest={requestDismiss}>
-			<OrchestratorProvider>
-				<ScreenLayers onDismissRequest={requestDismiss}>
-					{children}
-				</ScreenLayers>
-			</OrchestratorProvider>
-			<NativeStackLifecycle />
-		</MotionProvider>
+		<ScreenMotion
+			onDismissRequest={requestDismiss}
+			lifecycle={<NativeStackLifecycle />}
+		>
+			{children}
+		</ScreenMotion>
 	);
 });
 

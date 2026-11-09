@@ -3,6 +3,7 @@ import { scheduleOnRN } from "react-native-worklets";
 import { EPSILON, TRUE } from "../../../../../constants";
 import { animateToProgress } from "../../../animation/animate-to-progress";
 import { emitMotionStart } from "../../../animation/emit-motion-start";
+import type { MotionGestureValues } from "../../../types";
 import {
 	normalizeGestureTranslation,
 	resolveGestureVelocity,
@@ -25,50 +26,48 @@ import { resetPanGestureValues } from "./pan-reset";
 
 export const startPanBase = (runtime: PanGestureRuntime) => {
 	"worklet";
-	const {
-		stores: { gestures, animations },
-	} = runtime;
+	const { values } = runtime;
 
-	emitMotionStart(animations);
+	emitMotionStart(values);
 
 	// A drag released short of dismissing springs its offset back: the progress delta on top of
 	// transitionProgress, and x/y/normX/normY for interpolators that read them. A drag that starts
 	// before that spring finishes continues from what is on screen, not from rest, so fold the delta
 	// into transitionProgress and carry the gesture values into the new drag before clearing them.
-	const { internal } = gestures;
+	const { internal } = values;
 	const deltaInFlight =
 		Math.abs(internal.progressDeltaX.get()) > EPSILON ||
 		Math.abs(internal.progressDeltaY.get()) > EPSILON;
 	if (deltaInFlight) {
-		animations.transitionProgress.set(animations.visualProgress.get());
+		values.transitionProgress.set(values.visualProgress.get());
 	} else if (runtime.participation.effectiveSnapPoints.hasSnapPoints) {
 		// A sheet's progress is its position: stop whatever is animating it (a snapTo, a release's
 		// spring) so it doesn't keep moving under the finger and the release starts from where it is.
-		animations.transitionProgress.set(animations.transitionProgress.get());
+		values.transitionProgress.set(values.transitionProgress.get());
 	}
-	internal.carry.x.set(gestures.x.get());
-	internal.carry.y.set(gestures.y.get());
-	internal.carry.normX.set(gestures.normX.get());
-	internal.carry.normY.set(gestures.normY.get());
+	internal.carry.x.set(values.x.get());
+	internal.carry.y.set(values.y.get());
+	internal.carry.normX.set(values.normX.get());
+	internal.carry.normY.set(values.normY.get());
 
-	gestures.dragging.set(TRUE);
-	gestures.dismissing.set(0);
-	gestures.settling.set(0);
-	clearPanTrackingValues(gestures);
+	values.dragging.set(TRUE);
+	values.dismissing.set(0);
+	values.settling.set(0);
+	clearPanTrackingValues(values);
 	// Hold the carried values (stopping their spring) until the first update adds the new translation.
-	gestures.x.set(internal.carry.x.get());
-	gestures.y.set(internal.carry.y.get());
-	gestures.normX.set(internal.carry.normX.get());
-	gestures.normY.set(internal.carry.normY.get());
-	clearTransformTrackingValues(gestures);
-	clearFocalPoint(gestures);
-	gestures.internal.progressBaseline.set(animations.transitionProgress.get());
+	values.x.set(internal.carry.x.get());
+	values.y.set(internal.carry.y.get());
+	values.normX.set(internal.carry.normX.get());
+	values.normY.set(internal.carry.normY.get());
+	clearTransformTrackingValues(values);
+	clearFocalPoint(values);
+	values.internal.progressBaseline.set(values.transitionProgress.get());
 };
 
 export const trackPanGesture = (
 	event: PanGestureEvent,
 	rawEvent: PanGestureEvent,
-	gestures: PanGestureRuntime["stores"]["gestures"],
+	gestures: MotionGestureValues,
 	dimensions: GestureDimensions,
 ): void => {
 	"worklet";
@@ -115,10 +114,7 @@ export const finalizePanRelease = (
 	gestureCompositionOwner?: SharedValue<GestureCompositionOwner>,
 ) => {
 	"worklet";
-	const {
-		policy,
-		stores: { gestures, animations, system },
-	} = runtime;
+	const { policy, values } = runtime;
 
 	const canDriveRelease =
 		!gestureCompositionOwner || gestureCompositionOwner.get() === "pan";
@@ -127,7 +123,7 @@ export const finalizePanRelease = (
 		canDriveRelease
 			? release
 			: {
-					target: animations.transitionProgress.get(),
+					target: values.transitionProgress.get(),
 					shouldDismiss: false,
 					initialVelocity: 0,
 					transitionSpec: undefined,
@@ -139,23 +135,22 @@ export const finalizePanRelease = (
 	);
 
 	if (typeof plan.commitProgress === "number") {
-		animations.transitionProgress.set(plan.commitProgress);
-		system.targetProgress.set(plan.commitProgress);
+		values.transitionProgress.set(plan.commitProgress);
+		values.targetProgress.set(plan.commitProgress);
 	}
 
 	const progressAlreadyAtTarget =
-		Math.abs(animations.transitionProgress.get() - plan.target) <= EPSILON;
+		Math.abs(values.transitionProgress.get() - plan.target) <= EPSILON;
 
 	if (canDriveRelease && plan.shouldDismiss) {
-		snapshotGestureHandoff(gestures, {
+		snapshotGestureHandoff(values, {
 			velocity: plan.handoffVelocity,
 		});
 	}
 
 	resetPanGestureValues({
 		plan,
-		gestures,
-		animations,
+		values,
 		completeMotion: !plan.shouldDismiss && progressAlreadyAtTarget,
 		updateLifecycle: canDriveRelease,
 	});
@@ -165,7 +160,7 @@ export const finalizePanRelease = (
 	}
 
 	if (!plan.shouldDismiss && progressAlreadyAtTarget) {
-		system.targetProgress.set(plan.target);
+		values.targetProgress.set(plan.target);
 		return;
 	}
 
@@ -174,9 +169,7 @@ export const finalizePanRelease = (
 		spec: plan.transitionSpec,
 		emitWillAnimate: false,
 		markEntering: false,
-		targetProgress: system.targetProgress,
-		animationProgress: system.animationProgress,
-		animations,
+		values,
 		initialVelocity: plan.progressVelocity,
 	});
 

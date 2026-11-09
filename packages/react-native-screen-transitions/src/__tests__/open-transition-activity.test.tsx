@@ -43,7 +43,7 @@ it("preserves retained motion on Activity resume and initializes a genuine remou
 		useLayoutEffect(() => {
 			effectSetups++;
 		}, []);
-		useOpenTransitionIntent(current, animations, system);
+		useOpenTransitionIntent(current, { ...animations, ...system });
 		return null;
 	}
 	const tree = (mode: "visible" | "hidden", key = "retained") => (
@@ -132,7 +132,7 @@ it.each([
 		actions: { requestLifecycleTransition: request },
 	} as any;
 	function Screen() {
-		useOpenTransitionIntent({ options: {} } as any, animations, system);
+		useOpenTransitionIntent({ options: {} } as any, { ...animations, ...system });
 		return null;
 	}
 	const tree = (mode: "visible" | "hidden") => (
@@ -172,7 +172,11 @@ it("reports an open once it settles above zero, at any snap point, and again aft
 		actions: { requestLifecycleTransition: mock(() => {}) },
 	} as any;
 	function Screen() {
-		useOpenTransitionIntent({ options: {} } as any, values as any, system, onOpen);
+		useOpenTransitionIntent(
+			{ options: {} } as any,
+			{ ...values, ...system },
+			onOpen,
+		);
 		return null;
 	}
 	const settle = (progress: number, closing = 0) => {
@@ -210,8 +214,11 @@ it("doesn't report an open for a screen that starts settled", () => {
 	function Screen() {
 		useOpenTransitionIntent(
 			{ options: {} } as any,
-			values as any,
-			{ targetProgress: makeMutable(1), actions: { requestLifecycleTransition: () => {} } } as any,
+			{
+				...values,
+				targetProgress: makeMutable(1),
+				actions: { requestLifecycleTransition: () => {} },
+			} as any,
 			onOpen,
 		);
 		return null;

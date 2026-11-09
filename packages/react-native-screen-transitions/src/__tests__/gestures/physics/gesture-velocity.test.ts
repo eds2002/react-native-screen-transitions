@@ -62,9 +62,7 @@ const createGestureRuntime = (
 	({
 		policy: { gestureSensitivity },
 		screenOptions: createScreenOptions(runtimeSensitivity ?? gestureSensitivity),
-		stores: {
-			gestures: createGestureStore(),
-		},
+		values: createGestureStore(),
 	}) as any;
 
 const createPanReleaseRuntime = (
@@ -80,7 +78,7 @@ const createPanReleaseRuntime = (
 			gestureReleaseVelocityScale,
 			transitionSpec: undefined,
 		},
-		stores: { animations: createAnimations(progress) },
+		values: createAnimations(progress),
 	}) as any;
 
 const createPinchReleaseRuntime = (
@@ -96,12 +94,9 @@ const createPinchReleaseRuntime = (
 			gestureReleaseVelocityScale,
 			transitionSpec: undefined,
 		},
-		stores: {
-			animations: createAnimations(progress),
-			system: {
+		values: { ...createAnimations(progress), ...{
 				targetProgress: { get: () => 1 },
-			},
-			gestures: {
+			}, ...{
 				internal: {
 					progressBaseline: { get: () => 1 },
 					progressDeltaX: { get: () => 0 },
@@ -133,8 +128,7 @@ const createPinchReleaseRuntime = (
 						direction: { get: () => null },
 					},
 				},
-			},
-		},
+			} },
 	}) as any;
 
 const createSharedValue = <T>(initialValue: T) => {
@@ -283,7 +277,7 @@ const applyAndTrackPanEvent = (
 		),
 	};
 
-	trackPanGesture(event, rawEvent, runtime.stores.gestures, {
+	trackPanGesture(event, rawEvent, runtime.values, {
 		width: 400,
 		height: 800,
 	});
@@ -307,7 +301,7 @@ const applyAndTrackPinchEvent = (
 		scale: 1 + normScale,
 	};
 
-	trackPinchGesture(event, rawEvent, runtime.stores.gestures);
+	trackPinchGesture(event, rawEvent, runtime.values);
 
 	return event;
 };

@@ -5,7 +5,7 @@ import {
 	animate,
 	isSpringAnimationConfig,
 } from "../../../utils/animation/animate";
-import type { MotionAnimationValues } from "../types";
+import type { MotionAnimationValues, MotionProgressValues } from "../types";
 import { emitMotionStart } from "./emit-motion-start";
 
 interface AnimateToProgressProps {
@@ -17,9 +17,7 @@ interface AnimateToProgressProps {
 	 */
 	target: "open" | "close" | number;
 	spec?: TransitionSpec;
-	animations: MotionAnimationValues;
-	targetProgress: SharedValue<number>;
-	animationProgress: SharedValue<number>;
+	values: MotionProgressValues;
 	emitWillAnimate?: boolean;
 	markEntering?: boolean;
 	/** Optional initial velocity for spring-based progress (units: progress/sec). */
@@ -61,9 +59,7 @@ export const resolveAnimationProgressRange = (
 export const animateToProgress = ({
 	target,
 	spec,
-	animations,
-	targetProgress,
-	animationProgress,
+	values,
 	emitWillAnimate = true,
 	markEntering = true,
 	initialVelocity,
@@ -86,8 +82,14 @@ export const animateToProgress = ({
 			? { ...config, velocity: initialVelocity }
 			: config;
 
-	const { transitionProgress, progressAnimating, progressSettled, entering } =
-		animations;
+	const {
+		transitionProgress,
+		progressAnimating,
+		progressSettled,
+		entering,
+		targetProgress,
+		animationProgress,
+	} = values;
 
 	const startAnimation = (activateMotion: boolean) => {
 		"worklet";
@@ -100,7 +102,7 @@ export const animateToProgress = ({
 		const shouldClearEnteringOnFinish =
 			!isClosing && (markEntering || entering.get());
 
-		setTransitionLifecycleFlags(animations, isClosing, markEntering);
+		setTransitionLifecycleFlags(values, isClosing, markEntering);
 
 		if (!config) {
 			progressAnimating.set(FALSE);
@@ -153,13 +155,13 @@ export const animateToProgress = ({
 	};
 
 	if (emitWillAnimate) {
-		setTransitionLifecycleFlags(animations, isClosing, markEntering);
+		setTransitionLifecycleFlags(values, isClosing, markEntering);
 
 		// Already moving (a retarget: snapTo, or a push/pop landing mid-transition): there is no
 		// clean frame to give willAnimate, so take over now. Deferring to the next frame callback
 		// could cancel the running spring before it stepped while the new one waits a frame for its
 		// first step: the screen stood still for one frame mid-motion.
-		if (!emitMotionStart(animations)) {
+		if (!emitMotionStart(values)) {
 			startAnimation(false);
 			return;
 		}

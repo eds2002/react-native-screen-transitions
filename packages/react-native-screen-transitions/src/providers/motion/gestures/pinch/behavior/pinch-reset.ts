@@ -13,16 +13,14 @@ import {
 
 interface ResetPinchGestureValuesProps {
 	spec?: AnimationConfig;
-	gestures: MotionGestureValues;
-	animations?: MotionAnimationValues;
+	values: MotionGestureValues & MotionAnimationValues;
 	shouldDismiss: boolean;
 	resetValuesImmediately?: boolean;
 }
 
 export const resetPinchGestureValues = ({
 	spec,
-	gestures,
-	animations,
+	values,
 	shouldDismiss,
 	resetValuesImmediately = false,
 }: ResetPinchGestureValuesProps) => {
@@ -33,39 +31,39 @@ export const resetPinchGestureValues = ({
 			return;
 		}
 
-		clearFocalPoint(gestures);
-		gestures.initiator.set(null);
-		gestures.settling.set(FALSE);
-		animations?.progressAnimating.set(FALSE);
-		animations?.progressSettled.set(TRUE);
+		clearFocalPoint(values);
+		values.initiator.set(null);
+		values.settling.set(FALSE);
+		values.progressAnimating.set(FALSE);
+		values.progressSettled.set(TRUE);
 	};
 
-	if (animations && !shouldDismiss) {
-		animations.progressAnimating.set(TRUE);
-		animations.progressSettled.set(FALSE);
+	if (!shouldDismiss) {
+		values.progressAnimating.set(TRUE);
+		values.progressSettled.set(FALSE);
 	}
 
-	clearRawTransformValues(gestures);
+	clearRawTransformValues(values);
 
-	gestures.dragging.set(FALSE);
-	gestures.dismissing.set(shouldDismiss ? TRUE : FALSE);
-	gestures.settling.set(shouldDismiss ? FALSE : TRUE);
+	values.dragging.set(FALSE);
+	values.dismissing.set(shouldDismiss ? TRUE : FALSE);
+	values.settling.set(shouldDismiss ? FALSE : TRUE);
 
 	if (shouldDismiss) {
-		clearFocalPoint(gestures);
+		clearFocalPoint(values);
 	}
 
 	if (resetValuesImmediately) {
-		clearTransformTrackingValues(gestures);
+		clearTransformTrackingValues(values);
 		finishPinchReset();
 		return;
 	}
 
 	animateMany(
 		[
-			{ value: gestures.scale, toValue: 1 },
-			{ value: gestures.normScale, toValue: 0 },
-			{ value: gestures.rotation, toValue: 0 },
+			{ value: values.scale, toValue: 1 },
+			{ value: values.normScale, toValue: 0 },
+			{ value: values.rotation, toValue: 0 },
 		],
 		spec,
 		finishPinchReset,

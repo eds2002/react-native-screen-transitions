@@ -42,22 +42,16 @@ export function snapDescriptorToIndex(
 	}
 
 	const targetProgress = sorted[index];
-	const animations = getMotionStore(descriptor.route.key).state;
-	const {
-		targetProgress: targetProgressValue,
-		animationProgress: animationProgressValue,
-	} = animations;
+	const values = getMotionStore(descriptor.route.key).state;
 
 	scheduleOnUI(() => {
 		"worklet";
-		const currentProgress = animations.transitionProgress.get();
+		const currentProgress = values.transitionProgress.get();
 
 		animateToProgress({
 			target: targetProgress,
 			markEntering: false,
-			animations,
-			targetProgress: targetProgressValue,
-			animationProgress: animationProgressValue,
+			values,
 			spec: resolveSnapTransitionSpec(
 				descriptor.options.transitionSpec,
 				targetProgress < currentProgress ? "collapse" : "expand",

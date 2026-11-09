@@ -12,16 +12,14 @@ import type { PanReleasePlan } from "../../types";
 
 interface ResetPanGestureValuesProps {
 	plan: PanReleasePlan;
-	gestures: MotionGestureValues;
-	animations?: MotionAnimationValues;
+	values: MotionGestureValues & MotionAnimationValues;
 	completeMotion?: boolean;
 	updateLifecycle?: boolean;
 }
 
 export const resetPanGestureValues = ({
 	plan,
-	gestures,
-	animations,
+	values,
 	completeMotion = false,
 	updateLifecycle = true,
 }: ResetPanGestureValuesProps) => {
@@ -32,51 +30,51 @@ export const resetPanGestureValues = ({
 			return;
 		}
 
-		gestures.initiator.set(null);
-		gestures.settling.set(FALSE);
+		values.initiator.set(null);
+		values.settling.set(FALSE);
 		if (completeMotion) {
-			animations?.progressAnimating.set(FALSE);
-			animations?.progressSettled.set(TRUE);
+			values.progressAnimating.set(FALSE);
+			values.progressSettled.set(TRUE);
 		}
 	};
 
-	if (animations && updateLifecycle && !plan.shouldDismiss) {
-		animations.progressAnimating.set(TRUE);
-		animations.progressSettled.set(FALSE);
+	if (updateLifecycle && !plan.shouldDismiss) {
+		values.progressAnimating.set(TRUE);
+		values.progressSettled.set(FALSE);
 	}
 
-	clearRawPanValues(gestures);
+	clearRawPanValues(values);
 
 	if (updateLifecycle) {
-		gestures.dragging.set(FALSE);
-		gestures.dismissing.set(plan.shouldDismiss ? TRUE : FALSE);
-		gestures.settling.set(plan.shouldDismiss ? FALSE : TRUE);
+		values.dragging.set(FALSE);
+		values.dismissing.set(plan.shouldDismiss ? TRUE : FALSE);
+		values.settling.set(plan.shouldDismiss ? FALSE : TRUE);
 	}
 
-	gestures.velocity.set(0);
+	values.velocity.set(0);
 
 	const progressDeltaWasCommitted = typeof plan.commitProgress === "number";
 
 	if (progressDeltaWasCommitted) {
-		clearPanProgressDeltaValues(gestures);
+		clearPanProgressDeltaValues(values);
 	}
 
 	animateMany(
 		[
-			{ value: gestures.x, toValue: 0, velocity: plan.resetVelocityX },
-			{ value: gestures.y, toValue: 0, velocity: plan.resetVelocityY },
-			{ value: gestures.normX, toValue: 0, velocity: plan.resetVelocityNormX },
-			{ value: gestures.normY, toValue: 0, velocity: plan.resetVelocityNormY },
+			{ value: values.x, toValue: 0, velocity: plan.resetVelocityX },
+			{ value: values.y, toValue: 0, velocity: plan.resetVelocityY },
+			{ value: values.normX, toValue: 0, velocity: plan.resetVelocityNormX },
+			{ value: values.normY, toValue: 0, velocity: plan.resetVelocityNormY },
 			...(progressDeltaWasCommitted
 				? []
 				: [
 						{
-							value: gestures.internal.progressDeltaX,
+							value: values.internal.progressDeltaX,
 							toValue: 0,
 							velocity: plan.resetVelocityNormX,
 						},
 						{
-							value: gestures.internal.progressDeltaY,
+							value: values.internal.progressDeltaY,
 							toValue: 0,
 							velocity: plan.resetVelocityNormY,
 						},

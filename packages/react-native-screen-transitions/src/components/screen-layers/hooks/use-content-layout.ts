@@ -15,7 +15,7 @@ export function useContentLayout(styleId: string | undefined) {
 			: null,
 	);
 	const { height: screenHeight } = useWindowDimensions();
-	const animations = useOptionalMotionStore((store) =>
+	const values = useOptionalMotionStore((store) =>
 		builder ? store?.state : undefined,
 	);
 	const startsSettled = builder?.derivations.startsSettled;
@@ -25,14 +25,14 @@ export function useContentLayout(styleId: string | undefined) {
 
 	const handleLayout = useCallback(
 		(event: LayoutChangeEvent) => {
-			if (!animations) return;
+			if (!values) return;
 			const {
 				targetProgress,
 				resolvedAutoSnapPoint,
 				measuredContentLayout,
 				autoOpenArmed,
-			} = animations;
-			const { requestLifecycleTransition } = animations.actions;
+			} = values;
+			const { requestLifecycleTransition } = values.actions;
 			const { width, height } = event.nativeEvent.layout;
 			if (width <= 0 || height <= 0) return;
 
@@ -52,15 +52,15 @@ export function useContentLayout(styleId: string | undefined) {
 					if (
 						!isFirstMeasurement ||
 						!autoOpenArmed.get() ||
-						animations.transitionProgress.get() !== 0 ||
-						animations.progressAnimating.get() !== 0
+						values.transitionProgress.get() !== 0 ||
+						values.progressAnimating.get() !== 0
 					) {
 						return;
 					}
 
 					if (startsSettled) {
 						targetProgress.set(nextFraction);
-						animations.transitionProgress.set(nextFraction);
+						values.transitionProgress.set(nextFraction);
 						return;
 					}
 
@@ -74,7 +74,7 @@ export function useContentLayout(styleId: string | undefined) {
 				fraction,
 			);
 		},
-		[animations, isContent, measureSnap, startsSettled, screenHeight],
+		[values, isContent, measureSnap, startsSettled, screenHeight],
 	);
 	return isContent || measureSnap ? handleLayout : undefined;
 }

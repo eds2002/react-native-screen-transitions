@@ -108,14 +108,10 @@ export const usePinchActivation = ({
 			}
 
 			if (event.numberOfTouches === 2) {
-				updateAbsolutePinchFocalPoint(
-					event,
-					latestRuntime.stores.gestures,
-					true,
-				);
+				updateAbsolutePinchFocalPoint(event, latestRuntime.values, true);
 				updatePinchRotation(
 					event,
-					latestRuntime.stores.gestures,
+					latestRuntime.values,
 					lastAngle,
 					accumulatedRotation,
 					true,
@@ -155,14 +151,10 @@ export const usePinchActivation = ({
 			}
 
 			if (event.numberOfTouches === 2) {
-				updateAbsolutePinchFocalPoint(
-					event,
-					latestRuntime.stores.gestures,
-					false,
-				);
+				updateAbsolutePinchFocalPoint(event, latestRuntime.values, false);
 				updatePinchRotation(
 					event,
-					latestRuntime.stores.gestures,
+					latestRuntime.values,
 					lastAngle,
 					accumulatedRotation,
 					false,

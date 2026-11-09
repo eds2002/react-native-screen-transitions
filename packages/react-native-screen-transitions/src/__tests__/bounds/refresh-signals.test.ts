@@ -271,7 +271,7 @@ describe("refresh boundary signals", () => {
 		const runtime = {
 			participation: { canDismiss: true, effectiveSnapPoints: {} },
 			policy: { gestureReleaseVelocityScale: 1 },
-			stores: { animations, gestures, system },
+			values: { ...animations, ...gestures, ...system },
 		};
 		const electricViolet = {
 			x: 24,

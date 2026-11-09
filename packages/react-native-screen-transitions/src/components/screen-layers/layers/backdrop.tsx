@@ -37,9 +37,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 	const transitionSpec = useBuilderStore(
 		(store) => store.options.transitionSpec,
 	);
-	const animations = useMotionStore((store) => store.state);
-	const { targetProgress, animationProgress, resolvedAutoSnapPoint } =
-		animations;
+	const values = useMotionStore((store) => store.state);
 
 	const handleBackdropPress = useCallback(() => {
 		if (backdropBehavior === "dismiss") {
@@ -54,8 +52,6 @@ export const BackdropLayer = memo(function BackdropLayer({
 				return;
 			}
 
-			const gestures = animations;
-
 			scheduleOnUI(() => {
 				"worklet";
 				const resolvedSnaps: number[] = [];
@@ -65,7 +61,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 					// Unmeasured, 'auto' isn't a snap point yet (it reads -1).
 					const resolvedPoint =
 						typeof point === "string"
-							? resolveAutoSnapPoint(true, resolvedAutoSnapPoint.get())
+							? resolveAutoSnapPoint(true, values.resolvedAutoSnapPoint.get())
 							: point;
 
 					if (typeof resolvedPoint === "number") {
@@ -74,15 +70,15 @@ export const BackdropLayer = memo(function BackdropLayer({
 				}
 
 				const { target, shouldDismiss } = findCollapseTarget(
-					animations.transitionProgress.get(),
+					values.transitionProgress.get(),
 					resolvedSnaps,
 					canDismiss,
 				);
 
 				// If already dismissing, skip
-				if (gestures.dismissing.get()) return;
+				if (values.dismissing.get()) return;
 
-				gestures.dismissing.set(shouldDismiss ? 1 : 0);
+				values.dismissing.set(shouldDismiss ? 1 : 0);
 
 				const spec = shouldDismiss
 					? transitionSpec
@@ -92,9 +88,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 					target,
 					markEntering: false,
 					spec,
-					animations,
-					targetProgress,
-					animationProgress,
+					values,
 				});
 
 				if (shouldDismiss) {
@@ -103,10 +97,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 			});
 		}
 	}, [
-		animations,
-		targetProgress,
-		animationProgress,
-		resolvedAutoSnapPoint,
+		values,
 		backdropBehavior,
 		rawSnapPoints,
 		canDismiss,

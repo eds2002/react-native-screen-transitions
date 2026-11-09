@@ -1,17 +1,9 @@
 import { memo, type ReactNode, useMemo, useState } from "react";
-import { StyleSheet, View } from "react-native";
 import { useAnimatedReaction } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import { ScreenLayers } from "../components/screen-layers";
-import useStableCallback from "../hooks/use-stable-callback";
-import { BuilderProvider, useBuilderStore } from "../providers/builder";
-import { MotionProvider } from "../providers/motion";
-import { resetStoresForScreen } from "../providers/motion/lifecycle/reset-stores-for-screen";
-import { useCloseCompletion } from "../providers/motion/lifecycle/use-close-completion";
-import { useOpenTransitionIntent } from "../providers/motion/lifecycle/use-open-transition-intent";
-import { useTransitionStartController } from "../providers/motion/lifecycle/use-transition-start-controller";
-import { useMotionStore } from "../providers/motion/motion.store";
-import { OrchestratorProvider } from "../providers/orchestrator";
+import { ScreenMotion } from "../components/screen-motion";
+import { BuilderProvider } from "../providers/builder";
+import { useMotionLifecycle } from "../providers/motion/lifecycle/use-motion-lifecycle";
 import { useNextDescriptor, useRegisterAbove } from "./relations";
 import type { Motion, MotionOptions } from "./types";
 import { createStandaloneDescriptor, getMotionInternals } from "./use-motion";
@@ -26,26 +18,10 @@ const MotionLifecycle = memo(function MotionLifecycle({
 	onOpen?: () => void;
 	onClose?: () => void;
 }) {
-	const current = useBuilderStore((store) => store.descriptors.current);
-	const state = useMotionStore((store) => store.state);
-	const handleOpen = useStableCallback(() => onOpen?.());
-	const handleClose = useStableCallback(() => {
-		resetStoresForScreen(current.route.key);
-		onClose?.();
-	});
-
-	useOpenTransitionIntent(
-		current,
-		state,
-		state,
-		handleOpen,
-		initial === "closed" ? "closed" : "mount",
-	);
-	useTransitionStartController({ current, animations: state, system: state });
-	useCloseCompletion({
-		closing: state.closing,
-		animationProgress: state.animationProgress,
-		onComplete: handleClose,
+	useMotionLifecycle({
+		mode: initial === "closed" ? "closed" : "mount",
+		onOpen,
+		onClose,
 	});
 
 	return null;
@@ -106,25 +82,20 @@ export function MotionView({ value, children }: MotionViewProps) {
 			descriptors={descriptors}
 			startsSettled={initial === "open"}
 		>
-			<MotionProvider values={values} onDismissRequest={requestClose}>
-				<View
-					style={styles.fill}
-					pointerEvents={interactive ? "box-none" : "none"}
-				>
-					<OrchestratorProvider>
-						<ScreenLayers onDismissRequest={requestClose}>
-							{children}
-						</ScreenLayers>
-					</OrchestratorProvider>
-				</View>
-				<MotionLifecycle
-					initial={initial}
-					onOpen={options.onOpen}
-					onClose={options.onClose}
-				/>
-			</MotionProvider>
+			<ScreenMotion
+				values={values}
+				onDismissRequest={requestClose}
+				pointerEvents={interactive ? "box-none" : "none"}
+				lifecycle={
+					<MotionLifecycle
+						initial={initial}
+						onOpen={options.onOpen}
+						onClose={options.onClose}
+					/>
+				}
+			>
+				{children}
+			</ScreenMotion>
 		</BuilderProvider>
 	);
 }
-
-const styles = StyleSheet.create({ fill: { flex: 1 } });

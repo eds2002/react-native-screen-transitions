@@ -35,7 +35,7 @@ export const usePanBehavior = (
 		"worklet";
 		const latestRuntime = resolvePanRuntime(runtime.get(), screenOptions.get());
 		if (gestureCompositionOwner.get() === "pinch") {
-			clearPanTrackingValues(latestRuntime.stores.gestures);
+			clearPanTrackingValues(latestRuntime.values);
 			pendingDirection.set(null);
 			resetSensitivity();
 			return;
@@ -43,7 +43,7 @@ export const usePanBehavior = (
 
 		const direction = pendingDirection.get();
 		if (direction) {
-			latestRuntime.stores.gestures.initiator.set(direction);
+			latestRuntime.values.initiator.set(direction);
 		}
 		pendingDirection.set(null);
 		gestureCompositionOwner.set("pan");
@@ -79,12 +79,7 @@ export const usePanBehavior = (
 				return;
 			}
 			const event = withSensitivity(rawEvent);
-			trackPanGesture(
-				event,
-				rawEvent,
-				latestRuntime.stores.gestures,
-				dimensions,
-			);
+			trackPanGesture(event, rawEvent, latestRuntime.values, dimensions);
 		},
 		[runtime, screenOptions, dimensions, withSensitivity],
 	);
@@ -100,7 +95,7 @@ export const usePanBehavior = (
 
 			const release = !latestRuntime.policy.enabled
 				? {
-						target: latestRuntime.stores.animations.transitionProgress.get(),
+						target: latestRuntime.values.transitionProgress.get(),
 						shouldDismiss: false,
 						initialVelocity: 0,
 						transitionSpec: undefined,

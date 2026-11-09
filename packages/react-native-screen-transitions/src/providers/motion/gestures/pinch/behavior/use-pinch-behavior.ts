@@ -50,7 +50,7 @@ export const usePinchBehavior = (
 				screenOptions.get(),
 			);
 			const event = withSensitivity(rawEvent);
-			trackPinchGesture(event, rawEvent, latestRuntime.stores.gestures);
+			trackPinchGesture(event, rawEvent, latestRuntime.values);
 		},
 		[runtime, screenOptions, withSensitivity],
 	);

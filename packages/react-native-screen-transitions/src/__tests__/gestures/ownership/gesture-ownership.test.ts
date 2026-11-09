@@ -35,12 +35,10 @@ const createRuntime = () =>
 			},
 			gestureActivationArea: "screen",
 		},
-		stores: {
-			gestures: {
+		values: {
 				dragging: shared(0),
 				dismissing: shared(0),
 			},
-		},
 	}) as any;
 
 const createMoveEvent = (x: number, y: number) =>

@@ -1,11 +1,9 @@
 import { memo, type ReactNode, useEffect, useMemo, useRef } from "react";
 import { PortalProvider } from "../../../components/boundary/portal";
 import { Overlay } from "../../../components/overlay";
-import { ScreenLayers } from "../../../components/screen-layers";
+import { ScreenMotion } from "../../../components/screen-motion";
 import { BuilderProvider } from "../../../providers/builder";
-import { MotionProvider } from "../../../providers/motion";
 import { resetStoresForScreen } from "../../../providers/motion/lifecycle/reset-stores-for-screen";
-import { OrchestratorProvider } from "../../../providers/orchestrator";
 import { useNavigationHelpers } from "../hooks/use-navigation-helpers";
 import { useNavigatorStore } from "../state/navigator-store";
 import { ActivityContainer, ActivityScreen } from "./activity";
@@ -37,14 +35,12 @@ const SceneMotion = memo(function SceneMotion({
 }) {
 	const { requestDismiss } = useNavigationHelpers();
 	return (
-		<MotionProvider onDismissRequest={requestDismiss}>
-			<OrchestratorProvider>
-				<ScreenLayers onDismissRequest={requestDismiss}>
-					{children}
-				</ScreenLayers>
-			</OrchestratorProvider>
-			<SceneLifecycle />
-		</MotionProvider>
+		<ScreenMotion
+			onDismissRequest={requestDismiss}
+			lifecycle={<SceneLifecycle />}
+		>
+			{children}
+		</ScreenMotion>
 	);
 });
 

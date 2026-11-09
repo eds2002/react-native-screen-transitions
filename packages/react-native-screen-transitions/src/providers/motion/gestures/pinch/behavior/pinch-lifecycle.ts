@@ -3,6 +3,7 @@ import { scheduleOnRN } from "react-native-worklets";
 import { EPSILON, TRUE } from "../../../../../constants";
 import { animateToProgress } from "../../../animation/animate-to-progress";
 import { emitMotionStart } from "../../../animation/emit-motion-start";
+import type { MotionGestureValues } from "../../../types";
 import { normalizePinchScale } from "../../shared/physics";
 import { snapshotGestureHandoff } from "../../shared/snapshot";
 import {
@@ -32,29 +33,27 @@ export const startPinchBase = (
 	gestureCompositionOwner?: SharedValue<GestureCompositionOwner>,
 ) => {
 	"worklet";
-	const {
-		stores: { gestures, animations },
-	} = runtime;
+	const { values } = runtime;
 
 	if (joinsAnotherGesture(gestureCompositionOwner)) {
-		clearTransformTrackingValues(gestures);
+		clearTransformTrackingValues(values);
 		return;
 	}
 
-	emitMotionStart(animations);
-	gestures.dragging.set(TRUE);
-	gestures.dismissing.set(0);
-	gestures.settling.set(0);
-	gestures.initiator.set(null);
-	gestures.velocity.set(0);
-	clearTransformTrackingValues(gestures);
-	gestures.internal.progressBaseline.set(animations.transitionProgress.get());
+	emitMotionStart(values);
+	values.dragging.set(TRUE);
+	values.dismissing.set(0);
+	values.settling.set(0);
+	values.initiator.set(null);
+	values.velocity.set(0);
+	clearTransformTrackingValues(values);
+	values.internal.progressBaseline.set(values.transitionProgress.get());
 };
 
 export const trackPinchGesture = (
 	event: PinchGestureEvent,
 	rawEvent: PinchGestureEvent,
-	gestures: PinchGestureRuntime["stores"]["gestures"],
+	gestures: MotionGestureValues,
 ): void => {
 	"worklet";
 	const normScale = clamp(normalizePinchScale(event.scale), -1, 1);
@@ -81,40 +80,37 @@ export const finalizePinchRelease = (
 	gestureCompositionOwner?: SharedValue<GestureCompositionOwner>,
 ) => {
 	"worklet";
-	const {
-		stores: { gestures, animations, system },
-	} = runtime;
+	const { values } = runtime;
 
 	if (joinsAnotherGesture(gestureCompositionOwner)) {
-		clearTransformTrackingValues(gestures);
-		clearFocalPoint(gestures);
+		clearTransformTrackingValues(values);
+		clearFocalPoint(values);
 		return;
 	}
 
 	if (typeof release.commitProgress === "number") {
-		animations.transitionProgress.set(release.commitProgress);
-		system.targetProgress.set(release.commitProgress);
+		values.transitionProgress.set(release.commitProgress);
+		values.targetProgress.set(release.commitProgress);
 	}
 
 	const progressAlreadyAtTarget =
-		Math.abs(animations.transitionProgress.get() - release.target) <= EPSILON;
+		Math.abs(values.transitionProgress.get() - release.target) <= EPSILON;
 
 	if (release.shouldDismiss) {
-		snapshotGestureHandoff(gestures, {
+		snapshotGestureHandoff(values, {
 			velocity: release.handoffVelocity,
 		});
 	}
 
 	resetPinchGestureValues({
 		spec: release.resetSpec,
-		gestures,
-		animations,
+		values,
 		shouldDismiss: release.shouldDismiss,
 		resetValuesImmediately: release.resetValuesImmediately,
 	});
 
 	if (!release.shouldDismiss && progressAlreadyAtTarget) {
-		system.targetProgress.set(release.target);
+		values.targetProgress.set(release.target);
 		return;
 	}
 
@@ -123,9 +119,7 @@ export const finalizePinchRelease = (
 		spec: release.transitionSpec,
 		emitWillAnimate: false,
 		markEntering: false,
-		animations,
-		targetProgress: system.targetProgress,
-		animationProgress: system.animationProgress,
+		values,
 		initialVelocity: release.initialVelocity,
 	});
 

@@ -1,32 +1,23 @@
 import { useAnimatedReaction } from "react-native-reanimated";
 import type { BaseDescriptor } from "../../builder";
 import { animateToProgress } from "../animation/animate-to-progress";
-import {
-	LifecycleTransitionRequestKind,
-	type MotionTransitionValues,
-} from "../hooks/use-transition-values";
-import { useMotionStore } from "../motion.store";
-import type { MotionAnimationValues } from "../types";
+import { LifecycleTransitionRequestKind } from "../hooks/use-transition-values";
+import type { MotionValues } from "../types";
 
 export const useTransitionStartController = ({
 	current,
-	animations,
-	system,
+	values,
 }: {
 	current: BaseDescriptor;
-	animations: MotionAnimationValues;
-	system: MotionTransitionValues;
+	values: MotionValues;
 }) => {
 	const {
-		targetProgress,
-		animationProgress,
 		pendingLifecycleRequestKind,
 		pendingLifecycleRequestTarget,
 		pendingLifecycleStartBlockCount,
-	} = system;
-	const { clearLifecycleTransitionRequest } = system.actions;
+	} = values;
+	const { clearLifecycleTransitionRequest } = values.actions;
 	const transitionSpec = current.options.transitionSpec;
-	const isDragging = useMotionStore((store) => store.state.dragging);
 
 	useAnimatedReaction(
 		() => {
@@ -54,11 +45,9 @@ export const useTransitionStartController = ({
 				spec: transitionSpec,
 				emitWillAnimate:
 					kind !== LifecycleTransitionRequestKind.Open ||
-					!animations.entering.get(),
-				animations,
-				targetProgress,
-				animationProgress,
-				isDragging,
+					!values.entering.get(),
+				values,
+				isDragging: values.dragging,
 			});
 
 			clearLifecycleTransitionRequest();

@@ -207,11 +207,7 @@ const resolveSnapScrollExpansionDecision = (
 	nextActivationState: GestureActivationState,
 ): PanActivationDecision | null => {
 	"worklet";
-	const {
-		participation,
-		policy,
-		stores: { animations, system },
-	} = runtime;
+	const { participation, policy, values } = runtime;
 	const { hasAutoSnapPoint, snapPoints, minSnapPoint, maxSnapPoint } =
 		participation.effectiveSnapPoints;
 
@@ -227,15 +223,15 @@ const resolveSnapScrollExpansionDecision = (
 	const { resolvedMaxSnapPoint } = resolveRuntimeSnapPoints({
 		snapPoints,
 		hasAutoSnapPoint,
-		resolvedAutoSnapPoint: system.resolvedAutoSnapPoint.get(),
+		resolvedAutoSnapPoint: values.resolvedAutoSnapPoint.get(),
 		minSnapPoint,
 		maxSnapPoint,
 		canDismiss: participation.canDismiss,
 	});
 
 	const canExpandMore =
-		animations.transitionProgress.get() < resolvedMaxSnapPoint - EPSILON &&
-		system.targetProgress.get() < resolvedMaxSnapPoint - EPSILON;
+		values.transitionProgress.get() < resolvedMaxSnapPoint - EPSILON &&
+		values.targetProgress.get() < resolvedMaxSnapPoint - EPSILON;
 
 	if (canExpandMore) {
 		return null;
@@ -333,7 +329,7 @@ const resolveScrollDecision = (
 
 	const dismissingDecision = resolveDismissingDecision(
 		hasSnapPoints,
-		Boolean(runtime.stores.gestures.dismissing.get()),
+		Boolean(runtime.values.dismissing.get()),
 		swipeDirection,
 		nextActivationState,
 	);
@@ -403,7 +399,7 @@ export const resolvePanActivationMoveDecision = ({
 	const offsetFailureDecision = resolveOffsetFailureDecision(offset);
 	if (offsetFailureDecision) return offsetFailureDecision;
 
-	if (runtime.stores.gestures.dragging.get()) {
+	if (runtime.values.dragging.get()) {
 		return createDecision(
 			"activate",
 			"already-dragging",

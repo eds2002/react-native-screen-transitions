@@ -34,7 +34,7 @@ const resolvePanReleaseVelocity = (
 	velocityNormY: number,
 ) => {
 	"worklet";
-	const activeGesture = runtime.stores.gestures.initiator.get();
+	const activeGesture = runtime.values.initiator.get();
 
 	switch (activeGesture) {
 		case "horizontal":
@@ -50,7 +50,7 @@ const resolvePanReleaseVelocity = (
 
 const resolveActivePanSnapAxis = (runtime: PanGestureRuntime) => {
 	"worklet";
-	const activeGesture = runtime.stores.gestures.initiator.get();
+	const activeGesture = runtime.values.initiator.get();
 
 	return isResolvedPanGestureDirection(activeGesture)
 		? getPanSnapAxisConfigForDirection(
@@ -105,14 +105,13 @@ const getPanSnapReleaseProgress = ({
 	const signedProgressDelta = activeAxis.config.progressSign * axisProgress;
 	if (sheetSnapBehavior === "step") {
 		return resolveStepSnapProgress({
-			baseline: runtime.stores.gestures.internal.progressBaseline.get(),
+			baseline: runtime.values.internal.progressBaseline.get(),
 			normalizedDelta: signedProgressDelta,
 			snapPoints,
 		});
 	}
 	const progress =
-		runtime.stores.gestures.internal.progressBaseline.get() +
-		signedProgressDelta;
+		runtime.values.internal.progressBaseline.get() + signedProgressDelta;
 
 	return clamp(progress, minSnapPoint, maxSnapPoint);
 };
@@ -121,10 +120,10 @@ const buildInactivePanSnapRelease = (
 	runtime: PanGestureRuntime,
 ): PanReleaseResult => {
 	"worklet";
-	const { policy, stores } = runtime;
+	const { policy, values } = runtime;
 
 	return {
-		target: stores.animations.transitionProgress.get(),
+		target: values.transitionProgress.get(),
 		shouldDismiss: false,
 		initialVelocity: 0,
 		transitionSpec: policy.transitionSpec,
@@ -138,11 +137,7 @@ export const resolvePanRelease = (
 	dimensions: GestureDimensions,
 ): PanReleaseResult => {
 	"worklet";
-	const {
-		participation,
-		policy,
-		stores: { animations },
-	} = runtime;
+	const { participation, policy, values } = runtime;
 
 	const result = determineDismissal({
 		event,
@@ -157,7 +152,7 @@ export const resolvePanRelease = (
 		target: shouldDismiss ? 0 : 1,
 		shouldDismiss,
 		initialVelocity: getPanReleaseProgressVelocity({
-			animations,
+			animations: values,
 			shouldDismiss,
 			event,
 			dimensions,
@@ -198,7 +193,7 @@ export const resolveSnapPanRelease = (
 	const releaseSnapPoints =
 		policy.sheetSnapBehavior === "step"
 			? resolveStepSnapTargets({
-					baseline: runtime.stores.gestures.internal.progressBaseline.get(),
+					baseline: runtime.values.internal.progressBaseline.get(),
 					direction: progressDirection,
 					snapPoints: allSnapTargets,
 				})
@@ -221,10 +216,7 @@ export const resolveSnapPanRelease = (
 	const result = determineSnapTarget({
 		currentProgress,
 		snapPoints: policy.gestureSnapLocked
-			? [
-					runtime.stores.gestures.internal.lockedSnapPoint.get() ??
-						resolvedMaxSnapPoint,
-				]
+			? [runtime.values.internal.lockedSnapPoint.get() ?? resolvedMaxSnapPoint]
 			: releaseSnapPoints,
 		velocity: snapVelocity,
 		dimension: axisDimension,

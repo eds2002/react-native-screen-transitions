@@ -149,9 +149,11 @@ describe("zoom bound target", () => {
 		animateToProgress({
 			target: "open",
 			emitWillAnimate: false,
-			animations,
-			targetProgress: makeMutable(0),
-			animationProgress: makeMutable(0),
+			values: {
+				...animations,
+				targetProgress: makeMutable(0),
+				animationProgress: makeMutable(0),
+			},
 		});
 
 		const refresh = getRefreshBoundarySignal({

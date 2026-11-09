@@ -25,8 +25,7 @@ import type {
 	Direction,
 } from "../../../types/ownership.types";
 import type { ScreenTransitionConfig } from "../../../types/screen.types";
-import type { MotionTransitionValues } from "../hooks/use-transition-values";
-import type { MotionAnimationValues, MotionGestureValues } from "../types";
+import type { MotionValues } from "../types";
 
 export interface EffectiveSnapPointsResult {
 	hasSnapPoints: boolean;
@@ -124,18 +123,13 @@ export interface PinchGesturePolicy {
 	transitionSpec: TransitionSpec | undefined;
 }
 
-interface GestureRuntimeStores {
-	gestures: MotionGestureValues;
-	animations: MotionAnimationValues;
-	system: MotionTransitionValues;
-}
-
 export type GesturePolicy = PanGesturePolicy | PinchGesturePolicy;
 
 export interface GestureRuntime<TPolicy extends GesturePolicy> {
 	participation: ScreenGestureParticipation;
 	policy: TPolicy;
-	stores: GestureRuntimeStores;
+	/** The screen's motion values: progress, lifecycle flags and gesture tracking, in one bag. */
+	values: MotionValues;
 }
 
 export type PanGestureRuntime = GestureRuntime<PanGesturePolicy>;

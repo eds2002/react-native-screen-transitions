@@ -72,7 +72,7 @@ const getPinchSnapReleaseProgress = ({
 	const snapDirections = runtime.policy.snapDirections;
 
 	if (!pinchDirection || !snapDirections) {
-		return runtime.stores.animations.transitionProgress.get();
+		return runtime.values.transitionProgress.get();
 	}
 
 	const progressDelta =
@@ -81,14 +81,14 @@ const getPinchSnapReleaseProgress = ({
 			: Math.abs(normalizedScale);
 	if (runtime.policy.sheetSnapBehavior === "step") {
 		return resolveStepSnapProgress({
-			baseline: runtime.stores.gestures.internal.progressBaseline.get(),
+			baseline: runtime.values.internal.progressBaseline.get(),
 			normalizedDelta: progressDelta,
 			snapPoints,
 		});
 	}
 
 	return clamp(
-		runtime.stores.gestures.internal.progressBaseline.get() + progressDelta,
+		runtime.values.internal.progressBaseline.get() + progressDelta,
 		minSnapPoint,
 		maxSnapPoint,
 	);
@@ -99,13 +99,9 @@ export const resolvePinchRelease = (
 	runtime: PinchGestureRuntime,
 ): PinchReleaseResult => {
 	"worklet";
-	const {
-		participation,
-		policy,
-		stores: { animations, system },
-	} = runtime;
+	const { participation, policy, values } = runtime;
 	const normalizedScale = clamp(normalizePinchScale(event.scale), -1, 1);
-	const currentProgress = animations.transitionProgress.get();
+	const currentProgress = values.transitionProgress.get();
 	const shouldDismiss =
 		participation.canDismiss &&
 		shouldDismissFromPinch(
@@ -113,7 +109,7 @@ export const resolvePinchRelease = (
 			policy.pinchInEnabled,
 			policy.pinchOutEnabled,
 		);
-	const target = shouldDismiss ? 0 : system.targetProgress.get();
+	const target = shouldDismiss ? 0 : values.targetProgress.get();
 	const progressVelocity = getPinchReleaseHandoffVelocity(event.velocity);
 	const handoffVelocity = getPinchReleaseHandoffVelocity(
 		event.velocity,
@@ -160,7 +156,7 @@ export const resolveSnapPinchRelease = (
 	const releaseSnapPoints =
 		policy.sheetSnapBehavior === "step"
 			? resolveStepSnapTargets({
-					baseline: runtime.stores.gestures.internal.progressBaseline.get(),
+					baseline: runtime.values.internal.progressBaseline.get(),
 					direction: progressDirection,
 					snapPoints: allSnapTargets,
 				})
@@ -181,10 +177,7 @@ export const resolveSnapPinchRelease = (
 	const result = determineSnapTarget({
 		currentProgress,
 		snapPoints: policy.gestureSnapLocked
-			? [
-					runtime.stores.gestures.internal.lockedSnapPoint.get() ??
-						resolvedMaxSnapPoint,
-				]
+			? [runtime.values.internal.lockedSnapPoint.get() ?? resolvedMaxSnapPoint]
 			: releaseSnapPoints,
 		velocity: snapVelocity,
 		dimension: 1,

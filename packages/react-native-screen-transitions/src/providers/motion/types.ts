@@ -80,6 +80,10 @@ export type MotionGestureValues = {
 	initiator: SharedValue<ActiveGesture | null>;
 };
 
+/** What a progress animation reads and writes: the lifecycle flags and the progress clocks. */
+export type MotionProgressValues = MotionAnimationValues &
+	Pick<MotionTransitionValues, "targetProgress" | "animationProgress">;
+
 export type MotionValues = MotionAnimationValues &
 	MotionGestureValues &
 	MotionTransitionValues;

@@ -184,17 +184,14 @@ export const resolveRuntimeGestureSnapPoints = (
 	runtime: GestureRuntime<GesturePolicy>,
 ): ResolvedRuntimeSnapPointsResult => {
 	"worklet";
-	const {
-		participation,
-		stores: { system },
-	} = runtime;
+	const { participation, values } = runtime;
 	const { hasAutoSnapPoint, snapPoints, minSnapPoint, maxSnapPoint } =
 		participation.effectiveSnapPoints;
 
 	return resolveRuntimeSnapPoints({
 		snapPoints,
 		hasAutoSnapPoint,
-		resolvedAutoSnapPoint: system.resolvedAutoSnapPoint.get(),
+		resolvedAutoSnapPoint: values.resolvedAutoSnapPoint.get(),
 		minSnapPoint,
 		maxSnapPoint,
 		canDismiss: participation.canDismiss,
@@ -314,22 +311,16 @@ export const primeRuntimeSnapPoint = (
 	runtime: GestureRuntime<GesturePolicy>,
 ) => {
 	"worklet";
-	const {
-		policy,
-		stores: { animations, gestures },
-	} = runtime;
+	const { policy, values } = runtime;
 
 	const { resolvedSnapPoints } = resolveRuntimeGestureSnapPoints(runtime);
 
 	if (policy.gestureSnapLocked) {
-		gestures.internal.lockedSnapPoint.set(
-			findNearestSnapPoint(
-				animations.transitionProgress.get(),
-				resolvedSnapPoints,
-			),
+		values.internal.lockedSnapPoint.set(
+			findNearestSnapPoint(values.transitionProgress.get(), resolvedSnapPoints),
 		);
 		return;
 	}
 
-	gestures.internal.lockedSnapPoint.set(null);
+	values.internal.lockedSnapPoint.set(null);
 };

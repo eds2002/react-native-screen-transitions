@@ -21,11 +21,9 @@ const createRuntime = (gestureReleaseVelocityScale = 1) =>
 		policy: {
 			gestureReleaseVelocityScale,
 		},
-		stores: {
-			gestures: {
+		values: {
 				initiator: shared("horizontal" as ActiveGesture),
 			},
-		},
 	}) as PanGestureRuntime;
 
 const shared = <T>(initial: T) => {
@@ -101,14 +99,11 @@ const createSnapRuntime = ({
 			},
 			transitionSpec: undefined,
 		},
-		stores: {
-			animations: {
+		values: { ...{
 				transitionProgress: shared(progress),
-			},
-			system: {
+			}, ...{
 				resolvedAutoSnapPoint: shared(0),
-			},
-			gestures: {
+			}, ...{
 				initiator: shared(activeGesture),
 				internal: {
 					progressBaseline: shared(baseline),
@@ -118,8 +113,7 @@ const createSnapRuntime = ({
 					lockedSnapPoint: shared<number | null>(lockedSnapPoint),
 					snapshot: createGestureSnapshotStore(),
 				},
-			},
-		},
+			} },
 	}) as unknown as PanGestureRuntime;
 
 const createRelease = (

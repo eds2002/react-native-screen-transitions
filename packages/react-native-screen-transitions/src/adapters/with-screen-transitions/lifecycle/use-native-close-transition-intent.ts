@@ -3,7 +3,6 @@ import useStableCallback from "../../../hooks/use-stable-callback";
 import { useNavigationHelpers } from "../../../navigators/kit/hooks/use-navigation-helpers";
 import type { BaseDescriptor } from "../../../providers/builder";
 import { useScreenRelationships } from "../../../providers/builder/topology";
-import { resetStoresForScreen } from "../../../providers/motion/lifecycle/reset-stores-for-screen";
 import { useOptionalMotionStore } from "../../../providers/motion/motion.store";
 import {
 	dispatchCloseAction,
@@ -39,8 +38,6 @@ export function useNativeCloseTransitionIntent(current: BaseDescriptor): {
 		} else {
 			dismissScreen();
 		}
-
-		resetStoresForScreen(routeKey);
 	});
 
 	const handleBeforeRemove = useStableCallback((event: any) => {

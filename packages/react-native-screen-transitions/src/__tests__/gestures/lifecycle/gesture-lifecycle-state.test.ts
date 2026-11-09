@@ -145,13 +145,11 @@ const createRuntime = (
 			gestureReleaseVelocityScale: 1,
 			...policyOverrides,
 		},
-		stores: {
-			gestures,
-			animations,
-			system: {
-				targetProgress: shared(1),
-				animationProgress: shared(0),
-			},
+		values: {
+			...gestures,
+			...animations,
+			targetProgress: shared(1),
+			animationProgress: shared(0),
 		},
 	};
 
@@ -168,7 +166,7 @@ const createStoredRuntime = () => {
 	const runtime = {
 		participation: { canDismiss: true, effectiveSnapPoints: {} },
 		policy: { gestureReleaseVelocityScale: 1 },
-		stores: { gestures, animations, system },
+		values: { ...gestures, ...animations, ...system },
 	};
 
 	return {
@@ -204,7 +202,7 @@ const exposeToInterpolator = (
 		route: { key: "details", name: "Details" },
 		options: DEFAULT_SCREEN_TRANSITION_OPTIONS,
 		optionsSlot: {},
-		targetProgress: runtime.stores.system.targetProgress,
+		targetProgress: runtime.values.targetProgress,
 		resolvedAutoSnapPoint: shared(-1),
 		measuredContentLayout: shared(null),
 		scrollMetadata: shared(null),
@@ -275,7 +273,7 @@ describe("gesture lifecycle state", () => {
 		const Harness = () => {
 			animations = useMotionStore((store) => store.state);
 			const system = useMotionStore((store) => store.state);
-			useTransitionStartController({ current, animations, system });
+			useTransitionStartController({ current, values: system });
 			React.useLayoutEffect(() => {
 				animations.entering.set(1);
 				system.actions.requestLifecycleTransition(
@@ -312,8 +310,7 @@ describe("gesture lifecycle state", () => {
 
 		const Harness = () => {
 			useCloseCompletion({
-				closing: animations.closing,
-				animationProgress,
+				values: { closing: animations.closing, animationProgress: animationProgress },
 				onComplete: () => {
 					completionCount += 1;
 				},
@@ -346,9 +343,7 @@ describe("gesture lifecycle state", () => {
 
 		animateToProgress({
 			target: "open",
-			animations,
-			targetProgress: shared(0),
-			animationProgress,
+			values: { ...animations, targetProgress: shared(0), animationProgress: animationProgress },
 		});
 
 		expect(animations.willAnimate.get()).toBe(1);
@@ -370,9 +365,7 @@ describe("gesture lifecycle state", () => {
 
 		animateToProgress({
 			target: "close",
-			animations,
-			targetProgress: shared(1),
-			animationProgress,
+			values: { ...animations, targetProgress: shared(1), animationProgress: animationProgress },
 		});
 
 		expect(animations.willAnimate.get()).toBe(1);
@@ -393,9 +386,7 @@ describe("gesture lifecycle state", () => {
 		animateToProgress({
 			target: "close",
 			spec: { close: { duration: 200, __defer: true } as any },
-			animations,
-			targetProgress: runtime.stores.system.targetProgress,
-			animationProgress: runtime.stores.system.animationProgress,
+			values: runtime.values,
 		});
 
 		expect(
@@ -428,9 +419,7 @@ describe("gesture lifecycle state", () => {
 
 		animateToProgress({
 			target: 0.25,
-			animations: state.animations,
-			targetProgress: state.runtime.stores.system.targetProgress,
-			animationProgress: state.runtime.stores.system.animationProgress,
+			values: state.runtime.values,
 		});
 
 		expect(exposeToInterpolator(state, [0.25, 1])).toMatchObject({
@@ -453,14 +442,12 @@ describe("gesture lifecycle state", () => {
 		const state = createRuntime();
 		state.animations.transitionProgress.set(0.25);
 		state.animations.visualProgress.set(0.25);
-		state.runtime.stores.system.targetProgress.set(0.25);
+		state.runtime.values.targetProgress.set(0.25);
 
 		animateToProgress({
 			target: 1,
 			markEntering: false,
-			animations: state.animations,
-			targetProgress: state.runtime.stores.system.targetProgress,
-			animationProgress: state.runtime.stores.system.animationProgress,
+			values: state.runtime.values,
 		});
 
 		expect(exposeToInterpolator(state, [0.25, 1])).toMatchObject({
@@ -476,13 +463,11 @@ describe("gesture lifecycle state", () => {
 		const state = createRuntime();
 		state.animations.transitionProgress.set(1);
 		state.animations.visualProgress.set(1);
-		state.runtime.stores.system.targetProgress.set(1);
+		state.runtime.values.targetProgress.set(1);
 
 		animateToProgress({
 			target: 0.25,
-			animations: state.animations,
-			targetProgress: state.runtime.stores.system.targetProgress,
-			animationProgress: state.runtime.stores.system.animationProgress,
+			values: state.runtime.values,
 		});
 
 		expect(exposeToInterpolator(state, [0.25, 1])).toMatchObject({
@@ -501,9 +486,7 @@ describe("gesture lifecycle state", () => {
 
 		animateToProgress({
 			target: "open",
-			animations,
-			targetProgress: shared(0),
-			animationProgress: shared(0),
+			values: { ...animations, targetProgress: shared(0), animationProgress: shared(0) },
 		});
 
 		expect(animations.closing.get()).toBe(0);
@@ -987,9 +970,7 @@ describe("gesture lifecycle state", () => {
 				target: "open",
 				spec: { open: { duration: 200, __defer: true } as any },
 				emitWillAnimate: false,
-				animations: state.animations,
-				targetProgress: state.runtime.stores.system.targetProgress,
-				animationProgress: state.runtime.stores.system.animationProgress,
+				values: state.runtime.values,
 				isDragging: state.gestures.dragging,
 			});
 

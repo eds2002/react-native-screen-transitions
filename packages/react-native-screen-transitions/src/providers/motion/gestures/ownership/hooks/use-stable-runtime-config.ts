@@ -5,7 +5,7 @@ import type { GesturePolicy, GestureRuntime } from "../../types";
 
 type RuntimeConfigInput<TPolicy extends GesturePolicy> = Omit<
 	GestureRuntime<TPolicy>,
-	"stores"
+	"values"
 >;
 
 export function useStableRuntimeConfig<TPolicy extends GesturePolicy>(
@@ -14,21 +14,13 @@ export function useStableRuntimeConfig<TPolicy extends GesturePolicy>(
 ): SharedValue<GestureRuntime<TPolicy>> {
 	const { participation, policy } = runtimeConfigInput;
 
-	const stores = useMemo(() => {
-		return {
-			gestures: values,
-			animations: values,
-			system: values,
-		};
-	}, [values]);
-
 	const runtimeConfig = useMemo<GestureRuntime<TPolicy>>(() => {
 		return {
 			participation,
 			policy,
-			stores,
+			values,
 		};
-	}, [participation, policy, stores]);
+	}, [participation, policy, values]);
 	const stableRuntimeConfig = useSharedValue(runtimeConfig);
 
 	useLayoutEffect(() => {
