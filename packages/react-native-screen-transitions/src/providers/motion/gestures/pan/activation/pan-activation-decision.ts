@@ -18,9 +18,9 @@ import {
 	resolveOffsetRules,
 } from "./pan-activation-rules";
 
-export type PanActivationAction = "activate" | "fail" | "wait";
+type PanActivationAction = "activate" | "fail" | "wait";
 
-export type PanActivationReason =
+type PanActivationReason =
 	| "ancestor-dismissing"
 	| "already-dragging"
 	| "disabled"

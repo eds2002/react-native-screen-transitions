@@ -40,7 +40,6 @@ const EMPTY_SCENES: never[] = [];
 
 interface UseInitialDestinationMeasurementParams {
 	boundTag: BoundTag;
-	enabled: boolean;
 	measureBoundary: MeasureBoundary;
 	/** The transition that opens this screen (see useOpeningScreen). */
 	opening: OpeningScreen;
@@ -48,7 +47,6 @@ interface UseInitialDestinationMeasurementParams {
 
 export const useInitialDestinationMeasurement = ({
 	boundTag,
-	enabled,
 	measureBoundary,
 	opening,
 }: UseInitialDestinationMeasurementParams) => {
@@ -61,7 +59,7 @@ export const useInitialDestinationMeasurement = ({
 	);
 	const openingScreenKey = opening.screenKey;
 	const destinationPairKey = opening.destinationPairKey;
-	const destinationEnabled = enabled && opening.receiving;
+	const destinationEnabled = opening.receiving;
 	const canReceiveDestination = destinationEnabled && !!destinationPairKey;
 	const preferredSourceScreenKey = destinationPairKey
 		? getSourceScreenKeyFromPairKey(destinationPairKey)

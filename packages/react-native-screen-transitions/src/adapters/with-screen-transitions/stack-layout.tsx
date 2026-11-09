@@ -42,7 +42,6 @@ type TransitionStackState = {
 	routeKeys: string[];
 	scenes: ScreenTransitionsAdapterScene[];
 	routeIndexByKey: Map<string, number>;
-	shouldShowFloatOverlay: boolean;
 };
 
 const EMPTY_PRELOADED_ROUTES: Route<string>[] = [];
@@ -78,7 +77,6 @@ function buildTransitionStackState({
 	const routeKeys = routes.map((route) => route.key);
 	const scenes: ScreenTransitionsAdapterScene[] = [];
 	const routeIndexByKey = new Map<string, number>();
-	let shouldShowFloatOverlay = false;
 
 	for (const route of allRoutes) {
 		const descriptor = descriptors[route.key];
@@ -115,14 +113,6 @@ function buildTransitionStackState({
 			previousDescriptor,
 		});
 		routeIndexByKey.set(route.key, sceneIndex);
-
-		if (
-			!shouldShowFloatOverlay &&
-			normalizedDescriptor.options.overlay &&
-			normalizedDescriptor.options.overlayShown !== false
-		) {
-			shouldShowFloatOverlay = true;
-		}
 	}
 
 	return {
@@ -130,7 +120,6 @@ function buildTransitionStackState({
 		routeKeys,
 		scenes,
 		routeIndexByKey,
-		shouldShowFloatOverlay,
 	};
 }
 
@@ -171,7 +160,6 @@ function ScreenTransitionsStackContent({
 			scenesByKey,
 			paintDriverRouteKeyByRouteKey: new Map<string, string>(),
 			focusedIndex: layoutArgs.state.index,
-			shouldShowFloatOverlay: transitionState.shouldShowFloatOverlay,
 		};
 	}, [layoutArgs.state.key, layoutArgs.state.index, transitionState]);
 	const firstRouteKey = layoutArgs.state.routes[0]?.key;

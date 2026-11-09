@@ -49,15 +49,10 @@ export interface BoundaryOwnProps extends BoundaryConfigProps {
 export type BoundaryComponentProps<P extends object> = Omit<P, "id"> &
 	BoundaryOwnProps;
 
-export type MeasureTarget =
-	| {
-			type: "source";
-			pairKey: ScreenPairKey;
-	  }
-	| {
-			type: "destination";
-			pairKey: ScreenPairKey;
-	  };
+export type MeasureTarget = {
+	type: "source" | "destination";
+	pairKey: ScreenPairKey;
+};
 
 export type MeasureBoundary = (target: MeasureTarget) => void;
 

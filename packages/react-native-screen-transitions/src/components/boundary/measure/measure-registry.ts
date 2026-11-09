@@ -12,7 +12,7 @@ import type { BoundaryMeasureData } from "./use-measurer";
  * changes. One coordinator per screen watches the pairs and asks these boundaries to measure, so a
  * boundary itself runs no reaction.
  */
-export type RegisteredBoundary = {
+type RegisteredBoundary = {
 	id: number;
 	linkKey: BoundTag["linkKey"];
 	group?: BoundTag["group"];

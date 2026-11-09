@@ -9,7 +9,7 @@ import { useScreenTopology } from "./hooks/use-screen-topology";
 
 export type BaseDescriptor = BaseStackDescriptor;
 
-export interface DescriptorsContextValue {
+interface DescriptorsContextValue {
 	previous?: BaseDescriptor;
 	current: BaseDescriptor;
 	next?: BaseDescriptor;

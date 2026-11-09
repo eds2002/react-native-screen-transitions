@@ -127,7 +127,6 @@ const DestinationHandshake = memo(function DestinationHandshake({
 	const measureBoundary = useMeasurer(measureData, currentScreenKey);
 	useInitialDestinationMeasurement({
 		boundTag,
-		enabled: true,
 		measureBoundary,
 		opening,
 	});

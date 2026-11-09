@@ -8,17 +8,6 @@ import type { DerivedValue } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "./screen.types";
 
 /**
- * Overlay state without the animated progress value.
- */
-export type OverlayScreenState<
-	TNavigation = unknown,
-	TParamList extends ParamListBase = ParamListBase,
-	TOwnerRouteName extends keyof TParamList = keyof TParamList,
-> = Omit<OverlayProps<TNavigation, TParamList, TOwnerRouteName>, "progress"> & {
-	snapTo: (index: number) => void;
-};
-
-/**
  * Props passed to a floating overlay component.
  *
  * `route` and `index` identify the screen that owns the overlay. Focused

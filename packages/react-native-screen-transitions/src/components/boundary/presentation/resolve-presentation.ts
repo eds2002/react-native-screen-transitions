@@ -195,15 +195,6 @@ export function resolveBoundaryHandoffTarget(
 	return { receiver, slot: receiverSlot };
 }
 
-export function resolveBoundaryHandoff(
-	screenKey: string,
-	boundaryId: string,
-	state: BoundaryPresentationState,
-) {
-	"worklet";
-	return resolveBoundaryHandoffTarget(screenKey, boundaryId, state).receiver;
-}
-
 /**
  * The size of a receiver a handoff boundary's content is in: its slot's size this frame when the
  * slot sets one (a size transition), otherwise its box in its screen's layout. The window-space

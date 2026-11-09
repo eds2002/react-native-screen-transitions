@@ -1,7 +1,7 @@
 import type { LinkPairsState, ScreenPairKey } from "../../../stores/bounds";
 import { getLinkKeyFromTag, isActiveGroupMember } from "../../../stores/bounds";
 
-export type InitialDestinationMeasurementAction =
+type InitialDestinationMeasurementAction =
 	| "wait"
 	| "release"
 	| "measure"

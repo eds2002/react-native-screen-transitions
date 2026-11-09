@@ -36,7 +36,7 @@ export type ScrollGestureAxisState = {
 /**
  * One transition-aware scrollable's geometry along its axis.
  */
-export type ScrollViewState = ScrollGestureAxisState & {
+type ScrollViewState = ScrollGestureAxisState & {
 	axis: ScrollGestureAxis;
 };
 

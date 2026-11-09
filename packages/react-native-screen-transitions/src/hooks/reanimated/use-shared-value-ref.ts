@@ -1,6 +1,5 @@
-import { useCallback, useRef } from "react";
-import { type SharedValue, useAnimatedReaction } from "react-native-reanimated";
-import { runOnUISync, scheduleOnRN } from "react-native-worklets";
+import type { SharedValue } from "react-native-reanimated";
+import { runOnUISync } from "react-native-worklets";
 import { IS_WEB } from "../../constants";
 
 export function readInitialValue<T>(sharedValue: SharedValue<T>): T {
@@ -11,28 +10,4 @@ export function readInitialValue<T>(sharedValue: SharedValue<T>): T {
 		"worklet";
 		return sv.get();
 	}, sharedValue);
-}
-
-/**
- * Mirrors a Reanimated SharedValue into a React ref.
- * Same bridging as useSharedValueState but without triggering rerenders.
- */
-export function useSharedValueRef<T>(
-	sharedValue: SharedValue<T>,
-): React.RefObject<T> {
-	const ref = useRef<T>(readInitialValue(sharedValue));
-
-	const updateRef = useCallback((value: T) => {
-		ref.current = value;
-	}, []);
-
-	useAnimatedReaction(
-		() => sharedValue.get(),
-		(value, previousValue) => {
-			if (Object.is(value, previousValue)) return;
-			scheduleOnRN(updateRef, value);
-		},
-	);
-
-	return ref;
 }

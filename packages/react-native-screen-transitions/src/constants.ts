@@ -28,7 +28,6 @@ export const NAVIGATION_MASK_CONTAINER_STYLE_ID =
  * Styles
  */
 export const NO_STYLES = Object.freeze({});
-export const VISIBLE_STYLE = Object.freeze({ opacity: 1 });
 export const NO_PROPS = Object.freeze({});
 
 /**

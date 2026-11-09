@@ -31,7 +31,6 @@ export interface NavigatorStoreValue {
 	paintDriverRouteKeyByRouteKey: ReadonlyMap<string, string>;
 	focusedIndex: number;
 	requestDismiss?: (payload: { route: BaseStackRoute }) => boolean;
-	shouldShowFloatOverlay: boolean;
 	handleOpenRoute?: (payload: { route: BaseStackRoute }) => void;
 	handleCloseRoute?: (payload: { route: BaseStackRoute }) => void;
 }

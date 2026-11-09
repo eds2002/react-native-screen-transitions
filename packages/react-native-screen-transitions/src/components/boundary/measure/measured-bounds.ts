@@ -39,7 +39,7 @@ const getOverscrollDelta = (
 	return Math.abs(delta) > SCROLL_MEASUREMENT_EPSILON ? delta : 0;
 };
 
-export const adjustedMeasuredBoundsForOverscrollDeltas = (
+const adjustedMeasuredBoundsForOverscrollDeltas = (
 	measured: MeasuredDimensions,
 	scrollState: ScrollGestureState | ScrollMetadataState | null,
 ): MeasuredDimensions => {
@@ -70,7 +70,7 @@ export const adjustedMeasuredBoundsForOverscrollDeltas = (
  * gives boxes that small: they cannot be scaled back to its layout, so they are not recorded and
  * the screen is measured again once it is drawn.
  */
-export const MIN_MEASURABLE_SCREEN_SCALE = 0.05;
+const MIN_MEASURABLE_SCREEN_SCALE = 0.05;
 
 /** Whether a view as wide as the screen measured `measuredWidth` wide: its screen is drawn too small. */
 export const isScreenDrawnTooSmall = (

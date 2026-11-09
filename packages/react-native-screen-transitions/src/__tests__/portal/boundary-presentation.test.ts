@@ -1,4 +1,4 @@
-import { resolveBoundaryHandoff as handoff, resolveBoundaryHandoffTarget, resolveReceiverSize } from "../../components/boundary/presentation/resolve-presentation";
+import { resolveBoundaryHandoffTarget, resolveReceiverSize } from "../../components/boundary/presentation/resolve-presentation";
 import { isHandoffLanded } from "../../utils/bounds/helpers/styles/overlap";
 import { boundaryRegistry, pairs } from "../../stores/bounds/internals/state";
 import { boundarySourceFrame, runBoundaryInterpolator } from "../../components/boundary/presentation/use-pair-presentation";
@@ -147,6 +147,7 @@ function resolveBoundaryHandoff(key: string, id: string) {
  expect(resolveBoundaryHandoffTarget(key,id,state,{presentation: presentation(key,id,state)}).receiver).toBe(receiver);
  return receiver;
 }
+function handoff(key: string, id: string, state: ReturnType<typeof snapshot>) {return resolveBoundaryHandoffTarget(key,id,state).receiver;}
 function resolveBoundaryPresentation(key: string, id: string) {return presentation(key,id,snapshot());}
 
 it("hands off container-only navigation zoom without requiring a boundary style slot", () => {

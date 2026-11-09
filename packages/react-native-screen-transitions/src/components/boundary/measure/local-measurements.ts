@@ -9,9 +9,9 @@ import type {
  * number. One map for every boundary instead of a shared value each: a list mounting creates none.
  * Only boundaries taking part in a transition (and their overlay hosts) read it.
  */
-export const localMeasurements = makeMutable<
-	Record<number, BoundaryLocalMeasurement>
->({});
+const localMeasurements = makeMutable<Record<number, BoundaryLocalMeasurement>>(
+	{},
+);
 
 export const createLocalMeasurementRef = (
 	key: number,

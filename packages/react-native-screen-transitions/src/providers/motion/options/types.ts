@@ -1,10 +1,10 @@
 import type { SharedValue } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "../../../types";
 
-export type RuntimeOption<T> = SharedValue<T>;
+type RuntimeOption<T> = SharedValue<T>;
 export type RequiredScreenOption<K extends keyof ScreenTransitionConfig> =
 	NonNullable<ScreenTransitionConfig[K]>;
-export type OptionalScreenOption<K extends keyof ScreenTransitionConfig> =
+type OptionalScreenOption<K extends keyof ScreenTransitionConfig> =
 	ScreenTransitionConfig[K];
 
 export type ScreenOptionsSnapshot = {

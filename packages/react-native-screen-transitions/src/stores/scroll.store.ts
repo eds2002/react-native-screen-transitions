@@ -10,9 +10,8 @@ import type {
 	ScrollMetadataState,
 } from "../types/gesture.types";
 import type { ScreenKey } from "../types/screen.types";
-import { createStore } from "../utils/create-store";
 
-export type ScrollStoreMap = {
+type ScrollStoreMap = {
 	coordination: SharedValue<ScrollGestureState | null>;
 	metadata: SharedValue<ScrollMetadataState | null>;
 };
@@ -117,33 +116,12 @@ export const clampScrollAxisOffset = (
 };
 
 /**
- * Clamped scroll travel between a captured snapshot and the current state on
- * one axis. Returns 0 when either side does not track the axis.
- */
-export const getClampedScrollAxisDelta = (
-	current: ScrollMetadataState | null | undefined,
-	captured: ScrollMetadataState | null | undefined,
-	axis: ScrollGestureAxis,
-): number => {
-	"worklet";
-
-	const currentOffset = clampScrollAxisOffset(current?.[axis]);
-	const capturedOffset = clampScrollAxisOffset(captured?.[axis]);
-
-	if (currentOffset === null || capturedOffset === null) {
-		return 0;
-	}
-
-	return currentOffset - capturedOffset;
-};
-
-/**
  * Visual scroll travel from a bounds snapshot normalized to its at-rest
  * position. The captured side is clamped because measurement removes transient
  * rubber-band displacement; the current side stays raw so consumers can follow
  * the position that is actually visible on iOS.
  */
-export const getVisualScrollAxisDelta = (
+const getVisualScrollAxisDelta = (
 	current: ScrollMetadataState | null | undefined,
 	captured: ScrollMetadataState | null | undefined,
 	axis: ScrollGestureAxis,
@@ -233,25 +211,36 @@ export const getMeasuredScrollAxisDelta = (
  * Coordination tracks gesture-owner scoped ScrollView offsets and dimensions;
  * metadata tracks screen-scoped scroll values exposed to animation consumers.
  */
-const scrollStore = createStore<ScrollStoreMap>({
-	createBag: () => ({
-		coordination: makeMutable<ScrollGestureState | null>(null),
-		metadata: makeMutable<ScrollMetadataState | null>(null),
-	}),
-	disposeBag: (bag) => {
-		cancelAnimation(bag.coordination);
-		cancelAnimation(bag.metadata);
-	},
-});
+const bags: Record<ScreenKey, ScrollStoreMap> = {};
+
+const getValue = <K extends keyof ScrollStoreMap>(
+	routeKey: ScreenKey,
+	key: K,
+): ScrollStoreMap[K] => {
+	let bag = bags[routeKey];
+	if (!bag) {
+		bag = {
+			coordination: makeMutable<ScrollGestureState | null>(null),
+			metadata: makeMutable<ScrollMetadataState | null>(null),
+		};
+		bags[routeKey] = bag;
+	}
+	return bag[key];
+};
 
 export const ScrollStore = {
-	...scrollStore,
+	getValue,
 	createMetadataWriterId,
 	claimMetadataWriter,
 	releaseMetadataWriter,
 	hasMetadataWriters,
 	clearBag(routeKey: ScreenKey) {
 		clearMetadataWriters(routeKey);
-		scrollStore.clearBag(routeKey);
+		const bag = bags[routeKey];
+		if (bag) {
+			cancelAnimation(bag.coordination);
+			cancelAnimation(bag.metadata);
+		}
+		delete bags[routeKey];
 	},
 };

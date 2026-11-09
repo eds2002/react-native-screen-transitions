@@ -48,7 +48,7 @@ const MULTIPLE_TARGETS_WARNING =
 export const TARGET_OUTSIDE_ROOT_WARNING =
 	"Boundary.Target must be rendered inside Transition.Boundary or a component created by createBoundaryComponent.";
 
-export type BoundaryRootRenderState = {
+type BoundaryRootRenderState = {
 	boundaryPresentation: BoundaryPresentationHandles["presentation"];
 	slotsMap: BoundaryPresentationHandles["slotsMap"];
 	attachedStyle: unknown;

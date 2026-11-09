@@ -15,7 +15,7 @@ import type {
 	ScrollGestureState,
 } from "../types";
 
-export type GestureOwnershipRegistration = {
+type GestureOwnershipRegistration = {
 	screenKey: string;
 	source: ScreenGestureSource;
 	claimedDirections: ClaimedDirections;

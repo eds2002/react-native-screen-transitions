@@ -31,7 +31,7 @@ import type { EffectiveSnapPointsResult } from "./shared/snap-points";
 
 export type PanGesture = ReturnType<typeof Gesture.Pan>;
 export type PinchGesture = ReturnType<typeof Gesture.Pinch>;
-export type ComposedGesture = ReturnType<typeof Gesture.Simultaneous>;
+type ComposedGesture = ReturnType<typeof Gesture.Simultaneous>;
 
 export type PanGestureEvent =
 	| GestureUpdateEvent<PanGestureHandlerEventPayload>
@@ -117,7 +117,7 @@ export interface PinchGesturePolicy {
 	transitionSpec: TransitionSpec | undefined;
 }
 
-export interface GestureRuntimeStores {
+interface GestureRuntimeStores {
 	gestures: MotionGestureValues;
 	animations: MotionAnimationValues;
 	system: MotionTransitionValues;

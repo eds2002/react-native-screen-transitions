@@ -143,7 +143,6 @@ const buildBaseScenes = ({
 	const routeChildStates: Record<string, unknown> = {};
 	const sourceDescriptors: BlankStackDescriptorSources = {};
 	const blankStackDescriptors: BlankStackDescriptors = {};
-	let shouldShowFloatOverlay = false;
 
 	for (let sceneIndex = 0; sceneIndex < routes.length; sceneIndex++) {
 		const route = routes[sceneIndex] as BlankStackDescriptor["route"];
@@ -215,12 +214,6 @@ const buildBaseScenes = ({
 		sourceDescriptors[route.key] = sourceDescriptor;
 		blankStackDescriptors[route.key] = descriptor;
 
-		if (!shouldShowFloatOverlay) {
-			const options = sourceDescriptor?.options;
-			shouldShowFloatOverlay =
-				Boolean(options?.overlay) && options?.overlayShown !== false;
-		}
-
 		scenes.push({
 			activity,
 			route: descriptor.route,
@@ -234,7 +227,6 @@ const buildBaseScenes = ({
 		sourceDescriptors,
 		descriptors: blankStackDescriptors,
 		routeKeys,
-		shouldShowFloatOverlay,
 	};
 };
 
@@ -352,7 +344,6 @@ export const buildBlankStackState = (
 		sourceDescriptors,
 		descriptors: blankStackDescriptors,
 		routeKeys,
-		shouldShowFloatOverlay,
 	} = buildBaseScenes({
 		...params,
 		activityWindow,
@@ -400,7 +391,6 @@ export const buildBlankStackState = (
 			routeKeyListsAreEqual(params.previousState.routeKeys, routeKeys)
 				? params.previousState.routeKeys
 				: routeKeys,
-		shouldShowFloatOverlay,
 		closingRouteKeys:
 			params.previousState &&
 			setsAreEqual(params.previousState.closingRouteKeys, closingRouteKeys)

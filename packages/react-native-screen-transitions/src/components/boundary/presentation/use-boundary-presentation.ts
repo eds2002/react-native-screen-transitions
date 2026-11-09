@@ -22,7 +22,6 @@ import { boundaryRegistry, pairs } from "../../../stores/bounds";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
 import {
 	type BoundaryPresentationState,
-	type resolveBoundaryHandoff,
 	resolveBoundaryHandoffTarget,
 	resolveBoundaryPresentation,
 	resolveReceiverSize,
@@ -32,7 +31,7 @@ import { usePairDestinationKeys } from "./use-pair-presentation";
 export type BoundaryPresentationValue = {
 	owner: ReturnType<typeof resolveBoundaryPresentation> | null;
 	/** Where a handoff boundary's content goes; null outside any transition. */
-	receiver: ReturnType<typeof resolveBoundaryHandoff> | null;
+	receiver: string | null;
 	/**
 	 * The receiver's size this frame while the content is in another screen's receiver. The content
 	 * takes it in the same frame as the move: laid out through its portal, it would only learn the

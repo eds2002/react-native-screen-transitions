@@ -3,7 +3,6 @@ import { View, type ViewProps } from "react-native";
 import { Pressable, type PressableProps } from "react-native-gesture-handler";
 import { createBoundaryComponent } from "./create-boundary-component";
 import { BoundaryTarget } from "./root/boundary-target";
-import type { BoundaryComponentProps } from "./types";
 
 export { createBoundaryComponent };
 
@@ -50,8 +49,6 @@ export interface BoundaryComponent extends BoundaryRootComponent {
 	 */
 	Target: typeof BoundaryTarget;
 }
-
-export type BoundaryProps = BoundaryComponentProps<BoundaryPrimitiveProps>;
 
 export const Boundary = Object.assign(BoundaryRoot, {
 	Target: BoundaryTarget,

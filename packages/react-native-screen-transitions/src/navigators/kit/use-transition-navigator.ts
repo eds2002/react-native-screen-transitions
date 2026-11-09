@@ -95,7 +95,6 @@ export function useTransitionNavigator(
 				paintDriverRouteKeyByRouteKey,
 				focusedIndex,
 				requestDismiss,
-				shouldShowFloatOverlay: state.shouldShowFloatOverlay,
 				handleCloseRoute,
 				handleOpenRoute,
 			},

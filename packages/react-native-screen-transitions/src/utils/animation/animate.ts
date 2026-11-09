@@ -3,7 +3,7 @@ import { type SpringConfig, withInternalSpring } from "./spring";
 import type { AnimationProgressDriver, AnimationStateCallback } from "./state";
 import { withInternalTiming } from "./timing";
 
-export type TimingAnimationConfig = WithTimingConfig;
+type TimingAnimationConfig = WithTimingConfig;
 export type SpringAnimationConfig = SpringConfig;
 export type ScreenAnimationConfig =
 	| SpringAnimationConfig

@@ -51,7 +51,7 @@ type MotionTransitionRawValues = {
 	autoOpenArmed: SharedValue<number>;
 };
 
-export interface MotionTransitionActions {
+interface MotionTransitionActions {
 	requestLifecycleTransition(
 		kind: LifecycleTransitionRequestKind,
 		target: number,

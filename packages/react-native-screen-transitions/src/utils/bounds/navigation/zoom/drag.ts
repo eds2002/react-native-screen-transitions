@@ -32,7 +32,7 @@ export type ZoomDragState = {
 	rotation: number;
 };
 
-export function resolveZoomDismissContentScale({
+function resolveZoomDismissContentScale({
 	transitionRemaining,
 	releaseScale,
 	targetScale,

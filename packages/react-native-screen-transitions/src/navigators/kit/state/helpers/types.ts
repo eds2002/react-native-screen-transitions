@@ -22,7 +22,6 @@ export type LocalRoutesState = {
 	routeChildStates: Record<string, unknown>;
 	scenes: BaseStackScene<BlankStackDescriptor>[];
 	routeKeys: string[];
-	shouldShowFloatOverlay: boolean;
 	closingRouteKeys: ReadonlySet<string>;
 };
 
