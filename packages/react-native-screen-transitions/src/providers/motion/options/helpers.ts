@@ -198,76 +198,143 @@ const areGestureDirectionsEqual = (
 	return true;
 };
 
+type ScreenOptionKey = keyof ScreenOptionsSnapshot;
+
+type ScreenOptionSpec<K extends ScreenOptionKey> = {
+	/** The value validated; `fallback` when it isn't a valid value for the option. */
+	resolve: (
+		value: unknown,
+		fallback: ScreenOptionsSnapshot[K],
+	) => ScreenOptionsSnapshot[K];
+	/** Its value when a screen doesn't set it (or sets an invalid one). */
+	fallback: ScreenOptionsSnapshot[K];
+	/** Whether an interpolator's returned `options` can override it for a frame. */
+	overridable: boolean;
+	/** How two states compare it, when not by identity. */
+	equal?: (
+		left: ScreenOptionsSnapshot[K],
+		right: ScreenOptionsSnapshot[K],
+	) => boolean;
+};
+
+/**
+ * Every screen option the motion layer reads, with how it is validated, defaulted and overridden.
+ * Typed against ScreenOptionsSnapshot: an option added there needs its entry here, and the base
+ * options, the interpolator overrides and the comparisons below all follow from this table.
+ */
+const SCREEN_OPTIONS: { [K in ScreenOptionKey]: ScreenOptionSpec<K> } = {
+	gestureEnabled: {
+		resolve: resolveBooleanOption,
+		fallback: undefined,
+		overridable: true,
+	},
+	gestureTracking: {
+		resolve: resolveGestureTrackingOption,
+		fallback: DEFAULT_GESTURE_TRACKING,
+		overridable: false,
+	},
+	gestureDirection: {
+		resolve: resolveGestureDirectionOption,
+		fallback: DEFAULT_GESTURE_DIRECTION,
+		overridable: true,
+		equal: areGestureDirectionsEqual,
+	},
+	gestureSensitivity: {
+		resolve: resolveNumberOption,
+		fallback: DEFAULT_GESTURE_SENSITIVITY,
+		overridable: true,
+	},
+	gestureVelocityImpact: {
+		resolve: resolveNumberOption,
+		fallback: DEFAULT_GESTURE_VELOCITY_IMPACT,
+		overridable: true,
+	},
+	gestureSnapVelocityImpact: {
+		resolve: resolveNumberOption,
+		fallback: DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT,
+		overridable: true,
+	},
+	gestureReleaseVelocityScale: {
+		resolve: resolveNumberOption,
+		fallback: DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
+		overridable: true,
+	},
+	gestureSnapLocked: {
+		resolve: resolveBooleanOption,
+		fallback: DEFAULT_GESTURE_SNAP_LOCKED,
+		overridable: true,
+	},
+	sheetSnapBehavior: {
+		resolve: resolveSheetSnapBehaviorOption,
+		fallback: DEFAULT_SHEET_SNAP_BEHAVIOR,
+		overridable: true,
+	},
+	sheetScrollGestureBehavior: {
+		resolve: resolveSheetScrollGestureBehaviorOption,
+		fallback: DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR,
+		overridable: true,
+	},
+	backdropBehavior: {
+		resolve: resolveBackdropBehaviorOption,
+		fallback: undefined,
+		overridable: true,
+	},
+	transitionSpec: {
+		resolve: (value) => {
+			"worklet";
+			return value as ScreenOptionsSnapshot["transitionSpec"];
+		},
+		fallback: undefined,
+		overridable: false,
+	},
+};
+
+const SCREEN_OPTION_KEYS = Object.keys(SCREEN_OPTIONS) as ScreenOptionKey[];
+
+/** Read and written key by key: the table above gives each key its own value type. */
+type ScreenOptionValues = Record<ScreenOptionKey, unknown>;
+type AnyScreenOptionSpec = {
+	resolve: (value: unknown, fallback: unknown) => unknown;
+	fallback: unknown;
+	overridable: boolean;
+	equal?: (left: unknown, right: unknown) => boolean;
+};
+const specOf = (key: ScreenOptionKey) => {
+	"worklet";
+	return SCREEN_OPTIONS[key] as AnyScreenOptionSpec;
+};
+
 const areScreenOptionsEqual = (
 	left: ScreenOptionsState,
 	right: ScreenOptionsState,
 ) => {
 	"worklet";
-	return (
-		left.gestureEnabled === right.gestureEnabled &&
-		left.gestureTracking === right.gestureTracking &&
-		areGestureDirectionsEqual(left.gestureDirection, right.gestureDirection) &&
-		left.gestureSensitivity === right.gestureSensitivity &&
-		left.gestureVelocityImpact === right.gestureVelocityImpact &&
-		left.gestureSnapVelocityImpact === right.gestureSnapVelocityImpact &&
-		left.gestureReleaseVelocityScale === right.gestureReleaseVelocityScale &&
-		left.gestureSnapLocked === right.gestureSnapLocked &&
-		left.sheetSnapBehavior === right.sheetSnapBehavior &&
-		left.sheetScrollGestureBehavior === right.sheetScrollGestureBehavior &&
-		left.backdropBehavior === right.backdropBehavior &&
-		left.transitionSpec === right.transitionSpec &&
-		left.baseOptions === right.baseOptions
-	);
+	if (left.baseOptions !== right.baseOptions) return false;
+	const a = left as ScreenOptionValues;
+	const b = right as ScreenOptionValues;
+	for (let i = 0; i < SCREEN_OPTION_KEYS.length; i++) {
+		const key = SCREEN_OPTION_KEYS[i];
+		const equal = specOf(key).equal;
+		if (equal ? !equal(a[key], b[key]) : a[key] !== b[key]) return false;
+	}
+	return true;
 };
 
 export const resolveBaseScreenOptions = (
 	options: ScreenTransitionConfig,
 ): ScreenOptionsSnapshot => {
-	return {
-		gestureEnabled: resolveBooleanOption(options.gestureEnabled, undefined),
-		gestureTracking: resolveGestureTrackingOption(
-			options.gestureTracking,
-			DEFAULT_GESTURE_TRACKING,
-		),
-		gestureDirection: resolveGestureDirectionOption(
-			options.gestureDirection,
-			DEFAULT_GESTURE_DIRECTION,
-		),
-		gestureSensitivity: resolveNumberOption(
-			options.gestureSensitivity,
-			DEFAULT_GESTURE_SENSITIVITY,
-		),
-		gestureVelocityImpact: resolveNumberOption(
-			options.gestureVelocityImpact,
-			DEFAULT_GESTURE_VELOCITY_IMPACT,
-		),
-		gestureSnapVelocityImpact: resolveNumberOption(
-			options.gestureSnapVelocityImpact,
-			DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT,
-		),
-		gestureReleaseVelocityScale: resolveNumberOption(
-			options.gestureReleaseVelocityScale,
-			DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
-		),
-		gestureSnapLocked: resolveBooleanOption(
-			options.gestureSnapLocked,
-			DEFAULT_GESTURE_SNAP_LOCKED,
-		),
-		sheetSnapBehavior: resolveSheetSnapBehaviorOption(
-			options.sheetSnapBehavior,
-			DEFAULT_SHEET_SNAP_BEHAVIOR,
-		),
-		sheetScrollGestureBehavior: resolveSheetScrollGestureBehaviorOption(
-			options.sheetScrollGestureBehavior,
-			DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR,
-		),
-		backdropBehavior: resolveBackdropBehaviorOption(
-			options.backdropBehavior,
-			undefined,
-		),
-		transitionSpec: options.transitionSpec,
-	};
+	const input = options as Partial<ScreenOptionValues>;
+	const base = {} as ScreenOptionValues;
+	for (const key of SCREEN_OPTION_KEYS) {
+		const spec = specOf(key);
+		base[key] = spec.resolve(input[key], spec.fallback);
+	}
+	return base as ScreenOptionsSnapshot;
 };
+
+/** The options a screen reads, in table order: a dependency list for the base options' memo. */
+export const screenOptionInputs = (options: ScreenTransitionConfig) =>
+	SCREEN_OPTION_KEYS.map((key) => options[key]);
 
 export const syncScreenOptionsBase = (
 	screenOptions: ScreenOptionsContextValue,
@@ -289,20 +356,13 @@ const isStateEqualToBase = (
 	base: ScreenOptionsSnapshot,
 ) => {
 	"worklet";
-	return (
-		state.gestureEnabled === base.gestureEnabled &&
-		state.gestureTracking === base.gestureTracking &&
-		state.gestureDirection === base.gestureDirection &&
-		state.gestureSensitivity === base.gestureSensitivity &&
-		state.gestureVelocityImpact === base.gestureVelocityImpact &&
-		state.gestureSnapVelocityImpact === base.gestureSnapVelocityImpact &&
-		state.gestureReleaseVelocityScale === base.gestureReleaseVelocityScale &&
-		state.gestureSnapLocked === base.gestureSnapLocked &&
-		state.sheetSnapBehavior === base.sheetSnapBehavior &&
-		state.sheetScrollGestureBehavior === base.sheetScrollGestureBehavior &&
-		state.backdropBehavior === base.backdropBehavior &&
-		state.transitionSpec === base.transitionSpec
-	);
+	const a = state as ScreenOptionValues;
+	const b = base as ScreenOptionValues;
+	for (let i = 0; i < SCREEN_OPTION_KEYS.length; i++) {
+		const key = SCREEN_OPTION_KEYS[i];
+		if (a[key] !== b[key]) return false;
+	}
+	return true;
 };
 
 export const syncScreenOptionsOverrides = (
@@ -310,7 +370,7 @@ export const syncScreenOptionsOverrides = (
 	screenOptions: ScreenOptionsContextValue,
 ) => {
 	"worklet";
-	const options = raw?.options;
+	const options = raw?.options as Partial<ScreenOptionValues> | undefined;
 	const current = screenOptions.get();
 	const base = current.baseOptions;
 
@@ -320,53 +380,19 @@ export const syncScreenOptionsOverrides = (
 		return;
 	}
 
-	const next: ScreenOptionsState = {
-		gestureEnabled: resolveBooleanOption(
-			options?.gestureEnabled,
-			base.gestureEnabled,
-		),
-		gestureTracking: base.gestureTracking,
-		gestureDirection: resolveGestureDirectionOption(
-			options?.gestureDirection,
-			base.gestureDirection,
-		),
-		gestureSensitivity: resolveNumberOption(
-			options?.gestureSensitivity,
-			base.gestureSensitivity,
-		),
-		gestureVelocityImpact: resolveNumberOption(
-			options?.gestureVelocityImpact,
-			base.gestureVelocityImpact,
-		),
-		gestureSnapVelocityImpact: resolveNumberOption(
-			options?.gestureSnapVelocityImpact,
-			base.gestureSnapVelocityImpact,
-		),
-		gestureReleaseVelocityScale: resolveNumberOption(
-			options?.gestureReleaseVelocityScale,
-			base.gestureReleaseVelocityScale,
-		),
-		gestureSnapLocked: resolveBooleanOption(
-			options?.gestureSnapLocked,
-			base.gestureSnapLocked,
-		),
-		sheetSnapBehavior: resolveSheetSnapBehaviorOption(
-			options?.sheetSnapBehavior,
-			base.sheetSnapBehavior,
-		),
-		sheetScrollGestureBehavior: resolveSheetScrollGestureBehaviorOption(
-			options?.sheetScrollGestureBehavior,
-			base.sheetScrollGestureBehavior,
-		),
-		backdropBehavior: resolveBackdropBehaviorOption(
-			options?.backdropBehavior,
-			base.backdropBehavior,
-		),
-		transitionSpec: base.transitionSpec,
-		baseOptions: base,
+	const values = base as ScreenOptionValues;
+	const next = { baseOptions: base } as ScreenOptionValues & {
+		baseOptions: ScreenOptionsSnapshot;
 	};
+	for (let i = 0; i < SCREEN_OPTION_KEYS.length; i++) {
+		const key = SCREEN_OPTION_KEYS[i];
+		const spec = specOf(key);
+		next[key] = spec.overridable
+			? spec.resolve(options?.[key], values[key])
+			: values[key];
+	}
 
-	if (!areScreenOptionsEqual(screenOptions.get(), next)) {
-		screenOptions.set(next);
+	if (!areScreenOptionsEqual(current, next as ScreenOptionsState)) {
+		screenOptions.set(next as ScreenOptionsState);
 	}
 };

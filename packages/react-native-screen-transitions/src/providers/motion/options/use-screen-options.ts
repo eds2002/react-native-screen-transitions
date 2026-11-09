@@ -1,57 +1,21 @@
 import { useLayoutEffect, useMemo } from "react";
 import { useSharedValue } from "react-native-reanimated";
 import { useBuilderStore } from "../../builder";
-import { resolveBaseScreenOptions, syncScreenOptionsBase } from "./helpers";
+import {
+	resolveBaseScreenOptions,
+	screenOptionInputs,
+	syncScreenOptionsBase,
+} from "./helpers";
 import type { ScreenOptionsContextValue, ScreenOptionsState } from "./types";
 
 export function useScreenOptions(): ScreenOptionsContextValue {
 	const options = useBuilderStore((store) => store.options);
 
-	const {
-		gestureEnabled,
-		gestureTracking,
-		gestureDirection,
-		gestureSensitivity,
-		gestureVelocityImpact,
-		gestureSnapVelocityImpact,
-		gestureReleaseVelocityScale,
-		gestureSnapLocked,
-		sheetSnapBehavior,
-		sheetScrollGestureBehavior,
-		backdropBehavior,
-		transitionSpec,
-	} = options;
-
+	// Recomputed only when an option the table reads changes: a new base re-sets the shared value.
 	const baseScreenOptions = useMemo(
-		() =>
-			resolveBaseScreenOptions({
-				gestureEnabled,
-				gestureTracking,
-				gestureDirection,
-				gestureSensitivity,
-				gestureVelocityImpact,
-				gestureSnapVelocityImpact,
-				gestureReleaseVelocityScale,
-				gestureSnapLocked,
-				sheetSnapBehavior,
-				sheetScrollGestureBehavior,
-				backdropBehavior,
-				transitionSpec,
-			}),
-		[
-			gestureEnabled,
-			gestureTracking,
-			gestureDirection,
-			gestureSensitivity,
-			gestureVelocityImpact,
-			gestureSnapVelocityImpact,
-			gestureReleaseVelocityScale,
-			gestureSnapLocked,
-			sheetSnapBehavior,
-			sheetScrollGestureBehavior,
-			backdropBehavior,
-			transitionSpec,
-		],
+		() => resolveBaseScreenOptions(options),
+		// biome-ignore lint/correctness/useExhaustiveDependencies: the inputs are the table's options.
+		screenOptionInputs(options),
 	);
 
 	const initialScreenOptions = useMemo<ScreenOptionsState>(
