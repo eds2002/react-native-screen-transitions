@@ -102,26 +102,11 @@ export const createScreenTransitionState = (
  * Default screen transition state
  */
 export const DEFAULT_SCREEN_TRANSITION_STATE: ScreenTransitionState =
-	Object.freeze({
-		progress: 0,
-		transitionProgress: 0,
-		closing: 0,
-		animating: 0,
-		willAnimate: 0,
-		settled: 1,
-		entering: 0,
-		gesture: createDefaultGestureValues(),
-		route: {} as RouteProp<ParamListBase>,
-		options: DEFAULT_SCREEN_TRANSITION_OPTIONS,
-		layouts: {
-			screen: {
-				width: 0,
-				height: 0,
-			},
-		},
-		animatedSnapIndex: -1,
-		snapIndex: -1,
-	});
+	Object.freeze(
+		createScreenTransitionState(
+			{} as RouteProp<ParamListBase> as BaseStackRoute,
+		),
+	);
 
 /**
  * Bounds API Defaults
