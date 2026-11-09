@@ -1,23 +1,45 @@
-import { clamp } from "react-native-reanimated";
+import { clamp, type SharedValue } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { EPSILON, TRUE } from "../../../../../constants";
 import { animateToProgress } from "../../../animation/animate-to-progress";
 import { emitMotionStart } from "../../../animation/emit-motion-start";
 import { normalizePinchScale } from "../../shared/physics";
 import { snapshotGestureHandoff } from "../../shared/snapshot";
-import { clearTransformTrackingValues } from "../../shared/values";
+import {
+	clearFocalPoint,
+	clearTransformTrackingValues,
+} from "../../shared/values";
 import type {
+	GestureCompositionOwner,
 	PinchGestureEvent,
 	PinchGestureRuntime,
 	PinchReleaseResult,
 } from "../../types";
 import { resetPinchGestureValues } from "./pinch-reset";
 
-export const startPinchBase = (runtime: PinchGestureRuntime) => {
+/**
+ * A pinch drives the screen only when it owns the composition. One that joined a pan (or
+ * outlived the pan it joined) only tracks its own values (scale, rotation): the pan keeps its
+ * drag, its release and its claim, as a pan that joins a pinch does.
+ */
+const joinsAnotherGesture = (owner?: SharedValue<GestureCompositionOwner>) => {
+	"worklet";
+	return owner !== undefined && owner.get() !== "pinch";
+};
+
+export const startPinchBase = (
+	runtime: PinchGestureRuntime,
+	gestureCompositionOwner?: SharedValue<GestureCompositionOwner>,
+) => {
 	"worklet";
 	const {
 		stores: { gestures, animations },
 	} = runtime;
+
+	if (joinsAnotherGesture(gestureCompositionOwner)) {
+		clearTransformTrackingValues(gestures);
+		return;
+	}
 
 	emitMotionStart(animations);
 	gestures.dragging.set(TRUE);
@@ -56,11 +78,18 @@ export const finalizePinchRelease = (
 	release: PinchReleaseResult,
 	runtime: PinchGestureRuntime,
 	requestDismiss?: () => void,
+	gestureCompositionOwner?: SharedValue<GestureCompositionOwner>,
 ) => {
 	"worklet";
 	const {
 		stores: { gestures, animations, system },
 	} = runtime;
+
+	if (joinsAnotherGesture(gestureCompositionOwner)) {
+		clearTransformTrackingValues(gestures);
+		clearFocalPoint(gestures);
+		return;
+	}
 
 	if (typeof release.commitProgress === "number") {
 		animations.transitionProgress.set(release.commitProgress);

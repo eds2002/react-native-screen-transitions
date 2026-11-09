@@ -1085,6 +1085,71 @@ describe("gesture lifecycle state", () => {
 		expect(animations.progressAnimating.get()).toBe(0);
 	});
 
+	it("keeps a pan's drag when a pinch joins it", () => {
+		const { runtime, gestures, animations } = createRuntime();
+		const composition = shared<GestureCompositionOwner>("pan");
+		animations.transitionProgress.set(0.7);
+		gestures.dragging.set(1);
+		gestures.initiator.set("vertical");
+		gestures.velocity.set(0.4);
+		gestures.internal.progressBaseline.set(1);
+		gestures.internal.progressDeltaY.set(-0.3);
+
+		startPinchBase(runtime, composition);
+
+		expect(composition.get()).toBe("pan");
+		expect(gestures.internal.progressBaseline.get()).toBe(1);
+		expect(gestures.internal.progressDeltaY.get()).toBe(-0.3);
+		expect(gestures.initiator.get()).toBe("vertical");
+		expect(gestures.velocity.get()).toBe(0.4);
+		expect(gestures.dragging.get()).toBe(1);
+	});
+
+	it.each([
+		{ owner: "pan" as GestureCompositionOwner, when: "pan owns the composition" },
+		{ owner: null, when: "the pan it joined has released" },
+	])("resets pinch values without moving or dismissing when $when", ({ owner }) => {
+		const { runtime, gestures, animations } = createRuntime();
+		const composition = shared<GestureCompositionOwner>(owner);
+		let requestedDismiss = false;
+		animations.transitionProgress.set(0.64);
+		animations.progressAnimating.set(0);
+		gestures.dragging.set(1);
+		gestures.dismissing.set(0);
+		gestures.initiator.set("vertical");
+		gestures.scale.set(0.6);
+		gestures.normScale.set(-0.4);
+		gestures.rotation.set(0.2);
+		gestures.raw.scale.set(0.55);
+
+		finalizePinchRelease(
+			{
+				target: 0,
+				shouldDismiss: true,
+				initialVelocity: 0,
+				transitionSpec: undefined,
+				resetSpec: undefined,
+			} as any,
+			runtime,
+			() => {
+				requestedDismiss = true;
+			},
+			composition,
+		);
+
+		expect(requestedDismiss).toBe(false);
+		expect(composition.get()).toBe(owner);
+		expect(animations.transitionProgress.get()).toBe(0.64);
+		expect(animations.progressAnimating.get()).toBe(0);
+		expect(gestures.scale.get()).toBe(1);
+		expect(gestures.normScale.get()).toBe(0);
+		expect(gestures.rotation.get()).toBe(0);
+		expect(gestures.raw.scale.get()).toBe(1);
+		expect(gestures.dragging.get()).toBe(1);
+		expect(gestures.dismissing.get()).toBe(0);
+		expect(gestures.initiator.get()).toBe("vertical");
+	});
+
 	it("does not mark a dismissing pan release as settling", () => {
 		const { runtime, gestures } = createRuntime();
 		gestures.dragging.set(1);

@@ -32,12 +32,15 @@ export const usePinchBehavior = (
 			runtime.get(),
 			screenOptions.get(),
 		);
-		if (latestRuntime.participation.effectiveSnapPoints.hasSnapPoints) {
+		if (
+			gestureCompositionOwner.get() === "pinch" &&
+			latestRuntime.participation.effectiveSnapPoints.hasSnapPoints
+		) {
 			primeRuntimeSnapPoint(latestRuntime);
 		}
-		startPinchBase(latestRuntime);
+		startPinchBase(latestRuntime, gestureCompositionOwner);
 		resetSensitivity();
-	}, [runtime, screenOptions, resetSensitivity]);
+	}, [runtime, screenOptions, resetSensitivity, gestureCompositionOwner]);
 
 	const onUpdate = useCallback(
 		(rawEvent: PinchGestureEvent) => {
@@ -64,8 +67,15 @@ export const usePinchBehavior = (
 				.hasSnapPoints
 				? resolveSnapPinchRelease(event, latestRuntime)
 				: resolvePinchRelease(event, latestRuntime);
-			finalizePinchRelease(release, latestRuntime, requestDismiss);
-			gestureCompositionOwner.set(null);
+			finalizePinchRelease(
+				release,
+				latestRuntime,
+				requestDismiss,
+				gestureCompositionOwner,
+			);
+			if (gestureCompositionOwner.get() === "pinch") {
+				gestureCompositionOwner.set(null);
+			}
 		},
 		[
 			runtime,
