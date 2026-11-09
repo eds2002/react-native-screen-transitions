@@ -35,7 +35,7 @@
  */
 import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
-import { useAnimatedReaction, useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
+import Animated, { useAnimatedReaction, useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useScreenAnimation } from "react-native-screen-transitions";
 import { scheduleOnRN } from "react-native-worklets";
@@ -82,15 +82,19 @@ function useSnapIndex() {
 	return snap;
 }
 
+/** list=plain in the lab link: a plain (Reanimated) ScrollView, not wrapped by the library. */
+const plainLists = () => String(globalThis.__harnessLastUrl ?? "").includes("list=plain");
+
 function Rows({ testID, onScroll }) {
+	const Scroll = plainLists() ? Animated.ScrollView : Transition.ScrollView;
 	return (
-		<Transition.ScrollView testID={testID} style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 8 }} onScroll={onScroll}>
+		<Scroll testID={testID} style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 8 }} onScroll={onScroll}>
 			{ROWS.map((row) => (
 				<View key={row} style={{ backgroundColor: "#fff2", borderRadius: 10, padding: 14 }}>
 					<Text style={{ color: "white", fontWeight: "600" }}>{row}</Text>
 				</View>
 			))}
-		</Transition.ScrollView>
+		</Scroll>
 	);
 }
 

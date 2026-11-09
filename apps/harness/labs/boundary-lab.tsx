@@ -5,6 +5,7 @@
  * Everything else here is the test rig around it:
  *
  *   recipe   styles     `{ [id]: { style: bounds(id).styles({ method }) } }`
+ *            auto       nothing for the boundary: matching boundaries fly on their own
  *            zoom       `bounds(id).navigation.zoom()`              (shared bounds only)
  *            zoom-bound `bounds(id).navigation.zoom({ target: "bound" })` (shared bounds only)
  *   method   transform | size                       (styles)
@@ -41,6 +42,7 @@ import {
 } from "react";
 import {
 	Pressable,
+	ScrollView,
 	StyleSheet,
 	Text,
 	useWindowDimensions,
@@ -69,8 +71,8 @@ import {
 export type BoundaryLabKind = "bounds" | "elements";
 
 const RECIPES = {
-	bounds: ["styles", "zoom", "zoom-bound"],
-	elements: ["styles"],
+	bounds: ["styles", "auto", "zoom", "zoom-bound"],
+	elements: ["styles", "auto"],
 };
 const METHODS = ["transform", "size"];
 const MOTIONS = ["still", "slide", "diagonal", "swirl", "shuffle"];
@@ -102,6 +104,8 @@ function createConfig(kind: BoundaryLabKind, prefix: string) {
 		marker: 0,
 		// demo=1: no harness chrome (the bar, the option chips, the probes), for recording.
 		demo: 0,
+		// list=plain: React Native's own ScrollView instead of Transition.ScrollView (no wrapper).
+		list: "transition",
 	};
 	let cfg = initial;
 	const listeners = new Set<() => void>();
@@ -293,7 +297,7 @@ const detailOptions =
 	(config: Config) =>
 	({ route }) => {
 		const { recipe, motion } = config.get();
-		const zoom = recipe !== "styles";
+		const zoom = recipe === "zoom" || recipe === "zoom-bound";
 		const left = (labParams(route)?.level ?? 1) % 4 >= 2;
 		return {
 			gestureEnabled: true,
@@ -340,9 +344,9 @@ const detailOptions =
 						),
 				};
 				const content = motionStyle(config.motion.get(), props);
-				return content
-					? { content: { style: content }, [id]: slot }
-					: { [id]: slot };
+				// auto: the boundary is left to fly on its own.
+				const boundary = r === "auto" ? {} : { [id]: slot };
+				return content ? { content: { style: content }, ...boundary } : boundary;
 			},
 		};
 	};
@@ -412,6 +416,10 @@ function useRig(rig, level: number, next: () => void, scroll: () => void) {
 		};
 	}, [rig, level, scroll]);
 }
+
+/** The lab's scroll views: Transition.ScrollView, or (list=plain) React Native's own, unwrapped. */
+const scrollFor = (cfg): typeof Transition.ScrollView =>
+	cfg.list === "plain" ? (ScrollView as never) : Transition.ScrollView;
 
 /** A scroller for a Transition.ScrollView: down by a step, back to the top once far enough. */
 function useScroller() {
@@ -488,6 +496,7 @@ function makeList(config: Config, rig) {
 	const p = config.prefix;
 	return function List({ navigation, route }) {
 		const cfg = useConfig(config);
+		const Scroll = scrollFor(cfg);
 		const { width } = useWindowDimensions();
 		const size = (width - 40 - 20) / 3;
 		const scroller = useScroller();
@@ -511,7 +520,7 @@ function makeList(config: Config, rig) {
 		return (
 			<View style={styles.screen}>
 				<ScreenReporter routeKey={route.key} name={route.name} />
-				<Transition.ScrollView
+				<Scroll
 					ref={scroller.ref}
 					onScroll={scroller.onScroll}
 					scrollEventThrottle={16}
@@ -565,7 +574,7 @@ function makeList(config: Config, rig) {
 							/>
 						</>
 					)}
-					<Transition.ScrollView
+					<Scroll
 						horizontal
 						style={styles.carousel}
 						contentContainerStyle={styles.carouselContent}
@@ -581,7 +590,7 @@ function makeList(config: Config, rig) {
 								height={size}
 							/>
 						))}
-					</Transition.ScrollView>
+					</Scroll>
 					<View style={styles.grid}>
 						{CARDS.map((id) => (
 							<Card
@@ -595,7 +604,7 @@ function makeList(config: Config, rig) {
 							/>
 						))}
 					</View>
-				</Transition.ScrollView>
+				</Scroll>
 			</View>
 		);
 	};
@@ -617,6 +626,7 @@ function makeDetail(config: Config, rig) {
 	const p = config.prefix;
 	return function Detail({ navigation, route }) {
 		const cfg = useConfig(config);
+		const Scroll = scrollFor(cfg);
 		const { width } = useWindowDimensions();
 		const { k, level } = route.params;
 		const scroller = useScroller();
@@ -625,7 +635,7 @@ function makeDetail(config: Config, rig) {
 			[navigation, k, level],
 		);
 		useRig(rig, level, next, scroller.scroll);
-		const zoom = cfg.recipe !== "styles";
+		const zoom = cfg.recipe === "zoom" || cfg.recipe === "zoom-bound";
 		const slot = slotStyle(level, width);
 		let incoming = null;
 		if (config.kind === "elements") {
@@ -662,7 +672,7 @@ function makeDetail(config: Config, rig) {
 				style={[styles.screen, { backgroundColor: colorFor(`level${level}`) }]}
 			>
 				<ScreenReporter routeKey={route.key} name={route.name} />
-				<Transition.ScrollView
+				<Scroll
 					ref={scroller.ref}
 					onScroll={scroller.onScroll}
 					scrollEventThrottle={16}
@@ -696,7 +706,7 @@ function makeDetail(config: Config, rig) {
 					{[0, 1, 2, 3].map((i) => (
 						<View key={i} style={styles.filler} />
 					))}
-				</Transition.ScrollView>
+				</Scroll>
 			</View>
 		);
 	};
@@ -811,7 +821,7 @@ function makeLab(config: Config) {
 						(cfg.motion === "diagonal" ||
 							cfg.motion === "swirl" ||
 							cfg.motion === "shuffle") &&
-						cfg.recipe === "styles"
+						(cfg.recipe === "styles" || cfg.recipe === "auto")
 							? "#05060f"
 							: undefined,
 				}}

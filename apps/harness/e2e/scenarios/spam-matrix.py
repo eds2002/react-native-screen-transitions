@@ -19,9 +19,14 @@ CARD3 = {"shared-bounds": (0.809, 0.887), "shared-elements": (0.809, 0.829)}
 
 def configs():
     out = []
-    for lab, recipes in (("shared-bounds", ("styles", "zoom", "zoom-bound")), ("shared-elements", ("styles",))):
+    for lab, recipes in (("shared-bounds", ("styles", "auto", "zoom", "zoom-bound")), ("shared-elements", ("styles", "auto"))):
         for recipe in recipes:
-            motions = ("slide", "diagonal", "swirl", "still", "shuffle") if recipe == "styles" else ("still",)
+            # auto: no line for the boundary; it flies on its own (transform; shuffle uses size, so not here).
+            motions = (
+                ("slide", "diagonal", "swirl", "still", "shuffle") if recipe == "styles"
+                else ("slide", "still") if recipe == "auto"
+                else ("still",)
+            )
             for motion in motions:
                 trees = (("flat", 1), ("below", 2), ("above", 2)) if recipe != "zoom-bound" else (("flat", 1),)
                 if recipe == "styles" and motion in ("still", "shuffle"):
@@ -36,6 +41,11 @@ def configs():
                     track = not (lab == "shared-bounds" and recipe == "zoom")
                     out.append({"lab": lab, "query": q, "name": name, "recipe": recipe, "motion": motion, "track": track})
     return out
+
+
+def is_zoom(cfg):
+    """Zoom recipes dismiss vertically and pinch; styles and auto move like any screen."""
+    return cfg["recipe"] in ("zoom", "zoom-bound")
 
 
 class Script:
@@ -68,7 +78,7 @@ class Script:
         return self
 
     def direction(self):
-        if self.cfg["recipe"] != "styles" or self.cfg["motion"] == "swirl":
+        if is_zoom(self.cfg) or self.cfg["motion"] == "swirl":
             return "v"
         if self.cfg["motion"] == "diagonal" and self.level % 4 >= 2:
             return "hinv"
@@ -163,7 +173,7 @@ def scripts(cfg):
     # A shuffled screen's side (and so its swipe) is random: only taps are scripted for it.
     if cfg["motion"] == "shuffle":
         out = {k: v for k, v in out.items() if not k.startswith("g-")}
-    if cfg["recipe"] != "styles":
+    if is_zoom(cfg):
         s = S()
         for _ in range(3):
             s.next().wait(250).pinch().wait(300)
