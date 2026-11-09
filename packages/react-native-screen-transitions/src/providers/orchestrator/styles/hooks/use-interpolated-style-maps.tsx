@@ -9,7 +9,6 @@ import type {
 	ScreenStyleInterpolator,
 	TransitionInterpolatedStyle,
 } from "../../../../types/animation.types";
-import { logger } from "../../../../utils/logger";
 import { useBuilderStore } from "../../../builder";
 import {
 	hasCloseTransitionFinished,
@@ -27,7 +26,7 @@ import type {
 	ScreenInterpolatorFrame,
 } from "../../helpers/pipeline";
 import { syncSelectedInterpolatorOptions } from "../../helpers/selected-interpolator-options";
-import { createInterpolatorScope } from "../helpers/create-interpolator-scope";
+import { callInterpolator } from "../helpers/create-interpolator-scope";
 import { normalizeSlots } from "../helpers/normalize-slots";
 import { resolveInterpolatorStyleHandoff } from "../helpers/resolve-interpolator-style-handoff";
 import type { LocalStyleLayers } from "../helpers/resolve-slot-styles";
@@ -98,28 +97,15 @@ const runInterpolator = ({
 		return undefined;
 	}
 
-	try {
-		const raw = interpolator(
-			createInterpolatorScope({
-				frame: props,
-				selectedFrame,
-			}),
-		);
-
-		const rawStyleMap: TransitionInterpolatedStyle | undefined =
-			typeof raw === "object" && raw != null ? raw : undefined;
-
-		return {
-			rawStyleMap,
-			stylesMap: normalizeRawStyleMap(rawStyleMap),
-		};
-	} catch (_) {
-		if (__DEV__) {
-			logger.warn("screenStyleInterpolator must be a worklet");
-		}
-
+	const rawStyleMap = callInterpolator(interpolator, props, selectedFrame);
+	if (rawStyleMap === false) {
 		return undefined;
 	}
+
+	return {
+		rawStyleMap,
+		stylesMap: normalizeRawStyleMap(rawStyleMap),
+	};
 };
 
 /**

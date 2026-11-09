@@ -18,7 +18,7 @@ import type {
 	ScreenInterpolatorFrame,
 } from "../../../providers/orchestrator/helpers/pipeline";
 import { useOptionalOrchestratorStore } from "../../../providers/orchestrator/orchestrator.store";
-import { createInterpolatorScope } from "../../../providers/orchestrator/styles/helpers/create-interpolator-scope";
+import { callInterpolator } from "../../../providers/orchestrator/styles/helpers/create-interpolator-scope";
 import { normalizeSlots } from "../../../providers/orchestrator/styles/helpers/normalize-slots";
 import { selectInterpolatorFrame } from "../../../providers/orchestrator/styles/helpers/select-interpolator-frame";
 import { stripInterpolatorOptions } from "../../../providers/orchestrator/styles/helpers/strip-interpolator-options";
@@ -86,15 +86,12 @@ export function runBoundaryInterpolator(
 	side: "source" | "destination",
 ) {
 	"worklet";
-	const raw = interpolator(
-		createInterpolatorScope({
-			frame,
-			selectedFrame: selectInterpolatorFrame(frame, side === "destination"),
-		}),
+	const raw = callInterpolator(
+		interpolator,
+		frame,
+		selectInterpolatorFrame(frame, side === "destination"),
 	);
-	return raw && typeof raw === "object"
-		? normalizeSlots(stripInterpolatorOptions(raw))
-		: NO_STYLES;
+	return raw ? normalizeSlots(stripInterpolatorOptions(raw)) : NO_STYLES;
 }
 
 type PairLinks = NonNullable<

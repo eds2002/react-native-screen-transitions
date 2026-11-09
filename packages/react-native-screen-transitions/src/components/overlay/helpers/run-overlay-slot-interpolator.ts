@@ -1,12 +1,11 @@
 import type { ScreenInterpolatorFrame } from "../../../providers/orchestrator/helpers/pipeline";
-import { createInterpolatorScope } from "../../../providers/orchestrator/styles/helpers/create-interpolator-scope";
+import { callInterpolator } from "../../../providers/orchestrator/styles/helpers/create-interpolator-scope";
 import { normalizeSlots } from "../../../providers/orchestrator/styles/helpers/normalize-slots";
 import { selectInterpolatorFrame } from "../../../providers/orchestrator/styles/helpers/select-interpolator-frame";
 import type {
 	NormalizedTransitionSlotStyle,
 	ScreenStyleInterpolator,
 } from "../../../types/animation.types";
-import { logger } from "../../../utils/logger";
 
 export const runOverlaySlotInterpolator = ({
 	frame,
@@ -21,24 +20,15 @@ export const runOverlaySlotInterpolator = ({
 		return undefined;
 	}
 
-	try {
-		const raw = interpolator(
-			createInterpolatorScope({
-				frame,
-				selectedFrame: selectInterpolatorFrame(frame, false),
-			}),
-		);
-
-		if (!raw?.overlay) {
-			return undefined;
-		}
-
-		return normalizeSlots({ overlay: raw.overlay }).overlay;
-	} catch (_) {
-		if (__DEV__) {
-			logger.warn("screenStyleInterpolator must be a worklet");
-		}
-
+	const raw = callInterpolator(
+		interpolator,
+		frame,
+		selectInterpolatorFrame(frame, false),
+	);
+	if (!raw) {
 		return undefined;
 	}
+	return raw.overlay
+		? normalizeSlots({ overlay: raw.overlay }).overlay
+		: undefined;
 };

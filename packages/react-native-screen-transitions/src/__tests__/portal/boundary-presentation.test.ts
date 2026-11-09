@@ -87,6 +87,14 @@ it("evaluates the old pair from its destination frame even after Home's next rou
  expect(result.photo.style?.transform).toEqual([{scale:0.4}]);
 });
 
+it("a throwing interpolator leaves a pair side unstyled instead of throwing", () => {
+ const frame = {current: {progress: 1}, previous: {progress: 1}, progress: 1, transitionProgress: 1, focused: true} as any;
+ const thrower = () => { throw new Error("not a worklet"); };
+ (globalThis as any).__DEV__ = false; // React Native defines it; the warning path reads it.
+ expect(() => runBoundaryInterpolator(thrower, frame, "destination")).not.toThrow();
+ expect(runBoundaryInterpolator(thrower, frame, "destination")).toEqual({});
+});
+
 it("animates escapeClipping source-only navigation zoom without a handoff destination", () => {
  const presentation = publish("media-1", "photo", 0.6);
  pairs.modify(state => {
