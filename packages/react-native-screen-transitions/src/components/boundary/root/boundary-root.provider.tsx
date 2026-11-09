@@ -69,7 +69,7 @@ type BoundaryRootRenderState = {
 
 type BoundaryRootProviderProps = Pick<
 	BoundaryOwnProps,
-	"enabled" | "escapeClipping" | "group" | "handoff"
+	"animate" | "enabled" | "escapeClipping" | "group" | "handoff"
 > & {
 	children: (state: BoundaryRootRenderState) => ReactNode;
 	config: BoundaryConfigProps;
@@ -92,6 +92,7 @@ export const {
 	BoundaryRootContextValue
 >(
 	({
+		animate = true,
 		children,
 		config,
 		enabled = true,
@@ -286,6 +287,7 @@ export const {
 						/>
 					) : null}
 					<BoundaryLifecycle
+						animate={animate}
 						boundTag={boundTag}
 						config={config}
 						currentScreenKey={currentScreenKey}

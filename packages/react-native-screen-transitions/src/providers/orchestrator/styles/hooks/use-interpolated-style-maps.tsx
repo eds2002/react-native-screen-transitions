@@ -26,7 +26,7 @@ import type {
 	ScreenInterpolatorFrame,
 } from "../../helpers/pipeline";
 import { syncSelectedInterpolatorOptions } from "../../helpers/selected-interpolator-options";
-import { callInterpolator } from "../helpers/create-interpolator-scope";
+import { callScreenInterpolator } from "../helpers/create-interpolator-scope";
 import { normalizeSlots } from "../helpers/normalize-slots";
 import { resolveInterpolatorStyleHandoff } from "../helpers/resolve-interpolator-style-handoff";
 import type { LocalStyleLayers } from "../helpers/resolve-slot-styles";
@@ -93,12 +93,13 @@ const runInterpolator = ({
 }: RunInterpolatorParams): InterpolatorResult | undefined => {
 	"worklet";
 
-	if (!interpolator) {
-		return undefined;
-	}
-
-	const rawStyleMap = callInterpolator(interpolator, props, selectedFrame);
-	if (rawStyleMap === false) {
+	const rawStyleMap = callScreenInterpolator(
+		interpolator,
+		props,
+		selectedFrame,
+	);
+	// Threw, or no interpolator and no boundary flying on its own.
+	if (rawStyleMap === false || (!interpolator && !rawStyleMap)) {
 		return undefined;
 	}
 
@@ -169,7 +170,7 @@ export const useInterpolatedStylesMap = ({
 	const isGesturingDuringCloseAnimation = useSharedValue(false);
 	const initialDestinationStylesReady = useSharedValue(0);
 	const shouldPrepareInitialDestinationStyles =
-		!!destinationPairKey && !nextScreenKey && !!currentInterpolator;
+		!!destinationPairKey && !nextScreenKey;
 
 	useAnimatedReaction(
 		() => {
@@ -286,7 +287,9 @@ export const useInterpolatedStylesMap = ({
 			return runs;
 		}
 
-		const composedWithCurrent = !!currentResult?.stylesMap;
+		// Composed with this screen's own interpolator (not just its boundaries flying on their own).
+		const composedWithCurrent =
+			!!currentInterpolator && !!currentResult?.stylesMap;
 		runs.next = runInterpolator({
 			interpolator: nextInterpolator,
 			props,

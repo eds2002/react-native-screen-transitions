@@ -12,7 +12,7 @@ export type OpeningScreen = {
 	/** That transition's pair (its previous screen to it); none when nothing opens this screen. */
 	destinationPairKey: ScreenPairKey | undefined;
 	/** Whether that transition has an interpolator. */
-	hasConfiguredInterpolator: boolean;
+	boundsActive: boolean;
 	/** Whether a boundary here can be a pair's destination now (opened, and nothing covers it). */
 	receiving: boolean;
 };
@@ -40,7 +40,7 @@ export function useOpeningScreen(): OpeningScreen {
 				return {
 					screenKey: derivations.currentScreenKey,
 					destinationPairKey: derivations.destinationPairKey,
-					hasConfiguredInterpolator: derivations.hasConfiguredInterpolator,
+					boundsActive: derivations.boundsActive,
 					receiving: !!derivations.destinationPairKey,
 				};
 			}
@@ -48,7 +48,7 @@ export function useOpeningScreen(): OpeningScreen {
 		return {
 			screenKey: own.currentScreenKey,
 			destinationPairKey: own.destinationPairKey,
-			hasConfiguredInterpolator: own.hasConfiguredInterpolator,
+			boundsActive: own.boundsActive,
 			receiving: false,
 		};
 	}, [own, ancestors]);

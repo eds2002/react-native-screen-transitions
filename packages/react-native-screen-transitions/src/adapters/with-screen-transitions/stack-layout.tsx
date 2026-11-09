@@ -54,11 +54,16 @@ function getPreloadedRoutes(state: NavigationState): Route<string>[] {
 function normalizeDescriptor(
 	descriptor: BaseStackDescriptor,
 ): BaseStackDescriptor {
+	const options = resolveAdapterTransitionOptions(
+		descriptor.options as AdapterDescriptorOptions,
+	);
+	// Explicit, so the library knows which screens it runs (a blank stack's options leave it unset).
 	return {
 		...descriptor,
-		options: resolveAdapterTransitionOptions(
-			descriptor.options as AdapterDescriptorOptions,
-		),
+		options: {
+			...options,
+			enableTransitions: options.enableTransitions === true,
+		} as BaseStackDescriptor["options"],
 	};
 }
 

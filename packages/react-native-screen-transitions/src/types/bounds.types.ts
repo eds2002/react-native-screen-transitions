@@ -484,6 +484,8 @@ export type GroupKey = string;
 
 export type BoundaryRuntimeFlags = {
 	handoff?: boolean;
+	/** Set by `animate={false}`: the boundary doesn't fly to its match unless the interpolator styles it. */
+	still?: boolean;
 };
 
 /** How a boundary is laid out against its partner: the bounds options a Boundary takes as props. */
@@ -507,6 +509,7 @@ export type EntryPatch = {
 	styles?: StyleProps | null;
 	boundaryConfig?: BoundaryConfig | null;
 	handoff?: boolean | null;
+	still?: boolean | null;
 };
 
 export type ScreenIdentifier = {

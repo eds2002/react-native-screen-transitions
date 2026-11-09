@@ -50,6 +50,12 @@ const applyEntryPatch = (entry: Entry, patch: EntryPatch) => {
 	} else if (patch.handoff !== undefined) {
 		entry.handoff = patch.handoff;
 	}
+
+	if (patch.still === null) {
+		delete entry.still;
+	} else if (patch.still !== undefined) {
+		entry.still = patch.still;
+	}
 };
 
 function getEntry(tag: TagID, key: ScreenKey): Entry | null {

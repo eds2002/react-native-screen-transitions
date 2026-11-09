@@ -446,6 +446,8 @@ export type BoundSpec = {
 	group?: string;
 	/** A handoff boundary: its live content moves between the matching boundaries instead of remounting. */
 	handoff?: boolean;
+	/** `animate={false}`: it doesn't fly to its match unless an interpolator styles it. */
+	animate?: boolean;
 	/**
 	 * Renders a live child filling the boundary, recorded as the element `payload-<id>` of this screen
 	 * wherever it is teleported (a handoff source; the destination renders none).
@@ -631,6 +633,7 @@ export const mountStack = async (
 					id: bound.id,
 					group: bound.group,
 					handoff: bound.handoff,
+					animate: bound.animate,
 					testID: `${BOUND_MARKER}${route.key}:${bound.id}`,
 					style: { width: bound.rect.width, height: bound.rect.height },
 					onPress: bound.pushTo

@@ -86,7 +86,7 @@ describe("initial destination measurement lifecycle", () => {
 				opening: {
 					screenKey: "screen-b",
 					destinationPairKey: pairKey,
-					hasConfiguredInterpolator: true,
+					boundsActive: true,
 					receiving: true,
 				},
 				measureBoundary: ({ pairKey: measuredPairKey }) => {
@@ -154,7 +154,7 @@ describe("initial destination measurement lifecycle", () => {
 				opening: {
 					screenKey: "screen-b",
 					destinationPairKey: pairKey,
-					hasConfiguredInterpolator: true,
+					boundsActive: true,
 					receiving: true,
 				},
 				measureBoundary: ({ pairKey: measuredPairKey }) => {

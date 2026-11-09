@@ -18,7 +18,7 @@ import type {
 	ScreenInterpolatorFrame,
 } from "../../../providers/orchestrator/helpers/pipeline";
 import { useOptionalOrchestratorStore } from "../../../providers/orchestrator/orchestrator.store";
-import { callInterpolator } from "../../../providers/orchestrator/styles/helpers/create-interpolator-scope";
+import { callScreenInterpolator } from "../../../providers/orchestrator/styles/helpers/create-interpolator-scope";
 import { normalizeSlots } from "../../../providers/orchestrator/styles/helpers/normalize-slots";
 import { selectInterpolatorFrame } from "../../../providers/orchestrator/styles/helpers/select-interpolator-frame";
 import { stripInterpolatorOptions } from "../../../providers/orchestrator/styles/helpers/strip-interpolator-options";
@@ -81,12 +81,12 @@ export function boundarySourceFrame(
 }
 
 export function runBoundaryInterpolator(
-	interpolator: ScreenStyleInterpolator,
+	interpolator: ScreenStyleInterpolator | undefined,
 	frame: ScreenInterpolatorFrame,
 	side: "source" | "destination",
 ) {
 	"worklet";
-	const raw = callInterpolator(
+	const raw = callScreenInterpolator(
 		interpolator,
 		frame,
 		selectInterpolatorFrame(frame, side === "destination"),
@@ -214,14 +214,14 @@ export function usePairPresentation(
 			(s) => s.interpolatorRuns,
 		);
 	const ready = useMotionStore((s) => s.isScreenReady);
-	const isPairDestination = !!stackPairKey && !!currentInterpolator;
+	const isPairDestination = !!stackPairKey;
 	useLayoutEffect(() => {
 		if (!isPairDestination) return;
 		setPairDestination(currentScreenKey, true);
 		return () => setPairDestination(currentScreenKey, false);
 	}, [isPairDestination, currentScreenKey]);
 	return useDerivedValue(() => {
-		if (!stackPairKey || !currentInterpolator) return undefined;
+		if (!stackPairKey) return undefined;
 		const incoming = resolveIncomingPair(stackPairKey, currentScreenKey);
 		if (!incoming) return undefined;
 		const { pairKey, links } = incoming;

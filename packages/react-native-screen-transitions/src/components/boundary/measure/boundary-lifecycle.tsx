@@ -16,6 +16,7 @@ import { type BoundaryMeasureData, useMeasurer } from "./use-measurer";
 import { type OpeningScreen, useOpeningScreen } from "./use-opening-screen";
 
 interface BoundaryLifecycleProps {
+	animate: boolean;
 	boundTag: BoundTag;
 	config: BoundaryConfigProps;
 	currentScreenKey: string;
@@ -29,6 +30,7 @@ interface BoundaryLifecycleProps {
 }
 
 export const BoundaryLifecycle = memo(function BoundaryLifecycle({
+	animate,
 	boundTag,
 	config,
 	currentScreenKey,
@@ -39,15 +41,12 @@ export const BoundaryLifecycle = memo(function BoundaryLifecycle({
 	measuredRef,
 	style,
 }: BoundaryLifecycleProps) {
-	const hasConfiguredInterpolator = useBuilderStore(
-		(s) => s.derivations.hasConfiguredInterpolator,
-	);
+	const boundsActive = useBuilderStore((s) => s.derivations.boundsActive);
 	// The transition that opens this screen: its own, or (the first screen of a nested stack) the one
 	// that opens its stack, up the tree.
 	const opening = useOpeningScreen();
 
-	const runtimeEnabled =
-		enabled && (hasConfiguredInterpolator || opening.hasConfiguredInterpolator);
+	const runtimeEnabled = enabled && (boundsActive || opening.boundsActive);
 	// Only a screen opened as a pair's destination (and not covered by another screen) can run the
 	// destination handshake. Everywhere else, such as a list of sources, it is never mounted.
 	const isReceivingDestination = opening.receiving;
@@ -87,6 +86,7 @@ export const BoundaryLifecycle = memo(function BoundaryLifecycle({
 		currentScreenKey,
 		boundaryConfig: config,
 		handoff,
+		animate,
 	});
 
 	// Source capture and refresh run from the screen's coordinator (one reaction per screen).

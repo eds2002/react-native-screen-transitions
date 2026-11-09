@@ -99,7 +99,7 @@ export function buildZoomStyles({
 	});
 
 	if (!trackingContentTarget) {
-		return {};
+		return { [link.id]: undefined };
 	}
 
 	const isDismissing = active.gesture.dismissing === 1;
@@ -217,6 +217,8 @@ export function buildZoomStyles({
 			options: {
 				gestureReleaseVelocityScale: 0.5,
 			},
+			// The focused screen's boundary rides on its content: claimed, so it doesn't fly on its own.
+			[link.id]: undefined,
 			backdrop: {
 				style: {
 					backgroundColor: backdropColor,

@@ -43,6 +43,7 @@ export function createBoundaryComponent<P extends object>(
 			target,
 			method,
 			style,
+			animate,
 			handoff,
 			escapeClipping,
 			children,
@@ -79,6 +80,7 @@ export function createBoundaryComponent<P extends object>(
 
 		return (
 			<BoundaryRootProvider
+				animate={animate}
 				config={config}
 				enabled={enabled}
 				escapeClipping={escapeClipping}

@@ -24,6 +24,14 @@ export interface BoundaryOwnProps extends BoundaryConfigProps {
 	 */
 	enabled?: boolean;
 	/**
+	 * Whether this boundary flies to its match (a boundary with the same id on the other screen)
+	 * on its own. It does by default whenever the screen's interpolator returns nothing for it; turn
+	 * it off to keep it still unless the interpolator styles it.
+	 *
+	 * @default true
+	 */
+	animate?: boolean;
+	/**
 	 * Teleports this boundary's live payload to the next matching boundary while
 	 * a transition is active.
 	 *

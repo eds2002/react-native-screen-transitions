@@ -68,9 +68,7 @@ export function useBoundaryMeasureCoordinator(
 		(s) => s.derivations.currentScreenKey,
 	);
 	const nextScreenKey = useBuilderStore((s) => s.derivations.nextScreenKey);
-	const hasConfiguredInterpolator = useBuilderStore(
-		(s) => s.derivations.hasConfiguredInterpolator,
-	);
+	const boundsActive = useBuilderStore((s) => s.derivations.boundsActive);
 	// Source-side boundaries refresh from the next screen's lifecycle pulse.
 	// Destination-side boundaries have no next screen, so they refresh from self.
 	const refreshScreenKey = nextScreenKey ?? currentScreenKey;
@@ -101,8 +99,7 @@ export function useBoundaryMeasureCoordinator(
 			const linkState = pairs.get();
 			if (!boundaries) return null;
 
-			const canRefresh =
-				hasConfiguredInterpolator && !!willAnimate && !!progressSettled;
+			const canRefresh = boundsActive && !!willAnimate && !!progressSettled;
 			const isClosing = !!closing?.get();
 			const closeStarted = canRefresh && isClosing && !lastClosing.get();
 			const willAnimatePulse = canRefresh && !!willAnimate?.get();

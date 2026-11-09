@@ -14,7 +14,11 @@ export interface DescriptorDerivations {
 	 * visible. A stack's first route does unless `experimental_animateOnInitialMount` is set.
 	 */
 	startsSettled: boolean;
-	hasConfiguredInterpolator: boolean;
+	/**
+	 * Whether boundaries on this screen take part in its transitions (with the next screen, or into
+	 * it): the library runs them. Always, except a native-stack screen without `enableTransitions`.
+	 */
+	boundsActive: boolean;
 }
 
 interface Params {
@@ -26,6 +30,19 @@ interface Params {
 	/** Overrides the stack rule for units that decide how they mount (see `useMotion`). */
 	startsSettled?: boolean;
 }
+
+/**
+ * Whether the library runs this screen's transitions. A native-stack screen opts in with
+ * `enableTransitions` (the adapter sets it to false otherwise); an interpolator always counts.
+ */
+const runsTransitions = (descriptor?: BaseStackDescriptor) => {
+	if (!descriptor) return false;
+	const options = descriptor.options as { enableTransitions?: boolean };
+	return (
+		!!descriptor.options.screenStyleInterpolator ||
+		options.enableTransitions !== false
+	);
+};
 
 export function deriveDescriptorDerivations({
 	previous,
@@ -43,9 +60,7 @@ export function deriveDescriptorDerivations({
 
 	const isFirstKey =
 		firstRouteKey !== undefined && current.route.key === firstRouteKey;
-	const hasConfiguredInterpolator =
-		!!current.options.screenStyleInterpolator ||
-		!!next?.options?.screenStyleInterpolator;
+	const boundsActive = runsTransitions(current) || runsTransitions(next);
 
 	return {
 		previousScreenKey,
@@ -56,6 +71,6 @@ export function deriveDescriptorDerivations({
 		startsSettled:
 			startsSettled ??
 			(isFirstKey && !current.options.experimental_animateOnInitialMount),
-		hasConfiguredInterpolator,
+		boundsActive,
 	};
 }

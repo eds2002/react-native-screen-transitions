@@ -37,9 +37,16 @@ export const useBoundaryPresence = (params: {
 	currentScreenKey: string;
 	boundaryConfig?: BoundaryConfigProps;
 	handoff?: boolean;
+	animate?: boolean;
 }) => {
-	const { enabled, boundTag, currentScreenKey, boundaryConfig, handoff } =
-		params;
+	const {
+		enabled,
+		boundTag,
+		currentScreenKey,
+		boundaryConfig,
+		handoff,
+		animate = true,
+	} = params;
 	const { tag, linkKey } = boundTag;
 
 	useLayoutEffect(() => {
@@ -57,11 +64,12 @@ export const useBoundaryPresence = (params: {
 			patch: {
 				boundaryConfig,
 				handoff: handoff ? true : null,
+				still: animate ? null : true,
 			},
 		});
 
 		return () => {
 			queueEntryOp({ tag, screenKey: currentScreenKey, remove: true });
 		};
-	}, [enabled, tag, currentScreenKey, boundaryConfig, handoff]);
+	}, [enabled, tag, currentScreenKey, boundaryConfig, handoff, animate]);
 };
