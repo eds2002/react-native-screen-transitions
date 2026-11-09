@@ -59,7 +59,6 @@ export interface MotionTransitionActions {
 	clearLifecycleTransitionRequest(): void;
 	blockLifecycleStart(): void;
 	unblockLifecycleStart(): void;
-	drainLifecycleStartBlocks(): void;
 }
 
 export type MotionTransitionValues = MotionTransitionRawValues & {
@@ -125,11 +124,6 @@ export function useTransitionValues(): MotionTransitionValues {
 							return Math.max(0, count - 1) as T;
 						},
 					);
-				},
-
-				drainLifecycleStartBlocks() {
-					"worklet";
-					bag.pendingLifecycleStartBlockCount.set(0);
 				},
 			},
 		};

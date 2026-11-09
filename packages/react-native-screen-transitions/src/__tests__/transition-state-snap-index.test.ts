@@ -5,7 +5,7 @@ import {
 	DEFAULT_SCREEN_TRANSITION_OPTIONS,
 } from "../constants";
 import type { MotionGestureValues } from "../providers/motion/types";
-import { buildScreenTransitionOptions } from "../providers/motion/animation/helpers/build-screen-transition-options";
+import type { ScreenTransitionOptions } from "../types";
 import { hydrateTransitionState } from "../providers/motion/animation/helpers/hydrate-transition-state";
 
 const shared = <T>(initial: T): SharedValue<T> => {
@@ -86,7 +86,7 @@ const createGestureStore = (): MotionGestureValues => ({
 
 describe("hydrateTransitionState snap indices", () => {
 	it("hydrates the expanded screen transition options subset", () => {
-		const options = buildScreenTransitionOptions({
+		const options: ScreenTransitionOptions = {
 			gestureEnabled: false,
 			gestureTracking: "always",
 			gestureDirection: ["vertical", "pinch-out"],
@@ -97,7 +97,7 @@ describe("hydrateTransitionState snap indices", () => {
 			gestureSnapLocked: true,
 			sheetScrollGestureBehavior: "collapse-only",
 			backdropBehavior: "dismiss",
-		});
+		};
 		const state = createScreenTransitionState(
 			{
 				key: "route-a",
@@ -149,11 +149,10 @@ describe("hydrateTransitionState snap indices", () => {
 	});
 
 	it("keeps static structural options while applying runtime option overrides", () => {
-		const baseOptions = buildScreenTransitionOptions({
-			navigationMaskEnabled: false,
+		const baseOptions: ScreenTransitionOptions = {
 			gestureTracking: "always",
 			gestureSensitivity: 0.5,
-		});
+		};
 		const state = createScreenTransitionState(
 			{
 				key: "route-a",

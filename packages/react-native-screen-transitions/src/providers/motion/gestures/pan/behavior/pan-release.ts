@@ -14,7 +14,6 @@ import {
 } from "../../shared/release";
 import {
 	getStepSnapProgressVelocityScale,
-	primeRuntimeSnapPoint,
 	resolveRuntimeGestureSnapPoints,
 	resolveRuntimeGestureSnapTargets,
 	resolveStepSnapProgress,
@@ -131,11 +130,6 @@ const buildInactivePanSnapRelease = (
 		transitionSpec: policy.transitionSpec,
 		resetSpec: policy.transitionSpec?.open,
 	};
-};
-
-export const primeSnapPanRelease = (runtime: PanGestureRuntime) => {
-	"worklet";
-	primeRuntimeSnapPoint(runtime);
 };
 
 export const resolvePanRelease = (

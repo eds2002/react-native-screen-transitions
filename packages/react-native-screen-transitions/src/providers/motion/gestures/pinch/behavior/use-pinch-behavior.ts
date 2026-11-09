@@ -3,6 +3,7 @@ import type { SharedValue } from "react-native-reanimated";
 import type { ScreenOptionsContextValue } from "../../../options";
 import { usePinchGestureSensitivity } from "../../ownership/hooks/use-gesture-sensitivity";
 import { resolvePinchRuntime } from "../../shared/runtime";
+import { primeRuntimeSnapPoint } from "../../shared/snap-points";
 import type {
 	GestureCompositionOwner,
 	PinchBehavior,
@@ -14,11 +15,7 @@ import {
 	startPinchBase,
 	trackPinchGesture,
 } from "./pinch-lifecycle";
-import {
-	primeSnapPinchRelease,
-	resolvePinchRelease,
-	resolveSnapPinchRelease,
-} from "./pinch-release";
+import { resolvePinchRelease, resolveSnapPinchRelease } from "./pinch-release";
 
 export const usePinchBehavior = (
 	runtime: SharedValue<PinchGestureRuntime>,
@@ -36,7 +33,7 @@ export const usePinchBehavior = (
 			screenOptions.get(),
 		);
 		if (latestRuntime.participation.effectiveSnapPoints.hasSnapPoints) {
-			primeSnapPinchRelease(latestRuntime);
+			primeRuntimeSnapPoint(latestRuntime);
 		}
 		startPinchBase(latestRuntime);
 		resetSensitivity();

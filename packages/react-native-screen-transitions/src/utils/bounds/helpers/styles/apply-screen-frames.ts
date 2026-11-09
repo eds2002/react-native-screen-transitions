@@ -233,7 +233,7 @@ export const screenCoverage = (screen: ScreenTransform, rect: FrameRect) => {
 };
 
 /** Whether a screen overlaps a window rect at all (see screenCoverage). */
-export const screenCovers = (screen: ScreenTransform, rect: FrameRect) => {
+const screenCovers = (screen: ScreenTransform, rect: FrameRect) => {
 	"worklet";
 	return screenCoverage(screen, rect) > 0;
 };

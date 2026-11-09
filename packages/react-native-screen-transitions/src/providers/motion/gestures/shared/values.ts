@@ -14,7 +14,7 @@ export const clearPanProgressDeltaValues = (gestures: MotionGestureValues) => {
 	gestures.internal.progressDeltaY.set(0);
 };
 
-export const clearPanProgressValues = (gestures: MotionGestureValues) => {
+const clearPanProgressValues = (gestures: MotionGestureValues) => {
 	"worklet";
 	gestures.x.set(0);
 	gestures.y.set(0);

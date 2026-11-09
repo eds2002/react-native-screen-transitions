@@ -5,7 +5,6 @@ import {
 } from "./transition-visual-state";
 
 type ScreenVisibilityGateState = {
-	isFloatingOverlay?: boolean;
 	hasVisibilityGateOpened: boolean;
 	pendingLifecycleStartBlockCount: number;
 	pendingLifecycleRequestKind: LifecycleTransitionRequestKind;
@@ -53,7 +52,6 @@ export const resolveInitialDestinationStyleGate = ({
 };
 
 export const resolveScreenVisibilityGate = ({
-	isFloatingOverlay,
 	hasVisibilityGateOpened,
 	pendingLifecycleStartBlockCount,
 	pendingLifecycleRequestKind,
@@ -61,7 +59,7 @@ export const resolveScreenVisibilityGate = ({
 	entering,
 }: ScreenVisibilityGateState): ScreenVisibilityGateDecision => {
 	"worklet";
-	if (isFloatingOverlay || hasVisibilityGateOpened) {
+	if (hasVisibilityGateOpened) {
 		return {
 			shouldBlock: false,
 			shouldOpenGate: false,
@@ -96,15 +94,7 @@ export const resolveScreenVisibilityGate = ({
  * Petrenko).
  */
 export const resolveInitialVisibilityBlocked = ({
-	isFloatingOverlay,
 	startsSettled,
 }: {
-	isFloatingOverlay?: boolean;
 	startsSettled: boolean;
-}): boolean => {
-	if (isFloatingOverlay) {
-		return false;
-	}
-
-	return !startsSettled;
-};
+}): boolean => !startsSettled;

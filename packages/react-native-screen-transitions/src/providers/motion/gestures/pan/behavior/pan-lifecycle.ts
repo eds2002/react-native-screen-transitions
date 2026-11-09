@@ -19,7 +19,6 @@ import type {
 	PanGestureEvent,
 	PanGestureRuntime,
 	PanReleaseResult,
-	PanTrackState,
 } from "../../types";
 import { buildPanReleasePlan } from "./pan-release";
 import { resetPanGestureValues } from "./pan-reset";
@@ -71,7 +70,7 @@ export const trackPanGesture = (
 	rawEvent: PanGestureEvent,
 	gestures: PanGestureRuntime["stores"]["gestures"],
 	dimensions: GestureDimensions,
-): PanTrackState => {
+): void => {
 	"worklet";
 	const { translationX: x, translationY: y } = event;
 	const {
@@ -105,14 +104,6 @@ export const trackPanGesture = (
 	gestures.raw.y.set(rawY);
 	gestures.raw.normX.set(rawNormX);
 	gestures.raw.normY.set(rawNormY);
-
-	return {
-		x,
-		y,
-		normX,
-		normY,
-		velocity,
-	};
 };
 
 export const finalizePanRelease = (

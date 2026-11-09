@@ -97,9 +97,7 @@ const DEFAULT_EDGE_DISTANCE_VERTICAL = 135;
 const DEFAULT_ACTIVATION_AREA = "screen" as const;
 const SCROLL_EPILSON = 1;
 
-export function normalizeSides(
-	area?: ResolvedGestureActivationArea,
-): NormalizedSides {
+function normalizeSides(area?: ResolvedGestureActivationArea): NormalizedSides {
 	"worklet";
 	if (!area || typeof area === "string" || typeof area === "number") {
 		const mode: GestureDirectionActivationArea =
@@ -140,7 +138,7 @@ const canActivateFromEndEdge = (
 	return touchPosition >= size - edgeDistance;
 };
 
-export function computeEdgeConstraints(
+function computeEdgeConstraints(
 	initialTouch: { x: number; y: number },
 	dimensions: Layout,
 	sides: NormalizedSides,
@@ -171,7 +169,7 @@ export function computeEdgeConstraints(
 	} as const;
 }
 
-export function calculateSwipeDirs(deltaX: number, deltaY: number) {
+function calculateSwipeDirs(deltaX: number, deltaY: number) {
 	"worklet";
 
 	const isVerticalSwipe = Math.abs(deltaY) > Math.abs(deltaX);
@@ -234,7 +232,7 @@ const resolveAxisActivation = ({
 	};
 };
 
-export function shouldActivateOrFail(params: ShouldActivateOrFailProps) {
+function shouldActivateOrFail(params: ShouldActivateOrFailProps) {
 	"worklet";
 	const hasHorizontal = params.allowedLeft || params.allowedRight;
 	const hasVertical = params.allowedUp || params.allowedDown;

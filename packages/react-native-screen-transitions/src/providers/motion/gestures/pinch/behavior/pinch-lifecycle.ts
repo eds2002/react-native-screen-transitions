@@ -10,7 +10,6 @@ import type {
 	PinchGestureEvent,
 	PinchGestureRuntime,
 	PinchReleaseResult,
-	PinchTrackState,
 } from "../../types";
 import { resetPinchGestureValues } from "./pinch-reset";
 
@@ -34,7 +33,7 @@ export const trackPinchGesture = (
 	event: PinchGestureEvent,
 	rawEvent: PinchGestureEvent,
 	gestures: PinchGestureRuntime["stores"]["gestures"],
-): PinchTrackState => {
+): void => {
 	"worklet";
 	const normScale = clamp(normalizePinchScale(event.scale), -1, 1);
 	const scale = clamp(1 + normScale, 0, 2);
@@ -51,11 +50,6 @@ export const trackPinchGesture = (
 			normScale < 0 ? "pinch-in" : normScale > 0 ? "pinch-out" : null,
 		);
 	}
-
-	return {
-		scale,
-		normScale,
-	};
 };
 
 export const finalizePinchRelease = (

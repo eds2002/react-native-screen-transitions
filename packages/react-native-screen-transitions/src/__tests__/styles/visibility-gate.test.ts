@@ -55,21 +55,6 @@ describe("resolveScreenVisibilityGate", () => {
 			shouldOpenGate: true,
 		});
 	});
-
-	it("does not block floating overlays", () => {
-		expect(
-			resolveScreenVisibilityGate({
-				...baseState,
-				isFloatingOverlay: true,
-				pendingLifecycleStartBlockCount: 1,
-				pendingLifecycleRequestKind: LifecycleTransitionRequestKind.Open,
-				animationProgress: 0,
-			}),
-		).toEqual({
-			shouldBlock: false,
-			shouldOpenGate: false,
-		});
-	});
 });
 
 describe("resolveInitialDestinationStyleGate", () => {
@@ -187,15 +172,6 @@ describe("resolveInitialVisibilityBlocked", () => {
 		expect(
 			resolveInitialVisibilityBlocked({
 				startsSettled: startsSettled("standalone", {}, true),
-			}),
-		).toBe(false);
-	});
-
-	it("never blocks floating overlays", () => {
-		expect(
-			resolveInitialVisibilityBlocked({
-				isFloatingOverlay: true,
-				startsSettled: startsSettled("pushed"),
 			}),
 		).toBe(false);
 	});

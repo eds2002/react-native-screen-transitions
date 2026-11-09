@@ -24,13 +24,11 @@ import { LifecycleTransitionRequestKind } from "./use-transition-values";
 type Params = {
 	motion: MotionValues;
 	ancestorIsScreenReady: SharedValue<boolean> | null;
-	isFloatingOverlay?: boolean;
 };
 
 export const useMaybeBlockVisibility = ({
 	motion,
 	ancestorIsScreenReady,
-	isFloatingOverlay,
 }: Params) => {
 	const { height } = useWindowDimensions();
 	const {
@@ -49,10 +47,7 @@ export const useMaybeBlockVisibility = ({
 	);
 	const hasVisibilityGateOpened = useSharedValue(false);
 	const localVisibilityBlocked = useSharedValue(
-		resolveInitialVisibilityBlocked({
-			isFloatingOverlay,
-			startsSettled,
-		}),
+		resolveInitialVisibilityBlocked({ startsSettled }),
 	);
 	const lastVisibilityStyle = useSharedValue<{
 		opacity: number;
@@ -65,7 +60,6 @@ export const useMaybeBlockVisibility = ({
 			"worklet";
 
 			return resolveScreenVisibilityGate({
-				isFloatingOverlay,
 				hasVisibilityGateOpened: hasVisibilityGateOpened.get(),
 				pendingLifecycleStartBlockCount: pendingLifecycleStartBlockCount.get(),
 				pendingLifecycleRequestKind: pendingLifecycleRequestKind.get(),

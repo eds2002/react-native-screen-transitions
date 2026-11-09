@@ -68,8 +68,6 @@ export interface ScreenGestureSource {
 	scrollState: SharedValue<ScrollGestureState | null>;
 }
 
-export type GestureContextType = ScreenGestureSource;
-
 export interface ScreenGestureParticipation {
 	/** Whether this route is the first route in its stack. First routes never track gestures. */
 	isFirstKey: boolean;
@@ -140,19 +138,6 @@ export type PinchGestureRuntime = GestureRuntime<PinchGesturePolicy>;
 export interface GestureDimensions {
 	width: number;
 	height: number;
-}
-
-export interface PanTrackState {
-	x: number;
-	y: number;
-	normX: number;
-	normY: number;
-	velocity: number;
-}
-
-export interface PinchTrackState {
-	scale: number;
-	normScale: number;
 }
 
 export interface PanReleaseResult {

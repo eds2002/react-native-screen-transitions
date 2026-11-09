@@ -11,7 +11,6 @@ import {
 } from "../../shared/release";
 import {
 	getStepSnapProgressVelocityScale,
-	primeRuntimeSnapPoint,
 	resolveRuntimeGestureSnapPoints,
 	resolveRuntimeGestureSnapTargets,
 	resolveStepSnapProgress,
@@ -93,11 +92,6 @@ const getPinchSnapReleaseProgress = ({
 		minSnapPoint,
 		maxSnapPoint,
 	);
-};
-
-export const primeSnapPinchRelease = (runtime: PinchGestureRuntime) => {
-	"worklet";
-	primeRuntimeSnapPoint(runtime);
 };
 
 export const resolvePinchRelease = (

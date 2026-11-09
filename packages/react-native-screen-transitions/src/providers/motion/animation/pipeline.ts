@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { ScrollStore } from "../../../stores/scroll.store";
+import type { ScreenTransitionOptions } from "../../../types";
 import { useBuilderStore } from "../../builder";
 import type { MotionValues } from "../types";
-import { buildScreenTransitionOptions } from "./helpers/build-screen-transition-options";
 import type { MotionAnimationState } from "./helpers/hydrate-transition-state/types";
 import { toPlainRoute, toPlainValue } from "./helpers/worklet";
 
@@ -29,20 +29,19 @@ export function useMotionAnimationPipeline(
 	} = descriptor.options;
 
 	const transitionOptions = useMemo(
-		() =>
-			buildScreenTransitionOptions({
-				gestureEnabled,
-				gestureTracking,
-				gestureDirection,
-				gestureSensitivity,
-				gestureVelocityImpact,
-				gestureSnapVelocityImpact,
-				gestureReleaseVelocityScale,
-				gestureSnapLocked,
-				sheetSnapBehavior,
-				sheetScrollGestureBehavior,
-				backdropBehavior,
-			}),
+		(): ScreenTransitionOptions => ({
+			gestureEnabled,
+			gestureTracking,
+			gestureDirection,
+			gestureSensitivity,
+			gestureVelocityImpact,
+			gestureSnapVelocityImpact,
+			gestureReleaseVelocityScale,
+			gestureSnapLocked,
+			sheetSnapBehavior,
+			sheetScrollGestureBehavior,
+			backdropBehavior,
+		}),
 		[
 			gestureEnabled,
 			gestureTracking,

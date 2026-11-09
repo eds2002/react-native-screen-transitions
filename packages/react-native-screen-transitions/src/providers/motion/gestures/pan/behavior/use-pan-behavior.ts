@@ -4,6 +4,7 @@ import type { Direction } from "../../../../../types/ownership.types";
 import type { ScreenOptionsContextValue } from "../../../options";
 import { usePanGestureSensitivity } from "../../ownership/hooks/use-gesture-sensitivity";
 import { resolvePanRuntime } from "../../shared/runtime";
+import { primeRuntimeSnapPoint } from "../../shared/snap-points";
 import { clearPanTrackingValues } from "../../shared/values";
 import type {
 	GestureCompositionOwner,
@@ -17,11 +18,7 @@ import {
 	startPanBase,
 	trackPanGesture,
 } from "./pan-lifecycle";
-import {
-	primeSnapPanRelease,
-	resolvePanRelease,
-	resolveSnapPanRelease,
-} from "./pan-release";
+import { resolvePanRelease, resolveSnapPanRelease } from "./pan-release";
 
 export const usePanBehavior = (
 	runtime: SharedValue<PanGestureRuntime>,
@@ -52,7 +49,7 @@ export const usePanBehavior = (
 		gestureCompositionOwner.set("pan");
 
 		if (latestRuntime.participation.effectiveSnapPoints.hasSnapPoints) {
-			primeSnapPanRelease(latestRuntime);
+			primeRuntimeSnapPoint(latestRuntime);
 		}
 		startPanBase(latestRuntime);
 		resetSensitivity();
