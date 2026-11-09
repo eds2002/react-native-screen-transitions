@@ -496,6 +496,28 @@ describe("transition state rules", () => {
 		expect(state.visualProgress.get()).toBeCloseTo(0.05);
 	});
 
+	it("shows an interpolator's option overrides, except the options it can't override", () => {
+		const options = {
+			gestureTracking: "auto",
+			gestureSensitivity: 1,
+			sheetSnapBehavior: "continuous",
+		} as const;
+		const state = createBuiltState({ options });
+
+		expect(hydrate(state).options).toBe(options);
+		expect(
+			hydrate(state, {
+				gestureTracking: "never",
+				gestureSensitivity: 0.5,
+			}).options,
+		).toMatchObject({
+			gestureTracking: "auto",
+			gestureSensitivity: 0.5,
+			sheetSnapBehavior: "continuous",
+			gestureEnabled: undefined,
+		});
+	});
+
 	it("normalizes live step progress across the adjacent snap interval", () => {
 		const state = createBuiltState({
 			progress: 0.9,

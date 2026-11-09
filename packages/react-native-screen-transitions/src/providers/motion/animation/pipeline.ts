@@ -1,7 +1,10 @@
 import { useMemo } from "react";
 import { ScrollStore } from "../../../stores/scroll.store";
-import type { ScreenTransitionOptions } from "../../../types";
 import { useBuilderStore } from "../../builder";
+import {
+	interpolatorOptionInputs,
+	pickInterpolatorOptions,
+} from "../options/helpers";
 import type { MotionValues } from "../types";
 import type { MotionAnimationState } from "./helpers/hydrate-transition-state/types";
 import { toPlainRoute, toPlainValue } from "./helpers/worklet";
@@ -14,47 +17,10 @@ export function useMotionAnimationPipeline(
 	const { meta, snapPoints } = descriptor.options;
 	const key = route.key;
 
-	const {
-		gestureEnabled,
-		gestureTracking,
-		gestureDirection,
-		gestureSensitivity,
-		gestureVelocityImpact,
-		gestureSnapVelocityImpact,
-		gestureReleaseVelocityScale,
-		gestureSnapLocked,
-		sheetSnapBehavior,
-		sheetScrollGestureBehavior,
-		backdropBehavior,
-	} = descriptor.options;
-
 	const transitionOptions = useMemo(
-		(): ScreenTransitionOptions => ({
-			gestureEnabled,
-			gestureTracking,
-			gestureDirection,
-			gestureSensitivity,
-			gestureVelocityImpact,
-			gestureSnapVelocityImpact,
-			gestureReleaseVelocityScale,
-			gestureSnapLocked,
-			sheetSnapBehavior,
-			sheetScrollGestureBehavior,
-			backdropBehavior,
-		}),
-		[
-			gestureEnabled,
-			gestureTracking,
-			gestureDirection,
-			gestureSensitivity,
-			gestureVelocityImpact,
-			gestureSnapVelocityImpact,
-			gestureReleaseVelocityScale,
-			gestureSnapLocked,
-			sheetSnapBehavior,
-			sheetScrollGestureBehavior,
-			backdropBehavior,
-		],
+		() => pickInterpolatorOptions(descriptor.options),
+		// biome-ignore lint/correctness/useExhaustiveDependencies: the inputs are the options it picks.
+		interpolatorOptionInputs(descriptor.options),
 	);
 
 	return useMemo(() => {

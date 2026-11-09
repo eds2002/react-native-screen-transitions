@@ -1,9 +1,7 @@
-import type {
-	ScreenTransitionOptions,
-	TransitionInterpolatorOptions,
-} from "../../../../../types/animation.types";
+import type { TransitionInterpolatorOptions } from "../../../../../types/animation.types";
 import type { Layout } from "../../../../../types/screen.types";
 import { resolveAutoSnapPoint } from "../../../gestures/shared/snap-points";
+import { mergeInterpolatorOptions } from "../../../options/helpers";
 import { resolveGestureAffectedProgress } from "./gesture-progress";
 import {
 	computeAnimatedSnapIndex,
@@ -11,38 +9,6 @@ import {
 	getResolvedSnapBounds,
 } from "./snap-points";
 import type { BuiltState } from "./types";
-
-const mergeTransitionOptions = (
-	base: ScreenTransitionOptions,
-	effective: TransitionInterpolatorOptions | undefined,
-	slot: ScreenTransitionOptions,
-): ScreenTransitionOptions => {
-	"worklet";
-	if (!effective) {
-		return base;
-	}
-
-	slot.gestureEnabled = effective.gestureEnabled ?? base.gestureEnabled;
-	slot.gestureTracking = base.gestureTracking;
-	slot.gestureDirection = effective.gestureDirection ?? base.gestureDirection;
-	slot.gestureSensitivity =
-		effective.gestureSensitivity ?? base.gestureSensitivity;
-	slot.gestureVelocityImpact =
-		effective.gestureVelocityImpact ?? base.gestureVelocityImpact;
-	slot.gestureSnapVelocityImpact =
-		effective.gestureSnapVelocityImpact ?? base.gestureSnapVelocityImpact;
-	slot.gestureReleaseVelocityScale =
-		effective.gestureReleaseVelocityScale ?? base.gestureReleaseVelocityScale;
-	slot.gestureSnapLocked =
-		effective.gestureSnapLocked ?? base.gestureSnapLocked;
-	slot.sheetSnapBehavior =
-		effective.sheetSnapBehavior ?? base.sheetSnapBehavior;
-	slot.sheetScrollGestureBehavior =
-		effective.sheetScrollGestureBehavior ?? base.sheetScrollGestureBehavior;
-	slot.backdropBehavior = effective.backdropBehavior ?? base.backdropBehavior;
-
-	return slot;
-};
 
 export const hydrateTransitionState = (
 	s: BuiltState,
@@ -52,7 +18,7 @@ export const hydrateTransitionState = (
 	"worklet";
 	const out = s.unwrapped;
 	const transitionProgress = s.transitionProgress.get();
-	const options = mergeTransitionOptions(
+	const options = mergeInterpolatorOptions(
 		s.options,
 		effectiveOptions,
 		s.optionsSlot,

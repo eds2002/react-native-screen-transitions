@@ -14,7 +14,9 @@ import type {
 	GestureDirectionActivationArea,
 	GestureDirectionEntry,
 	ScreenTransitionConfig,
+	ScreenTransitionOptions,
 	TransitionInterpolatedStyle,
+	TransitionInterpolatorOptions,
 } from "../../../types";
 import type { BackdropBehavior } from "../../../types/screen.types";
 import type {
@@ -210,6 +212,8 @@ type ScreenOptionSpec<K extends ScreenOptionKey> = {
 	fallback: ScreenOptionsSnapshot[K];
 	/** Whether an interpolator's returned `options` can override it for a frame. */
 	overridable: boolean;
+	/** Whether a screenStyleInterpolator sees it in `options` (as the screen set it, unvalidated). */
+	exposed: boolean;
 	/** How two states compare it, when not by identity. */
 	equal?: (
 		left: ScreenOptionsSnapshot[K],
@@ -227,57 +231,68 @@ const SCREEN_OPTIONS: { [K in ScreenOptionKey]: ScreenOptionSpec<K> } = {
 		resolve: resolveBooleanOption,
 		fallback: undefined,
 		overridable: true,
+		exposed: true,
 	},
 	gestureTracking: {
 		resolve: resolveGestureTrackingOption,
 		fallback: DEFAULT_GESTURE_TRACKING,
 		overridable: false,
+		exposed: true,
 	},
 	gestureDirection: {
 		resolve: resolveGestureDirectionOption,
 		fallback: DEFAULT_GESTURE_DIRECTION,
 		overridable: true,
+		exposed: true,
 		equal: areGestureDirectionsEqual,
 	},
 	gestureSensitivity: {
 		resolve: resolveNumberOption,
 		fallback: DEFAULT_GESTURE_SENSITIVITY,
 		overridable: true,
+		exposed: true,
 	},
 	gestureVelocityImpact: {
 		resolve: resolveNumberOption,
 		fallback: DEFAULT_GESTURE_VELOCITY_IMPACT,
 		overridable: true,
+		exposed: true,
 	},
 	gestureSnapVelocityImpact: {
 		resolve: resolveNumberOption,
 		fallback: DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT,
 		overridable: true,
+		exposed: true,
 	},
 	gestureReleaseVelocityScale: {
 		resolve: resolveNumberOption,
 		fallback: DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
 		overridable: true,
+		exposed: true,
 	},
 	gestureSnapLocked: {
 		resolve: resolveBooleanOption,
 		fallback: DEFAULT_GESTURE_SNAP_LOCKED,
 		overridable: true,
+		exposed: true,
 	},
 	sheetSnapBehavior: {
 		resolve: resolveSheetSnapBehaviorOption,
 		fallback: DEFAULT_SHEET_SNAP_BEHAVIOR,
 		overridable: true,
+		exposed: true,
 	},
 	sheetScrollGestureBehavior: {
 		resolve: resolveSheetScrollGestureBehaviorOption,
 		fallback: DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR,
 		overridable: true,
+		exposed: true,
 	},
 	backdropBehavior: {
 		resolve: resolveBackdropBehaviorOption,
 		fallback: undefined,
 		overridable: true,
+		exposed: true,
 	},
 	transitionSpec: {
 		resolve: (value) => {
@@ -286,6 +301,7 @@ const SCREEN_OPTIONS: { [K in ScreenOptionKey]: ScreenOptionSpec<K> } = {
 		},
 		fallback: undefined,
 		overridable: false,
+		exposed: false,
 	},
 };
 
@@ -297,6 +313,7 @@ type AnyScreenOptionSpec = {
 	resolve: (value: unknown, fallback: unknown) => unknown;
 	fallback: unknown;
 	overridable: boolean;
+	exposed: boolean;
 	equal?: (left: unknown, right: unknown) => boolean;
 };
 const specOf = (key: ScreenOptionKey) => {
@@ -395,4 +412,48 @@ export const syncScreenOptionsOverrides = (
 	if (!areScreenOptionsEqual(current, next as ScreenOptionsState)) {
 		screenOptions.set(next as ScreenOptionsState);
 	}
+};
+
+const EXPOSED_OPTION_KEYS = SCREEN_OPTION_KEYS.filter(
+	(key) => SCREEN_OPTIONS[key].exposed,
+);
+
+/** The options a screen's interpolator sees: as the screen set them (undefined when unset). */
+export const pickInterpolatorOptions = (
+	options: ScreenTransitionConfig,
+): ScreenTransitionOptions => {
+	const input = options as Partial<ScreenOptionValues>;
+	const picked = {} as Partial<ScreenOptionValues>;
+	for (const key of EXPOSED_OPTION_KEYS) {
+		picked[key] = input[key];
+	}
+	return picked as ScreenTransitionOptions;
+};
+
+/** The options an interpolator sees, in table order: a dependency list for their memo. */
+export const interpolatorOptionInputs = (options: ScreenTransitionConfig) =>
+	EXPOSED_OPTION_KEYS.map((key) => options[key]);
+
+/**
+ * The options an interpolator sees this frame: the screen's, with what an interpolator returned
+ * for the overridable ones. Written into `slot` (reused across frames); `base` when nothing is
+ * overridden.
+ */
+export const mergeInterpolatorOptions = (
+	base: ScreenTransitionOptions,
+	overrides: TransitionInterpolatorOptions | undefined,
+	slot: ScreenTransitionOptions,
+): ScreenTransitionOptions => {
+	"worklet";
+	if (!overrides) {
+		return base;
+	}
+	const from = base as Partial<ScreenOptionValues>;
+	const over = overrides as Partial<ScreenOptionValues>;
+	const into = slot as Partial<ScreenOptionValues>;
+	for (let i = 0; i < EXPOSED_OPTION_KEYS.length; i++) {
+		const key = EXPOSED_OPTION_KEYS[i];
+		into[key] = specOf(key).overridable ? (over[key] ?? from[key]) : from[key];
+	}
+	return slot;
 };

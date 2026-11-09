@@ -1,14 +1,6 @@
 import {
 	DEFAULT_GESTURE_ACTIVATION_AREA,
-	DEFAULT_GESTURE_DIRECTION,
-	DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
-	DEFAULT_GESTURE_SENSITIVITY,
-	DEFAULT_GESTURE_SNAP_LOCKED,
-	DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT,
 	DEFAULT_GESTURE_TRACKING,
-	DEFAULT_GESTURE_VELOCITY_IMPACT,
-	DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR,
-	DEFAULT_SHEET_SNAP_BEHAVIOR,
 } from "../../../../constants";
 import type {
 	GestureDirectionActivationArea,
@@ -20,9 +12,10 @@ import type {
 	GestureTracking,
 	ScreenTransitionConfig,
 	SheetScrollGestureBehavior,
-	SheetSnapBehavior,
 	SnapPoint,
 } from "../../../../types/screen.types";
+import type { ScreenOptionsSnapshot } from "../../options";
+import { resolveBaseScreenOptions } from "../../options/helpers";
 import { computeClaimedDirections } from "../ownership/compute-claimed-directions";
 import type {
 	PanGesturePolicy,
@@ -41,24 +34,14 @@ import {
 } from "./directions";
 import { validateSnapPoints } from "./snap-points";
 
-export type GesturePolicyOptions = {
-	gestureDirection?: GestureDirectionOption;
-	gestureEnabled?: boolean;
-	gestureTracking?: GestureTracking;
-	gestureReleaseVelocityScale?: number;
-	gestureSensitivity?: number;
-	gestureSnapLocked?: boolean;
-	gestureSnapVelocityImpact?: number;
-	gestureVelocityImpact?: number;
-	sheetSnapBehavior?: SheetSnapBehavior;
-	sheetScrollGestureBehavior?: SheetScrollGestureBehavior;
+/** A screen's options as the policy reads them: validated and defaulted by the options table. */
+export type GesturePolicyOptions = ScreenOptionsSnapshot & {
 	snapPoints?: SnapPoint[];
-	transitionSpec?: ScreenTransitionConfig["transitionSpec"];
 };
 
 const resolveGestureDirection = (options: GesturePolicyOptions) => {
 	"worklet";
-	return options.gestureDirection ?? DEFAULT_GESTURE_DIRECTION;
+	return options.gestureDirection;
 };
 
 const isStructuredGestureDirection = (entry: GestureDirectionEntry) => {
@@ -148,15 +131,11 @@ const resolveGestureActivationArea = (
 const resolveCommonGesturePolicy = (options: GesturePolicyOptions) => {
 	"worklet";
 	return {
-		gestureSensitivity:
-			options.gestureSensitivity ?? DEFAULT_GESTURE_SENSITIVITY,
-		gestureSnapVelocityImpact:
-			options.gestureSnapVelocityImpact ?? DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT,
-		gestureSnapLocked: options.gestureSnapLocked ?? DEFAULT_GESTURE_SNAP_LOCKED,
-		sheetSnapBehavior: options.sheetSnapBehavior ?? DEFAULT_SHEET_SNAP_BEHAVIOR,
-		gestureReleaseVelocityScale:
-			options.gestureReleaseVelocityScale ??
-			DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
+		gestureSensitivity: options.gestureSensitivity,
+		gestureSnapVelocityImpact: options.gestureSnapVelocityImpact,
+		gestureSnapLocked: options.gestureSnapLocked,
+		sheetSnapBehavior: options.sheetSnapBehavior,
+		gestureReleaseVelocityScale: options.gestureReleaseVelocityScale,
 		transitionSpec: options.transitionSpec,
 	};
 };
@@ -165,9 +144,7 @@ function resolvePolicySheetScrollGestureBehavior(
 	options: GesturePolicyOptions,
 ): SheetScrollGestureBehavior {
 	"worklet";
-	return (
-		options.sheetScrollGestureBehavior ?? DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR
-	);
+	return options.sheetScrollGestureBehavior;
 }
 
 const resolvePinchDirections = (
@@ -258,8 +235,7 @@ export const resolvePanPolicy = (
 		}),
 		snapAxisDirections: getPanSnapAxisDirections(gestureDirection),
 		...resolveCommonGesturePolicy(options),
-		gestureVelocityImpact:
-			options.gestureVelocityImpact ?? DEFAULT_GESTURE_VELOCITY_IMPACT,
+		gestureVelocityImpact: options.gestureVelocityImpact,
 		gestureActivationArea: resolveGestureActivationArea(
 			gestureDirection,
 			hasSnapPoints,
@@ -331,16 +307,20 @@ export const resolveScreenGestureConfig = ({
 	options: ScreenTransitionConfig;
 	isFirstKey: boolean;
 }): ScreenGestureConfig => {
+	const resolved: GesturePolicyOptions = {
+		...resolveBaseScreenOptions(options),
+		snapPoints: options.snapPoints,
+	};
 	const participation = resolveGestureParticipation({
-		options,
+		options: resolved,
 		isFirstKey,
 	});
 	const hasSnapPoints = participation.effectiveSnapPoints.hasSnapPoints;
 
 	return {
 		participation,
-		pan: resolvePanPolicy(options, hasSnapPoints),
-		pinch: resolvePinchPolicy(options, hasSnapPoints),
+		pan: resolvePanPolicy(resolved, hasSnapPoints),
+		pinch: resolvePinchPolicy(resolved, hasSnapPoints),
 	};
 };
 
