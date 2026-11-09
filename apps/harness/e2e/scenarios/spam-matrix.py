@@ -21,11 +21,16 @@ def configs():
     out = []
     for lab, recipes in (("shared-bounds", ("styles", "zoom", "zoom-bound")), ("shared-elements", ("styles",))):
         for recipe in recipes:
-            motions = ("slide", "diagonal", "swirl") if recipe == "styles" else ("still",)
-            trees = (("flat", 1), ("below", 2), ("above", 2)) if recipe != "zoom-bound" else (("flat", 1),)
+            motions = ("slide", "diagonal", "swirl", "still", "shuffle") if recipe == "styles" else ("still",)
             for motion in motions:
+                trees = (("flat", 1), ("below", 2), ("above", 2)) if recipe != "zoom-bound" else (("flat", 1),)
+                if recipe == "styles" and motion in ("still", "shuffle"):
+                    trees = (("flat", 1), ("below", 2))
                 for tree, depth in trees:
                     q = f"recipe={recipe}&motion={motion}&tree={tree}&depth={depth}"
+                    # Shuffle the way the demo uses it: the size method.
+                    if motion == "shuffle":
+                        q += "&method=size"
                     name = f"{'sb' if lab == 'shared-bounds' else 'se'}-{recipe}-{motion}-{tree}{depth}"
                     # sb zoom: the screen grows out of the card, there is no element to follow.
                     track = not (lab == "shared-bounds" and recipe == "zoom")
@@ -147,6 +152,17 @@ def scripts(cfg):
     s.parts.append("wait 2500; down 0.5,0.85; move 0.5,0.7 400; hold 300; up; wait 5000")
     out["t-deep-scroll-open"] = s.tap(NEXT)
     s.level = 1
+    # Deep, then back taps faster than a close takes (two closes overlapping each time).
+    s = S()
+    for _ in range(8):
+        s.next().wait(450)
+    s.wait(600)
+    for _ in range(8):
+        s.back().wait(240)
+    out["t-fast-pops"] = s
+    # A shuffled screen's side (and so its swipe) is random: only taps are scripted for it.
+    if cfg["motion"] == "shuffle":
+        out = {k: v for k, v in out.items() if not k.startswith("g-")}
     if cfg["recipe"] != "styles":
         s = S()
         for _ in range(3):
@@ -166,6 +182,7 @@ def main():
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
     flagged = []
     with open(args.out, "a") as log:
+        dead = 0
         for cfg in configs():
             if not want(cfg["name"], args.configs):
                 continue
@@ -186,11 +203,16 @@ def main():
                 st = r.get("state") or {}
                 path = st.get("path") or ""
                 level = 0 if path.endswith("List") else max(st.get("levels") or [0])
-                bad = [k for k, v in ev.items() if v] + (["errors"] if st.get("errors") else []) + (
+                # A run that produced no result (no device, no recording) is not a pass.
+                bad = (["NO-RESULT"] if "error" in r else []) + [k for k, v in ev.items() if v] + (
+                    ["errors"] if st.get("errors") else []) + (
                     ["unsettled"] if st.get("settled") is False else []) + (["end"] if level != s.level else [])
                 print(f"{'FLAG' if bad else 'ok  '} {run:58s} {' '.join(bad):28s} end={path}@{level} want={s.level}", flush=True)
                 if bad:
                     flagged.append(run)
+                dead = dead + 1 if "error" in r else 0
+                if dead >= 3:
+                    sys.exit(f"stopping: {dead} runs in a row produced no result (is the device up?)")
     print(f"\n{len(flagged)} flagged")
 
 
