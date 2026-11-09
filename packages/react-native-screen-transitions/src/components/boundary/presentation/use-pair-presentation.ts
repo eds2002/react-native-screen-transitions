@@ -11,7 +11,7 @@ import {
 } from "react-native-reanimated";
 import { NO_STYLES } from "../../../constants";
 import { useBuilderStore } from "../../../providers/builder";
-import { useMotionStore } from "../../../providers/motion";
+import { useMotionStore } from "../../../providers/motion/motion.store";
 import { updateDerivations } from "../../../providers/orchestrator/helpers/derivations";
 import type {
 	ScreenAnimationPipeline,

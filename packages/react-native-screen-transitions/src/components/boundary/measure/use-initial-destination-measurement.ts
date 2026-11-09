@@ -12,7 +12,7 @@ import { useOptionalScreenHostStore } from "../../../providers/host/screen-host.
 import {
 	useMotionStore,
 	useOptionalMotionStore,
-} from "../../../providers/motion";
+} from "../../../providers/motion/motion.store";
 import type { BoundTag } from "../../../stores/bounds";
 import {
 	createScreenPairKey,

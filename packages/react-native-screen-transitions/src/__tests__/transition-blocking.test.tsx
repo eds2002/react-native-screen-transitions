@@ -2,7 +2,8 @@ import { mountMotionTransitionValues } from "./helpers/mount-transition-values";
 import { createElement } from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { BuilderProvider } from "../providers/builder";
-import { MotionProvider, getMotionStore } from "../providers/motion";
+import { MotionProvider } from "../providers/motion";
+import { getMotionStore } from "../providers/motion/motion.store";
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import {
 	blockTransition,

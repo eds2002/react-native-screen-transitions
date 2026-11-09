@@ -1,4 +1,4 @@
-import { getMotionStore } from "../providers/motion";
+import { getMotionStore } from "../providers/motion/motion.store";
 import { HistoryStore } from "../stores/history.store";
 import type { ScreenKey } from "../types/screen.types";
 import { logger } from "../utils/logger";

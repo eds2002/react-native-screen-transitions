@@ -1,13 +1,17 @@
 import { type ReactNode, useMemo } from "react";
 import { StyleSheet } from "react-native";
-import Animated, { type SharedValue } from "react-native-reanimated";
-import createProvider from "../../utils/create-provider";
+import Animated from "react-native-reanimated";
 import { useBuilderStore } from "../builder";
 import { useMotionAnimationPipeline } from "./animation/pipeline";
 import { useScreenGestures } from "./gestures/use-screen-gestures";
 import { useRegisterScreenProgress } from "./helpers/progress-registry";
 import { useMaybeBlockVisibility } from "./hooks/use-maybe-block-visibility";
 import { useMotionValues } from "./hooks/use-motion-values";
+import {
+	MotionStoreProvider,
+	ReusedMotionProvider,
+	useOptionalMotionStore,
+} from "./motion.store";
 import { useScreenOptions } from "./options/use-screen-options";
 import type { MotionValues } from "./types";
 
@@ -21,23 +25,11 @@ export type MotionProviderProps = {
 	values?: MotionValues;
 };
 
-export type MotionState = {
-	options: ReturnType<typeof useScreenOptions>;
-	gestures: ReturnType<typeof useScreenGestures>;
-	state: ReturnType<typeof useMotionAnimationPipeline>;
-	/** False until this screen and its ancestors are ready, or after visual close. */
-	isScreenReady: SharedValue<boolean>;
-};
-
-export const {
-	MotionProvider,
-	getMotionStore,
-	useMotionStore,
-	useOptionalMotionStore,
-} = createProvider("Motion", { global: true })<
-	MotionProviderProps,
-	MotionState
->(({ onDismissRequest, children, values: externalValues }) => {
+const ComposedMotion = ({
+	onDismissRequest,
+	children,
+	values: externalValues,
+}: MotionProviderProps) => {
 	const screenKey = useBuilderStore(
 		(store) => store.derivations.currentScreenKey,
 	);
@@ -61,18 +53,31 @@ export const {
 		[options, gestures, state, isScreenReady],
 	);
 
-	return {
-		key: screenKey,
-		value,
-		children: (
+	return (
+		<MotionStoreProvider storeKey={screenKey} value={value}>
 			<Animated.View
 				style={[styles.container, animatedStyle]}
 				animatedProps={animatedProps}
 			>
 				{children}
 			</Animated.View>
-		),
-	};
-});
+		</MotionStoreProvider>
+	);
+};
+
+/**
+ * Gives the screen it is rendered in its motion; with `screenKey`, provides that screen's existing
+ * motion instead.
+ */
+export const MotionProvider = (
+	props: MotionProviderProps | { screenKey: string; children: ReactNode },
+) =>
+	"screenKey" in props ? (
+		<ReusedMotionProvider screenKey={props.screenKey}>
+			{props.children}
+		</ReusedMotionProvider>
+	) : (
+		<ComposedMotion {...props} />
+	);
 
 const styles = StyleSheet.create({ container: { flex: 1 } });

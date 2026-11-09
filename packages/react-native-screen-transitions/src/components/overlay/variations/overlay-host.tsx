@@ -6,7 +6,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { snapDescriptorToIndex } from "../../../controls/snap-to";
 import { useNavigatorStore } from "../../../navigators/kit/state/navigator-store";
-import { useOptionalMotionStore } from "../../../providers/motion";
+import { useOptionalMotionStore } from "../../../providers/motion/motion.store";
 import { OrchestratorProvider } from "../../../providers/orchestrator/orchestrator.provider";
 import {
 	type OrchestratorState,

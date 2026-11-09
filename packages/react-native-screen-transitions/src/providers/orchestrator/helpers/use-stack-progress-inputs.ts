@@ -3,7 +3,7 @@ import { Platform } from "react-native";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
 import { useOptionalScreenHostStore } from "../../host/screen-host.provider";
-import { useMotionStore } from "../../motion";
+import { useMotionStore } from "../../motion/motion.store";
 import type { StackProgressEntry } from "./stack-progress";
 
 const NO_ROUTE_KEYS: readonly string[] = [];

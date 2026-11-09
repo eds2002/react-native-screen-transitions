@@ -1,8 +1,8 @@
 import { useBuilderStore } from "../../../../providers/builder";
-import { useMotionStore } from "../../../../providers/motion";
 import { useCloseCompletion } from "../../../../providers/motion/lifecycle/use-close-completion";
 import { useOpenTransitionIntent } from "../../../../providers/motion/lifecycle/use-open-transition-intent";
 import { useTransitionStartController } from "../../../../providers/motion/lifecycle/use-transition-start-controller";
+import { useMotionStore } from "../../../../providers/motion/motion.store";
 import { useScreenHistory } from "./hooks/history/use-screen-history";
 
 export function useScreenLifecycle({

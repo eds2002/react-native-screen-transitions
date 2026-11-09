@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAnimatedReaction } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { useBuilderStore } from "../../../providers/builder";
-import { useMotionStore } from "../../../providers/motion";
+import { useMotionStore } from "../../../providers/motion/motion.store";
 import type { BackdropBehavior } from "../../../types/screen.types";
 
 interface BackdropPointerEventsResult {

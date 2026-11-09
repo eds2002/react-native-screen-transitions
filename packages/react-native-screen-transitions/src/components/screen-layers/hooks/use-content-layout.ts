@@ -2,8 +2,8 @@ import { useCallback } from "react";
 import { type LayoutChangeEvent, useWindowDimensions } from "react-native";
 import { scheduleOnUI } from "react-native-worklets";
 import { useOptionalBuilderStore } from "../../../providers/builder";
-import { useOptionalMotionStore } from "../../../providers/motion";
 import { LifecycleTransitionRequestKind } from "../../../providers/motion/hooks/use-transition-values";
+import { useOptionalMotionStore } from "../../../providers/motion/motion.store";
 
 /** "content" identifies the full content wrapper and is reserved internally. */
 export function useContentLayout(styleId: string | undefined) {

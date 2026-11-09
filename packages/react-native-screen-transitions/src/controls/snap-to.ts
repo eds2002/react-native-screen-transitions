@@ -1,5 +1,5 @@
 import { scheduleOnUI } from "react-native-worklets";
-import { getMotionStore } from "../providers/motion";
+import { getMotionStore } from "../providers/motion/motion.store";
 import type { HistoryEntry } from "../stores/history.store";
 import { animateToProgress } from "../utils/animation/animate-to-progress";
 import { resolveSnapTransitionSpec } from "../utils/animation/resolve-snap-transition-spec";

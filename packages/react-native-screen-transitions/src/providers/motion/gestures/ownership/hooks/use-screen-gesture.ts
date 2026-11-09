@@ -1,5 +1,5 @@
 import { useResolvedTransitionKey } from "../../../../builder/topology";
-import { useOptionalMotionStore } from "../../..";
+import { useOptionalMotionStore } from "../../../motion.store";
 
 export type ScreenGestureTarget = { depth: number };
 

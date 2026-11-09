@@ -10,7 +10,7 @@ import {
 import { useSharedValueState } from "../../../../hooks/reanimated/use-shared-value-state";
 import useStableCallback from "../../../../hooks/use-stable-callback";
 import { ScrollStore } from "../../../../stores/scroll.store";
-import { useMotionStore, useOptionalMotionStore } from "../..";
+import { useMotionStore, useOptionalMotionStore } from "../../motion.store";
 import { useGestureScrollCoordination } from "../ownership/use-gesture-scroll-coordination";
 import type {
 	ScrollGestureAxis,

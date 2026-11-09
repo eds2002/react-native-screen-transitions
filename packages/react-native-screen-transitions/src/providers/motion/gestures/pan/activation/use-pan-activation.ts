@@ -8,7 +8,7 @@ import { GestureActivationState } from "../../../../../types/gesture.types";
 import type { Direction } from "../../../../../types/ownership.types";
 import { useBuilderStore } from "../../../../builder";
 import { useScreenRelationships } from "../../../../builder/topology";
-import { useOptionalMotionStore } from "../../..";
+import { useOptionalMotionStore } from "../../../motion.store";
 import type { ScreenOptionsContextValue } from "../../../options";
 import { resolvePanRuntime } from "../../shared/runtime";
 import type {

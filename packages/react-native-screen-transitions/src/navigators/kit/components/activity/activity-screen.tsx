@@ -9,7 +9,7 @@ import {
 import { handoffLenders } from "../../../../components/boundary/portal";
 import { IS_WEB } from "../../../../constants";
 import { useSharedValueState } from "../../../../hooks/reanimated/use-shared-value-state";
-import { useOptionalMotionStore } from "../../../../providers/motion";
+import { useOptionalMotionStore } from "../../../../providers/motion/motion.store";
 import type { InactiveBehavior } from "../../../../types/screen.types";
 import type { StackSceneActivity } from "../../../../types/stack.types";
 import { useNavigatorStore } from "../../state/navigator-store";

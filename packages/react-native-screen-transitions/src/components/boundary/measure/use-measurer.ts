@@ -9,8 +9,8 @@ import {
 	type StyleProps,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import { useMotionStore } from "../../../providers/motion";
 import type { useScrollChain } from "../../../providers/motion/gestures/scroll-coordination";
+import { useMotionStore } from "../../../providers/motion/motion.store";
 import { useOptionalOrchestratorStore } from "../../../providers/orchestrator/orchestrator.store";
 import type { BoundTag } from "../../../stores/bounds";
 import {

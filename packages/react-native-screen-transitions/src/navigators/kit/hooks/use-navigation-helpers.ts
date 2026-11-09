@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import { runOnUISync } from "react-native-worklets";
 import { useBuilderStore } from "../../../providers/builder";
-import { getMotionStore } from "../../../providers/motion";
 import { LifecycleTransitionRequestKind } from "../../../providers/motion/hooks/use-transition-values";
+import { getMotionStore } from "../../../providers/motion/motion.store";
 import { dispatchCloseAction } from "../../../utils/navigation/close-action-replay";
 import { useNavigatorStore } from "../state/navigator-store";
 

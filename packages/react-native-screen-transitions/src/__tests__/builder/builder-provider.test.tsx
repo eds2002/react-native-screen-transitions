@@ -1,10 +1,6 @@
 import { createModuleMock } from "../helpers/mock-module";
-import {
-	MotionProvider,
-	getMotionStore,
-	useMotionStore,
-	useOptionalMotionStore,
-} from "../../providers/motion";
+import { MotionProvider } from "../../providers/motion";
+import { getMotionStore, useMotionStore, useOptionalMotionStore } from "../../providers/motion/motion.store";
 import { screenTopology } from "../../providers/builder/topology/helpers/create-screen-topology";
 import { snapDescriptorToIndex } from "../../controls/snap-to";
 import { Activity, useLayoutEffect } from "react";

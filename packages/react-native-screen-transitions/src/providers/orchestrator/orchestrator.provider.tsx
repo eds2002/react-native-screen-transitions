@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { useScreenBounds } from "../../components/boundary/screen/use-screen-bounds";
 import { useBuilderStore } from "../builder";
-import { useMotionStore } from "../motion";
+import { useMotionStore } from "../motion/motion.store";
 import { useScreenAnimationPipeline } from "./helpers/pipeline";
 import { useRegisterGestureOwnership } from "./hooks/use-register-gesture-ownership";
 import {

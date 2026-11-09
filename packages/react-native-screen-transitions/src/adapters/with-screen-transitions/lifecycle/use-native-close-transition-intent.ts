@@ -3,8 +3,8 @@ import useStableCallback from "../../../hooks/use-stable-callback";
 import { useNavigationHelpers } from "../../../navigators/kit/hooks/use-navigation-helpers";
 import type { BaseDescriptor } from "../../../providers/builder";
 import { useScreenRelationships } from "../../../providers/builder/topology";
-import { useOptionalMotionStore } from "../../../providers/motion";
 import { resetStoresForScreen } from "../../../providers/motion/lifecycle/reset-stores-for-screen";
+import { useOptionalMotionStore } from "../../../providers/motion/motion.store";
 import {
 	dispatchCloseAction,
 	isCloseActionReplay,

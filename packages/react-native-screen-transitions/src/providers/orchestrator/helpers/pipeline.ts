@@ -12,9 +12,12 @@ import type {
 	ScreenStyleInterpolator,
 } from "../../../types/animation.types";
 import { useBuilderStore } from "../../builder";
-import { useMotionStore, useOptionalMotionStore } from "../../motion";
 import { hydrateTransitionState } from "../../motion/animation/helpers/hydrate-transition-state";
 import type { BuiltState } from "../../motion/animation/helpers/hydrate-transition-state/types";
+import {
+	useMotionStore,
+	useOptionalMotionStore,
+} from "../../motion/motion.store";
 import { updateDerivations } from "./derivations";
 import type { SelectedInterpolatorOptions } from "./selected-interpolator-options";
 import { readStackProgress, type StackProgressEntry } from "./stack-progress";

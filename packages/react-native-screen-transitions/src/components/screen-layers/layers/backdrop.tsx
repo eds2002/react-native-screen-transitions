@@ -3,7 +3,7 @@ import { Pressable, StyleSheet } from "react-native";
 import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
 import { DefaultSnapSpec } from "../../../configs/specs";
 import { useBuilderStore } from "../../../providers/builder";
-import { useMotionStore } from "../../../providers/motion";
+import { useMotionStore } from "../../../providers/motion/motion.store";
 import {
 	useSlotProps,
 	useSlotStyles,

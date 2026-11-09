@@ -5,7 +5,8 @@ import {
 	useBuilderStore,
 } from "../../providers/builder/builder.provider";
 import { screenTopology } from "../../providers/builder/topology/helpers/create-screen-topology";
-import { MotionProvider, useMotionStore } from "../../providers/motion";
+import { MotionProvider } from "../../providers/motion";
+import { useMotionStore } from "../../providers/motion/motion.store";
 
 // The engine learns about surrounding screens from a host, never from
 // React Navigation. A screen mounted with no host must not touch navigation.

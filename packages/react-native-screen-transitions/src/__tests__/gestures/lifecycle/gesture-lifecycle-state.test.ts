@@ -2,10 +2,8 @@ import {
 	BuilderProvider,
 	useBuilderStore,
 } from "../../../providers/builder";
-import {
-	MotionProvider,
-	useMotionStore,
-} from "../../../providers/motion";
+import { MotionProvider } from "../../../providers/motion";
+import { useMotionStore } from "../../../providers/motion/motion.store";
 import { mountMotionValues } from "../../helpers/mount-motion-values";
 import { mountMotionTransitionValues } from "../../helpers/mount-transition-values";
 import { afterEach, describe, expect, it } from "bun:test";

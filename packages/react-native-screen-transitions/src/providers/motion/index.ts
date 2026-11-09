@@ -1,7 +1,7 @@
+export { MotionProvider } from "./motion.provider";
 export {
 	getMotionStore,
-	MotionProvider,
 	type MotionState,
 	useMotionStore,
 	useOptionalMotionStore,
-} from "./motion.provider";
+} from "./motion.store";

@@ -5,7 +5,7 @@ import {
 	LifecycleTransitionRequestKind,
 	type MotionTransitionValues,
 } from "../hooks/use-transition-values";
-import { useMotionStore } from "../motion.provider";
+import { useMotionStore } from "../motion.store";
 import type { MotionAnimationValues } from "../types";
 
 export const useTransitionStartController = ({

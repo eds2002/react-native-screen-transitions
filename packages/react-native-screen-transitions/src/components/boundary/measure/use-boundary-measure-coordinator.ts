@@ -7,7 +7,7 @@ import {
 	useSharedValue,
 } from "react-native-reanimated";
 import { useBuilderStore } from "../../../providers/builder";
-import { useOptionalMotionStore } from "../../../providers/motion";
+import { useOptionalMotionStore } from "../../../providers/motion/motion.store";
 import {
 	getMeasuredSourcePairKey,
 	getPairKeyForDestination,

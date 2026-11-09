@@ -3,7 +3,8 @@ import { mountMotionTransitionValues } from "./helpers/mount-transition-values";
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import React from "react";
 import { act, create } from "react-test-renderer";
-import { MotionProvider, getMotionStore } from "../providers/motion";
+import { MotionProvider } from "../providers/motion";
+import { getMotionStore } from "../providers/motion/motion.store";
 let motionRenderer: ReturnType<typeof create>;
 afterEach(() => {
 	act(() => motionRenderer?.unmount());

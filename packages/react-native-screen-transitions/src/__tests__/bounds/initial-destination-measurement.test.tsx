@@ -1,5 +1,6 @@
 import { createModuleMock } from "../helpers/mock-module";
-import { MotionProvider, getMotionStore } from "../../providers/motion";
+import { MotionProvider } from "../../providers/motion";
+import { getMotionStore } from "../../providers/motion/motion.store";
 import { beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import type { BoundTag } from "../../stores/bounds/types";

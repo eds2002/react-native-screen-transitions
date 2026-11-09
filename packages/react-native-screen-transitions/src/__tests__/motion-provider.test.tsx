@@ -69,7 +69,7 @@ const {
 	useMotionStore,
 	useOptionalMotionStore,
 	getMotionStore,
-} = await import("../providers/motion/motion.provider");
+} = await import("../providers/motion");
 type Motion = ReturnType<typeof useMotionStore>;
 let local: Motion;
 let remote: Motion | null;

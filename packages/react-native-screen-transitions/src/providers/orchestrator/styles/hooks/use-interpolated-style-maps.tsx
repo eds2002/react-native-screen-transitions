@@ -11,13 +11,16 @@ import type {
 } from "../../../../types/animation.types";
 import { logger } from "../../../../utils/logger";
 import { useBuilderStore } from "../../../builder";
-import { useMotionStore, useOptionalMotionStore } from "../../../motion";
 import {
 	hasCloseTransitionFinished,
 	isOpenTransitionBlocked,
 } from "../../../motion/helpers/transition-visual-state";
 import { resolveInitialDestinationStyleGate } from "../../../motion/helpers/visibility-gate";
 import { LifecycleTransitionRequestKind } from "../../../motion/hooks/use-transition-values";
+import {
+	useMotionStore,
+	useOptionalMotionStore,
+} from "../../../motion/motion.store";
 import { syncScreenOptionsOverrides } from "../../../motion/options";
 import type {
 	ScreenAnimationPipeline,
