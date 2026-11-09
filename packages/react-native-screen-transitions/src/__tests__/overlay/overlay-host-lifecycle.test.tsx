@@ -10,7 +10,7 @@ import {
 } from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { View } from "react-native";
-import type { OrchestratorState } from "../../providers/orchestrator/orchestrator.provider";
+import type { OrchestratorState } from "../../providers/orchestrator/orchestrator.store";
 
 (
 	globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }

@@ -6,7 +6,7 @@ import {
 	useDerivedValue,
 } from "react-native-reanimated";
 import { NO_PROPS, NO_STYLES } from "../../../constants";
-import type { OrchestratorState } from "../../../providers/orchestrator/orchestrator.provider";
+import type { OrchestratorState } from "../../../providers/orchestrator/orchestrator.store";
 import type {
 	NormalizedTransitionSlotStyle,
 	ScreenStyleInterpolator,

@@ -16,7 +16,7 @@ import {
 } from "../../../providers/builder/topology";
 import { useOptionalScreenHostStore } from "../../../providers/host/screen-host.provider";
 import type { ScreenAnimationPipeline } from "../../../providers/orchestrator/helpers/pipeline";
-import { useOptionalOrchestratorStore } from "../../../providers/orchestrator/orchestrator.provider";
+import { useOptionalOrchestratorStore } from "../../../providers/orchestrator/orchestrator.store";
 import type { LocalStyleLayers } from "../../../providers/orchestrator/styles/helpers/resolve-slot-styles";
 import type { InterpolatorRuns } from "../../../providers/orchestrator/styles/hooks/use-interpolated-style-maps";
 import {

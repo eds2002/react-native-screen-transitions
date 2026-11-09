@@ -19,7 +19,7 @@ const store = {
 	},
 };
 await mockModule(
-	"../../providers/orchestrator/orchestrator.provider",
+	"../../providers/orchestrator/orchestrator.store",
 	() => ({
 		useOrchestratorStore: (select: (state: typeof store) => unknown) =>
 			select(store),

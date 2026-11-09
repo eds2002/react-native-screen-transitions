@@ -6,7 +6,7 @@ import {
 import { NO_PROPS, NO_STYLES } from "../../../../constants";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../../types/animation.types";
 import { useScreenRelationships } from "../../../builder/topology";
-import { useOptionalOrchestratorStore } from "../../orchestrator.provider";
+import { useOptionalOrchestratorStore } from "../../orchestrator.store";
 import {
 	areResettableStatesBySlotEqual,
 	type LocalStyleLayers,

@@ -11,7 +11,7 @@ import {
 import { scheduleOnRN } from "react-native-worklets";
 import { useMotionStore } from "../../../providers/motion";
 import type { useScrollChain } from "../../../providers/motion/gestures/scroll-coordination";
-import { useOptionalOrchestratorStore } from "../../../providers/orchestrator/orchestrator.provider";
+import { useOptionalOrchestratorStore } from "../../../providers/orchestrator/orchestrator.store";
 import type { BoundTag } from "../../../stores/bounds";
 import {
 	getEntry,

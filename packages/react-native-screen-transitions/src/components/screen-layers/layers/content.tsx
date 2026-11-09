@@ -3,7 +3,7 @@ import { StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import { useBuilderStore } from "../../../providers/builder";
 import { useMotionStore } from "../../../providers/motion";
-import { useOrchestratorStore } from "../../../providers/orchestrator/orchestrator.provider";
+import { useOrchestratorStore } from "../../../providers/orchestrator/orchestrator.store";
 import {
 	useSlotProps,
 	useSlotStyles,

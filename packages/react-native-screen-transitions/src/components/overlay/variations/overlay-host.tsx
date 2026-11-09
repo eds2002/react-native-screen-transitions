@@ -7,11 +7,11 @@ import Animated, {
 import { snapDescriptorToIndex } from "../../../controls/snap-to";
 import { useNavigatorStore } from "../../../navigators/kit/state/navigator-store";
 import { useOptionalMotionStore } from "../../../providers/motion";
-import { useOptionalOrchestratorStore } from "../../../providers/orchestrator";
+import { OrchestratorProvider } from "../../../providers/orchestrator/orchestrator.provider";
 import {
-	OrchestratorProvider,
 	type OrchestratorState,
-} from "../../../providers/orchestrator/orchestrator.provider";
+	useOptionalOrchestratorStore,
+} from "../../../providers/orchestrator/orchestrator.store";
 import type { OverlayProps } from "../../../types/overlay.types";
 import type { FloatOverlayEntry } from "../helpers/get-active-overlay";
 import {

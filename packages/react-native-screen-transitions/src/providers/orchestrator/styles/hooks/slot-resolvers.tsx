@@ -1,6 +1,6 @@
 import { useAnimatedProps, useAnimatedStyle } from "react-native-reanimated";
 import { NO_PROPS, NO_STYLES } from "../../../../constants";
-import { useOrchestratorStore } from "../../orchestrator.provider";
+import { useOrchestratorStore } from "../../orchestrator.store";
 
 export const useSlotStyles = (slotId: string | undefined) => {
 	const slotsMap = useOrchestratorStore((store) => store.slotsMap);

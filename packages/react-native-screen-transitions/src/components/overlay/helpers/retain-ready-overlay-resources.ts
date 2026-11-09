@@ -1,5 +1,5 @@
 import type { SharedValue } from "react-native-reanimated";
-import type { OrchestratorState } from "../../../providers/orchestrator/orchestrator.provider";
+import type { OrchestratorState } from "../../../providers/orchestrator/orchestrator.store";
 import type { FloatOverlayEntry } from "./get-active-overlay";
 
 export type ReadyOverlayResources = {

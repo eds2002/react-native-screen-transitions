@@ -1,6 +1,6 @@
+export { OrchestratorProvider } from "./orchestrator.provider";
 export {
-	OrchestratorProvider,
 	type OrchestratorState,
 	useOptionalOrchestratorStore,
 	useOrchestratorStore,
-} from "./orchestrator.provider";
+} from "./orchestrator.store";

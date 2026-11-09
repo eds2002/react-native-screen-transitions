@@ -17,7 +17,7 @@ import type {
 	ScreenAnimationPipeline,
 	ScreenInterpolatorFrame,
 } from "../../../providers/orchestrator/helpers/pipeline";
-import { useOptionalOrchestratorStore } from "../../../providers/orchestrator/orchestrator.provider";
+import { useOptionalOrchestratorStore } from "../../../providers/orchestrator/orchestrator.store";
 import { createInterpolatorScope } from "../../../providers/orchestrator/styles/helpers/create-interpolator-scope";
 import { normalizeSlots } from "../../../providers/orchestrator/styles/helpers/normalize-slots";
 import { selectInterpolatorFrame } from "../../../providers/orchestrator/styles/helpers/select-interpolator-frame";

@@ -5,7 +5,7 @@ import type {
 } from "../../../types/animation.types";
 import { useOptionalBuilderStore } from "../../builder";
 import { useResolvedTransitionKey } from "../../builder/topology";
-import { useOptionalOrchestratorStore } from "../../orchestrator/orchestrator.provider";
+import { useOptionalOrchestratorStore } from "../../orchestrator/orchestrator.store";
 import type { ScreenAnimationTarget } from "./types";
 
 export type { ScreenAnimationTarget } from "./types";

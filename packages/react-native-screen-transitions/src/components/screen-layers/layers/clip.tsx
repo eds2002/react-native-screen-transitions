@@ -12,7 +12,7 @@ import Animated, {
 	useDerivedValue,
 	useSharedValue,
 } from "react-native-reanimated";
-import { useOrchestratorStore } from "../../../providers/orchestrator/orchestrator.provider";
+import { useOrchestratorStore } from "../../../providers/orchestrator/orchestrator.store";
 import type { Layout } from "../../../types/screen.types";
 
 type ClipStyles = { viewport: ViewStyle; content: ViewStyle };

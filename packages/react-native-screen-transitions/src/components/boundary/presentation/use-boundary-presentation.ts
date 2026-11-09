@@ -15,7 +15,7 @@ import { useOptionalScreenHostStore } from "../../../providers/host/screen-host.
 import {
 	useOptionalOrchestratorStore,
 	useOrchestratorStore,
-} from "../../../providers/orchestrator";
+} from "../../../providers/orchestrator/orchestrator.store";
 import { resolveSingleSlotStyle } from "../../../providers/orchestrator/styles/helpers/resolve-slot-styles";
 import type { ResettableStyleState } from "../../../providers/orchestrator/styles/helpers/resolve-slot-styles/types";
 import { boundaryRegistry, pairs } from "../../../stores/bounds";
