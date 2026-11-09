@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useMemo } from "react";
 import type { BaseStackScene } from "../../types/stack.types";
 import createProvider from "../../utils/create-provider";
 
@@ -29,4 +29,20 @@ const { StoreProvider: ScreenHostStoreProvider, useOptionalScreenHostStore } =
 		ScreenHostValue
 	>(({ value, children }) => ({ value, children }));
 
-export { ScreenHostStoreProvider, useOptionalScreenHostStore };
+/**
+ * The route keys of a screen's stack, bottom to top (closing screens included); outside a host, the
+ * screen alone.
+ */
+const useStackScreenKeys = (screenKey: string): string[] => {
+	const scenes = useOptionalScreenHostStore((store) => store?.scenes);
+	return useMemo(
+		() => scenes?.map((scene) => scene.route.key) ?? [screenKey],
+		[scenes, screenKey],
+	);
+};
+
+export {
+	ScreenHostStoreProvider,
+	useOptionalScreenHostStore,
+	useStackScreenKeys,
+};

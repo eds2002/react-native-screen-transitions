@@ -11,7 +11,7 @@ import {
 } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
 import { useAncestorScreenKeys } from "../../../providers/builder/topology";
-import { useOptionalScreenHostStore } from "../../../providers/host/screen-host.provider";
+import { useStackScreenKeys } from "../../../providers/host/screen-host.provider";
 import type { ScreenAnimationPipeline } from "../../../providers/orchestrator/helpers/pipeline";
 import { useOptionalOrchestratorStore } from "../../../providers/orchestrator/orchestrator.store";
 import type { LocalStyleLayers } from "../../../providers/orchestrator/styles/helpers/resolve-slot-styles";
@@ -145,11 +145,7 @@ export function useScreenBounds({
 
 	// The screens this one may share bound elements with: its stack's (closing ones included), read
 	// the same frame (a declared dependency: computed before this screen's styles).
-	const scenes = useOptionalScreenHostStore((store) => store?.scenes);
-	const stackKeys = useMemo(
-		() => scenes?.map((scene) => scene.route.key) ?? [currentScreenKey],
-		[scenes, currentScreenKey],
-	);
+	const stackKeys = useStackScreenKeys(currentScreenKey);
 	const stackScreenTransforms = useOptionalOrchestratorStore(
 		stackKeys,
 		(store) => store.screenTransform,

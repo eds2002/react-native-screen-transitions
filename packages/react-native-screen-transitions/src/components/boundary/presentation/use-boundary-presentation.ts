@@ -8,7 +8,7 @@ import {
 import { NO_STYLES } from "../../../constants";
 import { useBuilderStore } from "../../../providers/builder";
 import { useAncestorScreenKeys } from "../../../providers/builder/topology";
-import { useOptionalScreenHostStore } from "../../../providers/host/screen-host.provider";
+import { useStackScreenKeys } from "../../../providers/host/screen-host.provider";
 import {
 	useOptionalOrchestratorStore,
 	useOrchestratorStore,
@@ -70,11 +70,7 @@ export function useBoundaryPresentation(
 	boundaryId: string,
 ): BoundaryPresentationHandles {
 	const screenKey = useBuilderStore((s) => s.derivations.currentScreenKey);
-	const scenes = useOptionalScreenHostStore((s) => s?.scenes);
-	const own = useMemo(
-		() => scenes?.map((s) => s.route.key) ?? [screenKey],
-		[scenes, screenKey],
-	);
+	const own = useStackScreenKeys(screenKey);
 	// Destinations in other stacks (a pair can cross stacks); none, and no render, within one stack.
 	const otherDestinations = usePairDestinationKeys(own);
 	const keys = useMemo(
