@@ -37,12 +37,17 @@ function Home({ onOpen }) {
 export default function App() {
 	const [open, setOpen] = useState<string | null>(null);
 	const [stamp, setStamp] = useState(true);
+	// demo=1 on a lab link: no harness chrome (the stamp, the exit button), for recording.
+	const [demo, setDemo] = useState(false);
 	const url = Linking.useURL();
 	useEffect(() => {
 		// Labs can read their own options from the link that opened them (perf: ?rounds=…&loads=…).
 		if (url) globalThis.__harnessLastUrl = url;
 		const lab = url?.match(/lab\/([\w-]+)/);
-		if (lab) setOpen(lab[1]);
+		if (lab) {
+			setOpen(lab[1]);
+			setDemo(/[?&]demo=1/.test(url ?? ""));
+		}
 		const stampMatch = url?.match(/stamp\/(on|off)/);
 		if (stampMatch) setStamp(stampMatch[1] === "on");
 		const levelMatch = url?.match(/bridge\/(\d)/);
@@ -62,15 +67,15 @@ export default function App() {
 				{lab ? (
 					<View style={{ flex: 1 }}>
 						<lab.Component />
-						<Pressable testID="exit-lab" onPress={() => setOpen(null)} style={{ position: "absolute", top: 54, right: 16, zIndex: 1000, backgroundColor: "#000a", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 }}>
+						{demo ? null : <Pressable testID="exit-lab" onPress={() => setOpen(null)} style={{ position: "absolute", top: 54, right: 16, zIndex: 1000, backgroundColor: "#000a", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 }}>
 							<Text style={{ color: "white", fontWeight: "700" }}>✕ labs</Text>
-						</Pressable>
+						</Pressable>}
 					</View>
 				) : (
 					<Home onOpen={setOpen} />
 				)}
 				<BridgeProbe />
-				{stamp && lab?.id !== "perf" ? <FrameStamp /> : null}
+				{stamp && !demo && lab?.id !== "perf" ? <FrameStamp /> : null}
 			</SafeAreaProvider>
 		</GestureHandlerRootView>
 	);

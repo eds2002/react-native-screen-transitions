@@ -100,6 +100,8 @@ function createConfig(kind: BoundaryLabKind, prefix: string) {
 		depth: 1,
 		// marker=1: card 3's element is MARKER on every screen, for the tracker (e2e/visual/marker.py).
 		marker: 0,
+		// demo=1: no harness chrome (the bar, the option chips, the probes), for recording.
+		demo: 0,
 	};
 	let cfg = initial;
 	const listeners = new Set<() => void>();
@@ -130,7 +132,9 @@ function createConfig(kind: BoundaryLabKind, prefix: string) {
 				const value = url.match(new RegExp(`[?&]${key}=([\\w-]+)`))?.[1];
 				if (value)
 					patch[key] =
-						key === "depth" || key === "marker" ? Number(value) : value;
+						key === "depth" || key === "marker" || key === "demo"
+							? Number(value)
+							: value;
 			}
 			if (patch.recipe && !RECIPES[kind].includes(patch.recipe))
 				delete patch.recipe;
@@ -300,8 +304,8 @@ const detailOptions =
 					: motion === "shuffle"
 						? sideOf(route).gesture
 						: motion === "diagonal" && left
-						? "horizontal-inverted"
-						: "horizontal",
+							? "horizontal-inverted"
+							: "horizontal",
 			transitionSpec: zoom
 				? Transition.Specs.Zoom
 				: motion === "swirl"
@@ -516,47 +520,51 @@ function makeList(config: Config, rig) {
 					<Text style={styles.title}>
 						{config.kind === "bounds" ? "Shared bounds" : "Shared elements"}
 					</Text>
-					<Probe
-						testID={`${p}-config`}
-						value={`${config.kind} ${cfg.recipe} ${cfg.method} ${cfg.motion} ${cfg.tree} ${cfg.depth}`}
-					/>
-					{RECIPES[config.kind].length > 1 ? (
-						<Choice
-							label="recipe"
-							options={RECIPES[config.kind]}
-							value={cfg.recipe}
-							testID={`${p}-recipe`}
-							onChange={(recipe) => config.set({ recipe })}
-						/>
-					) : null}
-					<Choice
-						label="method"
-						options={METHODS}
-						value={cfg.method}
-						testID={`${p}-method`}
-						onChange={(method) => config.set({ method })}
-					/>
-					<Choice
-						label="motion"
-						options={MOTIONS}
-						value={cfg.motion}
-						testID={`${p}-motion`}
-						onChange={(motion) => config.set({ motion })}
-					/>
-					<Choice
-						label="tree"
-						options={TREES}
-						value={cfg.tree}
-						testID={`${p}-tree`}
-						onChange={(tree) => config.set({ tree })}
-					/>
-					<Choice
-						label="depth"
-						options={DEPTHS}
-						value={cfg.depth}
-						testID={`${p}-depth`}
-						onChange={(depth) => config.set({ depth })}
-					/>
+					{cfg.demo ? null : (
+						<>
+							<Probe
+								testID={`${p}-config`}
+								value={`${config.kind} ${cfg.recipe} ${cfg.method} ${cfg.motion} ${cfg.tree} ${cfg.depth}`}
+							/>
+							{RECIPES[config.kind].length > 1 ? (
+								<Choice
+									label="recipe"
+									options={RECIPES[config.kind]}
+									value={cfg.recipe}
+									testID={`${p}-recipe`}
+									onChange={(recipe) => config.set({ recipe })}
+								/>
+							) : null}
+							<Choice
+								label="method"
+								options={METHODS}
+								value={cfg.method}
+								testID={`${p}-method`}
+								onChange={(method) => config.set({ method })}
+							/>
+							<Choice
+								label="motion"
+								options={MOTIONS}
+								value={cfg.motion}
+								testID={`${p}-motion`}
+								onChange={(motion) => config.set({ motion })}
+							/>
+							<Choice
+								label="tree"
+								options={TREES}
+								value={cfg.tree}
+								testID={`${p}-tree`}
+								onChange={(tree) => config.set({ tree })}
+							/>
+							<Choice
+								label="depth"
+								options={DEPTHS}
+								value={cfg.depth}
+								testID={`${p}-depth`}
+								onChange={(depth) => config.set({ depth })}
+							/>
+						</>
+					)}
 					<Transition.ScrollView
 						horizontal
 						style={styles.carousel}
@@ -661,7 +669,9 @@ function makeDetail(config: Config, rig) {
 					contentContainerStyle={styles.detailContent}
 				>
 					<Text style={styles.title}>Level {level}</Text>
-					<Probe testID={`${p}-at`} value={`at:${k} level:${level}`} />
+					{cfg.demo ? null : (
+						<Probe testID={`${p}-at`} value={`at:${k} level:${level}`} />
+					)}
 					{incoming}
 					<View style={styles.row}>
 						<Button
@@ -808,42 +818,46 @@ function makeLab(config: Config) {
 			>
 				<LabContainer
 					key={`${cfg.tree}/${cfg.depth}`}
-					overlay={(ref) => (
-						<SpamBar
-							buttons={[
-								{
-									id: `${p}-bar-next`,
-									label: "next",
-									onPress: () => rig.next[focusedLevel(ref)]?.(),
-								},
-								{
-									id: `${p}-bar-back`,
-									label: "back",
-									onPress: () => ref.canGoBack() && ref.goBack(),
-								},
-								{
-									id: `${p}-bar-scroll`,
-									label: "scroll",
-									onPress: () => rig.scroll[focusedLevel(ref)]?.(),
-								},
-								{
-									id: `${p}-bar-under`,
-									label: "under",
-									onPress: () => rig.scroll[focusedLevel(ref) - 1]?.(),
-								},
-								{
-									id: `${p}-bar-back-scroll`,
-									label: "back+scroll",
-									onPress: () => {
-										const level = focusedLevel(ref);
-										if (!ref.canGoBack()) return;
-										ref.goBack();
-										setTimeout(() => rig.scroll[level - 1]?.(), 60);
-									},
-								},
-							]}
-						/>
-					)}
+					overlay={
+						cfg.demo
+							? undefined
+							: (ref) => (
+									<SpamBar
+										buttons={[
+											{
+												id: `${p}-bar-next`,
+												label: "next",
+												onPress: () => rig.next[focusedLevel(ref)]?.(),
+											},
+											{
+												id: `${p}-bar-back`,
+												label: "back",
+												onPress: () => ref.canGoBack() && ref.goBack(),
+											},
+											{
+												id: `${p}-bar-scroll`,
+												label: "scroll",
+												onPress: () => rig.scroll[focusedLevel(ref)]?.(),
+											},
+											{
+												id: `${p}-bar-under`,
+												label: "under",
+												onPress: () => rig.scroll[focusedLevel(ref) - 1]?.(),
+											},
+											{
+												id: `${p}-bar-back-scroll`,
+												label: "back+scroll",
+												onPress: () => {
+													const level = focusedLevel(ref);
+													if (!ref.canGoBack()) return;
+													ref.goBack();
+													setTimeout(() => rig.scroll[level - 1]?.(), 60);
+												},
+											},
+										]}
+									/>
+								)
+					}
 				>
 					<Tree tree={cfg.tree} depth={cfg.depth} />
 				</LabContainer>
