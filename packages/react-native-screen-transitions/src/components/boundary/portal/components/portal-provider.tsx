@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { NativePortalProvider } from "../teleport";
+import { NativePortalProvider } from "../../../../utils/teleport";
 
 export const PortalProvider = memo(function PortalProvider({
 	children,

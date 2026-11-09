@@ -1,5 +1,5 @@
 import { logger } from "../../../../utils/logger";
-import { isTeleportAvailable } from "../teleport";
+import { isTeleportAvailable } from "../../../../utils/teleport";
 
 /**
  * Boundaries escape clipping whenever react-native-teleport is installed: while a transition runs,

@@ -27,8 +27,8 @@ import {
 	unboundingBox,
 } from "../../../utils/bounds/helpers/screen-transform";
 import type { ScreenTransform } from "../../../utils/bounds/types/geometry";
+import { isTeleportAvailable } from "../../../utils/teleport";
 import { getVisibilityBlockOffset } from "../../../utils/visibility-block-offset";
-import { isTeleportAvailable } from "../portal/teleport";
 import type {
 	BoundaryLocalMeasurementValue,
 	MeasureBoundary,

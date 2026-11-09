@@ -1,6 +1,6 @@
 import { useAnimatedReaction } from "react-native-reanimated";
-import { animateToProgress } from "../../../utils/animation/animate-to-progress";
 import type { BaseDescriptor } from "../../builder";
+import { animateToProgress } from "../animation/animate-to-progress";
 import {
 	LifecycleTransitionRequestKind,
 	type MotionTransitionValues,

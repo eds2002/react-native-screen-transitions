@@ -1,7 +1,10 @@
 import { type ComponentProps, memo } from "react";
 import { StyleSheet } from "react-native";
 import Animated from "react-native-reanimated";
-import { NativePortalHost, PORTAL_POINTER_EVENTS } from "../teleport";
+import {
+	NativePortalHost,
+	PORTAL_POINTER_EVENTS,
+} from "../../../../utils/teleport";
 
 const AnimatedHost = NativePortalHost
 	? Animated.createAnimatedComponent(NativePortalHost)

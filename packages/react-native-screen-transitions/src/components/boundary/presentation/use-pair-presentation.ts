@@ -49,7 +49,7 @@ import {
 	isHandoffLanded,
 } from "../../../utils/bounds/helpers/styles/overlap";
 import type { ScreenTransform } from "../../../utils/bounds/types/geometry";
-import { isTeleportAvailable } from "../portal/teleport";
+import { isTeleportAvailable } from "../../../utils/teleport";
 
 export type BoundaryPairPresentation = {
 	pairKey: string;

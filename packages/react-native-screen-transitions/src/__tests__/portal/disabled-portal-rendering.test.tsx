@@ -11,7 +11,7 @@ import { act, create, type ReactTestRenderer } from "react-test-renderer";
 const usePortalDestination = mock(() => ({teleportProps:{},localHostName:"screen:card"}));
 const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
 await mockModule(
-	"../../components/boundary/portal/teleport",
+	"../../utils/teleport",
 	() => ({
 		isTeleportAvailable: true,
 		NativePortal: ({ children }: { children: ReactNode }) => children,

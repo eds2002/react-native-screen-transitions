@@ -13,7 +13,7 @@ import {
 	getZoomContentAnchor,
 	getZoomContentTarget,
 } from "../../utils/bounds/navigation/zoom/targets";
-import { animateToProgress } from "../../utils/animation/animate-to-progress";
+import { animateToProgress } from "../../providers/motion/animation/animate-to-progress";
 
 const SCREEN_LAYOUT = { width: 390, height: 844 };
 const PAIR_KEY = createScreenPairKey("screen-a", "screen-b");

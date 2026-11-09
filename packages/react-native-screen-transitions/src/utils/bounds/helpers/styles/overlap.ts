@@ -1,11 +1,4 @@
 import type { MeasuredDimensions } from "react-native-reanimated";
-import { isTeleportAvailable } from "../../../../components/boundary/portal/teleport";
-import {
-	getScreenMountOrder,
-	getScreenProgress,
-	isScreenClosing,
-	isScreenNewer,
-} from "../../../../providers/motion/helpers/progress-registry";
 import {
 	createScreenPairKey,
 	getDestinationScreenKeyFromPairKey,
@@ -15,6 +8,13 @@ import {
 	pairs,
 	resolveTransitionPair,
 } from "../../../../stores/bounds";
+import {
+	getScreenMountOrder,
+	getScreenProgress,
+	isScreenClosing,
+	isScreenNewer,
+} from "../../../../stores/screen-progress.store";
+import { isTeleportAvailable } from "../../../teleport";
 import type { StartPair } from "./screen-frame";
 
 const MAX_CHAIN_DEPTH = 6;

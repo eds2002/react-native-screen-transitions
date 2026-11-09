@@ -34,7 +34,7 @@ import { useTransitionStartController } from "../../../providers/motion/lifecycl
 import type { MotionAnimationValues } from "../../../providers/motion/types";
 import type { MotionGestureValues } from "../../../providers/motion/types";
 import { LifecycleTransitionRequestKind } from "../../../providers/motion/hooks/use-transition-values";
-import { animateToProgress } from "../../../utils/animation/animate-to-progress";
+import { animateToProgress } from "../../../providers/motion/animation/animate-to-progress";
 import { useCloseCompletion } from "../../../providers/motion/lifecycle/use-close-completion";
 
 const originalRequestAnimationFrame = globalThis.requestAnimationFrame;

@@ -1,10 +1,10 @@
 import { type ReactNode, useMemo } from "react";
 import { StyleSheet } from "react-native";
 import Animated from "react-native-reanimated";
+import { useRegisterScreenProgress } from "../../stores/screen-progress.store";
 import { useBuilderStore } from "../builder";
 import { useMotionAnimationPipeline } from "./animation/pipeline";
 import { useScreenGestures } from "./gestures/use-screen-gestures";
-import { useRegisterScreenProgress } from "./helpers/progress-registry";
 import { useMaybeBlockVisibility } from "./hooks/use-maybe-block-visibility";
 import { useMotionValues } from "./hooks/use-motion-values";
 import {

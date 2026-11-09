@@ -11,6 +11,11 @@ import Animated, {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { logger } from "../../../../utils/logger";
+import {
+	isTeleportAvailable,
+	NativePortal,
+	PORTAL_POINTER_EVENTS,
+} from "../../../../utils/teleport";
 import { useBoundaryRootStore } from "../../root/boundary-root.provider";
 import {
 	resolveSizedAxes,
@@ -20,11 +25,6 @@ import {
 	type PortalMode,
 	usePortalDestination,
 } from "../hooks/use-portal-destination";
-import {
-	isTeleportAvailable,
-	NativePortal,
-	PORTAL_POINTER_EVENTS,
-} from "../teleport";
 import { PortalHost } from "./portal-host";
 
 type NullableHostNamePortalProps = Omit<

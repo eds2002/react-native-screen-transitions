@@ -3,6 +3,7 @@ import { Pressable, StyleSheet } from "react-native";
 import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
 import { DefaultSnapSpec } from "../../../configs/specs";
 import { useBuilderStore } from "../../../providers/builder";
+import { animateToProgress } from "../../../providers/motion/animation/animate-to-progress";
 import { useMotionStore } from "../../../providers/motion/motion.store";
 import {
 	useSlotProps,
@@ -12,7 +13,6 @@ import type {
 	BackdropBehavior,
 	ScreenBackdropComponentProps,
 } from "../../../types/screen.types";
-import { animateToProgress } from "../../../utils/animation/animate-to-progress";
 import { findCollapseTarget } from "../helpers/find-collapse-target";
 import { LayerComponent } from "../helpers/layer-component";
 

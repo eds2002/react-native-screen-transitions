@@ -17,6 +17,7 @@ import {
 	ScrollStore,
 } from "../../../../stores/scroll.store";
 import type { ScrollMetadataState } from "../../../../types/gesture.types";
+import { PORTAL_POINTER_EVENTS } from "../../../../utils/teleport";
 import { readLocalMeasurement } from "../../measure/local-measurements";
 import {
 	type HostBounds,
@@ -26,7 +27,6 @@ import {
 	type ActivePortalBoundaryHost,
 	useActivePortalBoundaryHosts,
 } from "../stores/portal-boundary-host.store";
-import { PORTAL_POINTER_EVENTS } from "../teleport";
 import { resolvePortalOffsetStyle } from "../utils/offset-style";
 import { PortalHost } from "./portal-host";
 

@@ -6,8 +6,8 @@ import {
 	useMemo,
 } from "react";
 import Animated from "react-native-reanimated";
+import { isTeleportAvailable } from "../../utils/teleport";
 import { Portal } from "./portal/components/portal";
-import { isTeleportAvailable } from "./portal/teleport";
 import { BoundaryRootProvider } from "./root/boundary-root.provider";
 import {
 	BOUNDARY_TARGET_ACTIVE_PROP,

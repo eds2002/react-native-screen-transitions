@@ -15,7 +15,7 @@ import {
 	pairs,
 } from "../../../stores/bounds";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
-import { isTeleportAvailable } from "../portal/teleport";
+import { isTeleportAvailable } from "../../../utils/teleport";
 import type { MeasureTarget } from "../types";
 import { boundaryMeasureRegistry } from "./measure-registry";
 import { getRefreshBoundarySignal } from "./refresh-signals";
