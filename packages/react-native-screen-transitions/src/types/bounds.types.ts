@@ -486,12 +486,11 @@ export type BoundaryRuntimeFlags = {
 	handoff?: boolean;
 };
 
-type BoundaryConfig = {
-	anchor?: BoundsAnchor;
-	scaleMode?: BoundsScaleMode;
-	target?: "bound" | "fullscreen" | MeasuredDimensions;
-	method?: BoundsMethod;
-};
+/** How a boundary is laid out against its partner: the bounds options a Boundary takes as props. */
+export type BoundaryConfig = Pick<
+	BoundsOptions,
+	"anchor" | "scaleMode" | "target" | "method"
+>;
 
 export type Entry = {
 	bounds: MeasuredBounds | null;

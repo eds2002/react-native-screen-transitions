@@ -1,13 +1,10 @@
 import type { SharedValue } from "react-native-reanimated";
 import type { ScreenPairKey } from "../../stores/bounds";
-import type { BoundsOptions, MeasuredBounds } from "../../types/bounds.types";
+import type { BoundaryConfig, MeasuredBounds } from "../../types/bounds.types";
 
 export type BoundaryId = string | number;
 
-export type BoundaryConfigProps = Pick<
-	BoundsOptions,
-	"anchor" | "scaleMode" | "target" | "method"
->;
+export type BoundaryConfigProps = BoundaryConfig;
 
 /**
  * Boundary-specific props shared across all boundary component variants.

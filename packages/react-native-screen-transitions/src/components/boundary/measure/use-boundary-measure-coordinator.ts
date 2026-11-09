@@ -18,7 +18,10 @@ import type { NormalizedTransitionInterpolatedStyle } from "../../../types/anima
 import { isTeleportAvailable } from "../../../utils/teleport";
 import type { MeasureTarget } from "../types";
 import { boundaryMeasureRegistry } from "./measure-registry";
-import { getRefreshBoundarySignal } from "./refresh-signals";
+import {
+	getRefreshBoundarySignal,
+	mayRefreshBoundary,
+} from "./refresh-signals";
 import { getInitialSourceCaptureSignal } from "./source-signals";
 import {
 	type BoundaryMeasureData,
@@ -130,7 +133,11 @@ export function useBoundaryMeasureCoordinator(
 
 				// A group's active member can change while the transition is settled (paging a
 				// destination gallery): it refreshes without a willAnimate pulse.
-				if (!canRefresh || !closing || (!shouldRefresh && (!group || !settled)))
+				if (
+					!canRefresh ||
+					!closing ||
+					!mayRefreshBoundary(shouldRefresh, group, settled)
+				)
 					continue;
 				const refresh = getRefreshBoundarySignal({
 					currentScreenKey,

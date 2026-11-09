@@ -7,6 +7,20 @@ type RefreshBoundarySignal = MeasureTarget & {
 };
 
 /**
+ * Whether a boundary may need measuring again at all: asked to refresh, or a group member while
+ * the transition is settled (its selection can move). Cheap, so callers check it before looking up
+ * the pairs getRefreshBoundarySignal needs.
+ */
+export const mayRefreshBoundary = (
+	shouldRefresh: boolean,
+	group: string | undefined,
+	settled: boolean,
+) => {
+	"worklet";
+	return shouldRefresh || (!!group && settled);
+};
+
+/**
  * Whether a boundary should be measured again, and for which side of which pair: a source may move
  * while its destination is active, so whichever side of the pair this boundary represents (the
  * source when it is both). A group's active member also refreshes when the selection moves to it
@@ -37,7 +51,7 @@ export const getRefreshBoundarySignal = (params: {
 		linkState,
 	} = params;
 
-	if (!shouldRefresh && (!group || !settled)) return null;
+	if (!mayRefreshBoundary(shouldRefresh, group, settled)) return null;
 
 	const type: MeasureTarget["type"] = sourcePairKey ? "source" : "destination";
 	const pairKey = sourcePairKey ?? destinationPairKey;
