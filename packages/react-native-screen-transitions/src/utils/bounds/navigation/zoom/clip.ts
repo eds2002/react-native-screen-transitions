@@ -5,11 +5,11 @@ import type {
 	TransitionClip,
 } from "../../../../types/animation.types";
 import type {
+	BoundsAnchor,
 	BoundsLink,
 	BoundsScopedAccessor,
 } from "../../../../types/bounds.types";
 import type { Layout } from "../../../../types/screen.types";
-import type { BoundsAnchor } from "../../types/options";
 import { toNumber } from "../helpers";
 import { DRAG_CLIP_HEIGHT_COLLAPSE_END } from "../reveal/config";
 import {

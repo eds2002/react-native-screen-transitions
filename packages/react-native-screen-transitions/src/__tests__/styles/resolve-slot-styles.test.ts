@@ -1,8 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import {
-	NAVIGATION_MASK_CONTAINER_STYLE_ID,
-	NAVIGATION_MASK_ELEMENT_STYLE_ID,
-} from "../../constants";
+import { NAVIGATION_MASK_CONTAINER_STYLE_ID, NAVIGATION_MASK_ELEMENT_STYLE_ID } from "../../navigation-mask-ids";
 import type { NormalizedTransitionInterpolatedStyle } from "../../types/animation.types";
 import {
 	type LocalStyleLayers,

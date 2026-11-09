@@ -1,15 +1,13 @@
 import { NO_STYLES } from "../../../constants";
 import type {
 	BoundsAccessor,
-	BoundsInterpolationProps,
-	BoundsScopedAccessor,
-} from "../../../types/bounds.types";
-import type {
 	BoundsComputeOptions,
 	BoundsIdentityInput,
+	BoundsInterpolationProps,
+	BoundsScopedAccessor,
 	BoundsStyleResult,
 	BoundsValuesResult,
-} from "../types/options";
+} from "../../../types/bounds.types";
 import { createBoundTag, normalizeBoundIdentity } from "./create-bound-tag";
 import { getBoundsLink } from "./get-bounds-link";
 import { prepareBoundStyles, syncActiveGroupId } from "./prepare-bound-styles";

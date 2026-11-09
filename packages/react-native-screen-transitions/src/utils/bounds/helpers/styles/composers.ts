@@ -6,16 +6,16 @@ import {
 	type StyleProps,
 } from "react-native-reanimated";
 import { EPSILON } from "../../../../constants";
-import type { BoundsInterpolationProps } from "../../../../types/bounds.types";
+import type {
+	BoundsAnchor,
+	BoundsInternalOptions,
+	BoundsInterpolationProps,
+	BoundsMotionTransform,
+} from "../../../../types/bounds.types";
 import type {
 	ContentTransformGeometry,
 	RelativeGeometry,
 } from "../../types/geometry";
-import type {
-	BoundsAnchor,
-	BoundsInternalOptions,
-	BoundsMotionTransform,
-} from "../../types/options";
 import { getAnchorPoint } from "../geometry";
 
 /**

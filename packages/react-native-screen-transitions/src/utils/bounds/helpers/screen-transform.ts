@@ -1,22 +1,5 @@
 import type { StyleProps } from "react-native-reanimated";
-import type { FrameRect } from "./styles/screen-frame";
-
-/**
- * Where a screen draws its content this frame: `p -> c + t + R(rot) · diag(sx, sy) · (p - c)`
- * around the screen's center `c` (the default transform origin). Translation, rotation and scale are
- * read; a screen that skews is treated as if it only translated, rotated and scaled.
- */
-export type ScreenTransform = {
-	sx: number;
-	sy: number;
-	tx: number;
-	ty: number;
-	/** Rotation in radians (absent when 0). */
-	rot?: number;
-	/** The screen's size, for its center. */
-	width: number;
-	height: number;
-};
+import type { FrameRect, ScreenTransform } from "../types/geometry";
 
 export const IDENTITY_SCREEN_TRANSFORM: ScreenTransform = {
 	sx: 1,

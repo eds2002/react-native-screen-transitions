@@ -1,18 +1,5 @@
-import {
-	clearScreenBounds,
-	getActiveGroupId,
-	getDestination,
-	getEntry,
-	getLink,
-	getSource,
-	type MeasuredEntry,
-	removeEntry,
-	resolveTransitionPair,
-	setActiveGroupId,
-	setDestination,
-	setEntry,
-	setSource,
-} from "../../../stores/bounds";
+import { clearScreenBounds, getActiveGroupId, getDestination, getEntry, getLink, getSource, removeEntry, resolveTransitionPair, setActiveGroupId, setDestination, setEntry, setSource } from "../../../stores/bounds";
+import { type MeasuredEntry } from "../../../types/bounds.types";
 
 export type Snapshot = MeasuredEntry;
 

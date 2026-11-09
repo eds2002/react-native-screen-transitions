@@ -1,15 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import {
-	type Affine,
-	boundingBox,
-	compose,
-	composeScreenTransforms,
-	composeWithNearestAncestor,
-	readScreenTransform,
-	type ScreenTransform,
-	toAffine,
-	toLayoutSpace,
-} from "../../utils/bounds/helpers/screen-transform";
+import { type Affine, boundingBox, compose, composeScreenTransforms, composeWithNearestAncestor, readScreenTransform, toAffine, toLayoutSpace } from "../../utils/bounds/helpers/screen-transform";
+import { type ScreenTransform } from "../../utils/bounds/types/geometry";
 import { applyBoundsScreenFrames } from "../../utils/bounds/helpers/styles/apply-screen-frames";
 import { attachBoundsScreenFrame } from "../../utils/bounds/helpers/styles/screen-frame";
 

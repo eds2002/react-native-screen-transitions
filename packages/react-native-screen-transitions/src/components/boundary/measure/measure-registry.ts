@@ -1,8 +1,9 @@
 import { useLayoutEffect } from "react";
 import { makeMutable } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
-import type { BoundTag, ScreenKey, TagID } from "../../../stores/bounds";
+import type { BoundTag, ScreenKey } from "../../../stores/bounds";
 import { applyEntryOps, type EntryOp } from "../../../stores/bounds";
+import type { TagID } from "../../../types/bounds.types";
 import { forgetAppliedStyleKeys } from "../presentation/applied-style-keys";
 import { forgetLocalMeasurements } from "./local-measurements";
 import type { BoundaryMeasureData } from "./use-measurer";

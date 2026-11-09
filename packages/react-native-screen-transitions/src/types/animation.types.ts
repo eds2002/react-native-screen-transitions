@@ -4,7 +4,7 @@ import type { EdgeInsets } from "react-native-safe-area-context";
 import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
-} from "../constants";
+} from "../navigation-mask-ids";
 import type { ScreenAnimationConfig } from "../utils/animation/animate";
 import type { BoundsAccessor } from "./bounds.types";
 import type { GestureValues } from "./gesture.types";

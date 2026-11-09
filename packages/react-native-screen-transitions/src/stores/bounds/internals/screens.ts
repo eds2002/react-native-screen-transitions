@@ -1,6 +1,6 @@
 import { makeMutable, type SharedValue } from "react-native-reanimated";
 import type { ScrollMetadataState } from "../../../types/gesture.types";
-import type { ScreenTransform } from "../../../utils/bounds/helpers/screen-transform";
+import type { ScreenTransform } from "../../../utils/bounds/types/geometry";
 
 /**
  * Each mounted screen's content transform, by route key, readable from any worklet: a screen

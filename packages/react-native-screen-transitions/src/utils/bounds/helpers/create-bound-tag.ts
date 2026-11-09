@@ -2,7 +2,7 @@ import type {
 	BoundId,
 	BoundsIdentity,
 	BoundsIdentityInput,
-} from "../types/options";
+} from "../../../types/bounds.types";
 
 type CreateBoundTagParams = {
 	id?: BoundId;

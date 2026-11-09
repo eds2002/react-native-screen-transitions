@@ -9,6 +9,7 @@ import type {
 	NormalizedTransitionInterpolatedStyle,
 	NormalizedTransitionSlotStyle,
 } from "../../../../types/animation.types";
+import type { FrameRect, ScreenTransform } from "../../types/geometry";
 import {
 	blend,
 	boundingBox,
@@ -21,7 +22,6 @@ import {
 	lerpRect,
 	mapRect,
 	rectToRect,
-	type ScreenTransform,
 	toAffine,
 	toLayoutSpace,
 	UNIT,
@@ -29,7 +29,6 @@ import {
 import {
 	BOUNDS_SCREEN_FRAME_STYLE_KEY,
 	type BoundsScreenFrame,
-	type FrameRect,
 	getBoundsScreenFrame,
 	type MeasuredScroll,
 } from "./screen-frame";

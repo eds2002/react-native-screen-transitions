@@ -22,11 +22,11 @@ import {
 } from "../../../stores/bounds";
 import { ScrollStore } from "../../../stores/scroll.store";
 import {
-	type ScreenTransform,
 	toAffine,
 	toLayoutSpace,
 	unboundingBox,
 } from "../../../utils/bounds/helpers/screen-transform";
+import type { ScreenTransform } from "../../../utils/bounds/types/geometry";
 import { getVisibilityBlockOffset } from "../../../utils/visibility-block-offset";
 import { isTeleportAvailable } from "../portal/teleport";
 import type {

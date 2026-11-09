@@ -1,4 +1,11 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
+import type {
+	BoundaryRuntimeFlags,
+	GroupKey,
+	SourceTagLinkSide,
+	TagID,
+	TagLink,
+} from "../../../types/bounds.types";
 import {
 	createGroupTag,
 	ensurePairGroups,
@@ -14,15 +21,10 @@ import {
 	getSourceScreenKeyFromPairKey,
 } from "../helpers/link-pairs.helpers";
 import type {
-	BoundaryRuntimeFlags,
-	GroupKey,
 	LinkKey,
 	LinkPairsState,
 	ScreenKey,
 	ScreenPairKey,
-	SourceTagLinkSide,
-	TagID,
-	TagLink,
 } from "../types";
 import { pairs } from "./state";
 

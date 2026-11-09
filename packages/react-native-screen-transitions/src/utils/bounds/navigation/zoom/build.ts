@@ -1,10 +1,10 @@
 import { interpolate } from "react-native-reanimated";
 import { EPSILON } from "../../../../constants";
-import {
-	getMeasuredScrollAxisDelta,
-	type ScrollChainSnapshot,
-} from "../../../../stores/scroll.store";
-import type { ScrollMetadataState } from "../../../../types/gesture.types";
+import { getMeasuredScrollAxisDelta } from "../../../../stores/scroll.store";
+import type {
+	ScrollChainSnapshot,
+	ScrollMetadataState,
+} from "../../../../types/gesture.types";
 import { createBoundsAccessorCore } from "../../helpers/create-bounds-accessor-core";
 import { computeContentTransformGeometry } from "../../helpers/geometry";
 import { getSourceBorderRadius } from "../helpers";

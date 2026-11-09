@@ -35,7 +35,6 @@ import type {
 	NormalizedTransitionInterpolatedStyle,
 	ScreenStyleInterpolator,
 } from "../../../types/animation.types";
-import type { ScreenTransform } from "../../../utils/bounds/helpers/screen-transform";
 import {
 	boundingBox,
 	IDENTITY_SCREEN_TRANSFORM,
@@ -50,6 +49,7 @@ import {
 	isHandoffHomeDrawn,
 	isHandoffLanded,
 } from "../../../utils/bounds/helpers/styles/overlap";
+import type { ScreenTransform } from "../../../utils/bounds/types/geometry";
 import { isTeleportAvailable } from "../portal/teleport";
 
 export type BoundaryPairPresentation = {

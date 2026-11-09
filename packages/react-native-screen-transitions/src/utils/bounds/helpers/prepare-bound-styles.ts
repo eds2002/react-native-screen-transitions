@@ -3,13 +3,13 @@ import {
 	getEntry,
 	setActiveGroupId,
 } from "../../../stores/bounds";
-import type { BoundsInterpolationProps } from "../../../types/bounds.types";
-import { DEFAULT_BOUNDS_OPTIONS } from "../constants";
 import type {
 	BoundId,
 	BoundsInternalOptions,
+	BoundsInterpolationProps,
 	BoundsOptionsResult,
-} from "../types/options";
+} from "../../../types/bounds.types";
+import { DEFAULT_BOUNDS_OPTIONS } from "../constants";
 import { createBoundTag } from "./create-bound-tag";
 import { resolveBoundsPairKey } from "./resolve-bounds-pair-key";
 import { computeBoundStyles } from "./styles/compute";

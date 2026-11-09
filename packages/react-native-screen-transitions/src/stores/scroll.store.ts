@@ -4,6 +4,7 @@ import {
 	type SharedValue,
 } from "react-native-reanimated";
 import type {
+	ScrollChainSnapshot,
 	ScrollGestureAxis,
 	ScrollGestureAxisState,
 	ScrollGestureState,
@@ -136,13 +137,6 @@ const getVisualScrollAxisDelta = (
 	}
 
 	return currentAxisState.offset - capturedOffset;
-};
-
-/** A scrollable around a measured view and its (clamped) offset at measurement time. */
-export type ScrollChainSnapshot = {
-	id: string;
-	axis: ScrollGestureAxis;
-	offset: number;
 };
 
 /**

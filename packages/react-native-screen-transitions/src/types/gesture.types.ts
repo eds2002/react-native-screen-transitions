@@ -255,3 +255,10 @@ export type GestureValues = {
 	 */
 	settling: number;
 };
+
+/** A scrollable around a measured view and its (clamped) offset at measurement time. */
+export type ScrollChainSnapshot = {
+	id: string;
+	axis: ScrollGestureAxis;
+	offset: number;
+};

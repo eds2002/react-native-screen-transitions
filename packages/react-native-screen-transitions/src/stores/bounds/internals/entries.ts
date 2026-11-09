@@ -1,5 +1,6 @@
+import type { Entry, EntryPatch, TagID } from "../../../types/bounds.types";
 import { hasAnyKeys } from "../helpers/keys";
-import type { Entry, EntryPatch, ScreenKey, TagID } from "../types";
+import type { ScreenKey } from "../types";
 import { type BoundaryEntriesState, boundaryRegistry } from "./state";
 
 const ensureBoundaryState = (state: BoundaryEntriesState, tag: TagID) => {

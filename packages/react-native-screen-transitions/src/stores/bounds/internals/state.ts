@@ -1,5 +1,6 @@
 import { makeMutable } from "react-native-reanimated";
-import type { Entry, LinkPairsState, ScreenKey, TagID } from "../types";
+import type { Entry, TagID } from "../../../types/bounds.types";
+import type { LinkPairsState, ScreenKey } from "../types";
 
 export type BoundaryEntriesState = Record<
 	TagID,

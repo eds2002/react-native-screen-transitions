@@ -14,7 +14,7 @@ import {
 import { createBoundsAccessor } from "../../utils/bounds";
 import { computeBoundStyles } from "../../utils/bounds/helpers/styles/compute";
 import { BOUNDS_SCREEN_FRAME_STYLE_KEY } from "../../utils/bounds/helpers/styles/screen-frame";
-import type { EntryPatch } from "../../stores/bounds/types";
+import type { EntryPatch } from "../../types/bounds.types";
 
 const createBounds = (
 	x = 0,

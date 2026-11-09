@@ -35,9 +35,9 @@ import {
 	composeWithNearestAncestor,
 	IDENTITY_SCREEN_TRANSFORM,
 	readScreenTransform,
-	type ScreenTransform,
 } from "../../../utils/bounds/helpers/screen-transform";
 import { applyBoundsScreenFrames } from "../../../utils/bounds/helpers/styles/apply-screen-frames";
+import type { ScreenTransform } from "../../../utils/bounds/types/geometry";
 import { useBoundaryMeasureCoordinator } from "../measure/use-boundary-measure-coordinator";
 import type { BoundaryPresentationValue } from "../presentation/use-boundary-presentation";
 import { usePairPresentation } from "../presentation/use-pair-presentation";

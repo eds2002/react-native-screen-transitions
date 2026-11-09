@@ -1,10 +1,10 @@
+import type { TagID } from "../../../types/bounds.types";
 import { createScreenPairKey } from "../helpers/link-pairs.helpers";
 import type {
 	ResolvedTransitionPair,
 	ResolveTransitionContext,
 	ScreenKey,
 	ScreenPairKey,
-	TagID,
 } from "../types";
 import { getMatchingSourceScreenKey } from "./entries";
 import { getPairKeyForDestination, getResolvedLink } from "./links";

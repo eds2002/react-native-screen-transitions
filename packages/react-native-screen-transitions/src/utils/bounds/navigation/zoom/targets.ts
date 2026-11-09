@@ -1,10 +1,10 @@
 import type { MeasuredDimensions } from "react-native-reanimated";
 import type {
+	BoundsAnchor,
 	BoundsLink,
 	BoundsNavigationZoomOptions,
 } from "../../../../types/bounds.types";
 import type { Layout } from "../../../../types/screen.types";
-import type { BoundsAnchor } from "../../types/options";
 
 type ZoomContentTarget = Exclude<
 	BoundsNavigationZoomOptions["target"],

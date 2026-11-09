@@ -1,9 +1,9 @@
 import type { MeasuredDimensions } from "react-native-reanimated";
 import { EPSILON } from "../../../../constants";
+import type { BoundsAnchor } from "../../../../types/bounds.types";
 import type { Layout } from "../../../../types/screen.types";
 import { computeContentTransformGeometry } from "../../helpers/geometry";
 import type { ContentTransformGeometry } from "../../types/geometry";
-import type { BoundsAnchor } from "../../types/options";
 import {
 	DRAG_DIRECTIONAL_SCALE_EXPONENT,
 	DRAG_DIRECTIONAL_SCALE_MAX,

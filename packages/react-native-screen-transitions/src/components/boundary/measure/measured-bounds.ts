@@ -7,10 +7,10 @@ import {
 import {
 	clampScrollAxisOffset,
 	cloneScrollMetadataState,
-	type ScrollChainSnapshot,
 	snapshotScrollChain,
 } from "../../../stores/scroll.store";
 import type {
+	ScrollChainSnapshot,
 	ScrollGestureAxis,
 	ScrollGestureAxisState,
 	ScrollGestureState,

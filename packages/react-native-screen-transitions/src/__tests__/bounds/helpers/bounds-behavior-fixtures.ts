@@ -1,10 +1,8 @@
 import { expect } from "bun:test";
 import { BoundStore, type ResolvedTransitionPair, type Snapshot } from "./bound-store";
 import { createScreenPairKey } from "../../../stores/bounds/helpers/link-pairs.helpers";
-import type {
-	EntryPatch,
-	ResolveTransitionContext,
-} from "../../../stores/bounds/types";
+import type { ResolveTransitionContext } from "../../../stores/bounds/types";
+import type { EntryPatch } from "../../../types/bounds.types";
 
 export const createBounds = (
 	x = 0,

@@ -1,13 +1,15 @@
 import type {
-	BoundTag,
 	GroupKey,
+	ScreenIdentifier,
+	TagLink,
+} from "../../../types/bounds.types";
+import type {
+	BoundTag,
 	LinkGroupState,
 	LinkKey,
 	LinkPairState,
 	LinkPairsState,
-	ScreenIdentifier,
 	ScreenPairKey,
-	TagLink,
 } from "../types";
 
 const PAIR_SEPARATOR = "<>";

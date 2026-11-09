@@ -1,6 +1,9 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
-import type { ScrollChainSnapshot } from "../../../../stores/scroll.store";
-import type { ScrollMetadataState } from "../../../../types/gesture.types";
+import type {
+	ScrollChainSnapshot,
+	ScrollMetadataState,
+} from "../../../../types/gesture.types";
+import type { FrameRect } from "../../types/geometry";
 
 /**
  * What a bounds element style needs to stay one element while the screens it travels between move
@@ -12,13 +15,6 @@ import type { ScrollMetadataState } from "../../../../types/gesture.types";
  * removed there.
  */
 export const BOUNDS_SCREEN_FRAME_STYLE_KEY = "__screenTransitionsBoundsFrame";
-
-export type FrameRect = {
-	pageX: number;
-	pageY: number;
-	width: number;
-	height: number;
-};
 
 /**
  * A pair whose element another pair starts from (see resolveStartChain): an older screen still

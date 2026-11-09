@@ -27,11 +27,7 @@ export default {
 
 export type { NativeStackAdapterOptions } from "./adapters/with-screen-transitions";
 export { withScreenTransitions } from "./adapters/with-screen-transitions";
-export {
-	NAVIGATION_MASK_CONTAINER_STYLE_ID,
-	NAVIGATION_MASK_ELEMENT_STYLE_ID,
-	TRANSFORM_RESET,
-} from "./constants";
+export { TRANSFORM_RESET } from "./constants";
 export { snapTo } from "./controls/snap-to";
 export {
 	blockTransition,
@@ -46,6 +42,10 @@ export type { MotionViewProps } from "./motion/motion";
 export type { PresenceProps } from "./motion/presence";
 export type { Motion, MotionOptions, MotionStatus } from "./motion/types";
 export { useMotion } from "./motion/use-motion";
+export {
+	NAVIGATION_MASK_CONTAINER_STYLE_ID,
+	NAVIGATION_MASK_ELEMENT_STYLE_ID,
+} from "./navigation-mask-ids";
 export {
 	type ScreenAnimationTarget,
 	useScreenAnimation,

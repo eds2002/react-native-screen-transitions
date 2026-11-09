@@ -1,4 +1,4 @@
-import type { BoundsInternalOptions } from "./types/options";
+import type { BoundsInternalOptions } from "../../types/bounds.types";
 
 export const DEFAULT_BOUNDS_OPTIONS = {
 	target: "bound",

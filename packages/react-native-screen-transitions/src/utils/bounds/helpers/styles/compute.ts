@@ -11,17 +11,18 @@ import {
 	resolveTransitionPair,
 } from "../../../../stores/bounds";
 import type { ScreenTransitionState } from "../../../../types/animation.types";
-import type { Layout } from "../../../../types/screen.types";
 import type {
 	BoundId,
 	BoundsComputeParams,
 	BoundsInternalOptions,
-} from "../../types/options";
+} from "../../../../types/bounds.types";
+import type { Layout } from "../../../../types/screen.types";
+import type { ScreenTransform } from "../../types/geometry";
 import {
 	computeContentTransformGeometry,
 	computeRelativeGeometry,
 } from "../geometry";
-import { type ScreenTransform, toLayoutSpace } from "../screen-transform";
+import { toLayoutSpace } from "../screen-transform";
 import {
 	composeContentStyle,
 	composeSize,
