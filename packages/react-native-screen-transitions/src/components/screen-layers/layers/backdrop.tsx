@@ -1,7 +1,6 @@
 import { memo, useCallback } from "react";
 import { Pressable, StyleSheet } from "react-native";
 import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
-import { DefaultSnapSpec } from "../../../configs/specs";
 import { useBuilderStore } from "../../../providers/builder";
 import { animateToProgress } from "../../../providers/motion/animation/animate-to-progress";
 import { useMotionStore } from "../../../providers/motion/motion.store";
@@ -13,6 +12,7 @@ import type {
 	BackdropBehavior,
 	ScreenBackdropComponentProps,
 } from "../../../types/screen.types";
+import { resolveSnapTransitionSpec } from "../../../utils/animation/resolve-snap-transition-spec";
 import { findCollapseTarget } from "../helpers/find-collapse-target";
 import { LayerComponent } from "../helpers/layer-component";
 
@@ -82,10 +82,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 
 				const spec = shouldDismiss
 					? transitionSpec
-					: {
-							open: transitionSpec?.expand ?? DefaultSnapSpec,
-							close: transitionSpec?.collapse ?? DefaultSnapSpec,
-						};
+					: resolveSnapTransitionSpec(transitionSpec, "collapse");
 
 				animateToProgress({
 					target,
