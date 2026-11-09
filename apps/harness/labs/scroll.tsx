@@ -147,19 +147,13 @@ function Sheet({ navigation }) {
 	);
 }
 
-/**
- * On for both kinds of list: with list=plain it's what lets the plain list hand gestures to the
- * screen (iOS, native build); with Transition.ScrollView it must change nothing.
- */
-const PLAIN = { experimental_plainScrollViews: true };
-
 function Component() {
 	return (
 		<LabContainer>
 			<Stack.Navigator layout={({ state, children }) => <FocusProbe state={state}>{children}</FocusProbe>}>
 				<Stack.Screen name="home" component={Home} />
-				<Stack.Screen name="list" component={List} options={{ ...slide("vertical"), ...PLAIN }} />
-				<Stack.Screen name="sheet" component={Sheet} options={{ ...sheet([0.4, 0.7, 1], { sheetScrollGestureBehavior: BEHAVIORS[0] }), ...PLAIN }} />
+				<Stack.Screen name="list" component={List} options={slide("vertical")} />
+				<Stack.Screen name="sheet" component={Sheet} options={sheet([0.4, 0.7, 1], { sheetScrollGestureBehavior: BEHAVIORS[0] })} />
 			</Stack.Navigator>
 		</LabContainer>
 	);

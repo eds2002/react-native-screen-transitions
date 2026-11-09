@@ -208,7 +208,6 @@ mock.module("react-native-reanimated", () => ({
 	useAnimatedStyle: <T>(factory: () => T) => factory(),
 	useAnimatedProps: <T>(factory: () => T) => factory(),
 	useAnimatedScrollHandler: <T>(handlers: T) => handlers,
-	useEvent: <T>(handler: T) => handler,
 	useComposedEventHandler: (handlers: unknown[]) => handlers.filter(Boolean),
 	useAnimatedReaction: (
 		prepare: () => unknown,

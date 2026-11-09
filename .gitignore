@@ -12,8 +12,6 @@ expo-env.d.ts
 
 # iOS
 **/*/ios
-# The library's own native sources (not a generated app project).
-!packages/react-native-screen-transitions/ios/
 
 # Android
 **/*/android

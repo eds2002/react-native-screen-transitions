@@ -12,10 +12,6 @@ import { PortalOverlay } from "../../boundary/portal";
 import { LayerComponent } from "../helpers/layer-component";
 import { useContentLayout } from "../hooks/use-content-layout";
 import { Clip } from "./clip";
-import {
-	hasNativeScrollObserver,
-	PlainScrollObserver,
-} from "./plain-scroll-observer";
 import { SurfaceLayer } from "./surface";
 
 type Props = {
@@ -29,11 +25,6 @@ export const ContentLayer = memo(
 		const gestureContext = useMotionStore((store) => store.gestures);
 		const ContentComponent = useBuilderStore(
 			(store) => store.options.contentComponent,
-		);
-		const observesPlainScrollViews = useBuilderStore(
-			(store) =>
-				hasNativeScrollObserver &&
-				!!store.options.experimental_plainScrollViews,
 		);
 		const hasAutoSnapPoint = useBuilderStore(
 			(store) => store.options.snapPoints?.includes("auto") ?? false,
@@ -73,7 +64,6 @@ export const ContentLayer = memo(
 							pointerEvents="none"
 							style={StyleSheet.absoluteFill}
 						/>
-						{observesPlainScrollViews ? <PlainScrollObserver /> : null}
 						<SurfaceLayer pointerEvents={contentPointerEvents}>
 							{screenChildren}
 						</SurfaceLayer>
