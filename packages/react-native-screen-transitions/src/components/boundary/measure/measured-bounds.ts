@@ -9,8 +9,8 @@ import {
 	cloneScrollMetadataState,
 	snapshotScrollChain,
 } from "../../../stores/scroll.store";
+import type { MeasuredBounds } from "../../../types/bounds.types";
 import type {
-	ScrollChainSnapshot,
 	ScrollGestureAxis,
 	ScrollGestureAxisState,
 	ScrollGestureState,
@@ -18,12 +18,6 @@ import type {
 } from "../../../types/gesture.types";
 
 const SCROLL_MEASUREMENT_EPSILON = 1;
-
-export type ScrollMeasuredDimensions = MeasuredDimensions & {
-	scroll?: ScrollMetadataState | null;
-	/** The scrollables around the boundary and their offsets when it was measured. */
-	scrollChain?: ScrollChainSnapshot[];
-};
 
 const getOverscrollDelta = (
 	axisState: ScrollGestureAxisState | null | undefined,
@@ -177,7 +171,7 @@ export const attachScrollSnapshotToMeasuredBounds = (
 	measured: MeasuredDimensions,
 	scroll: ScrollMetadataState | null | undefined,
 	scrollChain: readonly { id: string; axis: ScrollGestureAxis }[] = [],
-): ScrollMeasuredDimensions => {
+): MeasuredBounds => {
 	"worklet";
 
 	return {

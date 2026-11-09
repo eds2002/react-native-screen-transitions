@@ -1,5 +1,8 @@
-import type { MeasuredDimensions } from "react-native-reanimated";
-import type { GroupKey, TagLink } from "../../types/bounds.types";
+import type {
+	GroupKey,
+	MeasuredBounds,
+	TagLink,
+} from "../../types/bounds.types";
 import type { ScreenKey } from "../../types/screen.types";
 
 export type LinkKey = string;
@@ -28,8 +31,8 @@ export type ResolveTransitionContext = {
 };
 
 export type ResolvedTransitionPair = {
-	sourceBounds: MeasuredDimensions | null;
-	destinationBounds: MeasuredDimensions | null;
+	sourceBounds: MeasuredBounds | null;
+	destinationBounds: MeasuredBounds | null;
 	sourceScreenKey: ScreenKey | null;
 	destinationScreenKey: ScreenKey | null;
 };

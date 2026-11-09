@@ -1,4 +1,3 @@
-import type { MeasuredDimensions } from "react-native-reanimated";
 import {
 	ENTER_RANGE,
 	EXIT_RANGE,
@@ -15,9 +14,9 @@ import type {
 	BoundId,
 	BoundsComputeParams,
 	BoundsInternalOptions,
+	MeasuredBounds,
 } from "../../../../types/bounds.types";
 import type { Layout } from "../../../../types/screen.types";
-import type { ScreenTransform } from "../../types/geometry";
 import {
 	computeContentTransformGeometry,
 	computeRelativeGeometry,
@@ -32,10 +31,6 @@ import {
 } from "./composers";
 import { resolveOverlap } from "./overlap";
 import { attachBoundsScreenFrame } from "./screen-frame";
-
-type MeasuredWith = MeasuredDimensions & {
-	screenTransform?: ScreenTransform;
-};
 
 const resolveStartEnd = (params: {
 	id: BoundId;
@@ -186,8 +181,8 @@ export const computeBoundStyles = (
 	// lay the element out, without the transforms the screens had when measured, and drawn through
 	// where the screens are now. Raw values keep the window-space rects their callers compose with.
 	const followsScreens = !computeOptions.raw && !isAbsolute;
-	const sourceMeasuredWith = (start as MeasuredWith).screenTransform;
-	const destinationMeasuredWith = (destinationBounds as MeasuredWith | null)
+	const sourceMeasuredWith = (start as MeasuredBounds).screenTransform;
+	const destinationMeasuredWith = (destinationBounds as MeasuredBounds | null)
 		?.screenTransform;
 	const pathStart = followsScreens
 		? toLayoutSpace(start, sourceMeasuredWith)

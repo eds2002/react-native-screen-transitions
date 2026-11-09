@@ -1,10 +1,6 @@
 import { interpolate } from "react-native-reanimated";
 import { EPSILON } from "../../../../constants";
 import { getMeasuredScrollAxisDelta } from "../../../../stores/scroll.store";
-import type {
-	ScrollChainSnapshot,
-	ScrollMetadataState,
-} from "../../../../types/gesture.types";
 import { createBoundsAccessorCore } from "../../helpers/create-bounds-accessor-core";
 import { computeContentTransformGeometry } from "../../helpers/geometry";
 import { getSourceBorderRadius } from "../helpers";
@@ -154,10 +150,7 @@ export function buildZoomStyles({
 	// scrolls during the close): follow it through every scrollable around it. The source screen is
 	// `inactive` from both sides. Scroll metadata is written in the scroll event, so this lands in
 	// the same frame as the scroll.
-	const capturedSource = sourceBounds as typeof sourceBounds & {
-		scroll?: ScrollMetadataState | null;
-		scrollChain?: ScrollChainSnapshot[];
-	};
+	const capturedSource = sourceBounds;
 	const liveSourceScroll = props.inactive?.layouts.scroll;
 	const tracksSourceScroll = active.entering || active.closing;
 	const sourceScrollOffsetX = tracksSourceScroll

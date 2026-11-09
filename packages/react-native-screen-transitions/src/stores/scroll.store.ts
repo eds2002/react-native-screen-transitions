@@ -3,6 +3,7 @@ import {
 	makeMutable,
 	type SharedValue,
 } from "react-native-reanimated";
+import type { MeasuredBounds } from "../types/bounds.types";
 import type {
 	ScrollChainSnapshot,
 	ScrollGestureAxis,
@@ -188,10 +189,7 @@ export const getScrollChainAxisDelta = (
  */
 export const getMeasuredScrollAxisDelta = (
 	current: ScrollMetadataState | null | undefined,
-	measured: {
-		scrollChain?: readonly ScrollChainSnapshot[];
-		scroll?: ScrollMetadataState | null;
-	},
+	measured: Pick<MeasuredBounds, "scroll" | "scrollChain">,
 	axis: ScrollGestureAxis,
 ): number => {
 	"worklet";

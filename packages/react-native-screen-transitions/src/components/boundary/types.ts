@@ -1,7 +1,6 @@
-import type { MeasuredDimensions, SharedValue } from "react-native-reanimated";
+import type { SharedValue } from "react-native-reanimated";
 import type { ScreenPairKey } from "../../stores/bounds";
-import type { BoundsOptions } from "../../types/bounds.types";
-import type { ScrollChainSnapshot } from "../../types/gesture.types";
+import type { BoundsOptions, MeasuredBounds } from "../../types/bounds.types";
 
 export type BoundaryId = string | number;
 
@@ -57,11 +56,7 @@ export type MeasureTarget = {
 export type MeasureBoundary = (target: MeasureTarget) => void;
 
 export type BoundaryLocalMeasurement = {
-	bounds: MeasuredDimensions & {
-		scrollChain?: ScrollChainSnapshot[];
-		/** Where the boundary sits inside its screen's content (see measureScreenAt). */
-		contentOffset?: { x: number; y: number; width: number; height: number };
-	};
+	bounds: MeasuredBounds;
 	pairKey: ScreenPairKey;
 	/**
 	 * Every pair this boundary has been measured for while mounted. A boundary in the middle of a

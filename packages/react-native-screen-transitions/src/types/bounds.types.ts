@@ -4,12 +4,14 @@ import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 } from "../navigation-mask-ids";
+import type { ScreenTransform } from "../utils/bounds/types/geometry";
 import type {
 	ScreenInterpolationProps,
 	ScreenTransitionState,
 	TransitionInterpolatedStyle,
 	TransitionSlotStyle,
 } from "./animation.types";
+import type { ScrollChainSnapshot, ScrollMetadataState } from "./gesture.types";
 import type { Layout, ScreenKey } from "./screen.types";
 
 /**
@@ -462,6 +464,21 @@ export type BoundsValuesResult<
 > = BoundsOptionsResult<T & { id: BoundId; raw: true }>;
 
 /** Links: a boundary measured on both screens of a transition (the bounds store's records). */
+
+/**
+ * A boundary's box as measured (window space), with what was true when it was measured: how its
+ * screen was drawn, the scroll positions around it, and where it sits in its screen's content.
+ */
+export type MeasuredBounds = MeasuredDimensions & {
+	/** How the boundary's screen was drawn (a box measured on a moved or scaled screen). */
+	screenTransform?: ScreenTransform;
+	scroll?: ScrollMetadataState | null;
+	/** The scrollables around the boundary and their offsets when it was measured. */
+	scrollChain?: readonly ScrollChainSnapshot[];
+	/** Where the boundary sits inside its screen's content (see measureScreenAt). */
+	contentOffset?: { x: number; y: number; width: number; height: number };
+};
+
 export type TagID = string;
 export type GroupKey = string;
 
@@ -477,17 +494,17 @@ type BoundaryConfig = {
 };
 
 export type Entry = {
-	bounds: MeasuredDimensions | null;
+	bounds: MeasuredBounds | null;
 	styles: StyleProps;
 	boundaryConfig?: BoundaryConfig;
 } & BoundaryRuntimeFlags;
 
 export type MeasuredEntry = Entry & {
-	bounds: MeasuredDimensions;
+	bounds: MeasuredBounds;
 };
 
 export type EntryPatch = {
-	bounds?: MeasuredDimensions | null;
+	bounds?: MeasuredBounds | null;
 	styles?: StyleProps | null;
 	boundaryConfig?: BoundaryConfig | null;
 	handoff?: boolean | null;

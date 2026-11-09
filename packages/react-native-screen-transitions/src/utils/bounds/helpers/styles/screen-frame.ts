@@ -1,8 +1,5 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
-import type {
-	ScrollChainSnapshot,
-	ScrollMetadataState,
-} from "../../../../types/gesture.types";
+import type { MeasuredBounds } from "../../../../types/bounds.types";
 import type { FrameRect } from "../../types/geometry";
 
 /**
@@ -33,10 +30,11 @@ export type StartPair = {
  * screen's scroll state. A rect measured inside a list that has scrolled since is drawn where the
  * scroll moved it (see applyBoundsScreenFrames). Null for a rect that was not measured (a custom target).
  */
-export type MeasuredScroll = {
-	chain?: ScrollChainSnapshot[];
-	scroll?: ScrollMetadataState | null;
-} | null;
+/** The scroll positions around a box when it was measured (see MeasuredBounds); null if none. */
+export type MeasuredScroll = Pick<
+	MeasuredBounds,
+	"scroll" | "scrollChain"
+> | null;
 
 export type BoundsScreenFrame = {
 	/** The bound's tag (to read the start pairs' links). */
@@ -69,17 +67,12 @@ type StyleWithScreenFrame = StyleProps & {
 	[BOUNDS_SCREEN_FRAME_STYLE_KEY]?: BoundsScreenFrame;
 };
 
-const scrollOf = (rect: unknown): MeasuredScroll => {
+export const scrollOf = (
+	rect: MeasuredBounds | null | undefined,
+): MeasuredScroll => {
 	"worklet";
-	const measured = rect as
-		| {
-				scrollChain?: ScrollChainSnapshot[];
-				scroll?: ScrollMetadataState | null;
-		  }
-		| null
-		| undefined;
-	if (!measured || (!measured.scrollChain && !measured.scroll)) return null;
-	return { chain: measured.scrollChain, scroll: measured.scroll };
+	if (!rect || (!rect.scrollChain && !rect.scroll)) return null;
+	return { scrollChain: rect.scrollChain, scroll: rect.scroll };
 };
 
 export const attachBoundsScreenFrame = (

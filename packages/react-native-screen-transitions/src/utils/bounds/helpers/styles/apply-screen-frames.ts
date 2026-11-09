@@ -9,6 +9,7 @@ import type {
 	NormalizedTransitionInterpolatedStyle,
 	NormalizedTransitionSlotStyle,
 } from "../../../../types/animation.types";
+import type { MeasuredBounds } from "../../../../types/bounds.types";
 import type { FrameRect, ScreenTransform } from "../../types/geometry";
 import {
 	blend,
@@ -31,6 +32,7 @@ import {
 	type BoundsScreenFrame,
 	getBoundsScreenFrame,
 	type MeasuredScroll,
+	scrollOf,
 } from "./screen-frame";
 
 const stripFrame = (style: StyleProps): StyleProps => {
@@ -46,12 +48,6 @@ const stripFrame = (style: StyleProps): StyleProps => {
 
 const EPSILON = 1e-4;
 
-type MeasuredRect = FrameRect & {
-	screenTransform?: ScreenTransform;
-	scrollChain?: NonNullable<MeasuredScroll>["chain"];
-	scroll?: NonNullable<MeasuredScroll>["scroll"];
-};
-
 /** How far a rect measured at `measured` scroll positions has moved since: lists scroll content up. */
 type Shift = { x: number; y: number };
 
@@ -62,9 +58,8 @@ const scrollShift = (measured: MeasuredScroll, screenKey: string): Shift => {
 	if (!measured) return NO_SHIFT;
 	const live = getScreenScroll(screenKey);
 	if (!live) return NO_SHIFT;
-	const rect = { scrollChain: measured.chain, scroll: measured.scroll };
-	const x = getMeasuredScrollAxisDelta(live, rect, "horizontal");
-	const y = getMeasuredScrollAxisDelta(live, rect, "vertical");
+	const x = getMeasuredScrollAxisDelta(live, measured, "horizontal");
+	const y = getMeasuredScrollAxisDelta(live, measured, "vertical");
 	return x === 0 && y === 0 ? NO_SHIFT : { x: -x, y: -y };
 };
 
@@ -80,16 +75,11 @@ const shiftRect = (rect: FrameRect, shift: Shift): FrameRect => {
 };
 
 /** A measured rect where its screen lays it out now: without the transform it was measured with, moved by the scroll since. */
-const liveLayoutRect = (rect: MeasuredRect, screenKey: string): FrameRect => {
+const liveLayoutRect = (rect: MeasuredBounds, screenKey: string): FrameRect => {
 	"worklet";
 	return shiftRect(
 		toLayoutSpace(rect, rect.screenTransform),
-		scrollShift(
-			rect.scrollChain || rect.scroll
-				? { chain: rect.scrollChain, scroll: rect.scroll }
-				: null,
-			screenKey,
-		),
+		scrollShift(scrollOf(rect), screenKey),
 	);
 };
 
@@ -113,8 +103,8 @@ const resolveStart = (
 	for (let index = chain.length - 1; index >= 0; index--) {
 		const pair = chain[index];
 		const link = getResolvedLink(pair.pairKey, frame.tag).link;
-		const from = link?.source?.bounds as MeasuredRect | undefined;
-		const to = link?.destination?.bounds as MeasuredRect | undefined;
+		const from = link?.source?.bounds;
+		const to = link?.destination?.bounds;
 		if (!from || !to) {
 			drawn = null;
 			continue;

@@ -6,7 +6,6 @@ import {
 } from "react";
 import {
 	type DerivedValue,
-	type MeasuredDimensions,
 	type SharedValue,
 	useDerivedValue,
 } from "react-native-reanimated";
@@ -181,9 +180,7 @@ const coversHandoffHomes = (
 	for (const key in links) {
 		const link = links[key];
 		if (!link?.destination?.handoff || !link.source) continue;
-		const from = link.source.bounds as MeasuredDimensions & {
-			screenTransform?: ScreenTransform;
-		};
+		const from = link.source.bounds;
 		const home = boundingBox(
 			toLayoutSpace(from, from.screenTransform),
 			toAffine(read(link.source.screenKey)),
