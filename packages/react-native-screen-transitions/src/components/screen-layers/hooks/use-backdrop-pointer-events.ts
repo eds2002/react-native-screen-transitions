@@ -35,7 +35,6 @@ export function useBackdropPointerEvents(): BackdropPointerEventsResult {
 				scheduleOnRN(setRuntimeBackdropBehavior, next);
 			}
 		},
-		[screenOptions],
 	);
 
 	const backdropBehavior: BackdropBehavior =

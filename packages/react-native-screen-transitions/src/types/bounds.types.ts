@@ -1,4 +1,4 @@
-import type { ColorValue } from "react-native";
+import type { ColorValue, ViewStyle } from "react-native";
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
 import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
@@ -272,7 +272,7 @@ export type BoundsMotionTransform = {
 	 * default center origin, so non-center origins offset the path — best for
 	 * rotation-dominant motion.
 	 */
-	transformOrigin?: string | Array<string | number>;
+	transformOrigin?: ViewStyle["transformOrigin"];
 };
 
 /**
@@ -319,7 +319,7 @@ type RawMotionRotation = {
 	rotate: number;
 	rotateX: number;
 	rotateY: number;
-	transformOrigin?: string | Array<string | number>;
+	transformOrigin?: ViewStyle["transformOrigin"];
 };
 
 type RawSizeAbsoluteReturn = RawMotionRotation & {

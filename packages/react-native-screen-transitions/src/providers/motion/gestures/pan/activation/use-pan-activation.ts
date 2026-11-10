@@ -1,8 +1,5 @@
 import { useCallback, useMemo } from "react";
-import type {
-	GestureStateManager,
-	GestureTouchEvent,
-} from "react-native-gesture-handler";
+import type { GestureTouchEvent } from "react-native-gesture-handler";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
 import { GestureActivationState } from "../../../../../types/gesture.types";
 import type { Direction } from "../../../../../types/ownership.types";
@@ -15,6 +12,7 @@ import type {
 	GestureCompositionOwner,
 	GestureDimensions,
 	GestureOwnerMap,
+	GestureStateControl,
 	PanGestureRuntime,
 	ScrollGestureState,
 } from "../../types";
@@ -58,7 +56,7 @@ export const usePanActivation = ({
 	const onTouchesDown = useCallback(
 		(
 			event: GestureTouchEvent,
-			stateManager: GestureStateManager | undefined,
+			stateManager: GestureStateControl | undefined,
 		) => {
 			"worklet";
 			const { participation } = resolvePanRuntime(
@@ -93,7 +91,7 @@ export const usePanActivation = ({
 	);
 
 	const onTouchesMove = useCallback(
-		(event: GestureTouchEvent, stateManager: GestureStateManager) => {
+		(event: GestureTouchEvent, stateManager: GestureStateControl) => {
 			"worklet";
 
 			const currentActivationState = gestureActivationState.get();

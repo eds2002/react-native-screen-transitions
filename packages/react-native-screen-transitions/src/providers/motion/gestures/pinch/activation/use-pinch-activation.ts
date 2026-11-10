@@ -1,13 +1,14 @@
 import { useCallback, useMemo } from "react";
-import type {
-	GestureStateManager,
-	GestureTouchEvent,
-} from "react-native-gesture-handler";
+import type { GestureTouchEvent } from "react-native-gesture-handler";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
 import type { ScreenOptionsContextValue } from "../../../options";
 import type { MotionGestureValues } from "../../../types";
 import { resolvePinchRuntime } from "../../shared/runtime";
-import type { GestureCompositionOwner, PinchGestureRuntime } from "../../types";
+import type {
+	GestureCompositionOwner,
+	GestureStateControl,
+	PinchGestureRuntime,
+} from "../../types";
 
 export const updateAbsolutePinchFocalPoint = (
 	event: GestureTouchEvent,
@@ -93,7 +94,7 @@ export const usePinchActivation = ({
 	const onTouchesDown = useCallback(
 		(
 			event: GestureTouchEvent,
-			stateManager: GestureStateManager | undefined,
+			stateManager: GestureStateControl | undefined,
 		) => {
 			"worklet";
 			const latestRuntime = resolvePinchRuntime(
@@ -137,7 +138,7 @@ export const usePinchActivation = ({
 	);
 
 	const onTouchesMove = useCallback(
-		(event: GestureTouchEvent, stateManager: GestureStateManager) => {
+		(event: GestureTouchEvent, stateManager: GestureStateControl) => {
 			"worklet";
 			const latestRuntime = resolvePinchRuntime(
 				runtime.get(),

@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.2.0](https://github.com/eds2002/react-native-screen-transitions/compare/v4.1.0...v4.2.0) (2026-11-10)
+
+### Features
+
+* **expo-router:** use the stable router integration from SDK 58 ([89fe8c2](https://github.com/eds2002/react-native-screen-transitions/commit/89fe8c2648298ab43e0ef2dc84cfd1438bcc9de4))
+
+### Bug Fixes
+
+* **expo-router:** keep SDK 58 preloaded routes out of the active stack ([cd3b219](https://github.com/eds2002/react-native-screen-transitions/commit/cd3b219e84dfc3964b19065c8f4e53c63f30e1a9)), closes [#157](https://github.com/eds2002/react-native-screen-transitions/issues/157)
+* **types:** typecheck clean in Expo SDK 58 apps (React Native 0.88, gesture-handler 3), still on gesture-handler 2
+* **backdrop:** no Reanimated "Dependencies should only be used on the web" warning on start (Reanimated 4.7)
+
 ## [4.1.0](https://github.com/eds2002/react-native-screen-transitions/compare/v4.1.0-rc.0...v4.1.0) (2026-11-04)
 
 ### Features

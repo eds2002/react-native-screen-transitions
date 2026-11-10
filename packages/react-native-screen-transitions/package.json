@@ -1,6 +1,6 @@
 {
 	"name": "react-native-screen-transitions",
-	"version": "4.1.0",
+	"version": "4.2.0",
 	"description": "Easy screen transitions for React Native and Expo",
 	"author": "Ed",
 	"license": "MIT",
@@ -70,6 +70,7 @@
 	"peerDependencies": {
 		"@react-navigation/native": ">=7.3.0",
 		"@types/react": "*",
+		"expo-router": ">=56.0.0",
 		"react": ">=19.2.0",
 		"react-native": "*",
 		"react-native-gesture-handler": ">=2.16.1",
@@ -79,6 +80,9 @@
 		"react-native-worklets": ">=0.8.0"
 	},
 	"peerDependenciesMeta": {
+		"expo-router": {
+			"optional": true
+		},
 		"react-native-teleport": {
 			"optional": true
 		}
@@ -91,7 +95,7 @@
 		"@react-navigation/native-stack": "7.18.10",
 		"@testing-library/react-native": "13.3.3",
 		"@types/react": "~19.2.17",
-		"expo-router": "56.2.11",
+		"expo-router": "58.0.30",
 		"react-native-builder-bob": "0.41.0",
 		"react-test-renderer": "19.2.3",
 		"typescript": "catalog:"
