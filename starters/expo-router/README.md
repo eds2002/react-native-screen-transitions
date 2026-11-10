@@ -13,10 +13,10 @@ You can use npm, yarn, or pnpm instead. The app contains a normal detail transit
 
 ## Start from your own Expo app
 
-Start with any Expo Router template on a compatible SDK, then install the v4 alpha and its Expo-selected native peers:
+Start with any Expo Router template on a compatible SDK, then install Screen Transitions and its Expo-selected native peers:
 
 ```bash
-npx expo install react-native-screen-transitions@alpha \
+npx expo install react-native-screen-transitions \
   react-native-reanimated react-native-worklets \
   react-native-gesture-handler react-native-screens \
   react-native-safe-area-context

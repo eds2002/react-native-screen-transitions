@@ -1,0 +1,28 @@
+---
+title: "New in 4.2"
+pageTitle: "New in 4.2"
+summary: "Expo SDK 58 support, and the Expo Router integration is no longer Alpha."
+description: "Expo SDK 58 support: the stable Expo Router integration API, preloaded routes, and React Native 0.88 and Gesture Handler 3 types."
+eyebrow: "Changelogs"
+group: "Changelogs"
+version: "v4"
+hidden: true
+changelogDate: "November 2026"
+order: -7
+to: /changelog/updating-to-4-2
+---
+
+## Expo SDK 58
+
+4.2 supports Expo SDK 58 and its Expo Router 58.
+
+- **Stable Router integration:** on Expo Router 58 and later, `BlankStack` uses Expo Router's stable `integrateWithRouter` API. Expo Router 56 and 57 keep working through `unstable_integrateWithRouter`, so there is nothing to change in your layout.
+- **Preloaded routes:** Expo Router 58 keeps preloaded routes in the stack's routes instead of `preloadedRoutes`. Blank Stack and the native stack adapter now set them apart, so a prefetched screen (`router.prefetch`) is never shown as the active screen, and opening it later animates in as usual. Thanks to [@Ubax](https://github.com/Ubax) for the fix.
+- **Types:** apps on SDK 58 typecheck this package's source against React Native 0.88 and Gesture Handler 3. Both now typecheck cleanly, and Gesture Handler 2 keeps working.
+- **No Reanimated warning:** Reanimated 4.7 warned "Dependencies should only be used on the web" at every app start; that's gone.
+
+`expo-router` is now an optional peer dependency (56 or later). It is only needed when you import `react-native-screen-transitions/expo-router`.
+
+## Expo Router is no longer Alpha
+
+The [Expo Router integration](/expo-router) has graduated from Alpha. It runs the same Blank Stack as the React Navigation integration, with the same transitions, gestures, sheets and shared elements, on Expo Router's own Standard Navigator API.
