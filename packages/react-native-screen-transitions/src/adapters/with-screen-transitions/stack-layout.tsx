@@ -1,4 +1,4 @@
-import type { NavigationState, Route } from "@react-navigation/native";
+import type { NavigationState } from "@react-navigation/native";
 import { memo, type ReactNode, useMemo } from "react";
 import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -10,6 +10,7 @@ import { BuilderProvider } from "../../providers/builder";
 import { MotionProvider } from "../../providers/motion";
 import { OrchestratorProvider } from "../../providers/orchestrator";
 import type { BaseStackDescriptor, BaseStackRoute } from "../../types";
+import { getStackRoutes } from "../../utils/navigation/get-stack-routes";
 import {
 	ScreenTransitionsAdapterProvider,
 	type ScreenTransitionsAdapterScene,
@@ -29,10 +30,6 @@ import type {
 
 type DescriptorMap = Record<string, BaseStackDescriptor>;
 
-type NavigationStateWithPreloads = NavigationState & {
-	preloadedRoutes?: Route<string>[];
-};
-
 type TransitionStackState = {
 	routes: BaseStackRoute[];
 	routeKeys: string[];
@@ -40,15 +37,6 @@ type TransitionStackState = {
 	routeIndexByKey: Map<string, number>;
 	shouldShowFloatOverlay: boolean;
 };
-
-const EMPTY_PRELOADED_ROUTES: Route<string>[] = [];
-
-function getPreloadedRoutes(state: NavigationState): Route<string>[] {
-	return (
-		(state as NavigationStateWithPreloads).preloadedRoutes ??
-		EMPTY_PRELOADED_ROUTES
-	);
-}
 
 function normalizeDescriptor(
 	descriptor: BaseStackDescriptor,
@@ -68,8 +56,7 @@ function buildTransitionStackState({
 	state: NavigationState;
 	descriptors: DescriptorMap;
 }): TransitionStackState {
-	const routes = state.routes as BaseStackRoute[];
-	const preloadedRoutes = getPreloadedRoutes(state) as BaseStackRoute[];
+	const { routes, preloadedRoutes } = getStackRoutes<BaseStackRoute>(state);
 	const allRoutes = routes.concat(preloadedRoutes);
 	const routeKeys = routes.map((route) => route.key);
 	const scenes: ScreenTransitionsAdapterScene[] = [];

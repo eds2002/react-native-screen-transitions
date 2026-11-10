@@ -42,6 +42,15 @@ export type PinchGestureEvent =
 	| GestureStateChangeEvent<PinchGestureHandlerEventPayload>;
 
 /** Gesture that owns navigation release for the current simultaneous composition. */
+/**
+ * What a gesture's touch callbacks get to decide it: activate or fail. Typed by what is used, not as
+ * gesture-handler's own GestureStateManager, which v2 exports as a type and v3 as a value.
+ */
+export type GestureStateControl = {
+	activate: () => void;
+	fail: () => void;
+};
+
 export type GestureCompositionOwner = "pan" | "pinch" | null;
 
 export type {
