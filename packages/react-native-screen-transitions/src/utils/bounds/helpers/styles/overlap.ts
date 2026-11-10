@@ -116,8 +116,10 @@ export const isHandoffLanded = (links: LandingLinks, t: number): boolean => {
  * Whether a closing pair's element has landed: its destination is closing and the element is
  * within LANDED_PX of its source slot (its spring's tail, the screen all but gone). A landed pair
  * no longer holds the element: popping the screen below then is carried by that screen's own pair.
- * Never for handoff (the live content is in the destination's slot until it lands home), and only
- * with Teleport: inline, the leaving copy is clipped away with its screen and never carries on.
+ * Handoff content has landed home then too (isHandoffLanded): a pair still holding it would keep the
+ * pair below from sending it home, until its screen unmounts with the content's host (a blank frame
+ * when closes overlap). Only with Teleport: inline, the leaving copy is clipped away with its screen
+ * and never carries on.
  */
 const isPairLanded = (
 	pairKey: string,
@@ -126,7 +128,6 @@ const isPairLanded = (
 ): boolean => {
 	"worklet";
 	if (!isTeleportAvailable || !isScreenClosing(destination)) return false;
-	if (getEntry(tag, destination)?.handoff) return false;
 	const link = getResolvedLink(pairKey, tag).link;
 	const from = link?.source?.bounds;
 	const to = link?.destination?.bounds;
