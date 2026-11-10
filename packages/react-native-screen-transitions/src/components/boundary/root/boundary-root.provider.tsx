@@ -60,7 +60,8 @@ type BoundaryRootRenderState = {
 	localMeasurement: BoundaryLocalMeasurementValue;
 	measurementRef: AnimatedRef<View>;
 	portalRuntime: ReturnType<typeof resolveBoundaryPortal>;
-	ref: RefObject<View | null>;
+	/** The boundary's root view: the animated measurement ref, or a plain one (see rootRef). */
+	ref: AnimatedRef<View> | RefObject<View | null>;
 	/** Set by the overlay once this boundary's host is placed. */
 	portalHostReady: SharedValue<boolean>;
 	shouldRenderBoundaryRootThroughPortal: boolean;

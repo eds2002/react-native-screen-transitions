@@ -35,7 +35,11 @@ import {
 	scrollOf,
 } from "./screen-frame";
 
-const stripFrame = (style: StyleProps): StyleProps => {
+/** A style this file builds itself, so it may write to it (Reanimated 4.7 types styles read-only). */
+type OwnStyle = { -readonly [K in keyof StyleProps]: StyleProps[K] };
+
+/** A copy of `style` without its frame data: the caller's own, to place. */
+const stripFrame = (style: StyleProps): OwnStyle => {
 	"worklet";
 	const rest: Record<string, unknown> = {};
 	const source = style as Record<string, unknown>;
@@ -43,7 +47,7 @@ const stripFrame = (style: StyleProps): StyleProps => {
 		if (key === BOUNDS_SCREEN_FRAME_STYLE_KEY) continue;
 		rest[key] = source[key];
 	}
-	return rest as StyleProps;
+	return rest as OwnStyle;
 };
 
 const EPSILON = 1e-4;
