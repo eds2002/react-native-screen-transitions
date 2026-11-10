@@ -11,6 +11,7 @@ import {
 	type BlankStackStandardEventMap,
 	type BlankStackStandardNavigatorProps,
 } from "../blank-stack/create-blank-stack-navigator";
+import { createBlankStackProps } from "./create-blank-stack-props";
 
 type BlankStackExpoRouterParamList = Record<string, object | undefined>;
 
@@ -49,10 +50,7 @@ export const BlankStack = integrateWithRouter<
 	BlankStackStandardNavigatorProps,
 	StackRouterOptions
 >(BlankStackNavigator, StackRouter, {
-	createProps: ({ state, navigation }) => ({
-		navigationState: state,
-		navigation,
-	}),
+	createProps: createBlankStackProps,
 } satisfies IntegrateWithRouterOptions<
 	BlankStackExpoRouterState,
 	BlankStackStandardNavigatorProps
