@@ -1,5 +1,5 @@
-import { memo } from "react";
-import { StyleSheet, View } from "react-native";
+import { memo, useCallback } from "react";
+import { type LayoutChangeEvent, StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import { useBuilderStore } from "../../../providers/builder";
 import { useMotionStore } from "../../../providers/motion/motion.store";
@@ -36,6 +36,17 @@ export const ContentLayer = memo(
 		const contentMeasureRef = useOrchestratorStore(
 			(store) => store.contentMeasureRef,
 		);
+		const contentMeasureLayout = useOrchestratorStore(
+			(store) => store.contentMeasureLayout,
+		);
+		const recordContentMeasureLayout = useCallback(
+			(event: LayoutChangeEvent) => {
+				const { width, height } = event.nativeEvent.layout;
+				if (width > 0 && height > 0)
+					contentMeasureLayout.set({ width, height });
+			},
+			[contentMeasureLayout],
+		);
 		const contentStyle = useSlotStyles("content");
 		const contentProps = useSlotProps("content");
 
@@ -60,6 +71,7 @@ export const ContentLayer = memo(
 					<Clip pointerEvents={contentPointerEvents}>
 						<View
 							ref={contentMeasureRef}
+							onLayout={recordContentMeasureLayout}
 							collapsable={false}
 							pointerEvents="none"
 							style={StyleSheet.absoluteFill}

@@ -59,6 +59,8 @@ export type ScreenBounds = {
 	/** Where this screen draws its content this frame (translation and scale). */
 	screenTransform: SharedValue<ScreenTransform>;
 	contentMeasureRef: AnimatedRef<View>;
+	/** That view's laid-out size (its onLayout, so no transform in it): what its drawn size is read against. */
+	contentMeasureLayout: SharedValue<{ width: number; height: number } | null>;
 	/** What boundaries outside any transition present: no pair, this screen's slots. */
 	idleBoundaryPresentation: SharedValue<BoundaryPresentationValue>;
 };
@@ -86,6 +88,10 @@ export function useScreenBounds({
 	// A full-size view inside the screen's content (ContentLayer): boundary measurements measure it
 	// too, to know where the screen was drawn when they were taken.
 	const contentMeasureRef = useAnimatedRef<View>();
+	const contentMeasureLayout = useSharedValue<{
+		width: number;
+		height: number;
+	} | null>(null);
 
 	// Where this screen draws its content this frame, for the bounds elements of the screens it
 	// shares them with (see applyBoundsScreenFrames). From its own interpolator's content style only
@@ -190,6 +196,7 @@ export function useScreenBounds({
 		slotsMap,
 		screenTransform,
 		contentMeasureRef,
+		contentMeasureLayout,
 		idleBoundaryPresentation,
 	};
 }

@@ -58,6 +58,12 @@ export type ScreenMeasureContext = {
 	isScreenReady: SharedValue<boolean>;
 	/** A full-size view inside the screen's content: where the screen is drawn when measured. */
 	contentRef: AnimatedRef<View> | null;
+	/**
+	 * The laid-out size of the view contentRef measures (its onLayout, no transform in it): what the
+	 * screen's drawn size is compared with. The window's size is not it on Android drawn edge to edge, where the
+	 * window leaves out the system bars the content runs under.
+	 */
+	contentLayout: SharedValue<{ width: number; height: number } | null> | null;
 };
 
 /** What measuring one boundary needs of its own: data, registered with its screen's coordinator. */
@@ -86,6 +92,9 @@ export const useScreenMeasureContext = (
 		(store) => store.state.pendingLifecycleStartBlockCount,
 	);
 	const isScreenReady = useMotionStore((store) => store.isScreenReady);
+	const contentLayout = useOptionalOrchestratorStore(
+		(store) => store?.contentMeasureLayout ?? null,
+	);
 	return useMemo(
 		() => ({
 			currentScreenKey,
@@ -96,6 +105,7 @@ export const useScreenMeasureContext = (
 			pendingLifecycleStartBlockCount,
 			isScreenReady,
 			contentRef,
+			contentLayout,
 		}),
 		[
 			currentScreenKey,
@@ -106,6 +116,7 @@ export const useScreenMeasureContext = (
 			pendingLifecycleStartBlockCount,
 			isScreenReady,
 			contentRef,
+			contentLayout,
 		],
 	);
 };
@@ -202,8 +213,13 @@ const measureScreenAt = (
 	gateDeltaY: number,
 ): ScreenAtMeasure | typeof NOT_MEASURABLE | undefined => {
 	"worklet";
-	const { contentRef, currentScreenKey, viewportWidth, viewportHeight } =
-		screen;
+	const {
+		contentRef,
+		contentLayout,
+		currentScreenKey,
+		viewportWidth,
+		viewportHeight,
+	} = screen;
 	if (!contentRef) return undefined;
 	const content = measure(contentRef);
 	if (!content) return undefined;
@@ -216,8 +232,28 @@ const measureScreenAt = (
 		return NOT_MEASURABLE;
 	}
 	const now = getScreenTransform(currentScreenKey);
-	const width = now?.width || viewportWidth;
-	const height = now?.height || viewportHeight;
+	// The size the screen is laid out at, to read its drawn size against: the measured view's own
+	// layout (onLayout, no transform in it). Before it is known, what was just measured when the
+	// screen is drawn untransformed (moved at most), else its live transform's size. Only a laid-out
+	// size can tell a screen drawn turned or stretched (731d9c7c): the transform's size and the
+	// window's are what the screen is styled with, and on Android drawn edge to edge the window
+	// leaves out the system bars the content runs under.
+	const laidOut = contentLayout?.get();
+	const untransformed =
+		!now ||
+		(Math.abs(now.sx - 1) < 1e-4 &&
+			Math.abs(now.sy - 1) < 1e-4 &&
+			Math.abs(now.rot ?? 0) < 1e-4);
+	const reference =
+		laidOut ??
+		(untransformed
+			? { width: content.width, height: content.height }
+			: now?.width
+				? { width: now.width, height: now.height }
+				: null);
+	const judged = !!laidOut;
+	const width = reference?.width || viewportWidth;
+	const height = reference?.height || viewportHeight;
 	if (now && Math.abs(now.rot ?? 0) > 1e-4) {
 		const turned = measureTurnedScreenAt(
 			boundary,
@@ -235,6 +271,7 @@ const measureScreenAt = (
 	// read as a straight one, is off by as much as the turn moves it. Measured again.
 	if (
 		now &&
+		judged &&
 		Math.abs((sx / sy) * (now.sy / now.sx) - 1) > SCREEN_TURN_TOLERANCE
 	) {
 		return NOT_MEASURABLE;
