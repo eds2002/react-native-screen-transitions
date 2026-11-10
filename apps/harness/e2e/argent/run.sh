@@ -15,7 +15,10 @@ DIR=.argent/e2e
 if (( SPAM )); then
   # The spam tests are generated, not kept: write them from the matrix as it is now.
   DIR=.argent/e2e/spam
-  python3 -I e2e/scenarios/spam-matrix.py --emit || exit 1
+  PLATFORM=android; [[ $U =~ '^[0-9A-F]{8}-' ]] && PLATFORM=ios
+  # An emulator draws and records at ~15 fps: too few frames to judge, so it checks end states only.
+  TRACK=(); [[ $U == emulator-* ]] && TRACK=(--no-track)
+  python3 -I e2e/scenarios/spam-matrix.py --emit --platform $PLATFORM $TRACK || exit 1
 fi
 FAILED=()
 for test in $DIR/*.yaml(N); do

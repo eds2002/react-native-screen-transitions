@@ -26,12 +26,12 @@ function readState(id) {
  * finger script leads to.
  */
 export function finishSpam(name, { track = true, level }) {
-	const { after, out } = stopRecording(name, readState);
+	const { info, after, out } = stopRecording(name, readState);
 	const problems = [];
 	if (track) {
 		let verdict = {};
 		try {
-			const res = execFileSync("python3", ["-I", path.join(E2E, "visual", "marker.py"), path.join(out, "run.mov"), "--json", path.join(out, "track.json")], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+			const res = execFileSync("python3", ["-I", path.join(E2E, "visual", "marker.py"), path.join(out, "run.mov"), "--json", path.join(out, "track.json"), ...(info.points ? ["--points", info.points.split("x")[0]] : [])], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
 			verdict = JSON.parse(res.split("\n")[0]);
 		} catch (e) {
 			// marker.py exits 1 when it flags something: its first line is still the verdict.

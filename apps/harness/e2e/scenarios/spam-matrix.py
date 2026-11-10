@@ -3,7 +3,7 @@
 Tap and gesture spam over the boundary labs, each run checked frame by frame (spam.sh + marker.py).
 
   spam-matrix.py [--configs substr,...] [--scripts substr,...] [--out results.jsonl]
-  spam-matrix.py --emit [--configs ...] [--scripts ...]
+  spam-matrix.py --emit [--configs ...] [--scripts ...] [--platform ios|android]
 
 Configs are lab × recipe × motion × tree; scripts are finger scripts written per config (the swipe
 that dismisses a screen depends on its motion and level). One JSON line per run goes to --out
@@ -18,8 +18,12 @@ import argparse, json, os, subprocess, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 NEXT, BACK, SCROLL, UNDER = 0.1, 0.3, 0.5, 0.7
 BAR_Y = 0.135
-# card 3 on the unscrolled list (describe: sb-card-3, se-card-3)
+# card 3 on the unscrolled list (describe: sb-card-3, se-card-3). Android (Pixel 4a, 3-button nav)
+# lays the list out lower, with the nav bar over the last ~5%: its points are set by --platform.
 CARD3 = {"shared-bounds": (0.809, 0.887), "shared-elements": (0.809, 0.829)}
+CARD3_ANDROID = {"shared-bounds": (0.809, 0.925), "shared-elements": (0.809, 0.89)}
+# Whether runs track the marked element frame by frame (--no-track: end state only).
+TRACKING = [True]
 
 
 def configs():
@@ -43,7 +47,7 @@ def configs():
                         q += "&method=size"
                     name = f"{'sb' if lab == 'shared-bounds' else 'se'}-{recipe}-{motion}-{tree}{depth}"
                     # sb zoom: the screen grows out of the card, there is no element to follow.
-                    track = not (lab == "shared-bounds" and recipe == "zoom")
+                    track = TRACKING[0] and not (lab == "shared-bounds" and recipe == "zoom")
                     out.append({"lab": lab, "query": q, "name": name, "recipe": recipe, "motion": motion, "track": track})
                     # Swiped shared elements with the size method: a size element is resized, never
                     # scaled, even when overlapping closes re-aim it (the scaled content showed).
@@ -254,7 +258,14 @@ def main():
     ap.add_argument("--scripts", default="")
     ap.add_argument("--out", default=os.path.join(HERE, "..", "results", "spam", "matrix.jsonl"))
     ap.add_argument("--emit", action="store_true", help="write the runs as Argent e2e tests instead of running them")
+    ap.add_argument("--platform", choices=("ios", "android"), default="ios", help="where card 3 is tapped")
+    ap.add_argument("--no-track", action="store_true",
+                    help="end state only, no frame-by-frame tracking (emulators draw and record at ~15 fps)")
     args = ap.parse_args()
+    if args.no_track:
+        TRACKING[0] = False
+    if args.platform == "android":
+        CARD3.update(CARD3_ANDROID)
     want = lambda name, filt: not filt or any(f in name for f in filt.split(","))
     if args.emit:
         return emit(want, args.configs, args.scripts)
