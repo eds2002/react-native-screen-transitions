@@ -101,20 +101,7 @@ export function startRecording() {
  * a message. check(before, after) gets the bridge state at the start of the recording and now.
  */
 export function finish(name, { analyze = [], check, flaky = false } = {}) {
-	const info = JSON.parse(fs.readFileSync(path.join(CURRENT, "recording.json"), "utf8"));
-	execFileSync("sleep", ["1"]);
-	const after = state(info.device);
-	if (info.android) {
-		sh("adb", ["-s", info.device, "shell", "pkill", "-INT", "screenrecord"]);
-		execFileSync("sleep", ["1"]);
-		sh("adb", ["-s", info.device, "pull", "/sdcard/harness-run.mp4", path.join(CURRENT, "run.mov")]);
-	} else {
-		process.kill(info.pid, "SIGINT");
-		for (let i = 0; i < 50 && isAlive(info.pid); i++) execFileSync("sleep", ["0.1"]);
-	}
-	const out = path.join(RESULTS, name);
-	fs.rmSync(out, { recursive: true, force: true });
-	fs.renameSync(CURRENT, out);
+	const { info, after, out } = stopRecording(name);
 	const args = [path.join(E2E, "visual", "analyze.py"), path.join(out, "run.mov"), "--out", out, ...analyze];
 	if (info.points) args.push("--points", info.points);
 	try {
@@ -138,6 +125,29 @@ export function finish(name, { analyze = [], check, flaky = false } = {}) {
 	if (problems.length && !flaky) throw new Error(`${problems.join("; ")}. ${line}`);
 	if (problems.length) console.log(`FLAKY (tolerated): ${problems.join("; ")}`);
 	console.log(line);
+}
+
+/**
+ * Stops the recording startRecording() began and moves it, with what it recorded, to
+ * results/argent/<name>. Returns the recording's info, the bridge state now, and that folder.
+ * `read(id)` reads the state (the bridge summary by default).
+ */
+export function stopRecording(name, read = state) {
+	const info = JSON.parse(fs.readFileSync(path.join(CURRENT, "recording.json"), "utf8"));
+	execFileSync("sleep", ["1"]);
+	const after = read(info.device);
+	if (info.android) {
+		sh("adb", ["-s", info.device, "shell", "pkill", "-INT", "screenrecord"]);
+		execFileSync("sleep", ["1"]);
+		sh("adb", ["-s", info.device, "pull", "/sdcard/harness-run.mp4", path.join(CURRENT, "run.mov")]);
+	} else {
+		process.kill(info.pid, "SIGINT");
+		for (let i = 0; i < 50 && isAlive(info.pid); i++) execFileSync("sleep", ["0.1"]);
+	}
+	const out = path.join(RESULTS, name);
+	fs.rmSync(out, { recursive: true, force: true });
+	fs.renameSync(CURRENT, out);
+	return { info, after, out };
 }
 
 function isAlive(pid) {

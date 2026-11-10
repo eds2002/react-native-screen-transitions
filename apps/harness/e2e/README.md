@@ -25,6 +25,23 @@ marked flaky only warns. Script steps take no arguments, so the device comes fro
 every flagged event as a strip of the frames around it, flagged frames outlined in
 red. `results/` is gitignored.
 
+### Spam matrix
+
+The boundary labs' spam matrix (`e2e/scenarios/spam-matrix.py`: every recipe × motion × tree, each
+with ~10 tap and gesture spam scripts, 483 runs) runs as Argent e2e tests too:
+
+```sh
+apps/harness/e2e/argent/run.sh <device> --spam [name filter]   # e.g. --spam se-styles-slide-size
+```
+
+`--spam` first writes the tests from the matrix (`spam-matrix.py --emit`: `.argent/e2e/spam/<run>.yaml`
+and `e2e/argent/spam/check-<run>.mjs`, both gitignored, so they always match the matrix). Each opens
+its lab with `?marker=1`, records, plays the finger script as one `gesture-custom` step, and its check
+(`e2e/argent/spam/lib.mjs`) tracks the marked element with `visual/marker.py`: missing, doubled,
+jumping or resizing fails it, as do lab errors, an unsettled stack or the wrong end level. Single
+`jump`/`resize` flags on fast-moving cards are often one dropped frame: rerun before chasing one.
+`spam-matrix.py` without `--emit` still runs the same matrix directly (`spam.sh`).
+
 ## Android
 
 `argent/run.sh` drives an Android emulator or device too: pass its adb serial (`emulator-5554`)
