@@ -123,6 +123,62 @@ const resolveStart = (
 };
 
 /**
+ * How an element's style changes to be drawn where it belongs: a transform in front of its own, or,
+ * for an element whose box is sized (the size method), a new box and the translation that puts it
+ * there (`replace`: the transform replaces its own).
+ */
+type Correction = {
+	transform: TransformArrayItem[];
+	replace?: boolean;
+	width?: number;
+	height?: number;
+};
+
+/**
+ * The size method resizes its element's box and never scales it: its content is laid out at the
+ * box's size. A correction that scales it (overlapping transitions: the path it is drawn along is
+ * not the one it was composed along) resizes the box by as much instead, keeping it where the scale
+ * would have drawn it: `p -> L + v + A (p + own - L)` about its center L moves its top-left by
+ * `v + A own + (1 - A) size / 2`. Only for an element moved by translation alone.
+ */
+const resizeInstead = (
+	style: StyleProps,
+	a: number,
+	d: number,
+	vx: number,
+	vy: number,
+): Correction | null => {
+	"worklet";
+	const { width, height } = style;
+	if (typeof width !== "number" || typeof height !== "number") return null;
+	let ownX = 0;
+	let ownY = 0;
+	const own = style.transform;
+	if (Array.isArray(own)) {
+		for (const entry of own as Record<string, unknown>[]) {
+			for (const key in entry) {
+				const value = entry[key];
+				if (typeof value !== "number") return null;
+				if (key === "translateX") ownX += value;
+				else if (key === "translateY") ownY += value;
+				else return null;
+			}
+		}
+	} else if (own !== undefined) {
+		return null;
+	}
+	return {
+		transform: [
+			{ translateX: vx + a * ownX + ((1 - a) * width) / 2 },
+			{ translateY: vy + d * ownY + ((1 - d) * height) / 2 },
+		] as unknown as TransformArrayItem[],
+		replace: true,
+		width: width * a,
+		height: height * d,
+	};
+};
+
+/**
  * The transform to put in front of an element's own bounds transform so that it is drawn where it
  * belongs this frame. Its style was composed along `start -> end` where the screens lay it out; it
  * belongs on the path from where it starts now (resolveStart) to `end`, drawn through the blend of
@@ -135,7 +191,7 @@ const resolveCorrection = (
 	frame: BoundsScreenFrame,
 	style: StyleProps,
 	read: (key: string) => ScreenTransform,
-): TransformArrayItem[] | null => {
+): Correction | null => {
 	"worklet";
 	const t = frame.t;
 	const start = resolveStart(frame, read);
@@ -179,9 +235,15 @@ const resolveCorrection = (
 			Math.abs(placement.d - 1) > EPSILON;
 		if (!scaled && Math.abs(vx) < EPSILON && Math.abs(vy) < EPSILON)
 			return null;
-		return (scaled
-			? [...move, { scaleX: placement.a }, { scaleY: placement.d }]
-			: move) as unknown as TransformArrayItem[];
+		if (scaled) {
+			const resized = resizeInstead(style, placement.a, placement.d, vx, vy);
+			if (resized) return resized;
+		}
+		return {
+			transform: (scaled
+				? [...move, { scaleX: placement.a }, { scaleY: placement.d }]
+				: move) as unknown as TransformArrayItem[],
+		};
 	}
 	// A screen that turns: the element turns back by as much (blending two screens' scales can leave
 	// a little shear, kept as a skew).
@@ -190,13 +252,15 @@ const resolveCorrection = (
 		Math.abs(k) > EPSILON && sy !== 0
 			? [{ skewX: `${Math.atan(k / sy)}rad` }]
 			: [];
-	return [
-		...move,
-		{ rotate: `${rot}rad` },
-		...skew,
-		{ scaleX: sx },
-		{ scaleY: sy },
-	] as unknown as TransformArrayItem[];
+	return {
+		transform: [
+			...move,
+			{ rotate: `${rot}rad` },
+			...skew,
+			{ scaleX: sx },
+			{ scaleY: sy },
+		] as unknown as TransformArrayItem[],
+	};
 };
 
 /**
@@ -283,12 +347,16 @@ export const applyBoundsScreenFrames = (
 		const correction = unmoved
 			? null
 			: resolveCorrection(frame, stripped, read);
-		if (correction) {
+		if (correction?.replace) {
+			stripped.transform = correction.transform as StyleProps["transform"];
+			stripped.width = correction.width;
+			stripped.height = correction.height;
+		} else if (correction) {
 			const transform = stripped.transform;
 			stripped.transform = (
 				Array.isArray(transform)
-					? [...correction, ...(transform as TransformArrayItem[])]
-					: correction
+					? [...correction.transform, ...(transform as TransformArrayItem[])]
+					: correction.transform
 			) as StyleProps["transform"];
 		}
 		if (frame.landed && !coversSource(frame, read)) stripped.opacity = 0;

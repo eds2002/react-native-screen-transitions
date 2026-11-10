@@ -40,6 +40,11 @@ def configs():
                     # sb zoom: the screen grows out of the card, there is no element to follow.
                     track = not (lab == "shared-bounds" and recipe == "zoom")
                     out.append({"lab": lab, "query": q, "name": name, "recipe": recipe, "motion": motion, "track": track})
+                    # Swiped shared elements with the size method: a size element is resized, never
+                    # scaled, even when overlapping closes re-aim it (the scaled content showed).
+                    if lab == "shared-elements" and recipe == "styles" and motion == "slide":
+                        out.append({"lab": lab, "query": q + "&method=size", "name": f"se-styles-slide-size-{tree}{depth}",
+                                    "recipe": recipe, "motion": motion, "track": track})
     return out
 
 
