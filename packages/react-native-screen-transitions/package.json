@@ -91,7 +91,7 @@
 		"@react-navigation/native-stack": "7.18.10",
 		"@testing-library/react-native": "13.3.3",
 		"@types/react": "~19.2.17",
-		"expo-router": "56.2.11",
+		"expo-router": "58.0.30",
 		"react-native-builder-bob": "0.41.0",
 		"react-test-renderer": "19.2.3",
 		"typescript": "catalog:"
