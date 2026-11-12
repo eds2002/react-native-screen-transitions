@@ -55,8 +55,26 @@ it('resets what the full style set when the root escapes (a boundary hidden by i
  expect(output.width).toBe(100);
  expect(output.opacity).toBe(1);
  expect(output.transform).toBeDefined();
- // The reset is sent once; later frames carry layout only.
+ // Later frames keep it at 1: the host applies the slot's opacity, the root's own must not apply twice.
  await act(() => root!.update(<Probe/>));
- expect(output.opacity).toBeUndefined();
+ expect(output.opacity).toBe(1);
+ await act(() => root!.unmount());
+});
+
+it('an escaped root with its own opacity is drawn at the slot\'s opacity once, not at both', async () => {
+ const slots = makeMutable<NormalizedTransitionInterpolatedStyle>({box:{style:{opacity:0.85}}});
+ const presentation = makeMutable<any>({owner:{ready:true, pairKey:'A<>B'}, slots:{box:{style:{opacity:0.85}}}});
+ const localMeasurement = createLocalMeasurementRef(102);
+ writeLocalMeasurement(localMeasurement, {pairKey:'A<>B', bounds:{}} as any);
+ const portalHostReady = makeMutable(true);
+ const escapeState = {boundaryId:'box', presentation, localMeasurement, portalHostReady};
+ let output: any;
+ function Probe() {
+  output = useComposedBoundaryStyle(slots, 'box', {width:100, height:80, opacity:0.85}, 'full', escapeState);
+  return null;
+ }
+ let root: ReturnType<typeof create>;
+ await act(() => {root = create(<Probe/>);});
+ expect(output.opacity).toBe(1);
  await act(() => root!.unmount());
 });

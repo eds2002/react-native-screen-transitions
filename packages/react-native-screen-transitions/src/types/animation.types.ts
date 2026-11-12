@@ -347,6 +347,12 @@ export type NormalizedTransitionSlotStyle = {
 	props?: TransitionSlotProps;
 	/** A bounds element styles() placed this frame (its style moves it along a shared-bound path). */
 	boundsPlaced?: true;
+	/**
+	 * Style keys the slot stopped setting, which this frame resets to a neutral value (0, 1,
+	 * transparent). An element that knows its own resting value for one (a boundary, from its
+	 * style) sets that instead, so a card with rounded corners doesn't draw square for a frame.
+	 */
+	resetStyleKeys?: Record<string, true>;
 };
 
 /**

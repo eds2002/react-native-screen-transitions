@@ -56,6 +56,15 @@ export type BoundsScreenFrame = {
 	startScroll: MeasuredScroll;
 	endScroll: MeasuredScroll;
 	ownScroll: MeasuredScroll;
+	/**
+	 * The transform `bounds().styles()` composed. A slot returned with another transform (the
+	 * user's, spread over the bounds styles) gets it after this one instead of in its place, as a
+	 * transform in the boundary's own style does.
+	 */
+	boundsTransform: unknown;
+	/** The visual props of each end (see visual-styles); null when both are plain. */
+	fromLook: Record<string, unknown> | null;
+	toLook: Record<string, unknown> | null;
 	/** The element's own box where its screen lays it out. */
 	x: number;
 	y: number;
@@ -88,6 +97,8 @@ export const attachBoundsScreenFrame = (
 		end: MeasuredDimensions;
 		startChain: StartPair[];
 		landed?: boolean;
+		fromLook?: Record<string, unknown> | null;
+		toLook?: Record<string, unknown> | null;
 	},
 ): StyleProps => {
 	"worklet";
@@ -118,6 +129,9 @@ export const attachBoundsScreenFrame = (
 		},
 		startChain: params.startChain,
 		landed: !!params.landed,
+		boundsTransform: (style as Record<string, unknown>).transform,
+		fromLook: params.fromLook ?? null,
+		toLook: params.toLook ?? null,
 		startScroll: scrollOf(params.start),
 		endScroll: scrollOf(params.end),
 		ownScroll: scrollOf(layout),

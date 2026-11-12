@@ -58,6 +58,8 @@ function resolveTransitionPair(
 		destinationBounds: matchedLink?.destination?.bounds ?? null,
 		sourceScreenKey: matchedLink?.source?.screenKey ?? null,
 		destinationScreenKey: matchedLink?.destination?.screenKey ?? null,
+		sourceStyles: matchedLink?.source?.styles ?? null,
+		destinationStyles: matchedLink?.destination?.styles ?? null,
 	};
 }
 

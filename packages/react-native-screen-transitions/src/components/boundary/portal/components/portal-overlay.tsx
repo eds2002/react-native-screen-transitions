@@ -17,6 +17,7 @@ import {
 	ScrollStore,
 } from "../../../../stores/scroll.store";
 import type { ScrollMetadataState } from "../../../../types/gesture.types";
+import { omitVisualStyle } from "../../../../utils/bounds/helpers/styles/visual-styles";
 import { PORTAL_POINTER_EVENTS } from "../../../../utils/teleport";
 import { readLocalMeasurement } from "../../measure/local-measurements";
 import {
@@ -151,7 +152,9 @@ const BoundaryPortalPlacement = memo(function BoundaryPortalPlacement({
 
 	const slotStyle = useAnimatedStyle(() => {
 		"worklet";
-		return host.slotsMap.get()[host.boundaryId]?.style ?? NO_STYLES;
+		// The element inside keeps its look (see visual-styles); the host takes the rest.
+		const style = host.slotsMap.get()[host.boundaryId]?.style;
+		return style ? omitVisualStyle(style) : NO_STYLES;
 	});
 
 	return (

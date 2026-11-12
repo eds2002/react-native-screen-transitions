@@ -166,6 +166,22 @@ mock.module("react-native-reanimated", () => ({
 		createAnimatedComponent,
 	},
 	Extrapolation: { CLAMP: "clamp", EXTEND: "extend", IDENTITY: "identity" },
+	// Blends two #rrggbb colors (tests only need the endpoints to differ from the middle).
+	interpolateColor: (
+		value: number,
+		inputRange: number[],
+		outputRange: string[],
+	) => {
+		const t = Math.min(
+			1,
+			Math.max(0, (value - inputRange[0]) / (inputRange[1] - inputRange[0])),
+		);
+		const parse = (c: string) =>
+			[1, 3, 5].map((i) => Number.parseInt(c.slice(i, i + 2), 16));
+		const [a, b] = [parse(outputRange[0]), parse(outputRange[1])];
+		const mixed = a.map((v, i) => Math.round(v + (b[i] - v) * t));
+		return `rgba(${mixed[0]}, ${mixed[1]}, ${mixed[2]}, 1)`;
+	},
 	interpolate: (
 		value: number,
 		inputRange: number[],

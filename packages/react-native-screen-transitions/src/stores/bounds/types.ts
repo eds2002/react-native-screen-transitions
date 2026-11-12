@@ -1,3 +1,4 @@
+import type { StyleProps } from "react-native-reanimated";
 import type {
 	GroupKey,
 	MeasuredBounds,
@@ -35,6 +36,9 @@ export type ResolvedTransitionPair = {
 	destinationBounds: MeasuredBounds | null;
 	sourceScreenKey: ScreenKey | null;
 	destinationScreenKey: ScreenKey | null;
+	/** Each end's own style when it was measured (its look travels with it: see visual-styles). */
+	sourceStyles: StyleProps | null;
+	destinationStyles: StyleProps | null;
 };
 
 export type LinkGroupState = {

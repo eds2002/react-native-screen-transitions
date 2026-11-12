@@ -273,6 +273,8 @@ describe("resolveSlotStyles", () => {
 				props: {
 					pointerEvents: "auto",
 				},
+				// The keys reset to neutral values, for an element that rests at its own (a boundary).
+				resetStyleKeys: { borderRadius: true, filter: true, opacity: true },
 			});
 			expect(omitted.nextPreviousStyleStatesBySlot).toEqual({});
 		});
@@ -309,6 +311,11 @@ describe("resolveSlotStyles", () => {
 				borderRadius: 0,
 				transform: IDENTITY_TRANSFORM,
 				opacity: 0.9,
+			});
+			// Only what was reset is marked, not what the slot still sets.
+			expect(next.resolvedStylesMap.card?.resetStyleKeys).toEqual({
+				borderRadius: true,
+				transform: true,
 			});
 		});
 

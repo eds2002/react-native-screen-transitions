@@ -6,12 +6,15 @@ import {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { NO_STYLES } from "../../../constants";
-import { STYLE_RESET_VALUES } from "../../../providers/orchestrator/styles/constants";
 import {
 	composeSlotStyleWithLocalTransform,
 	getLocalTransformForSlotComposition,
 } from "../../../providers/orchestrator/styles/helpers/compose-slot-style";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
+import {
+	restingStyleValue,
+	VISUAL_STYLE_KEYS,
+} from "../../../utils/bounds/helpers/styles/visual-styles";
 import { queueForgetAppliedStyleKeys } from "../measure/measure-registry";
 import {
 	type BoundaryEscapeState,
@@ -55,8 +58,10 @@ export function useComposedBoundaryStyle(
 			appliedCount++;
 			if (key in style) continue;
 			sameKeys = false;
-			const value =
-				(baseLayout as Record<string, unknown>)[key] ?? STYLE_RESET_VALUES[key];
+			const value = restingStyleValue(
+				key,
+				baseLayout as Record<string, unknown>,
+			);
 			if (value === undefined) continue;
 			if (!reset) reset = {};
 			reset[key] = value;
@@ -81,7 +86,22 @@ export function useComposedBoundaryStyle(
 
 		function resolveStyle(): StyleProps {
 			const slot = id ? slots?.get()[id] : undefined;
-			const value: StyleProps = slot?.style ?? NO_STYLES;
+			let value: StyleProps = slot?.style ?? NO_STYLES;
+			// A key the slot stopped setting comes reset to a neutral value (a radius to 0): the
+			// boundary rests at its own style's value instead. The transform is composed below.
+			const resets = slot?.resetStyleKeys;
+			if (resets) {
+				const own: Record<string, unknown> = { ...value };
+				for (const key in resets) {
+					if (key === "transform" || !(key in own)) continue;
+					const resting = restingStyleValue(
+						key,
+						baseLayout as Record<string, unknown>,
+					);
+					if (resting !== undefined) own[key] = resting;
+				}
+				value = own as StyleProps;
+			}
 			const effectiveKind =
 				kind === "full" && escapeState && isBoundaryEscaped(escapeState)
 					? "layout"
@@ -100,7 +120,16 @@ export function useComposedBoundaryStyle(
 					aspectRatio,
 				} = value;
 
+				// Its frame flies in the overlay host, which takes the move; the element keeps its look.
+				const look: Record<string, unknown> = {};
+				for (const key in value) {
+					if (VISUAL_STYLE_KEYS[key])
+						look[key] = (value as Record<string, unknown>)[key];
+				}
+				// The host applies the slot's opacity; the element's own would apply a second time.
+				if (typeof value.opacity === "number") look.opacity = 1;
 				return {
+					...look,
 					width: width ?? baseLayout.width,
 					height: height ?? baseLayout.height,
 					minWidth: minWidth ?? baseLayout.minWidth,

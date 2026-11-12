@@ -11,6 +11,7 @@ const materializeResolvedBucket = ({
 	hasAnyKeys,
 	hasResetPatch,
 	resetValues,
+	resetKeys,
 }: {
 	source: Record<string, unknown> | undefined;
 	previousKeys: Record<string, true> | undefined;
@@ -19,6 +20,8 @@ const materializeResolvedBucket = ({
 	hasAnyKeys: boolean;
 	hasResetPatch: boolean;
 	resetValues: Record<string, unknown> | undefined;
+	/** Filled with the keys this frame resets (see NormalizedTransitionSlotStyle.resetStyleKeys). */
+	resetKeys?: Record<string, true>;
 }) => {
 	"worklet";
 
@@ -42,6 +45,7 @@ const materializeResolvedBucket = ({
 
 		if (resetValue !== undefined) {
 			resolvedBucket[key] = resetValue;
+			if (resetKeys) resetKeys[key] = true;
 		}
 	}
 
@@ -64,12 +68,14 @@ const materializeResolvedStyle = ({
 	styleKeys,
 	hasAnyStyleKeys,
 	hasStyleResetPatch,
+	resetKeys,
 }: {
 	baseStyle: Record<string, unknown> | undefined;
 	previousState: ResettableStyleState | undefined;
 	styleKeys: Record<string, true> | undefined;
 	hasAnyStyleKeys: boolean;
 	hasStyleResetPatch: boolean;
+	resetKeys?: Record<string, true>;
 }) => {
 	"worklet";
 	return materializeResolvedBucket({
@@ -80,6 +86,7 @@ const materializeResolvedStyle = ({
 		hasAnyKeys: hasAnyStyleKeys,
 		hasResetPatch: hasStyleResetPatch,
 		resetValues: STYLE_RESET_VALUES,
+		resetKeys,
 	});
 };
 
@@ -132,12 +139,17 @@ export const materializeResolvedSlot = ({
 	"worklet";
 	const resolvedSlot = {} as NormalizedTransitionSlotStyle;
 
+	// Only a frame whose keys changed resets any.
+	const resetStyleKeys: Record<string, true> | undefined = hasStyleResetPatch
+		? {}
+		: undefined;
 	const resolvedStyle = materializeResolvedStyle({
 		baseStyle,
 		previousState,
 		styleKeys,
 		hasAnyStyleKeys,
 		hasStyleResetPatch,
+		resetKeys: resetStyleKeys,
 	});
 	const resolvedProps = materializeResolvedProps({
 		baseProps,
@@ -149,6 +161,12 @@ export const materializeResolvedSlot = ({
 
 	resolvedSlot.style = resolvedStyle;
 	resolvedSlot.props = resolvedProps;
+	if (resetStyleKeys) {
+		for (const _key in resetStyleKeys) {
+			resolvedSlot.resetStyleKeys = resetStyleKeys;
+			break;
+		}
+	}
 
 	if (!resolvedSlot.style && !resolvedSlot.props) {
 		return undefined;
