@@ -31,7 +31,6 @@ import {
 } from "./composers";
 import { resolveOverlap } from "./overlap";
 import { attachBoundsScreenFrame } from "./screen-frame";
-import { pickVisualStyle } from "./visual-styles";
 
 const resolveStartEnd = (params: {
 	id: BoundId;
@@ -70,11 +69,8 @@ const resolveStartEnd = (params: {
 		sourceScreenKey,
 		destinationScreenKey,
 		// A custom target has no destination look: the element keeps the source's.
-		fromLook: pickVisualStyle(pair.sourceStyles as Record<string, unknown>),
-		toLook:
-			hasTargetOverride || !pair.destinationStyles
-				? null
-				: pickVisualStyle(pair.destinationStyles as Record<string, unknown>),
+		fromLook: pair.sourceLook,
+		toLook: hasTargetOverride ? null : pair.destinationLook,
 	};
 
 	// A custom target needs no destination element, only the source.

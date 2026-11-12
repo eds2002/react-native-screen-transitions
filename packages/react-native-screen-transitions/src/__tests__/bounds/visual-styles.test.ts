@@ -2,13 +2,14 @@ import { describe, expect, it } from "bun:test";
 import {
 	pickVisualStyle,
 	resolveVisualStyle,
+	transformScale,
 } from "../../utils/bounds/helpers/styles/visual-styles";
 
 describe("a boundary's look travels with it", () => {
 	it("keeps only the visual props of a style", () => {
 		expect(
-			pickVisualStyle({ width: 100, margin: 4, borderRadius: 12, backgroundColor: "#fff" }),
-		).toEqual({ borderRadius: 12 });
+			pickVisualStyle({ width: 100, margin: 4, borderRadius: 12, backgroundColor: "#fff", opacity: 0.5 }),
+		).toEqual({ borderRadius: 12, opacity: 0.5 });
 		expect(pickVisualStyle({ width: 100 })).toBeNull();
 		expect(pickVisualStyle(null)).toBeNull();
 	});
@@ -61,13 +62,46 @@ describe("a boundary's look travels with it", () => {
 		expect(style?.borderRadius).toBeCloseTo(6);
 	});
 
-	it("blends colors, and leaves a color both ends share as it is", () => {
-		const same = resolveVisualStyle({ backgroundColor: "#ff0000" }, { backgroundColor: "#ff0000" }, 0.5, 1, 1);
-		expect(same?.backgroundColor).toBeUndefined();
-		const mixed = resolveVisualStyle({ backgroundColor: "#000000" }, { backgroundColor: "#ffffff" }, 0.5, 1, 1);
-		expect(mixed?.backgroundColor).toBeDefined();
-		expect(mixed?.backgroundColor).not.toBe("#000000");
-		expect(mixed?.backgroundColor).not.toBe("#ffffff");
+	it("leaves colors out: they don't travel", () => {
+		expect(pickVisualStyle({ backgroundColor: "#000000", borderColor: "#fff" })).toBeNull();
+		expect(
+			resolveVisualStyle({ backgroundColor: "#000000" }, { backgroundColor: "#ffffff" }, 0.5, 1, 1),
+		).toBeNull();
+	});
+
+	it("leaves a key either end can't blend (a percentage radius) to the element", () => {
+		const style = resolveVisualStyle({ borderRadius: "50%", borderWidth: 2 }, { borderRadius: 12, borderWidth: 4 }, 0.5, 1, 1);
+		expect(style?.borderRadius).toBeUndefined();
+		expect(style?.borderWidth).toBeCloseTo(3);
+		// A corner falling back to a percentage shorthand can't blend either.
+		const corner = resolveVisualStyle({ borderRadius: "50%" }, { borderTopLeftRadius: 0 }, 0.5, 1, 1);
+		expect(corner?.borderTopLeftRadius).toBeUndefined();
+	});
+
+	it("leaves the keys the interpolator sets itself, but always resolves opacity", () => {
+		const style = resolveVisualStyle(
+			{ borderRadius: 12, shadowRadius: 4, opacity: 0.5 },
+			{ borderRadius: 0, shadowRadius: 8, opacity: 1 },
+			0.5,
+			1,
+			1,
+			{ borderRadius: 3, opacity: 0.2 },
+		);
+		expect(style?.borderRadius).toBeUndefined();
+		expect(style?.shadowRadius).toBeCloseTo(6);
+		expect(style?.opacity).toBeCloseTo(0.75);
+	});
+
+	it("picks a shadow offset as a copy", () => {
+		const offset = { width: 0, height: 8 };
+		const look = pickVisualStyle({ shadowOffset: offset, shadowRadius: 12 });
+		expect(look?.shadowOffset).toEqual(offset);
+		expect(look?.shadowOffset).not.toBe(offset);
+	});
+
+	it("reads the scale a transform draws at, per axis", () => {
+		expect(transformScale([{ translateX: 10 }, { scale: 2 }, { scaleX: 0.5 }, { rotate: "10deg" }])).toEqual({ x: 1, y: 2 });
+		expect(transformScale(undefined)).toEqual({ x: 1, y: 1 });
 	});
 
 	it("has nothing to set when neither end has a look", () => {

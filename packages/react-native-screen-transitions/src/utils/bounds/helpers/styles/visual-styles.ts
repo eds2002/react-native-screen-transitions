@@ -1,5 +1,5 @@
-import { interpolateColor, type StyleProps } from "react-native-reanimated";
-import { STYLE_RESET_VALUES } from "../../../../providers/orchestrator/styles/constants";
+import type { StyleProps } from "react-native-reanimated";
+import { STYLE_RESET_VALUES } from "../../../../style-reset-values";
 
 /**
  * A boundary's look travels with it: the visual props its two ends set (corners, border widths,
@@ -31,24 +31,11 @@ const BORDER_WIDTH_KEYS = [
 	"borderEndWidth",
 ] as const;
 
-/**
- * Colors do not travel (not in VISUAL_STYLE_KEYS, not picked): on iOS an animated background color
- * on the element is dropped for a frame when its frame returns from the overlay host, drawing it
- * without its background. Blend colors in the interpolator, on a view of your own, until the
- * element can carry them through that hand-back.
+/*
+ * Colors do not travel: on iOS an animated background color on the element is dropped for a frame
+ * when its frame returns from the overlay host, drawing it without its background. Blend colors in
+ * the interpolator, on a view of your own, until the element can carry them through that hand-back.
  */
-const COLOR_KEYS = [
-	"backgroundColor",
-	"borderColor",
-	"borderTopColor",
-	"borderRightColor",
-	"borderBottomColor",
-	"borderLeftColor",
-	"shadowColor",
-] as const;
-
-/** Drawn as is: not affected by the element's scale. */
-const PLAIN_KEYS = ["opacity", "shadowOpacity"] as const;
 
 /** Scaled with the element, like corners. */
 const SCALED_KEYS = ["shadowRadius"] as const;
@@ -121,30 +108,37 @@ export const restingStyleValue = (
 		: undefined;
 };
 
-/** The visual props of a style that travel with its boundary (everything else stays as laid out). */
+/**
+ * The visual props of a style that travel with its boundary (everything else stays as laid out),
+ * picked once when an end is measured. A shadow offset is copied: it is the one object a look holds.
+ */
 export const pickVisualStyle = (
 	style: Look | null | undefined,
 ): Look | null => {
 	"worklet";
 	if (!style) return null;
 	let picked: Look | null = null;
-	const take = (key: string) => {
+	for (const key in style) {
+		if (!VISUAL_STYLE_KEYS[key] && key !== "opacity") continue;
 		const value = style[key];
-		if (value === undefined || value === null) return;
+		if (value === undefined || value === null) continue;
 		if (!picked) picked = {};
-		picked[key] = value;
-	};
-	for (const key of RADIUS_KEYS) take(key);
-	for (const key of BORDER_WIDTH_KEYS) take(key);
-	for (const key of PLAIN_KEYS) take(key);
-	for (const key of SCALED_KEYS) take(key);
-	take("shadowOffset");
+		if (key === "shadowOffset") {
+			const offset = value as { width?: unknown; height?: unknown };
+			picked[key] = { width: offset.width, height: offset.height };
+		} else picked[key] = value;
+	}
 	return picked;
 };
 
-const numberOr = (value: unknown, fallback: number) => {
+/** A value one end gives a key: a number, absent (undefined), or one that can't blend (NaN). */
+const endValue = (look: Look, key: string, shorthand: string | undefined) => {
 	"worklet";
-	return typeof value === "number" ? value : fallback;
+	let value = look[key];
+	if ((value === undefined || value === null) && shorthand !== undefined)
+		value = look[shorthand];
+	if (value === undefined || value === null) return undefined;
+	return typeof value === "number" ? value : Number.NaN;
 };
 
 const lerp = (a: number, b: number, t: number) => {
@@ -152,11 +146,36 @@ const lerp = (a: number, b: number, t: number) => {
 	return a + (b - a) * t;
 };
 
+/** How much a transform scales what it draws, per axis (a rotation keeps the size). */
+export const transformScale = (
+	transform: unknown,
+): { x: number; y: number } => {
+	"worklet";
+	let x = 1;
+	let y = 1;
+	if (!Array.isArray(transform)) return { x, y };
+	for (let i = 0; i < transform.length; i++) {
+		const step = transform[i] as Record<string, unknown> | null;
+		if (!step) continue;
+		if (typeof step.scale === "number") {
+			x *= step.scale;
+			y *= step.scale;
+		}
+		if (typeof step.scaleX === "number") x *= step.scaleX;
+		if (typeof step.scaleY === "number") y *= step.scaleY;
+	}
+	return { x, y };
+};
+
 /**
  * The visual props of an element `t` of the way from `from` (the source's look) to `to` (the
- * destination's), for an element drawn at `scaleX` x `scaleY` of its laid-out box. Corners and
- * borders are one value for both axes, so under an uneven scale they are set for the mean of the two
- * (geometric): exact under an even scale, the nearest a single value gets otherwise.
+ * destination's), for an element its transform scales by `scaleX` x `scaleY`. Corners, borders and
+ * shadow blur are divided by that scale so they draw at their true size; under an uneven scale a
+ * single value can't be exact for both axes, so they take the mean of the two (geometric).
+ * A key only one end sets goes to or from its neutral value; a corner or side an end leaves unset
+ * takes that end's shorthand. A key either end sets to something that can't blend (a percentage
+ * radius) is left out, so the element keeps its own. `skip` holds keys the caller sets itself (its
+ * own corners or shadow win); opacity is always resolved, for the caller to multiply with its own.
  */
 export const resolveVisualStyle = (
 	from: Look | null | undefined,
@@ -164,6 +183,7 @@ export const resolveVisualStyle = (
 	t: number,
 	scaleX: number,
 	scaleY: number,
+	skip?: Look,
 ): StyleProps | null => {
 	"worklet";
 	if (!from && !to) return null;
@@ -175,66 +195,42 @@ export const resolveVisualStyle = (
 	const sy = Math.abs(scaleY) > 1e-6 ? Math.abs(scaleY) : 1;
 	const s = Math.sqrt(sx * sy);
 	let out: Record<string, unknown> | null = null;
-	const set = (key: string, value: unknown) => {
+	for (const key in VISUAL_STYLE_KEYS) {
+		if (skip && key in skip) continue;
+		if (key === "shadowOffset") continue;
+		const own = a[key] !== undefined || b[key] !== undefined;
+		if (!own) continue;
+		const shorthand = SHORTHAND_OF[key];
+		const va = endValue(a, key, shorthand);
+		const vb = endValue(b, key, shorthand);
+		const neutral = key === "shadowOpacity" ? 0 : NEUTRAL_WIDTH; // radius, width, blur: 0
+		const x = va === undefined ? neutral : va;
+		const y = vb === undefined ? neutral : vb;
+		if (Number.isNaN(x) || Number.isNaN(y)) continue;
+		const value = lerp(x, y, t);
 		if (!out) out = {};
-		out[key] = value;
-	};
-	const has = (key: string) => a[key] !== undefined || b[key] !== undefined;
-
-	// A corner side only one end sets falls back to that end's `borderRadius`, then to square.
-	for (const key of RADIUS_KEYS) {
-		if (!has(key)) continue;
-		const fa = key === "borderRadius" ? 0 : numberOr(a.borderRadius, 0);
-		const fb = key === "borderRadius" ? 0 : numberOr(b.borderRadius, 0);
-		set(key, lerp(numberOr(a[key], fa), numberOr(b[key], fb), t) / s);
+		out[key] = key === "shadowOpacity" ? value : value / s;
 	}
-	for (const key of BORDER_WIDTH_KEYS) {
-		if (!has(key)) continue;
-		const fa =
-			key === "borderWidth" ? NEUTRAL_WIDTH : numberOr(a.borderWidth, 0);
-		const fb =
-			key === "borderWidth" ? NEUTRAL_WIDTH : numberOr(b.borderWidth, 0);
-		set(key, lerp(numberOr(a[key], fa), numberOr(b[key], fb), t) / s);
+	// Opacity isn't skipped: the caller multiplies it with its own (a hidden copy stays hidden).
+	if (a.opacity !== undefined || b.opacity !== undefined) {
+		const x = endValue(a, "opacity", undefined);
+		const y = endValue(b, "opacity", undefined);
+		const ox = x === undefined ? 1 : x;
+		const oy = y === undefined ? 1 : y;
+		if (!Number.isNaN(ox) && !Number.isNaN(oy)) {
+			if (!out) out = {};
+			out.opacity = lerp(ox, oy, t);
+		}
 	}
-	// A color blends only between two set colors; a color one end leaves unset stays the other
-	// end's (fading it through transparent would empty the element mid-flight).
-	for (const key of COLOR_KEYS) {
-		if (!has(key)) continue;
-		const ca = (a[key] ??
-			(key === "backgroundColor" ? undefined : a.borderColor)) as
-			| string
-			| undefined;
-		const cb = (b[key] ??
-			(key === "backgroundColor" ? undefined : b.borderColor)) as
-			| string
-			| undefined;
-		// Nothing to blend: the element's own color stands (setting it anyway costs a frame when the
-		// key is handed back to the static style).
-		if (ca === undefined || cb === undefined || ca === cb) continue;
-		set(key, interpolateColor(t, [0, 1], [ca, cb]));
-	}
-	for (const key of PLAIN_KEYS) {
-		if (!has(key)) continue;
-		const neutral = STYLE_RESET_VALUES[key] as number;
-		set(key, lerp(numberOr(a[key], neutral), numberOr(b[key], neutral), t));
-	}
-	for (const key of SCALED_KEYS) {
-		if (!has(key)) continue;
-		set(key, lerp(numberOr(a[key], 0), numberOr(b[key], 0), t) / s);
-	}
-	if (has("shadowOffset")) {
-		const oa = (a.shadowOffset ?? { width: 0, height: 0 }) as {
-			width?: number;
-			height?: number;
+	if (!(skip && "shadowOffset" in skip) && (a.shadowOffset || b.shadowOffset)) {
+		const oa = (a.shadowOffset ?? {}) as { width?: unknown; height?: unknown };
+		const ob = (b.shadowOffset ?? {}) as { width?: unknown; height?: unknown };
+		const n = (v: unknown) => (typeof v === "number" ? v : 0);
+		if (!out) out = {};
+		out.shadowOffset = {
+			width: lerp(n(oa.width), n(ob.width), t) / sx,
+			height: lerp(n(oa.height), n(ob.height), t) / sy,
 		};
-		const ob = (b.shadowOffset ?? { width: 0, height: 0 }) as {
-			width?: number;
-			height?: number;
-		};
-		set("shadowOffset", {
-			width: lerp(oa.width ?? 0, ob.width ?? 0, t) / sx,
-			height: lerp(oa.height ?? 0, ob.height ?? 0, t) / sy,
-		});
 	}
 	return out;
 };

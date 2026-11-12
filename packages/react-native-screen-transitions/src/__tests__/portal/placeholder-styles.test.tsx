@@ -19,6 +19,10 @@ it("an absolutely placed box sized by its insets is not pinned (absoluteFill in 
 	expect(resolveSizedAxes({ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 })).toEqual({ width: true, height: true });
 	expect(resolveSizedAxes({ position: "absolute", left: 0, right: 0, top: 10 })).toEqual({ width: true, height: false });
 	expect(resolveSizedAxes({ position: "absolute", inset: 0 })).toEqual({ width: true, height: true });
+	// Logical insets count too (RTL-aware start/end, insetInline/insetBlock).
+	expect(resolveSizedAxes({ position: "absolute", start: 0, end: 0, top: 0, bottom: 0 })).toEqual({ width: true, height: true });
+	expect(resolveSizedAxes({ position: "absolute", insetInline: 0, insetBlock: 0 })).toEqual({ width: true, height: true });
+	expect(resolveSizedAxes({ position: "absolute", left: 0, end: 0, insetBlockStart: 0, insetBlockEnd: 0 })).toEqual({ width: true, height: true });
 	// In the flow, insets only offset the box: its content still sizes it.
 	expect(resolveSizedAxes({ left: 0, right: 0, top: 0, bottom: 0 })).toEqual({ width: false, height: false });
 });

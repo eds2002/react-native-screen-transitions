@@ -50,18 +50,42 @@ export function createStandaloneDescriptor(
 	};
 }
 
-const shallowEqual = (a: object, b: object) => {
+const shallowEqual = (
+	a: object,
+	b: object,
+	field: (x: unknown, y: unknown) => boolean = Object.is,
+) => {
 	const aKeys = Object.keys(a) as (keyof typeof a)[];
 	return (
 		aKeys.length === Object.keys(b).length &&
-		aKeys.every((key) => Object.is(a[key], b[key]))
+		aKeys.every((key) => field(a[key], b[key]))
 	);
+};
+
+/** One option field: an inline array or object (`snapPoints: [0.5, 1]`) compares by its items. */
+const sameField = (x: unknown, y: unknown) => {
+	if (Object.is(x, y)) return true;
+	if (Array.isArray(x) && Array.isArray(y)) {
+		return x.length === y.length && x.every((item, i) => Object.is(item, y[i]));
+	}
+	if (
+		x !== null &&
+		y !== null &&
+		typeof x === "object" &&
+		typeof y === "object" &&
+		!Array.isArray(x) &&
+		!Array.isArray(y)
+	) {
+		return shallowEqual(x, y);
+	}
+	return false;
 };
 
 /** Inline option objects keep their identity while their fields don't change. */
 function useStableOptions(options: MotionOptions): MotionOptions {
 	const stable = useRef(options);
-	if (!shallowEqual(stable.current, options)) stable.current = options;
+	if (!shallowEqual(stable.current, options, sameField))
+		stable.current = options;
 	return stable.current;
 }
 

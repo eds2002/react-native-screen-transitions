@@ -6,6 +6,7 @@ import type {
 	TagID,
 	TagLink,
 } from "../../../types/bounds.types";
+import { pickVisualStyle } from "../../../utils/bounds/helpers/styles/visual-styles";
 import {
 	createGroupTag,
 	ensurePairGroups,
@@ -191,6 +192,8 @@ const createLinkSide = (
 		screenKey,
 		bounds,
 		styles: snapshotStyles(styles),
+		// Picked once here, not per frame (and before the snapshot drops the shadow offset).
+		look: pickVisualStyle(styles as Record<string, unknown>) ?? undefined,
 		handoff: runtimeFlags.handoff ? true : undefined,
 	};
 };

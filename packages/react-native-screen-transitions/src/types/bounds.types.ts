@@ -521,7 +521,11 @@ export type BoundsLinkStatus =
 	| "destination-incomplete"
 	| "complete";
 
-export type TagLinkSide = ScreenIdentifier & MeasuredEntry;
+export type TagLinkSide = ScreenIdentifier &
+	MeasuredEntry & {
+		/** The end's look (see visual-styles), picked when it was measured. */
+		look?: Record<string, unknown> | null;
+	};
 export type SourceTagLinkSide = TagLinkSide;
 
 type TagLinkBase = {

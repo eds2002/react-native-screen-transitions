@@ -43,4 +43,15 @@ describe("a transform returned with the bounds styles", () => {
 		const copied = { ...styles, transform: flight.map((step) => ({ ...step })) };
 		expect(placed(copied)).toEqual(flight);
 	});
+
+	it("leaves a transform that already composed the bounds one itself (no double flight)", () => {
+		const styles = boundsStyles(flight);
+		const manual = { ...styles, transform: [...flight.map((step) => ({ ...step })), { rotate: "5deg" }] };
+		expect(placed(manual)).toEqual([...flight, { rotate: "5deg" }]);
+	});
+
+	it("takes an empty transform as an opt-out (the element stays put)", () => {
+		const styles = boundsStyles(flight);
+		expect(placed({ ...styles, transform: [] })).toEqual([]);
+	});
 });

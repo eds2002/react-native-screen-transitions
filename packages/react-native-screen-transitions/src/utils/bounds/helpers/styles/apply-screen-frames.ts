@@ -34,7 +34,7 @@ import {
 	type MeasuredScroll,
 	scrollOf,
 } from "./screen-frame";
-import { resolveVisualStyle } from "./visual-styles";
+import { resolveVisualStyle, transformScale } from "./visual-styles";
 
 /** A style this file builds itself, so it may write to it (Reanimated 4.7 types styles read-only). */
 type OwnStyle = { -readonly [K in keyof StyleProps]: StyleProps[K] };
@@ -53,14 +53,17 @@ const stripFrame = (style: StyleProps): OwnStyle => {
 
 const EPSILON = 1e-4;
 
-/** Two transform arrays with the same steps (styles may be copied on their way here). */
-const sameTransform = (a: unknown[], b: unknown[]) => {
+/**
+ * Whether `own` already holds the steps of `generated` first (styles may be copied on their way
+ * here, so steps are compared by value): an interpolator that composed the bounds transform itself.
+ */
+const startsWithTransform = (own: unknown[], generated: unknown[]) => {
 	"worklet";
-	if (a === b) return true;
-	if (a.length !== b.length) return false;
-	for (let i = 0; i < a.length; i++) {
-		const x = a[i] as Record<string, unknown>;
-		const y = b[i] as Record<string, unknown>;
+	if (own === generated) return true;
+	if (own.length < generated.length) return false;
+	for (let i = 0; i < generated.length; i++) {
+		const x = own[i] as Record<string, unknown>;
+		const y = generated[i] as Record<string, unknown>;
 		if (x === y) continue;
 		if (!x || !y || typeof x !== "object" || typeof y !== "object")
 			return false;
@@ -365,24 +368,20 @@ export const applyBoundsScreenFrames = (
 		const stripped = stripFrame(style);
 		// A transform returned in place of the bounds one composes with it (after it, in the
 		// element's own space): spreading `bounds().styles()` and adding a transform keeps the flight.
+		// One that already starts with the bounds steps is composed already; an empty one opts out.
 		const own = stripped.transform;
 		const generated = frame.boundsTransform;
 		if (
 			Array.isArray(own) &&
+			own.length > 0 &&
 			Array.isArray(generated) &&
-			!sameTransform(own, generated)
+			!startsWithTransform(own, generated)
 		) {
 			stripped.transform = [
 				...(generated as TransformArrayItem[]),
 				...(own as TransformArrayItem[]),
 			] as StyleProps["transform"];
 		}
-		// The box the element is laid out at (the size method resizes it to its path; otherwise its
-		// screen's layout), against the rect its path draws it at: the scale its look is drawn under.
-		const boxWidth =
-			typeof stripped.width === "number" ? stripped.width : frame.width;
-		const boxHeight =
-			typeof stripped.height === "number" ? stripped.height : frame.height;
 		const unmoved =
 			!frame.startChain.length &&
 			!frame.startScroll &&
@@ -407,13 +406,16 @@ export const applyBoundsScreenFrames = (
 			) as StyleProps["transform"];
 		}
 		if (frame.fromLook || frame.toLook) {
-			const drawn = lerpRect(frame.start, frame.end, frame.t);
+			// Drawn at its true size under the scale the element ends up drawn at (its path's, the
+			// correction's and any of the interpolator's own); keys the interpolator sets stay its own.
+			const scale = transformScale(stripped.transform);
 			const look = resolveVisualStyle(
 				frame.fromLook,
 				frame.toLook,
 				frame.t,
-				boxWidth > 0 ? drawn.width / boxWidth : 1,
-				boxHeight > 0 ? drawn.height / boxHeight : 1,
+				scale.x,
+				scale.y,
+				style as Record<string, unknown>,
 			);
 			if (look) {
 				const hidden = stripped.opacity;
