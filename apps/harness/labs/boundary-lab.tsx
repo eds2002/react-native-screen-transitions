@@ -84,6 +84,38 @@ const MARKER = "#00ff66";
 const isMarked = (config, id: string) =>
 	config.get().marker === 1 && id === "3";
 
+/**
+ * look=styled: what each end looks like. The list card is a rounded, outlined, shadowed card; each
+ * level's slot is something else (square, or very round; no border; faded), so every visual prop
+ * changes along the flight.
+ */
+const LOOKS = {
+	list: {
+		borderRadius: 28,
+		borderWidth: 3,
+		borderColor: "#ffffff",
+		shadowColor: "#000000",
+		shadowOpacity: 0.35,
+		shadowRadius: 12,
+		shadowOffset: { width: 0, height: 6 },
+	},
+	slot: (level: number) =>
+		level % 2 === 1
+			? { borderRadius: 0, opacity: 0.85 }
+			: { borderRadius: 60, borderTopLeftRadius: 0, borderWidth: 0 },
+	// The tracked element keeps its exact color and box for the tracker (marker.py): only its
+	// corners and shadow change.
+	marked: {
+		list: {
+			borderRadius: 28,
+			shadowColor: "#000000",
+			shadowOpacity: 0.35,
+			shadowRadius: 12,
+		},
+		slot: (level: number) => ({ borderRadius: level % 2 === 1 ? 0 : 60 }),
+	},
+};
+
 const CARDS = Array.from({ length: 12 }, (_, i) => `${i + 1}`);
 const CAROUSEL = Array.from({ length: 6 }, (_, i) => `c${i + 1}`);
 
@@ -106,6 +138,9 @@ function createConfig(kind: BoundaryLabKind, prefix: string) {
 		demo: 0,
 		// list=plain: React Native's own ScrollView instead of Transition.ScrollView (no wrapper).
 		list: "transition",
+		// look=styled: each end of a shared bound looks different (corners, border, shadow, opacity):
+		// its look has to travel with it, drawn at its true size whatever the element's scale.
+		look: "plain",
 	};
 	let cfg = initial;
 	const listeners = new Set<() => void>();
@@ -346,7 +381,9 @@ const detailOptions =
 				const content = motionStyle(config.motion.get(), props);
 				// auto: the boundary is left to fly on its own.
 				const boundary = r === "auto" ? {} : { [id]: slot };
-				return content ? { content: { style: content }, ...boundary } : boundary;
+				return content
+					? { content: { style: content }, ...boundary }
+					: boundary;
 			},
 		};
 	};
@@ -467,6 +504,8 @@ function Card({ config, id, testID, onPress, width, height }) {
 						? MARKER
 						: colorFor(`card${id}`),
 				},
+				config.get().look === "styled" &&
+					(isMarked(config, id) ? LOOKS.marked.list : LOOKS.list),
 			]}
 		>
 			<Text style={styles.cardLabel}>{id}</Text>
@@ -661,6 +700,8 @@ function makeDetail(config: Config, rig) {
 								? MARKER
 								: colorFor(`slot${level}`),
 						},
+						cfg.look === "styled" &&
+							(isMarked(config, id) ? LOOKS.marked.slot(level) : LOOKS.slot(level)),
 					]}
 				>
 					<Text style={styles.cardLabel}>{id}</Text>

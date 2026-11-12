@@ -49,6 +49,15 @@ def configs():
                     # sb zoom: the screen grows out of the card, there is no element to follow.
                     track = TRACKING[0] and not (lab == "shared-bounds" and recipe == "zoom")
                     out.append({"lab": lab, "query": q, "name": name, "recipe": recipe, "motion": motion, "track": track})
+                    # look=styled: the two ends look different (corners, border, shadow, opacity), so
+                    # each flight carries its look along; it must stay seamless under spam too.
+                    if lab == "shared-bounds" and recipe == "styles" and motion in ("slide", "swirl") and tree in ("flat", "below"):
+                        out.append({"lab": lab, "query": q + "&look=styled", "name": f"{name}-styled",
+                                    "recipe": recipe, "motion": motion, "track": track})
+                        if motion == "slide":
+                            out.append({"lab": lab, "query": q + "&method=size&look=styled",
+                                        "name": f"sb-styles-slide-size-{tree}{depth}-styled",
+                                        "recipe": recipe, "motion": motion, "track": track})
                     # Swiped shared elements with the size method: a size element is resized, never
                     # scaled, even when overlapping closes re-aim it (the scaled content showed).
                     if lab == "shared-elements" and recipe == "styles" and motion == "slide":
