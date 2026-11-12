@@ -14,8 +14,14 @@ export const resolveSizedAxes = (style: unknown): SizedAxes => {
 		string,
 		unknown
 	>;
-	const width = flat.width !== undefined && flat.width !== "auto";
-	const height = flat.height !== undefined && flat.height !== "auto";
+	const set = (key: string) => flat[key] !== undefined && flat[key] !== "auto";
+	// An absolutely placed box with both insets on an axis is sized by them (absoluteFill): a pin
+	// would freeze it at its first size when its parent resizes it later.
+	const absolute = flat.position === "absolute";
+	const inset = (start: string, end: string) =>
+		absolute && (set("inset") || (set(start) && set(end)));
+	const width = set("width") || inset("left", "right");
+	const height = set("height") || inset("top", "bottom");
 	// An aspect ratio derives the other axis from the one that is set.
 	const ratio = flat.aspectRatio !== undefined && (width || height);
 	return { width: width || ratio, height: height || ratio };

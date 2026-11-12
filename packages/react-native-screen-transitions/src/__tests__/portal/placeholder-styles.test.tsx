@@ -15,6 +15,14 @@ it("an axis the style sizes is not pinned; an aspect ratio sizes the other axis"
 	expect(resolveSizedAxes(undefined)).toEqual({ width: false, height: false });
 });
 
+it("an absolutely placed box sized by its insets is not pinned (absoluteFill in a resizing parent)", () => {
+	expect(resolveSizedAxes({ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 })).toEqual({ width: true, height: true });
+	expect(resolveSizedAxes({ position: "absolute", left: 0, right: 0, top: 10 })).toEqual({ width: true, height: false });
+	expect(resolveSizedAxes({ position: "absolute", inset: 0 })).toEqual({ width: true, height: true });
+	// In the flow, insets only offset the box: its content still sizes it.
+	expect(resolveSizedAxes({ left: 0, right: 0, top: 0, bottom: 0 })).toEqual({ width: false, height: false });
+});
+
 const layoutEvent = (width: number, height: number) => ({ nativeEvent: { layout: { x: 0, y: 0, width, height } } }) as any;
 
 const renderPlaceholder = async (sized: { width: boolean; height: boolean }) => {
