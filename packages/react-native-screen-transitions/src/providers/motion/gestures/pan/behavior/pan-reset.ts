@@ -26,15 +26,16 @@ export const resetPanGestureValues = ({
 	updateLifecycle = true,
 }: ResetPanGestureValuesProps) => {
 	"worklet";
+	const requestId = animations?.progressRequest.get().id;
 	const finishPanReset = () => {
 		"worklet";
-		if (!updateLifecycle || plan.shouldDismiss) {
+		if (!updateLifecycle || plan.shouldDismiss || gestures.dragging.get()) {
 			return;
 		}
 
 		gestures.initiator.set(null);
 		gestures.settling.set(FALSE);
-		if (completeMotion) {
+		if (completeMotion && animations?.progressRequest.get().id === requestId) {
 			animations?.progressAnimating.set(FALSE);
 			animations?.progressSettled.set(TRUE);
 		}

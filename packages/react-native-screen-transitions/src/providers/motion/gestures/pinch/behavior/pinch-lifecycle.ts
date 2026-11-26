@@ -20,6 +20,10 @@ export const startPinchBase = (runtime: PinchGestureRuntime) => {
 		stores: { gestures, animations },
 	} = runtime;
 
+	const request = animations.progressRequest.get();
+	if (request.phase === "pending") {
+		animations.progressRequest.set({ id: request.id, phase: "idle" });
+	}
 	emitMotionStart(animations);
 	gestures.dragging.set(TRUE);
 	gestures.dismissing.set(0);
@@ -61,7 +65,7 @@ export const trackPinchGesture = (
 export const finalizePinchRelease = (
 	release: PinchReleaseResult,
 	runtime: PinchGestureRuntime,
-	requestDismiss?: () => void,
+	requestDismiss?: (id: number) => void,
 ) => {
 	"worklet";
 	const {
@@ -87,6 +91,7 @@ export const finalizePinchRelease = (
 		gestures,
 		animations,
 		shouldDismiss: release.shouldDismiss,
+		completeMotion: !release.shouldDismiss && progressAlreadyAtTarget,
 		resetValuesImmediately: release.resetValuesImmediately,
 	});
 
@@ -95,11 +100,12 @@ export const finalizePinchRelease = (
 		return;
 	}
 
-	animateToProgress({
+	const id = animateToProgress({
 		target: release.target,
 		spec: release.transitionSpec,
 		emitWillAnimate: false,
 		markEntering: false,
+		isDragging: gestures.dragging,
 		animations,
 		targetProgress: system.targetProgress,
 		animationProgress: system.animationProgress,
@@ -107,6 +113,6 @@ export const finalizePinchRelease = (
 	});
 
 	if (release.shouldDismiss && requestDismiss) {
-		scheduleOnRN(requestDismiss);
+		scheduleOnRN(requestDismiss, id);
 	}
 };

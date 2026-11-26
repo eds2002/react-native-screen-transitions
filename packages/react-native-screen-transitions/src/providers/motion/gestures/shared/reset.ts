@@ -48,7 +48,7 @@ const animateResetValue = (
 	value.set(
 		animate(toValue, config, (state) => {
 			"worklet";
-			if (state.finished) {
+			if (state === "finished") {
 				onFinished();
 			}
 		}),

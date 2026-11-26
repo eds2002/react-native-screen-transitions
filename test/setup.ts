@@ -277,7 +277,7 @@ mock.module(
 		withInternalTiming: (
 			toValue: number,
 			config?: Record<string, unknown>,
-			callback?: (state: { finished: boolean; settled: boolean }) => void,
+			callback?: (state: "finished" | "settled" | "cancelled") => void,
 			animationProgress?: {
 				value: { set: (value: number) => void };
 				from: number;
@@ -290,8 +290,7 @@ mock.module(
 				animationProgress.value.set(withTiming(animationProgress.to, config));
 			}
 			return withTiming(toValue, config, (finished?: boolean) => {
-				const didFinish = finished === true;
-				callback?.({ finished: didFinish, settled: didFinish });
+				callback?.(finished ? "finished" : "cancelled");
 			});
 		},
 	}),

@@ -1,8 +1,6 @@
 import { useLayoutEffect, useRef } from "react";
-import { useAnimatedReaction } from "react-native-reanimated";
-import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
+import { scheduleOnUI } from "react-native-worklets";
 import { AnimationProgress } from "../../../../../constants";
-import useStableCallback from "../../../../../hooks/use-stable-callback";
 import {
 	type BaseDescriptor,
 	useBuilderStore,
@@ -44,31 +42,10 @@ export function useOpenTransitionIntent(
 	current: BaseDescriptor,
 	animations: MotionAnimationValues,
 	system: MotionTransitionValues,
-	onComplete?: () => void,
 ) {
 	const initialized = useRef(false);
 	const isFirstKey = useBuilderStore((store) => store.derivations.isFirstKey);
 	const { requestLifecycleTransition } = system.actions;
-	const completeOpen = useStableCallback(() => {
-		onComplete?.();
-	});
-	const { animationProgress } = system;
-	const { closing } = animations;
-
-	useAnimatedReaction(
-		() => {
-			"worklet";
-			return (
-				!closing.get() && animationProgress.get() === AnimationProgress.Visible
-			);
-		},
-		(complete, previouslyComplete) => {
-			"worklet";
-			if (complete && !previouslyComplete) {
-				scheduleOnRN(completeOpen);
-			}
-		},
-	);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Must only run once on mount
 	useLayoutEffect(() => {

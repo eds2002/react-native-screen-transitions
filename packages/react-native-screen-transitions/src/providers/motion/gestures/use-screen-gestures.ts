@@ -3,6 +3,7 @@ import { Gesture } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
 import { ScrollStore } from "../../../stores/scroll.store";
 import { useBuilderStore } from "../../builder";
+import { useRequestDismissForProgress } from "../animation/use-request-dismiss-for-progress";
 import type { ScreenOptionsContextValue } from "../options/types";
 import type { MotionValues } from "../types";
 import { useScreenGestureConfig } from "./ownership/hooks/use-screen-gesture-config";
@@ -22,9 +23,13 @@ export function useScreenGestures(
 	const scrollState = ScrollStore.getValue(currentScreenKey, "coordination");
 	const gestureOwners = useSharedValue({ ...NO_GESTURE_OWNERS });
 	const gestureCompositionOwner = useSharedValue<GestureCompositionOwner>(null);
+	const dismissForProgress = useRequestDismissForProgress(
+		values.progressRequest,
+		onDismissRequest,
+	);
 	const panGesture = useBuildPanGesture({
 		values,
-		onDismissRequest,
+		onDismissRequest: dismissForProgress,
 		scrollState,
 		screenOptions,
 		gestureConfig,
@@ -33,7 +38,7 @@ export function useScreenGestures(
 	});
 	const pinchGesture = useBuildPinchGesture({
 		values,
-		onDismissRequest,
+		onDismissRequest: dismissForProgress,
 		screenOptions,
 		gestureConfig,
 		gestureCompositionOwner,

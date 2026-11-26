@@ -74,7 +74,9 @@ describe("internal withSpring", () => {
 		expect(springAnimation.velocity).toBe(2500);
 	});
 
-	test("tracks visual settlement before final spring completion", () => {
+	test.each([true, false])(
+		"distinguishes spring settlement from final completion or cancellation (%s)",
+		(shouldFinish) => {
 		const states: AnimationState[] = [];
 		const definition = withInternalSpring(
 			0,
@@ -106,29 +108,18 @@ describe("internal withSpring", () => {
 
 		expect(finished).toBe(false);
 		expect(springAnimation.settled).toBe(true);
-		expect(states).toEqual([
-			{
-				finished: false,
-				settled: true,
-			},
-		]);
+		expect(states).toEqual(["settled"]);
 
-		while (!finished && timestamp < 4000) {
-			timestamp += 16;
-			finished = springAnimation.onFrame(springAnimation, timestamp);
+		if (shouldFinish) {
+			while (!finished && timestamp < 4000) {
+				timestamp += 16;
+				finished = springAnimation.onFrame(springAnimation, timestamp);
+			}
+			expect(finished).toBe(true);
 		}
 		springAnimation.callback?.(finished);
 
-		expect(states).toEqual([
-			{
-				finished: false,
-				settled: true,
-			},
-			{
-				finished: true,
-				settled: true,
-			},
-		]);
+		expect(states).toEqual(["settled", shouldFinish ? "finished" : "cancelled"]);
 	});
 
 	test.each([

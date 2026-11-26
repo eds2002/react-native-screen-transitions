@@ -16,6 +16,7 @@ interface ResetPinchGestureValuesProps {
 	gestures: MotionGestureValues;
 	animations?: MotionAnimationValues;
 	shouldDismiss: boolean;
+	completeMotion: boolean;
 	resetValuesImmediately?: boolean;
 }
 
@@ -24,20 +25,24 @@ export const resetPinchGestureValues = ({
 	gestures,
 	animations,
 	shouldDismiss,
+	completeMotion,
 	resetValuesImmediately = false,
 }: ResetPinchGestureValuesProps) => {
 	"worklet";
+	const requestId = animations?.progressRequest.get().id;
 	const finishPinchReset = () => {
 		"worklet";
-		if (shouldDismiss) {
+		if (shouldDismiss || gestures.dragging.get()) {
 			return;
 		}
 
 		clearFocalPoint(gestures);
 		gestures.initiator.set(null);
 		gestures.settling.set(FALSE);
-		animations?.progressAnimating.set(FALSE);
-		animations?.progressSettled.set(TRUE);
+		if (completeMotion && animations?.progressRequest.get().id === requestId) {
+			animations?.progressAnimating.set(FALSE);
+			animations?.progressSettled.set(TRUE);
+		}
 	};
 
 	if (animations && !shouldDismiss) {

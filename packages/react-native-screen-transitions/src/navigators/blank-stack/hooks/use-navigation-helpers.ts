@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { runOnUISync } from "react-native-worklets";
+import { IS_WEB } from "../../../constants";
 import { useBuilderStore } from "../../../providers/builder";
 import { getMotionStore } from "../../../providers/motion";
 import { LifecycleTransitionRequestKind } from "../../../providers/motion/hooks/use-transition-values";
@@ -52,12 +53,14 @@ export function useNavigationHelpers() {
 		} = getMotionStore(route.key).state;
 
 		// Publish before the remaining React commit delays JS's queued UI writes.
-		runOnUISync(() => {
+		const publish = () => {
 			"worklet";
 			if (!closing.get()) {
 				requestLifecycleTransition(LifecycleTransitionRequestKind.Close, 0);
 			}
-		});
+		};
+		if (IS_WEB) publish();
+		else runOnUISync(publish);
 		return true;
 	}, [navigation, route, requestStackDismiss]);
 

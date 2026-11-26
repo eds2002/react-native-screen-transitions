@@ -29,7 +29,7 @@ export const usePanBehavior = (
 	dimensions: GestureDimensions,
 	gestureCompositionOwner: SharedValue<GestureCompositionOwner>,
 	pendingDirection: SharedValue<Direction | null>,
-	requestDismiss?: () => void,
+	requestDismiss?: (id: number) => void,
 ): PanBehavior => {
 	const { withSensitivity, resetSensitivity } =
 		usePanGestureSensitivity(screenOptions);

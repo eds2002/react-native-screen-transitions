@@ -31,7 +31,7 @@ describe("reanimated sim", () => {
 		for (let i = 1; i < values.length; i++) {
 			expect(values[i]).toBeGreaterThanOrEqual(values[i - 1] - 1e-9);
 		}
-		expect(results.filter((r) => (r as { finished: boolean }).finished)).toHaveLength(1);
+		expect(results.filter((r) => r === "finished")).toHaveLength(1);
 	});
 
 	it("runs a timing for its duration", () => {

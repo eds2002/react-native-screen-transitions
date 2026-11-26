@@ -2,7 +2,13 @@ import type { SharedValue } from "react-native-reanimated";
 import type { ActiveGesture } from "../../types/gesture.types";
 import type { MotionTransitionValues } from "./hooks/use-transition-values";
 
+export type ProgressRequest = {
+	id: number;
+	phase: "idle" | "pending" | "running" | "finished";
+};
+
 export type MotionAnimationValues = {
+	progressRequest: SharedValue<ProgressRequest>;
 	transitionProgress: SharedValue<number>;
 	visualProgress: SharedValue<number>;
 	willAnimate: SharedValue<number>;

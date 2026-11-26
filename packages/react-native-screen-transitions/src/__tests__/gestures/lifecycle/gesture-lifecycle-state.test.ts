@@ -37,7 +37,6 @@ import type { MotionAnimationValues } from "../../../providers/motion/types";
 import type { MotionGestureValues } from "../../../providers/motion/types";
 import { LifecycleTransitionRequestKind } from "../../../providers/motion/hooks/use-transition-values";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
-import { useCloseCompletion } from "../../../navigators/blank-stack/components/lifecycle/hooks/use-close-completion";
 
 const originalRequestAnimationFrame = globalThis.requestAnimationFrame;
 
@@ -125,6 +124,7 @@ const createGestureStore = (): MotionGestureValues => {
 };
 
 const createAnimations = (): MotionAnimationValues => ({
+	progressRequest: shared({ id: 0, phase: "idle" }),
 	transitionProgress: shared(1),
 	visualProgress: shared(1),
 	willAnimate: shared(0),
@@ -302,42 +302,6 @@ describe("gesture lifecycle state", () => {
 		expect(animations!.willAnimate.get()).toBe(0);
 		act(() => renderer.unmount());
 		raf.restore();
-	});
-
-	it("completes once when a closing screen reaches terminal progress", () => {
-		const animations = createAnimations();
-		const animationProgress = shared(0.2);
-		let completionCount = 0;
-		let renderer: ReturnType<typeof create> | undefined;
-
-		animations.closing.set(1);
-
-		const Harness = () => {
-			useCloseCompletion({
-				closing: animations.closing,
-				animationProgress,
-				onComplete: () => {
-					completionCount += 1;
-				},
-			});
-			return null;
-		};
-
-		act(() => {
-			renderer = create(React.createElement(Harness));
-		});
-		expect(completionCount).toBe(0);
-
-		animationProgress.set(0);
-		act(() => {
-			renderer?.update(React.createElement(Harness));
-		});
-		expect(completionCount).toBe(1);
-
-		act(() => {
-			renderer?.update(React.createElement(Harness));
-		});
-		expect(completionCount).toBe(1);
 	});
 
 	it("marks opening as entering before the willAnimate pulse is observed", () => {

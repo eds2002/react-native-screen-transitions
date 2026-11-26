@@ -17,7 +17,7 @@ import { usePanBehavior } from "./behavior/use-pan-behavior";
 
 interface UseBuildPanGestureProps {
 	values: MotionValues;
-	onDismissRequest?: () => void;
+	onDismissRequest?: (id: number) => void;
 	screenOptions: ScreenOptionsContextValue;
 	scrollState: SharedValue<ScrollGestureState | null>;
 	gestureConfig: ScreenGestureConfig;

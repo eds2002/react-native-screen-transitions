@@ -5,11 +5,13 @@ import type {
 	MotionAnimationValues,
 	MotionGestureValues,
 	MotionValues,
+	ProgressRequest,
 } from "../types";
 import { useTransitionValues } from "./use-transition-values";
 
 function useAnimationValues(): MotionAnimationValues {
 	const values = {
+		progressRequest: useSharedValue<ProgressRequest>({ id: 0, phase: "idle" }),
 		transitionProgress: useSharedValue(0),
 		visualProgress: useSharedValue(0),
 		willAnimate: useSharedValue(0),
