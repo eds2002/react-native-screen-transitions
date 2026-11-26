@@ -14,7 +14,7 @@ import { usePinchBehavior } from "./behavior/use-pinch-behavior";
 
 interface UseBuildPinchGestureProps {
 	values: MotionValues;
-	onDismissRequest?: () => void;
+	onDismissRequest?: (id: number) => void;
 	screenOptions: ScreenOptionsContextValue;
 	gestureConfig: ScreenGestureConfig;
 	gestureCompositionOwner: SharedValue<GestureCompositionOwner>;

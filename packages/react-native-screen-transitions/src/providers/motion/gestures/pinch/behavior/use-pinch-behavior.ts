@@ -24,7 +24,7 @@ export const usePinchBehavior = (
 	runtime: SharedValue<PinchGestureRuntime>,
 	screenOptions: ScreenOptionsContextValue,
 	gestureCompositionOwner: SharedValue<GestureCompositionOwner>,
-	requestDismiss?: () => void,
+	requestDismiss?: (id: number) => void,
 ): PinchBehavior => {
 	const { withSensitivity, resetSensitivity } =
 		usePinchGestureSensitivity(screenOptions);

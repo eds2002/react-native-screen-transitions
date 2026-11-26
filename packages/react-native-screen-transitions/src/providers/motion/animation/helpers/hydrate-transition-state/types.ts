@@ -27,7 +27,7 @@ export type MotionAnimationState = MotionValues & {
 // Each interpolator reader owns its mutable output and option overrides.
 export type BuiltState = Pick<
 	MotionAnimationState,
-	| keyof MotionAnimationValues
+	| Exclude<keyof MotionAnimationValues, "progressRequest">
 	| "route"
 	| "meta"
 	| "options"

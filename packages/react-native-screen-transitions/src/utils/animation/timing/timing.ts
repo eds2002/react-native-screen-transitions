@@ -142,8 +142,7 @@ export const withInternalTiming = ((
 				easing: () => 0,
 				callback: ((finished?: boolean) => {
 					"worklet";
-					const didFinish = finished === true;
-					callback?.({ finished: didFinish, settled: didFinish });
+					callback?.(finished ? "finished" : "cancelled");
 				}) as AnimationCallback,
 				reduceMotion: getReduceMotionForAnimation(userConfig?.reduceMotion),
 			} as unknown as TimingAnimation;

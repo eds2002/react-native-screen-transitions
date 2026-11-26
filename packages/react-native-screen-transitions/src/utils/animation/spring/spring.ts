@@ -106,10 +106,7 @@ export const withInternalSpring = ((
 
 			settled = true;
 			animation.settled = true;
-			callback?.({
-				finished: false,
-				settled: true,
-			});
+			callback?.("settled");
 		};
 
 		config.skipAnimation = !checkIfConfigIsValid(config);
@@ -306,11 +303,7 @@ export const withInternalSpring = ((
 			startValue: 0,
 			callback: ((finished?: boolean) => {
 				"worklet";
-				const didFinish = finished === true;
-				callback?.({
-					finished: didFinish,
-					settled: didFinish || settled,
-				});
+				callback?.(finished ? "finished" : "cancelled");
 			}) as AnimationCallback,
 			lastTimestamp: 0,
 			startTimestamp: 0,

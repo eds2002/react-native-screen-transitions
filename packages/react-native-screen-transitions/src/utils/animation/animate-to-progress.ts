@@ -83,11 +83,23 @@ export const animateToProgress = ({
 			? { ...config, velocity: initialVelocity }
 			: config;
 
-	const { transitionProgress, progressAnimating, progressSettled, entering } =
-		animations;
+	const {
+		transitionProgress,
+		progressAnimating,
+		progressSettled,
+		entering,
+		progressRequest,
+	} = animations;
+	const id = progressRequest.get().id + 1;
+	progressRequest.set({ id, phase: "pending" });
 
-	const startAnimation = (activateMotion: boolean) => {
+	const startAnimation = () => {
 		"worklet";
+		const request = progressRequest.get();
+		if (request.id !== id || request.phase !== "pending") {
+			return;
+		}
+		progressRequest.set({ id, phase: "running" });
 		const { from: animationProgressFrom, to: animationProgressTo } =
 			resolveAnimationProgressRange(transitionProgress.get(), value);
 
@@ -107,12 +119,11 @@ export const animateToProgress = ({
 			if (shouldClearEnteringOnFinish) {
 				entering.set(FALSE);
 			}
+			progressRequest.set({ id, phase: "finished" });
 			return;
 		}
 
-		if (activateMotion) {
-			progressAnimating.set(TRUE);
-		}
+		progressAnimating.set(TRUE);
 		progressSettled.set(FALSE);
 		transitionProgress.set(
 			animate(
@@ -120,12 +131,25 @@ export const animateToProgress = ({
 				effectiveConfig,
 				(state) => {
 					"worklet";
-					if (!state.finished) return;
+					const request = progressRequest.get();
+					if (
+						request.id !== id ||
+						request.phase !== "running" ||
+						state === "settled"
+					) {
+						return;
+					}
+					if (state === "cancelled") {
+						progressRequest.set({ id, phase: "idle" });
+						if (!isDragging?.get()) progressAnimating.set(FALSE);
+						return;
+					}
+
+					progressRequest.set({ id, phase: "finished" });
+					animationProgress.set(animationProgressTo);
 					if (isDragging?.get()) return;
 
 					progressSettled.set(TRUE);
-
-					animationProgress.set(animationProgressTo);
 
 					if (shouldClearEnteringOnFinish) {
 						entering.set(FALSE);
@@ -136,7 +160,10 @@ export const animateToProgress = ({
 					} else {
 						// Delay clearing progress animation by one frame to ensure final frame is painted
 						requestAnimationFrame(() => {
-							progressAnimating.set(FALSE);
+							"worklet";
+							if (progressRequest.get().id === id && !isDragging?.get()) {
+								progressAnimating.set(FALSE);
+							}
 						});
 					}
 				},
@@ -152,13 +179,12 @@ export const animateToProgress = ({
 	if (emitWillAnimate) {
 		setTransitionLifecycleFlags(animations, isClosing, markEntering);
 
-		emitMotionStart(animations);
-		requestAnimationFrame(() => {
-			"worklet";
-			startAnimation(false);
-		});
-		return;
+		if (emitMotionStart(animations)) {
+			requestAnimationFrame(startAnimation);
+			return id;
+		}
 	}
 
-	startAnimation(true);
+	startAnimation();
+	return id;
 };

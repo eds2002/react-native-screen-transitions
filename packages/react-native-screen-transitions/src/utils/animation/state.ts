@@ -1,9 +1,6 @@
 import type { SharedValue } from "react-native-reanimated";
 
-export type AnimationState = {
-	finished: boolean;
-	settled: boolean;
-};
+export type AnimationState = "settled" | "finished" | "cancelled";
 
 export type AnimationStateCallback = (state: AnimationState) => void;
 

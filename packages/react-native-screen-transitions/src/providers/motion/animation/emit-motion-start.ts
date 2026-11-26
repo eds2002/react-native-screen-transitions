@@ -11,10 +11,15 @@ export const emitMotionStart = (animations: MotionAnimationValues) => {
 		return false;
 	}
 
+	const { progressRequest, progressSettled } = animations;
+	const id = progressRequest.get().id;
+
 	emit(animations.willAnimate, TRUE, FALSE);
 	requestAnimationFrame(() => {
 		"worklet";
-		animations.progressAnimating.set(TRUE);
+		if (progressRequest.get().id === id && !progressSettled.get()) {
+			animations.progressAnimating.set(TRUE);
+		}
 	});
 	return true;
 };

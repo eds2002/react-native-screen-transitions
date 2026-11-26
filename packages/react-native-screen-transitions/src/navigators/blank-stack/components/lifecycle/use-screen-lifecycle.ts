@@ -1,8 +1,8 @@
 import { useBuilderStore } from "../../../../providers/builder";
 import { useMotionStore } from "../../../../providers/motion";
 import { useScreenHistory } from "./hooks/history/use-screen-history";
-import { useCloseCompletion } from "./hooks/use-close-completion";
 import { useOpenTransitionIntent } from "./hooks/use-open-transition-intent";
+import { useTransitionCompletion } from "./hooks/use-transition-completion";
 import { useTransitionStartController } from "./hooks/use-transition-start-controller";
 
 export function useScreenLifecycle({
@@ -18,7 +18,7 @@ export function useScreenLifecycle({
 	const animations = useMotionStore((store) => store.state);
 	const system = animations;
 
-	useOpenTransitionIntent(current, animations, system, completeOpen);
+	useOpenTransitionIntent(current, animations, system);
 
 	useTransitionStartController({
 		current,
@@ -26,10 +26,10 @@ export function useScreenLifecycle({
 		system,
 	});
 
-	useCloseCompletion({
-		closing: animations.closing,
-		animationProgress: system.animationProgress,
-		onComplete: completeClose,
+	useTransitionCompletion({
+		motion: animations,
+		onClose: completeClose,
+		onOpen: completeOpen,
 	});
 
 	useScreenHistory(current, previous, animations);

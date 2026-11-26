@@ -30,7 +30,12 @@ export const startPanBase = (runtime: PanGestureRuntime) => {
 		stores: { gestures, animations },
 	} = runtime;
 
+	const request = animations.progressRequest.get();
+	if (request.phase === "pending") {
+		animations.progressRequest.set({ id: request.id, phase: "idle" });
+	}
 	emitMotionStart(animations);
+	gestures.dragging.set(TRUE);
 
 	// A drag released short of dismissing springs its offset back: the progress delta on top of
 	// transitionProgress, and x/y/normX/normY for interpolators that read them. A drag that starts
@@ -52,7 +57,6 @@ export const startPanBase = (runtime: PanGestureRuntime) => {
 	internal.carry.normX.set(gestures.normX.get());
 	internal.carry.normY.set(gestures.normY.get());
 
-	gestures.dragging.set(TRUE);
 	gestures.dismissing.set(0);
 	gestures.settling.set(0);
 	clearPanTrackingValues(gestures);
@@ -120,7 +124,7 @@ export const finalizePanRelease = (
 	runtime: PanGestureRuntime,
 	dimensions: GestureDimensions,
 	rawEvent: PanGestureEvent,
-	requestDismiss?: () => void,
+	requestDismiss?: (id: number) => void,
 	gestureCompositionOwner?: SharedValue<GestureCompositionOwner>,
 ) => {
 	"worklet";
@@ -178,11 +182,12 @@ export const finalizePanRelease = (
 		return;
 	}
 
-	animateToProgress({
+	const id = animateToProgress({
 		target: plan.target,
 		spec: plan.transitionSpec,
 		emitWillAnimate: false,
 		markEntering: false,
+		isDragging: gestures.dragging,
 		targetProgress: system.targetProgress,
 		animationProgress: system.animationProgress,
 		animations,
@@ -190,6 +195,6 @@ export const finalizePanRelease = (
 	});
 
 	if (plan.shouldDismiss && requestDismiss) {
-		scheduleOnRN(requestDismiss);
+		scheduleOnRN(requestDismiss, id);
 	}
 };

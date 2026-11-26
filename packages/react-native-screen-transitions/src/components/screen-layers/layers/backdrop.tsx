@@ -4,6 +4,7 @@ import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
 import { DefaultSnapSpec } from "../../../configs/specs";
 import { useBuilderStore } from "../../../providers/builder";
 import { useMotionStore } from "../../../providers/motion";
+import { useRequestDismissForProgress } from "../../../providers/motion/animation/use-request-dismiss-for-progress";
 import {
 	useSlotProps,
 	useSlotStyles,
@@ -39,6 +40,11 @@ export const BackdropLayer = memo(function BackdropLayer({
 	const animations = useMotionStore((store) => store.state);
 	const { targetProgress, animationProgress, resolvedAutoSnapPoint } =
 		animations;
+
+	const dismissForProgress = useRequestDismissForProgress(
+		animations.progressRequest,
+		onDismissRequest,
+	);
 
 	const handleBackdropPress = useCallback(() => {
 		if (backdropBehavior === "dismiss") {
@@ -87,17 +93,18 @@ export const BackdropLayer = memo(function BackdropLayer({
 							close: transitionSpec?.collapse ?? DefaultSnapSpec,
 						};
 
-				animateToProgress({
+				const id = animateToProgress({
 					target,
 					markEntering: false,
+					isDragging: animations.dragging,
 					spec,
 					animations,
 					targetProgress,
 					animationProgress,
 				});
 
-				if (shouldDismiss) {
-					if (onDismissRequest) scheduleOnRN(onDismissRequest);
+				if (shouldDismiss && dismissForProgress) {
+					scheduleOnRN(dismissForProgress, id);
 				}
 			});
 		}
@@ -110,6 +117,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 		rawSnapPoints,
 		canDismiss,
 		transitionSpec,
+		dismissForProgress,
 		onDismissRequest,
 	]);
 
