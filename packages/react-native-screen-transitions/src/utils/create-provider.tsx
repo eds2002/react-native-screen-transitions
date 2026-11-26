@@ -21,8 +21,8 @@
  * Both generated store hooks accept that key to subscribe to the original
  * provider store from outside its React context. Arrays of keys return ordered
  * snapshots (null for unavailable keys) and apply the selector to each store.
- * Route-owned registrations survive Activity cleanup until their route closes
- * or disappears; providers outside a route lifetime unregister on cleanup.
+ * Route-owned registrations survive Activity cleanup until their route
+ * disappears; providers outside a route lifetime unregister on cleanup.
  */
 import {
 	createContext,
@@ -227,43 +227,77 @@ const createProviderStoreRegistry = <
 	};
 };
 
-interface RouteLifetime {
-	/** Retain until route removal/close; the returned function cancels retention. */
+interface RouteLifetime<Value = unknown> {
+	/** Retain until route removal; the returned function cancels retention. */
 	retain: (key: string, dispose: () => void) => () => void;
+	adopt: (key: string, retire: () => void) => void;
+	commit: (value: Value) => void;
+	retire: () => void;
 	activate: () => void;
 	dispose: () => void;
 }
 
+interface RouteLifecycle<Value> {
+	getRouteKeys: (value: Value) => readonly string[];
+	onRouteAdded?: (key: string) => void;
+	onRouteRemoved?: (key: string) => void;
+}
+
 const ProviderRouteLifetimeContext = createContext<{
-	lifetime: RouteLifetime;
+	lifetime: Pick<RouteLifetime, "retain" | "adopt">;
 	routeKey?: string;
 } | null>(null);
 
-function createRouteLifetime<Value>(
-	store: {
-		getSnapshot: () => Value | null;
-		subscribe: (listener: () => void) => () => void;
-	},
-	getRouteActivity: (value: Value, key: string) => string | undefined,
-): RouteLifetime {
+function createRouteLifetime<Value>({
+	getRouteKeys,
+	onRouteAdded,
+	onRouteRemoved,
+}: RouteLifecycle<Value>): RouteLifetime<Value> {
 	let disposed = false;
-	const retained = new Set<() => void>();
-	const isRetained = (key: string) => {
-		const snapshot = store.getSnapshot();
-		const activity = snapshot && getRouteActivity(snapshot, key);
-		return !disposed && !!activity && activity !== "closing";
+	let committedKeys: readonly string[] | undefined;
+	let routeKeys = new Set<string>();
+	const retained = new Map<() => void, string>();
+	const nested = new Map<string, Set<() => void>>();
+	const retireRoute = (key: string) => {
+		onRouteRemoved?.(key);
+		for (const retire of nested.get(key) ?? []) retire();
+		nested.delete(key);
 	};
 	return {
 		activate: () => {
 			disposed = false;
 		},
+		adopt: (key, retire) => {
+			const owners = nested.get(key) ?? new Set();
+			owners.add(retire);
+			nested.set(key, owners);
+		},
+		commit: (value) => {
+			const keys = getRouteKeys(value);
+			if (keys === committedKeys) return;
+			committedKeys = keys;
+			const previous = routeKeys;
+			routeKeys = new Set(keys);
+			for (const key of routeKeys) {
+				if (!previous.has(key)) onRouteAdded?.(key);
+			}
+			for (const key of previous) {
+				if (!routeKeys.has(key)) retireRoute(key);
+			}
+			for (const [release, key] of retained) {
+				if (!routeKeys.has(key)) release();
+			}
+		},
+		retire: () => {
+			for (const key of routeKeys) retireRoute(key);
+			routeKeys.clear();
+			committedKeys = undefined;
+		},
 		retain: (key, dispose) => {
 			let released = false;
-			let unsubscribe = () => {};
 			const cancel = () => {
 				if (released) return;
 				released = true;
-				unsubscribe();
 				retained.delete(release);
 			};
 			const release = () => {
@@ -271,16 +305,13 @@ function createRouteLifetime<Value>(
 				cancel();
 				dispose();
 			};
-			retained.add(release);
-			unsubscribe = store.subscribe(() => {
-				if (!isRetained(key)) release();
-			});
-			if (!isRetained(key)) release();
+			retained.set(release, key);
+			if (disposed || !routeKeys.has(key)) release();
 			return cancel;
 		},
 		dispose: () => {
 			disposed = true;
-			for (const release of retained) release();
+			for (const release of retained.keys()) release();
 		},
 	};
 }
@@ -293,12 +324,7 @@ export default function createProvider<
 		factory: (
 			props: ProviderProps,
 		) => ProviderFactoryResult<ContextValue, Global>,
-		lifecycle?: {
-			getRouteActivity: (
-				value: ContextValue,
-				key: string,
-			) => string | undefined;
-		},
+		lifecycle?: RouteLifecycle<ContextValue>,
 	) => {
 		const { global = false } = options ?? {};
 		const providerDisplayName = `${name}Provider`;
@@ -477,11 +503,8 @@ export default function createProvider<
 
 			const parentRoute = useContext(ProviderRouteLifetimeContext);
 			const routeLifetime = useMemo(
-				() =>
-					lifecycle
-						? createRouteLifetime(store, lifecycle.getRouteActivity)
-						: null,
-				[store],
+				() => (lifecycle ? createRouteLifetime(lifecycle) : null),
+				[],
 			);
 			const retainedRegistration = useRef<(() => void) | undefined>(undefined);
 			const retainedLifetime = useRef<(() => void) | undefined>(undefined);
@@ -489,6 +512,13 @@ export default function createProvider<
 				if (!routeLifetime) return;
 				retainedLifetime.current?.();
 				routeLifetime.activate();
+				if (parentRoute?.routeKey) {
+					// A disconnected navigator can still belong to a retained parent route.
+					parentRoute.lifetime.adopt(
+						parentRoute.routeKey,
+						routeLifetime.retire,
+					);
+				}
 				return () => {
 					if (parentRoute?.routeKey) {
 						retainedLifetime.current = parentRoute.lifetime.retain(
@@ -539,6 +569,7 @@ export default function createProvider<
 				store.setSnapshot(value) || pendingNotifyRef.current;
 
 			useLayoutEffect(() => {
+				routeLifetime?.commit(value);
 				if (!pendingNotifyRef.current) {
 					return;
 				}

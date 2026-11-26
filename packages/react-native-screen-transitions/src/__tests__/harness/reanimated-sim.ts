@@ -450,6 +450,15 @@ export const createReanimatedSim = ({ frameMs = 1000 / 60 }: { frameMs?: number 
 	};
 
 	const worklets = {
+		createSynchronizable: <T>(initial: T) => {
+			let value = initial;
+			return {
+				getBlocking: () => value,
+				setBlocking: (next: T) => {
+					value = next;
+				},
+			};
+		},
 		runOnUISync: <T extends (...args: never[]) => unknown>(callback: T, ...args: Parameters<T>) =>
 			callback(...args),
 		scheduleOnRN: <T extends (...args: never[]) => unknown>(callback: T, ...args: Parameters<T>) => {

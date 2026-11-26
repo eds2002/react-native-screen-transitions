@@ -1,6 +1,5 @@
 import { useLayoutEffect, useRef } from "react";
 import useStableCallback from "../../../hooks/use-stable-callback";
-import { resetStoresForScreen } from "../../../navigators/blank-stack/components/lifecycle/hooks/helpers/reset-stores-for-screen";
 import { useNavigationHelpers } from "../../../navigators/blank-stack/hooks/use-navigation-helpers";
 import type { BaseDescriptor } from "../../../providers/builder";
 import { useScreenRelationships } from "../../../providers/builder/topology";
@@ -39,8 +38,6 @@ export function useNativeCloseTransitionIntent(current: BaseDescriptor): {
 		} else {
 			dismissScreen();
 		}
-
-		resetStoresForScreen(routeKey);
 	});
 
 	const handleBeforeRemove = useStableCallback((event: any) => {

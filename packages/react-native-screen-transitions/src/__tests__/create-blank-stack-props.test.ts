@@ -18,13 +18,14 @@ describe("createBlankStackProps", () => {
 		expect(props.navigation).toBe(navigation);
 	});
 
-	it("drops preloaded routes that follow the focused route", () => {
+	it("separates preloaded routes from the active stack", () => {
 		const a = route("a");
 		const b = route("b");
+		const preloaded = { ...route("preloaded"), isPreloaded: true };
 		const state = {
 			key: "stack",
 			index: 1,
-			routes: [a, b, { ...route("preloaded"), isPreloaded: true }],
+			routes: [a, b, preloaded],
 		};
 
 		const props = createBlankStackProps({ state, navigation });
@@ -33,6 +34,7 @@ describe("createBlankStackProps", () => {
 			key: "stack",
 			index: 1,
 			routes: [a, b],
+			preloadedRoutes: [preloaded],
 		});
 	});
 });

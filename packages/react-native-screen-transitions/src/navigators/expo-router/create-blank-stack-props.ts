@@ -13,10 +13,11 @@ export function createBlankStackProps({
 	state: BaseStackState<BaseStackRoute>;
 	navigation: BaseStackNavigation;
 }): BlankStackStandardNavigatorProps {
-	const { routes } = getStackRoutes(state);
+	const { routes, preloadedRoutes } = getStackRoutes(state);
 
 	return {
-		navigationState: routes === state.routes ? state : { ...state, routes },
+		navigationState:
+			routes === state.routes ? state : { ...state, routes, preloadedRoutes },
 		navigation,
 	};
 }

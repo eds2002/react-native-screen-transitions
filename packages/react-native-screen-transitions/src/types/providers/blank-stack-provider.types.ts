@@ -25,6 +25,7 @@ export type BlankStackDescriptorSources = Record<
 export interface BlankStackStoreValue {
 	navigatorKey: string;
 	routeKeys: string[];
+	routeLifetimeKeys?: string[];
 	routes: BaseStackRoute[];
 	scenes: BaseStackScene<BaseStackDescriptor>[];
 	scenesByKey: Record<string, BaseStackScene<BaseStackDescriptor>>;
