@@ -1,7 +1,10 @@
 import { mountMotionValues } from "./helpers/mount-motion-values";
 import { beforeEach, describe, expect, it } from "bun:test";
 
-import { resetStoresForScreen } from "../navigators/blank-stack/components/lifecycle/hooks/helpers/reset-stores-for-screen";
+import {
+	cancelScreenBoundsCleanup,
+	resetStoresForScreen,
+} from "../navigators/blank-stack/components/lifecycle/hooks/helpers/reset-stores-for-screen";
 import { BoundStore } from "../stores/bounds";
 import { createPendingPairKey } from "../stores/bounds/helpers/link-pairs.helpers";
 import {
@@ -9,6 +12,16 @@ import {
 	registerBoundaryPresence,
 	registerMeasuredEntry,
 } from "./bounds/helpers/bounds-behavior-fixtures";
+import { createModuleMock } from "./helpers/mock-module";
+
+const mockModule = createModuleMock((specifier) => import.meta.resolve(specifier));
+let deferred: Array<() => void> | undefined;
+await mockModule("react-native-worklets", () => ({
+	scheduleOnUI: (worklet: (...args: any[]) => void, ...args: any[]) => {
+		if (deferred) deferred.push(() => worklet(...args));
+		else worklet(...args);
+	},
+}));
 
 const createMeasured = (x = 0, y = 0, width = 100, height = 100) => ({
 	x,
@@ -29,6 +42,23 @@ beforeEach(() => {
 });
 
 describe("close transition cleanup", () => {
+	it("keeps restored bounds when an earlier cleanup is still queued", () => {
+		const routeKey = "restored-screen";
+		const queued: Array<() => void> = [];
+		deferred = queued;
+		try {
+			resetStoresForScreen(routeKey);
+			cancelScreenBoundsCleanup(routeKey);
+			registerMeasuredEntry("card", routeKey, createMeasured(10));
+			for (const cleanup of queued) cleanup();
+			expect(BoundStore.entry.get("card", routeKey)?.bounds?.x).toBe(10);
+			resetStoresForScreen(routeKey);
+			queued.at(-1)?.();
+			expect(BoundStore.entry.get("card", routeKey)).toBeNull();
+		} finally {
+			deferred = undefined;
+		}
+	});
 	it("clears bounds without resetting provider-owned motion", async () => {
 		const routeKey = "cleanup-screen";
 		const bounds = createMeasured(10, 20, 120, 140);

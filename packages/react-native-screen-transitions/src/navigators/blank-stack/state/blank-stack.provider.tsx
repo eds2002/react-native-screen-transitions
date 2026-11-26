@@ -6,6 +6,10 @@ import type {
 } from "../../../types/providers/blank-stack-provider.types";
 import type { BaseStackScene } from "../../../types/stack.types";
 import createProvider from "../../../utils/create-provider";
+import {
+	cancelScreenBoundsCleanup,
+	resetStoresForScreen,
+} from "../components/lifecycle/hooks/helpers/reset-stores-for-screen";
 import { resolvePresentedIndex } from "./helpers/resolve-presented-index";
 import { useBlankStackState } from "./use-blank-stack-state";
 
@@ -40,6 +44,15 @@ const {
 			});
 
 		const navigatorKey = stackState.key;
+		const routeLifetimeKeys = useMemo(
+			() =>
+				stackState.preloadedRoutes?.length
+					? state.routeKeys.concat(
+							stackState.preloadedRoutes.map(({ key }) => key),
+						)
+					: state.routeKeys,
+			[state.routeKeys, stackState.preloadedRoutes],
+		);
 		const focusedIndex = resolvePresentedIndex(
 			state.routes,
 			state.focusedRouteKey,
@@ -65,6 +78,7 @@ const {
 			value: {
 				navigatorKey,
 				routeKeys: state.routeKeys,
+				routeLifetimeKeys,
 				routes: state.routes,
 				scenes: state.scenes,
 				scenesByKey,
@@ -78,7 +92,11 @@ const {
 			children,
 		};
 	},
-	{ getRouteActivity: (store, key) => store.scenesByKey[key]?.activity },
+	{
+		getRouteKeys: (store) => store.routeLifetimeKeys ?? store.routeKeys,
+		onRouteAdded: cancelScreenBoundsCleanup,
+		onRouteRemoved: resetStoresForScreen,
+	},
 );
 
 export type { BlankStackProviderProps, BlankStackStoreValue };

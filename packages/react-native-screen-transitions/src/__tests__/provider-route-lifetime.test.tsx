@@ -1,12 +1,13 @@
 import { afterEach, expect, it } from "bun:test";
-import { Activity, type ReactNode } from "react";
+import { Activity, type ReactNode, StrictMode } from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import createProvider from "../utils/create-provider";
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+const retired: string[] = [];
 const { StoreProvider: Routes } = createProvider("RouteOwner")<{}, Record<string, string>>(
  () => { throw new Error("adapted only"); },
- { getRouteActivity: (routes, key) => routes[key] },
+ { getRouteKeys: Object.keys, onRouteRemoved: (key) => { retired.push(key); } },
 );
 const { StoreProvider: Screen, useOptionalScreenStateStore } = createProvider("ScreenState", {global: true})<{}, {progress: number}>(
  () => { throw new Error("adapted only"); },
@@ -18,7 +19,7 @@ const update = (children: ReactNode) => act(() => {
  const tree = <>{children}<Reader /></>;
  if (renderer) renderer.update(tree); else renderer = create(tree);
 });
-afterEach(() => {act(() => renderer?.unmount()); renderer = undefined;});
+afterEach(() => {act(() => renderer?.unmount()); renderer = undefined; retired.length = 0;});
 
 it("keeps hidden stores, resumes with fresh values, and releases removed hidden routes", () => {
  const tree = (mode: "visible" | "hidden", routes = {A: "active", B: "inactive"} as Record<string,string>, progress = 1) => (
@@ -40,17 +41,18 @@ it("keeps hidden stores, resumes with fresh values, and releases removed hidden 
  expect(selected).toEqual([null, null]);
 });
 
-it("retains an unmounted view until its route is closing or absent", () => {
+it("retains an unmounted view until its route is absent", () => {
  const tree = (show: boolean, activity?: string) => <Routes value={activity ? {A:activity} : {}}>{show && <Screen storeKey="A" value={{progress:1}} />}</Routes>;
  update(tree(true,"active"));
  update(tree(false,"inactive"));
  expect(selected[0]?.progress).toBe(1);
  update(tree(false,"closing"));
- expect(selected[0]).toBeNull();
+ expect(selected[0]?.progress).toBe(1);
  update(tree(true,"active"));
  update(tree(false,"inactive"));
  update(tree(false));
  expect(selected[0]).toBeNull();
+ expect(retired).toEqual(["A"]);
 });
 
 it("an old retained registration cannot remove its replacement", () => {
@@ -74,11 +76,28 @@ it("retains nested owners through ancestor Activity and disposes their descendan
  update(tree("visible"));
  update(tree("hidden"));
  expect(selected.map(v => v?.progress)).toEqual([1,2]);
+ expect(retired).toEqual([]);
  update(tree("visible"));
  expect(selected.map(v => v?.progress)).toEqual([1,2]);
  update(tree("hidden"));
  update(tree("hidden",false));
  expect(selected).toEqual([null,null]);
+ expect(retired).toEqual(["A", "B"]);
+});
+
+it("releases route resources only after committed removal", () => {
+ const tree = (mode: "visible" | "hidden", activity: string) => (
+  <StrictMode><Activity mode={mode}>
+   <Routes value={activity ? {A:activity} : {}}><Screen storeKey="A" value={{progress:1}} /></Routes>
+  </Activity></StrictMode>
+ );
+ update(tree("visible", "active"));
+ update(tree("hidden", "active"));
+ update(tree("visible", "preloaded"));
+ update(tree("visible", "closing"));
+ expect(retired).toEqual([]);
+ update(tree("visible", ""));
+ expect(retired).toEqual(["A"]);
 });
 
 it("does not dispose mounted stores merely because a close starts and cancels", () => {

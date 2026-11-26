@@ -140,6 +140,15 @@ mock.module("react-native-gesture-handler", () => ({
 	},
 }));
 mock.module("react-native-worklets", () => ({
+	createSynchronizable: <T>(initial: T) => {
+		let value = initial;
+		return {
+			getBlocking: () => value,
+			setBlocking: (next: T) => {
+				value = next;
+			},
+		};
+	},
 	runOnUISync: <T extends (...args: any[]) => any>(
 		callback: T,
 		...args: Parameters<T>

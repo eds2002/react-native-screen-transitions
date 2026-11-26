@@ -3,7 +3,6 @@ import useStableCallback from "../../../../../hooks/use-stable-callback";
 import type { BaseDescriptor } from "../../../../../providers/builder";
 import { useNavigationHelpers } from "../../../hooks/use-navigation-helpers";
 import { useBlankStackStore } from "../../../state/blank-stack.provider";
-import { resetStoresForScreen } from "./helpers/reset-stores-for-screen";
 
 export function useCloseTransitionIntent(current: BaseDescriptor) {
 	const handleCloseRoute = useBlankStackStore(
@@ -18,7 +17,6 @@ export function useCloseTransitionIntent(current: BaseDescriptor) {
 
 	const completeClose = useStableCallback(() => {
 		handleCloseRoute?.({ route: current.route });
-		resetStoresForScreen(current.route.key);
 	});
 
 	useLayoutEffect(() => {

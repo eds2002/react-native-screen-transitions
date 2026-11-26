@@ -149,6 +149,7 @@ function ScreenTransitionsStackContent({
 		return {
 			navigatorKey: layoutArgs.state.key,
 			routeKeys: transitionState.routeKeys,
+			routeLifetimeKeys: transitionState.routes.map(({ key }) => key),
 			routes: transitionState.routes,
 			scenes: transitionState.scenes,
 			scenesByKey,

@@ -74,6 +74,7 @@ export interface BaseStackState<
 	TRoute extends BaseStackRoute = BaseStackRoute,
 > {
 	routes: TRoute[];
+	preloadedRoutes?: TRoute[];
 	index: number;
 	key: string;
 }
