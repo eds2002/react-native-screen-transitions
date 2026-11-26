@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { ScrollStore } from "../../../stores/scroll.store";
 import { useBuilderStore } from "../../builder";
 import type { MotionValues } from "../types";
 import { buildScreenTransitionOptions } from "./helpers/build-screen-transition-options";
@@ -8,11 +7,11 @@ import { toPlainRoute, toPlainValue } from "./helpers/worklet";
 
 export function useMotionAnimationPipeline(
 	values: MotionValues,
+	scrollMetadata: MotionAnimationState["scrollMetadata"],
 ): MotionAnimationState {
 	const descriptor = useBuilderStore((store) => store.descriptors.current);
 	const route = descriptor.route;
 	const { meta, snapPoints } = descriptor.options;
-	const key = route.key;
 
 	const {
 		gestureEnabled,
@@ -70,7 +69,7 @@ export function useMotionAnimationPipeline(
 
 		return {
 			...values,
-			scrollMetadata: ScrollStore.getValue(key, "metadata"),
+			scrollMetadata,
 			hasAutoSnapPoint:
 				snapPoints?.some((point) => typeof point === "string") ?? false,
 			sortedNumericSnapPoints,
@@ -78,5 +77,5 @@ export function useMotionAnimationPipeline(
 			meta: plainMeta,
 			options: transitionOptions,
 		};
-	}, [key, meta, route, snapPoints, transitionOptions, values]);
+	}, [meta, route, scrollMetadata, snapPoints, transitionOptions, values]);
 }

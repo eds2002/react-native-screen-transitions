@@ -11,6 +11,7 @@ import type { AnimatedRef } from "react-native-reanimated";
 import { useAnimatedRef, useSharedValue } from "react-native-reanimated";
 import { useBlankStackStore } from "../../../navigators/blank-stack/state/blank-stack.provider";
 import { useBuilderStore } from "../../../providers/builder";
+import { useIsPreloadedScene } from "../../../providers/preloaded-scene-context";
 import { createBoundTag } from "../../../stores/bounds/helpers/link-pairs.helpers";
 import type { BoundTag } from "../../../stores/bounds/types";
 import createProvider from "../../../utils/create-provider";
@@ -101,6 +102,8 @@ export const {
 		const currentScreenKey = useBuilderStore(
 			(s) => s.derivations.currentScreenKey,
 		);
+		const isPreloadedScene = useIsPreloadedScene();
+		const boundaryEnabled = enabled && !isPreloadedScene;
 		const isCurrentScreenClosing = useBlankStackStore(
 			(store) =>
 				portalRuntime.handoff &&
@@ -120,13 +123,14 @@ export const {
 		const boundTag = retainedBoundTagRef.current;
 		// Associated slot styles attach whenever the boundary is enabled,
 		// independent of whether an interpolator is configured for this transition.
-		const shouldAttachAssociatedStyles = enabled;
+		const shouldAttachAssociatedStyles = boundaryEnabled;
 		const shouldEscapeBoundaryRootToScreenHost = portalRuntime.escapeClipping;
 
 		const { presentation: boundaryPresentation, slotsMap } =
 			useBoundaryPresentation(
 				boundTag.tag,
-				enabled && (portalRuntime.handoff || portalRuntime.escapeClipping),
+				boundaryEnabled &&
+					(portalRuntime.handoff || portalRuntime.escapeClipping),
 			);
 
 		const associatedStyles = useComposedBoundaryStyle(
@@ -209,17 +213,19 @@ export const {
 			children: (
 				<>
 					{children(value)}
-					<BoundaryLifecycle
-						boundTag={boundTag}
-						config={config}
-						currentScreenKey={currentScreenKey}
-						enabled={enabled}
-						escapeClipping={portalRuntime.escapeClipping}
-						handoff={portalRuntime.handoff}
-						localMeasurement={localMeasurement}
-						measuredRef={measuredRef}
-						style={hasTarget ? targetStyle : style}
-					/>
+					{!isPreloadedScene && (
+						<BoundaryLifecycle
+							boundTag={boundTag}
+							config={config}
+							currentScreenKey={currentScreenKey}
+							enabled={enabled}
+							escapeClipping={portalRuntime.escapeClipping}
+							handoff={portalRuntime.handoff}
+							localMeasurement={localMeasurement}
+							measuredRef={measuredRef}
+							style={hasTarget ? targetStyle : style}
+						/>
+					)}
 				</>
 			),
 		};

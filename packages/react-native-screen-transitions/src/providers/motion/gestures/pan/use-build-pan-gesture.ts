@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import { Gesture } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
+import { useIsPreloadedScene } from "../../../preloaded-scene-context";
 import type { ScreenOptionsContextValue } from "../../options/types";
 import type { MotionValues } from "../../types";
 import { useStableRuntimeConfig } from "../ownership/hooks/use-stable-runtime-config";
@@ -34,6 +35,7 @@ export const useBuildPanGesture = ({
 	gestureOwners,
 	gestureCompositionOwner,
 }: UseBuildPanGestureProps): PanGesture => {
+	const preloaded = useIsPreloadedScene();
 	const dimensions = useWindowDimensions();
 	const { participation, pan: policy } = gestureConfig;
 
@@ -65,7 +67,7 @@ export const useBuildPanGesture = ({
 
 	const panGesture = useMemo(() => {
 		return Gesture.Pan()
-			.enabled(true)
+			.enabled(!preloaded)
 			.manualActivation(true)
 			.averageTouches(true)
 			.onTouchesDown(activation.onTouchesDown)
@@ -73,7 +75,7 @@ export const useBuildPanGesture = ({
 			.onStart(behavior.onStart)
 			.onUpdate(behavior.onUpdate)
 			.onEnd(behavior.onEnd);
-	}, [activation, behavior]);
+	}, [activation, behavior, preloaded]);
 
 	return panGesture;
 };

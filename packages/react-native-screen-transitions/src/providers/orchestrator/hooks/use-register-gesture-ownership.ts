@@ -13,6 +13,7 @@ import type {
 	GestureOwnerMap,
 	ScreenGestureSource,
 } from "../../motion/gestures/types";
+import { useIsPreloadedScene } from "../../preloaded-scene-context";
 
 const getDescriptorIsFirstKey = (descriptor: BaseDescriptor): boolean => {
 	const routes = descriptor.navigation.getState()?.routes ?? [];
@@ -39,6 +40,7 @@ export const useRegisterGestureOwnership = ({
 	owners: SharedValue<GestureOwnerMap>;
 	source: ScreenGestureSource;
 }) => {
+	const preloaded = useIsPreloadedScene();
 	const previous = useBuilderStore((store) => store.descriptors.previous);
 	const isClosing = useOptionalBlankStackStore(
 		(store) => store?.scenesByKey[source.routeKey]?.activity === "closing",
@@ -58,6 +60,7 @@ export const useRegisterGestureOwnership = ({
 	);
 
 	useLayoutEffect(() => {
+		if (preloaded) return;
 		gestureOwnershipCoordinator.register({
 			screenKey: source.routeKey,
 			source,
@@ -65,12 +68,16 @@ export const useRegisterGestureOwnership = ({
 			effectiveClaimedDirections,
 			owners,
 		});
-	}, [claimedDirections, effectiveClaimedDirections, owners, source]);
+	}, [
+		claimedDirections,
+		effectiveClaimedDirections,
+		owners,
+		preloaded,
+		source,
+	]);
 
-	useLayoutEffect(
-		() => () => {
-			gestureOwnershipCoordinator.unregister(source.routeKey);
-		},
-		[source.routeKey],
-	);
+	useLayoutEffect(() => {
+		if (preloaded) return;
+		return () => gestureOwnershipCoordinator.unregister(source.routeKey);
+	}, [preloaded, source.routeKey]);
 };

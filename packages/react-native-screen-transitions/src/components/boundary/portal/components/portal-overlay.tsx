@@ -16,6 +16,7 @@ import Animated, {
 import { NO_STYLES } from "../../../../constants";
 import { useBuilderStore } from "../../../../providers/builder";
 import { composeSlotStyleWithLocalTransform } from "../../../../providers/orchestrator/styles/helpers/compose-slot-style";
+import { useIsPreloadedScene } from "../../../../providers/preloaded-scene-context";
 import { resolvePortalOffsetStyle } from "../helpers/offset-style";
 import { useHostMeasurement } from "../hooks/use-host-measurement";
 import { registerHost, unregisterHost } from "../stores/host-registry.store";
@@ -48,6 +49,7 @@ export const PortalOverlay = memo(function PortalOverlay({
 	style,
 }: PortalOverlayProps) {
 	const screenKey = useBuilderStore((s) => s.derivations.currentScreenKey);
+	const preloaded = useIsPreloadedScene();
 	const id = useId();
 	const hostKey = fallback ? screenKey : `${screenKey}-host-${id}`;
 	const activeBoundaryHosts = useActivePortalBoundaryHosts(hostKey);
@@ -79,6 +81,7 @@ export const PortalOverlay = memo(function PortalOverlay({
 	));
 
 	useLayoutEffect(() => {
+		if (preloaded) return;
 		registerHost({
 			fallback,
 			hostKey,
@@ -88,7 +91,9 @@ export const PortalOverlay = memo(function PortalOverlay({
 		return () => {
 			unregisterHost(screenKey, hostKey);
 		};
-	}, [fallback, hostKey, screenKey]);
+	}, [fallback, hostKey, preloaded, screenKey]);
+
+	if (preloaded) return null;
 
 	return (
 		<Animated.View

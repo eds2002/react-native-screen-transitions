@@ -1,4 +1,5 @@
 import { useBlankStackStore } from "../../navigators/blank-stack/state/blank-stack.provider";
+import { useIsPreloadedScene } from "../../providers/preloaded-scene-context";
 
 import {
 	getFloatOverlayStack,
@@ -11,7 +12,9 @@ import { OverlayHost } from "./variations/overlay-host";
  * Gets routes and descriptors from stack context.
  */
 export function Overlay() {
+	const isPreloadedScene = useIsPreloadedScene();
 	const scenes = useBlankStackStore((store) => store.scenes);
+	if (isPreloadedScene) return null;
 
 	const overlayStack = getFloatOverlayStack(scenes);
 

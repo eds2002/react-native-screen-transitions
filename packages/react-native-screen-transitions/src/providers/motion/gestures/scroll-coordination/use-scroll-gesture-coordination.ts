@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { LayoutChangeEvent } from "react-native";
 import { Gesture, type GestureType } from "react-native-gesture-handler";
 import {
@@ -9,6 +9,7 @@ import {
 import { useSharedValueState } from "../../../../hooks/reanimated/use-shared-value-state";
 import useStableCallback from "../../../../hooks/use-stable-callback";
 import { ScrollStore } from "../../../../stores/scroll.store";
+import { useIsPreloadedScene } from "../../../preloaded-scene-context";
 import { useMotionStore, useOptionalMotionStore } from "../..";
 import { useGestureScrollCoordination } from "../ownership/use-gesture-scroll-coordination";
 import type {
@@ -90,8 +91,10 @@ export const useScrollGestureCoordination = (
 	const context = useOptionalMotionStore((store) => store?.gestures ?? null);
 	const scrollDirection = props.direction ?? "vertical";
 	const routeKey = context?.routeKey ?? null;
+	const preloaded = useIsPreloadedScene();
+	const activeRouteKey = preloaded ? null : routeKey;
 	const { scrollStates, panGestures, pinchGestures, ownerRouteKeys } =
-		useGestureScrollCoordination(routeKey, scrollDirection);
+		useGestureScrollCoordination(activeRouteKey, scrollDirection);
 
 	const metadataOwnerContext = useOptionalScrollMetadataOwnerStore();
 	const metadataOwnerProviderValue =
@@ -103,18 +106,19 @@ export const useScrollGestureCoordination = (
 	const [writesMetadata, setWritesMetadata] = useState(false);
 
 	const metadataState = useMemo(
-		() => (routeKey ? ScrollStore.getValue(routeKey, "metadata") : null),
-		[routeKey],
+		() =>
+			activeRouteKey ? ScrollStore.getValue(activeRouteKey, "metadata") : null,
+		[activeRouteKey],
 	);
 
 	useLayoutEffect(() => {
-		if (!routeKey || !isFirstMetadataWriterInTree) {
+		if (!activeRouteKey || !isFirstMetadataWriterInTree) {
 			setWritesMetadata(false);
 			return;
 		}
 
 		const claimed = ScrollStore.claimMetadataWriter(
-			routeKey,
+			activeRouteKey,
 			scrollDirection,
 			metadataWriterId,
 		);
@@ -122,14 +126,14 @@ export const useScrollGestureCoordination = (
 
 		return () => {
 			const released = ScrollStore.releaseMetadataWriter(
-				routeKey,
+				activeRouteKey,
 				scrollDirection,
 				metadataWriterId,
 			);
 
 			if (!released || !metadataState) return;
 
-			if (!ScrollStore.hasMetadataWriters(routeKey)) {
+			if (!ScrollStore.hasMetadataWriters(activeRouteKey)) {
 				metadataState.set(null);
 				return;
 			}
@@ -137,7 +141,7 @@ export const useScrollGestureCoordination = (
 			clearScrollMetadataAxis(metadataState, scrollDirection);
 		};
 	}, [
-		routeKey,
+		activeRouteKey,
 		scrollDirection,
 		isFirstMetadataWriterInTree,
 		metadataState,
@@ -201,6 +205,7 @@ export const useScrollGestureCoordination = (
 		};
 
 		let gesture = Gesture.Native()
+			.enabled(!preloaded)
 			.onTouchesDown(setIsTouched)
 			.onTouchesUp(clearIsTouched)
 			.onTouchesCancelled(clearIsTouched);
@@ -231,6 +236,7 @@ export const useScrollGestureCoordination = (
 		scrollDirection,
 		writesMetadata,
 		metadataState,
+		preloaded,
 	]);
 
 	const scrollHandler = useAnimatedScrollHandler({
@@ -256,23 +262,35 @@ export const useScrollGestureCoordination = (
 		},
 	});
 
+	const preloadedLayout = useRef<ScrollGesturePatch | null>(null);
+	const publishLayout = useCallback(
+		(patch: ScrollGesturePatch) => {
+			if (preloaded || preloadedLayout.current) {
+				preloadedLayout.current = { ...preloadedLayout.current, ...patch };
+			}
+			for (const scrollState of scrollStates) {
+				modifyScrollGestureAxisState(scrollState, scrollDirection, patch);
+			}
+			if (writesMetadata && metadataState) {
+				modifyScrollMetadataAxisState(metadataState, scrollDirection, patch);
+			}
+		},
+		[metadataState, preloaded, scrollDirection, scrollStates, writesMetadata],
+	);
+
+	useLayoutEffect(() => {
+		// Promotion can install owners without a new native layout event.
+		if (!preloaded && preloadedLayout.current) {
+			publishLayout(preloadedLayout.current);
+		}
+	}, [preloaded, publishLayout]);
+
 	const onContentSizeChange = useStableCallback(
 		(width: number, height: number) => {
 			props.onContentSizeChange?.(width, height);
 
 			const contentSize = scrollDirection === "horizontal" ? width : height;
-
-			for (const scrollState of scrollStates) {
-				modifyScrollGestureAxisState(scrollState, scrollDirection, {
-					contentSize,
-				});
-			}
-
-			if (writesMetadata && metadataState) {
-				modifyScrollMetadataAxisState(metadataState, scrollDirection, {
-					contentSize,
-				});
-			}
+			publishLayout({ contentSize });
 		},
 	);
 
@@ -281,18 +299,7 @@ export const useScrollGestureCoordination = (
 
 		const { width, height } = event.nativeEvent.layout;
 		const layoutSize = scrollDirection === "horizontal" ? width : height;
-
-		for (const scrollState of scrollStates) {
-			modifyScrollGestureAxisState(scrollState, scrollDirection, {
-				layoutSize,
-			});
-		}
-
-		if (writesMetadata && metadataState) {
-			modifyScrollMetadataAxisState(metadataState, scrollDirection, {
-				layoutSize,
-			});
-		}
+		publishLayout({ layoutSize });
 	});
 
 	return {

@@ -26,11 +26,13 @@ const PointerEventsByActivity = {
 interface ActivityScreenProps {
 	children: React.ReactNode;
 	routeKey: string;
+	preloaded?: boolean;
 }
 
 export const ActivityScreen = memo(function ActivityScreen({
 	children,
 	routeKey,
+	preloaded = false,
 }: ActivityScreenProps) {
 	const scene = useBlankStackStore((store) => store.scenesByKey[routeKey]);
 	const paintDriverRouteKey = useBlankStackStore((store) =>
@@ -38,10 +40,13 @@ export const ActivityScreen = memo(function ActivityScreen({
 	);
 
 	const inactiveBehavior =
-		(scene.descriptor.options as { inactiveBehavior?: InactiveBehavior })
-			.inactiveBehavior ?? DEFAULT_INACTIVE_BEHAVIOR;
+		(
+			scene?.descriptor.options as
+				| { inactiveBehavior?: InactiveBehavior }
+				| undefined
+		)?.inactiveBehavior ?? DEFAULT_INACTIVE_BEHAVIOR;
 
-	const hasNestedState = "state" in scene.route;
+	const hasNestedState = scene && "state" in scene.route;
 
 	const paintDriverProgress = useOptionalMotionStore(
 		paintDriverRouteKey ?? null,
@@ -67,11 +72,14 @@ export const ActivityScreen = memo(function ActivityScreen({
 
 	const isPaintDriverSettledOnJS = useSharedValueState(isPaintDriverSettled);
 
+	const activity = scene?.activity ?? "inactive";
 	let activityViewMode: ActivityViewMode =
-		scene.activity === "active" ? "normal" : "inert";
-	let visible = scene.activity !== "inactive";
+		activity === "active" ? "normal" : "inert";
+	let visible = activity !== "inactive";
 
-	if (scene.activity === "inactive") {
+	if (preloaded) {
+		visible = true;
+	} else if (activity === "inactive") {
 		if (inactiveBehavior === "keep" || !isPaintDriverSettledOnJS) {
 			visible = true;
 		} else if (inactiveBehavior === "pause") {
@@ -84,8 +92,9 @@ export const ActivityScreen = memo(function ActivityScreen({
 	}
 
 	const shouldUnmount =
+		!preloaded &&
 		inactiveBehavior === "unmount" &&
-		scene.activity === "inactive" &&
+		activity === "inactive" &&
 		!hasNestedState &&
 		isPaintDriverSettledOnJS;
 
@@ -95,8 +104,11 @@ export const ActivityScreen = memo(function ActivityScreen({
 
 	return (
 		<View
-			style={StyleSheet.absoluteFill}
-			pointerEvents={PointerEventsByActivity[scene.activity]}
+			style={[StyleSheet.absoluteFill, preloaded && styles.preloaded]}
+			pointerEvents={preloaded ? "none" : PointerEventsByActivity[activity]}
+			aria-hidden={preloaded || undefined}
+			accessibilityElementsHidden={preloaded || undefined}
+			importantForAccessibility={preloaded ? "no-hide-descendants" : undefined}
 			collapsable={false}
 		>
 			<ActivityView mode={activityViewMode} visible={visible}>
@@ -105,3 +117,6 @@ export const ActivityScreen = memo(function ActivityScreen({
 		</View>
 	);
 });
+
+// Keep native layout measurable while excluding the scene from paint and input.
+const styles = StyleSheet.create({ preloaded: { opacity: 0 } });

@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Gesture } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
-import { ScrollStore } from "../../../stores/scroll.store";
+import type { ScrollStoreMap } from "../../../stores/scroll.store";
 import { useBuilderStore } from "../../builder";
 import type { ScreenOptionsContextValue } from "../options/types";
 import type { MotionValues } from "../types";
@@ -13,13 +13,13 @@ import { type GestureCompositionOwner, NO_GESTURE_OWNERS } from "./types";
 export function useScreenGestures(
 	screenOptions: ScreenOptionsContextValue,
 	values: MotionValues,
+	scrollState: ScrollStoreMap["coordination"],
 	onDismissRequest?: () => void,
 ) {
 	const currentScreenKey = useBuilderStore(
 		(store) => store.derivations.currentScreenKey,
 	);
 	const gestureConfig = useScreenGestureConfig();
-	const scrollState = ScrollStore.getValue(currentScreenKey, "coordination");
 	const gestureOwners = useSharedValue({ ...NO_GESTURE_OWNERS });
 	const gestureCompositionOwner = useSharedValue<GestureCompositionOwner>(null);
 	const panGesture = useBuildPanGesture({

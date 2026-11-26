@@ -9,6 +9,7 @@ import { BlankStackStoreProvider } from "../../navigators/blank-stack/state/blan
 import { BuilderProvider } from "../../providers/builder";
 import { MotionProvider } from "../../providers/motion";
 import { OrchestratorProvider } from "../../providers/orchestrator";
+import { useIsPreloadedScene } from "../../providers/preloaded-scene-context";
 import type { BaseStackDescriptor, BaseStackRoute } from "../../types";
 import { getStackRoutes } from "../../utils/navigation/get-stack-routes";
 import {
@@ -185,14 +186,16 @@ const NativeSceneMotion = memo(function NativeSceneMotion({
 	children: ReactNode;
 }) {
 	const { requestDismiss } = useNavigationHelpers();
+	const preloaded = useIsPreloadedScene();
+	const onDismissRequest = preloaded ? undefined : requestDismiss;
 	return (
-		<MotionProvider onDismissRequest={requestDismiss}>
+		<MotionProvider onDismissRequest={onDismissRequest}>
 			<OrchestratorProvider>
-				<ScreenLayers onDismissRequest={requestDismiss}>
+				<ScreenLayers onDismissRequest={onDismissRequest}>
 					{children}
 				</ScreenLayers>
 			</OrchestratorProvider>
-			<NativeStackLifecycle />
+			{!preloaded && <NativeStackLifecycle />}
 		</MotionProvider>
 	);
 });
