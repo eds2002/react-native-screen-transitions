@@ -4,9 +4,11 @@ import { scheduleOnUI } from "react-native-worklets";
 import { useOptionalBuilderStore } from "../../../providers/builder";
 import { useOptionalMotionStore } from "../../../providers/motion";
 import { LifecycleTransitionRequestKind } from "../../../providers/motion/hooks/use-transition-values";
+import { useIsPreloadedScene } from "../../../providers/preloaded-scene-context";
 
 /** "content" identifies the full content wrapper and is reserved internally. */
 export function useContentLayout(styleId: string | undefined) {
+	const preloaded = useIsPreloadedScene();
 	const isContent = styleId === "content";
 	const builder = useOptionalBuilderStore((store) =>
 		isContent ||
@@ -19,6 +21,7 @@ export function useContentLayout(styleId: string | undefined) {
 		builder ? store?.state : undefined,
 	);
 	const isFirstKey = builder?.derivations.isFirstKey;
+	const hasPrevious = !!builder?.descriptors.previous;
 	const experimental_animateOnInitialMount =
 		builder?.options.experimental_animateOnInitialMount;
 	const snapPoint = isContent ? "auto" : styleId;
@@ -48,6 +51,7 @@ export function useContentLayout(styleId: string | undefined) {
 					resolvedAutoSnapPoint.set(nextFraction);
 
 					if (
+						preloaded ||
 						!isFirstMeasurement ||
 						animations.transitionProgress.get() !== 0 ||
 						animations.progressAnimating.get() !== 0
@@ -56,6 +60,7 @@ export function useContentLayout(styleId: string | undefined) {
 					}
 
 					if (isFirstKey && !experimental_animateOnInitialMount) {
+						if (hasPrevious) return;
 						targetProgress.set(nextFraction);
 						animations.transitionProgress.set(nextFraction);
 						return;
@@ -75,7 +80,9 @@ export function useContentLayout(styleId: string | undefined) {
 			animations,
 			isContent,
 			measureSnap,
+			preloaded,
 			isFirstKey,
+			hasPrevious,
 			screenHeight,
 			experimental_animateOnInitialMount,
 		],

@@ -13,6 +13,8 @@ import {
 } from "../../../../../providers/motion/hooks/use-transition-values";
 import type { MotionAnimationValues } from "../../../../../providers/motion/types";
 import type { SnapPoint } from "../../../../../types/screen.types";
+import { animateToProgress } from "../../../../../utils/animation/animate-to-progress";
+import { useOpenOnMeasurement } from "./use-open-on-measurement";
 
 /**
  * Calculates the initial progress value based on snap points configuration.
@@ -48,6 +50,16 @@ export function useOpenTransitionIntent(
 ) {
 	const initialized = useRef(false);
 	const isFirstKey = useBuilderStore((store) => store.derivations.isFirstKey);
+	const hasPrevious = useBuilderStore(
+		(store) => store.derivations.previousScreenKey !== undefined,
+	);
+	const {
+		snapPoints,
+		initialSnapIndex = 0,
+		experimental_animateOnInitialMount,
+	} = current.options;
+	const initialProgress = getInitialProgress({ snapPoints, initialSnapIndex });
+	const animateOnMount = !isFirstKey || experimental_animateOnInitialMount;
 	const { requestLifecycleTransition } = system.actions;
 	const completeOpen = useStableCallback(() => {
 		onComplete?.();
@@ -66,6 +78,40 @@ export function useOpenTransitionIntent(
 			"worklet";
 			if (complete && !previouslyComplete) {
 				scheduleOnRN(completeOpen);
+			}
+		},
+	);
+
+	const { targetProgress } = system;
+	const { transitionProgress } = animations;
+	const showInitialProgress = (target: number) => {
+		"worklet";
+		if (hasPrevious && target === AnimationProgress.Visible) {
+			// A root replacement still has to release its outgoing scene.
+			animateToProgress({
+				target,
+				animations,
+				targetProgress,
+				animationProgress: system.animationProgress,
+				emitWillAnimate: false,
+				markEntering: false,
+			});
+			return;
+		}
+		targetProgress.set(target);
+		transitionProgress.set(target);
+	};
+
+	useOpenOnMeasurement(
+		typeof initialProgress === "string",
+		animations,
+		system,
+		(target) => {
+			"worklet";
+			if (animateOnMount) {
+				requestLifecycleTransition(LifecycleTransitionRequestKind.Open, target);
+			} else {
+				showInitialProgress(target);
 			}
 		},
 	);
@@ -95,25 +141,14 @@ export function useOpenTransitionIntent(
 		}
 		initialized.current = true;
 
-		const {
-			snapPoints,
-			initialSnapIndex = 0,
-			experimental_animateOnInitialMount,
-		} = current.options;
-
-		const initialProgress = getInitialProgress({
-			snapPoints,
-			initialSnapIndex,
-		});
-
-		if (isFirstKey && !experimental_animateOnInitialMount) {
+		if (!animateOnMount) {
 			if (typeof initialProgress === "string") {
 				system.targetProgress.set(0);
 				animations.transitionProgress.set(0);
 			} else {
 				const target = initialProgress ?? AnimationProgress.Visible;
-				system.targetProgress.set(target);
-				animations.transitionProgress.set(target);
+				if (hasPrevious) scheduleOnUI(showInitialProgress, target);
+				else showInitialProgress(target);
 			}
 			animations.progressAnimating.set(0);
 			animations.closing.set(0);
@@ -121,8 +156,7 @@ export function useOpenTransitionIntent(
 			return;
 		}
 
-		// When the initial snap point is 'auto', defer the opening animation until
-		// ScreenLayers has measured the content and set resolvedAutoSnapPoint.
+		// The measurement reaction also handles layout collected before promotion.
 		if (typeof initialProgress === "string") {
 			return;
 		}

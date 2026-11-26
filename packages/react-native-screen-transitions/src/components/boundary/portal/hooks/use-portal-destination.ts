@@ -1,4 +1,5 @@
 import { useAnimatedProps, useSharedValue } from "react-native-reanimated";
+import { useIsPreloadedScene } from "../../../../providers/preloaded-scene-context";
 import { useBoundaryRootStore } from "../../providers/boundary-root.provider";
 import { useActiveHostKey } from "../stores/host-registry.store";
 import {
@@ -10,11 +11,12 @@ import { useActivePortalBoundaryHost } from "./use-active-portal-boundary-host";
 export type PortalMode = "handoff" | "escapeClipping";
 
 export function usePortalDestination(boundaryId: string, mode: PortalMode) {
+	const preloaded = useIsPreloadedScene();
 	const { currentScreenKey, localMeasurement, slotsMap, boundaryPresentation } =
 		useBoundaryRootStore((s) => s);
 	const portalHostReady = useSharedValue(false);
 	const escapeHostKey = useActiveHostKey(
-		mode === "escapeClipping" ? currentScreenKey : null,
+		!preloaded && mode === "escapeClipping" ? currentScreenKey : null,
 	);
 	const portalHostName = useActivePortalBoundaryHost({
 		boundaryId,
@@ -25,6 +27,7 @@ export function usePortalDestination(boundaryId: string, mode: PortalMode) {
 	});
 	const teleportProps = useAnimatedProps(() => {
 		"worklet";
+		if (preloaded) return { hostName: PORTAL_HOST_NAME_RESET_VALUE };
 		const { owner, receiver, slots } = boundaryPresentation.get();
 		const slot = slots[boundaryId];
 		const {
@@ -48,6 +51,8 @@ export function usePortalDestination(boundaryId: string, mode: PortalMode) {
 	});
 	return {
 		teleportProps,
-		localHostName: createHandoffHostName(currentScreenKey, boundaryId),
+		localHostName: preloaded
+			? null
+			: createHandoffHostName(currentScreenKey, boundaryId),
 	};
 }

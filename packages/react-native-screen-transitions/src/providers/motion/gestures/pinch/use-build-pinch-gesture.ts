@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Gesture } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
+import { useIsPreloadedScene } from "../../../preloaded-scene-context";
 import type { ScreenOptionsContextValue } from "../../options/types";
 import type { MotionValues } from "../../types";
 import { useStableRuntimeConfig } from "../ownership/hooks/use-stable-runtime-config";
@@ -27,6 +28,7 @@ export const useBuildPinchGesture = ({
 	gestureConfig,
 	gestureCompositionOwner,
 }: UseBuildPinchGestureProps): PinchGesture => {
+	const preloaded = useIsPreloadedScene();
 	const { participation, pinch: policy } = gestureConfig;
 
 	const runtime = useStableRuntimeConfig(
@@ -52,14 +54,14 @@ export const useBuildPinchGesture = ({
 
 	const pinchGesture = useMemo(() => {
 		return Gesture.Pinch()
-			.enabled(true)
+			.enabled(!preloaded)
 			.manualActivation(true)
 			.onTouchesDown(activation.onTouchesDown)
 			.onTouchesMove(activation.onTouchesMove)
 			.onStart(behavior.onStart)
 			.onUpdate(behavior.onUpdate)
 			.onEnd(behavior.onEnd);
-	}, [activation, behavior]);
+	}, [activation, behavior, preloaded]);
 
 	return pinchGesture;
 };

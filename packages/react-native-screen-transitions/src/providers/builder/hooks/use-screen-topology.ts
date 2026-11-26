@@ -1,9 +1,11 @@
 import { useLayoutEffect } from "react";
 import { useOptionalBlankStackStore } from "../../../navigators/blank-stack/state/blank-stack.provider";
+import { useIsPreloadedScene } from "../../preloaded-scene-context";
 import { useOptionalBuilderStore } from "../builder.provider";
 import { screenTopology } from "../topology/helpers/create-screen-topology";
 
 export function useScreenTopology(screenKey: string) {
+	const isPreloadedScene = useIsPreloadedScene();
 	const parentScreenKey = useOptionalBuilderStore(
 		(store) => store?.derivations.currentScreenKey,
 	);
@@ -24,7 +26,7 @@ export function useScreenTopology(screenKey: string) {
 		);
 	});
 
-	const enabled = navigatorKey !== undefined;
+	const enabled = !isPreloadedScene && navigatorKey !== undefined;
 
 	useLayoutEffect(() => {
 		if (!enabled) return;

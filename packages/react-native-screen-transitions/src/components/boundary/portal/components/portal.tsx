@@ -94,7 +94,7 @@ function EnabledPortal({
 	return mode === "handoff" ? (
 		<>
 			{content}
-			<PortalHost name={localHostName} />
+			{localHostName && <PortalHost name={localHostName} />}
 		</>
 	) : (
 		<PortalPlaceholder placeholderRef={placeholderRef}>

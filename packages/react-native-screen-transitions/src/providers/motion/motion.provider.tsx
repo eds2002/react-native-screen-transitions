@@ -1,8 +1,10 @@
 import { type ReactNode, useMemo } from "react";
 import { StyleSheet } from "react-native";
 import Animated, { type SharedValue } from "react-native-reanimated";
+import { ScrollStore } from "../../stores/scroll.store";
 import createProvider from "../../utils/create-provider";
 import { useBuilderStore } from "../builder";
+import { useIsPreloadedScene } from "../preloaded-scene-context";
 import { useMotionAnimationPipeline } from "./animation/pipeline";
 import { useScreenGestures } from "./gestures/use-screen-gestures";
 import { useMaybeBlockVisibility } from "./hooks/use-maybe-block-visibility";
@@ -37,12 +39,21 @@ export const {
 	const ancestorIsScreenReady = useOptionalMotionStore(
 		(store) => store?.isScreenReady ?? null,
 	);
+	const preloaded = useIsPreloadedScene();
+	const scroll = preloaded
+		? ScrollStore.getCachedBag()
+		: ScrollStore.getBag(screenKey);
 	const values = useMotionValues();
 	const options = useScreenOptions();
 
-	const gestures = useScreenGestures(options, values, onDismissRequest);
+	const gestures = useScreenGestures(
+		options,
+		values,
+		scroll.coordination,
+		onDismissRequest,
+	);
 
-	const state = useMotionAnimationPipeline(values);
+	const state = useMotionAnimationPipeline(values, scroll.metadata);
 
 	const { animatedStyle, animatedProps, isScreenReady } =
 		useMaybeBlockVisibility({ motion: values, ancestorIsScreenReady });
